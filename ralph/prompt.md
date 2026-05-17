@@ -37,6 +37,14 @@ Any Python invocation that opens a CKKS context, runs training, generates synthe
 
 For quick sanity checks (≤ 5 min, ≤ 1 GPU), prefer `srun --partition=t4_ai --account=comx29 --time=00:05:00 --gres=gpu:1 python -c "..."`. For longer work, write a job script under `jobs/` and submit with `sbatch`.
 
+# MODULE PREREQUISITES
+
+This is an OHPC Lmod environment; the default PATH lacks several binaries you will need. Load them at the top of your shell session, **before** any of the feedback gates below:
+
+- `module load git/2.9.5` (or use the symlink at `/home/hkanpak21/bin/git`). The Agent harness's worktree isolation cannot work without git on PATH.
+- `module load latex/2025` if you touch `.tex`. See the caveat in the `.tex` feedback gate below.
+- Conda envs for Python work: per the `valar` memory cheatsheet; never run heavy Python on the login node regardless of which env is active.
+
 # FEEDBACK LOOPS
 
 Run the gates that apply to what you touched. Run them **before** the commit, not after.
@@ -47,12 +55,14 @@ Run the gates that apply to what you touched. Run them **before** the commit, no
   `srun --partition=t4_ai --account=comx29 --time=00:05:00 python -c "import tenseal; print(tenseal.__version__)"`
   followed by whatever smoke the issue specifies.
 - **`.tex` file touched** (anything under `FL_TDSC/`):
-  `cd FL_TDSC && pdflatex -interaction=nonstopmode main.tex >/dev/null` then revert the build artefacts (`rm -f main.aux main.log main.out main.toc main.bbl main.blg`). Confirms the paper still compiles. Also append a before/after entry to `FL_TDSC/CHANGES.md` per the `feedback-changes-log` memory.
+  Preferred: `module load latex/2025 && cd FL_TDSC && pdflatex -interaction=nonstopmode -halt-on-error main.tex >/dev/null` then revert artefacts (`rm -f main.aux main.log main.out main.toc main.bbl main.blg main.bcf main.run.xml`). Confirms the paper still compiles.
+  **Cluster fallback**: the OHPC TeX Live 2025 install at `/opt/ohpc/pub/apps/latex/2025` ships without `pdflatex.fmt` and without `fmtutil(-sys|-user)` to build it. If `pdflatex` errors with "I can't find the format file `pdflatex.fmt'!", treat the compile gate as unrunnable on this cluster and substitute a syntactic check: (a) `grep -c '{' <file> && grep -c '}' <file>` to confirm balanced braces (the `python3 -c "open(...).read().count(...)"` form gives the same), (b) `grep -E '\\cite\{([a-zA-Z0-9_:]+)\}' <file>` listing every newly-cited key — confirm each appears in `FL_TDSC/references.bib`, (c) `grep -E '\\ref\{([a-zA-Z0-9_:]+)\}' <file>` listing every newly-referenced label — confirm each appears via `grep -rn '\\label{<key>}' FL_TDSC/*.tex`. The authoritative compile is the Overleaf replay anchored on `FL_TDSC/CHANGES.md`; the local gate is best-effort.
+  Always append a before/after entry to `FL_TDSC/CHANGES.md` per the `feedback-changes-log` memory.
 - **SVG file touched** (anything under `FL_TDSC/figures/*.svg`):
   `xmllint --noout FL_TDSC/figures/<file>.svg`
   and re-export the matching `.pdf` via `rsvg-convert --format=pdf -o <file>.pdf <file>.svg` if the issue commits both.
 
-If a gate fails, fix the cause; do not skip it.
+If a gate fails for substantive reasons (your edit broke something), fix the cause; do not skip it. If a gate fails for cluster-environment reasons (missing format file, missing binary), substitute the documented fallback and note the substitution in the commit message.
 
 # TWEAK PROTOCOL — peripherals only
 
