@@ -816,3 +816,155 @@ Together, these four properties (the depth budget for the linear accumulator, th
 - Every `\cite{...}` in the edited regions resolves: no new `\cite{...}` keys introduced in either file; the abstract's new prose makes no bibliographic citations, and §I-A's pre-existing citations (`zhu2019deep`, `so2023securing`, `jagielski2023students`, `shao2023selective`, `kerkouche2023client`, `zhang2020batchcrypt`, `jin2023fedml`, `kanpak2024cure`, `agamennone2025polynomial`, `alhossain2025training`) are untouched.
 - Every `\ref{...}` in the new §I-A region resolves to a `\label{...}` in `FL_TDSC/*.tex`: `sec:phase2` → `methodology.tex:102`, `sec:threat_binding` → `methodology.tex:17`, `sec:methodology` → `methodology.tex:2`, `sec:experiments` → `experiments.tex:2`.
 - Legacy challenge terms ("polynomial magnitude", "training–distillation", "scale-aligned", "scale-anchored") absent from active §I-A prose (lines 15–35). Three commented-out occurrences remain at lines 86, 88, 90 inside the pre-existing backup block (lines 56–109); not in active prose, so the acceptance criterion holds.
+
+---
+
+## 13. A1 wholesale methodology rewrite (2026-05-17)
+
+Action plan A1 / PRD `reports/2026-05-05_methodology_pivot.md` §§4–6 (lines 131–209) called for a wholesale replacement of `methodology.tex` §3 onwards, importing the encrypted CFD protocol described in PRD §4 (encrypted CFD phases + β/λ secure handling + HE depth budget per encrypted SGD step under the linear-accumulator construction), PRD §5 (communication complexity), and PRD §6 (two-stage initialisation, variant α only). The PRD's "Deprecation note for downstream builder LLMs" at lines 8–10 is explicit that the block-wise HE-IFD content of the legacy `methodology.tex` is deprecated and must not be propagated. The block-wise overview paragraph, Algorithm 1 (HE-IFD per-block pseudocode), the four legacy Phase~1–4 subsubsections, the Training Stability subsection, the Privacy Analysis subsection (rewritten as a brief structural note), the Architecture-Specific Instantiations subsection (kept as brief stubs to preserve external label resolution from `experiments.tex`), and the Communication and Computation Complexity subsection have all been replaced by post-pivot content. The threat-model subsubsection (issue 05's `\label{sec:threat_binding}`, lines 16–31 of the post-issue-05 `methodology.tex`) is preserved verbatim and is the load-bearing security backbone for the new prose. The new content matches the post-issue-05 voice register at `methodology.tex:19` and uses `\par\noindent\textbf{...}` paragraph leads as the structural template throughout. The legacy operator-replacement / magnitude-regularisation discussion is reduced to (i) the released-student inference-compatibility note inside Section~\ref{sec:linear_accumulator} (matching `reports/cover_letter_draft.md` §3 R1-W2 "Largely retired"), (ii) a brief one-paragraph "Remark on training stability" inside the new Two-Stage Initialisation subsection, and (iii) two brief paragraphs inside the retained `\subsection{Architecture-Specific Instantiations}` stub that anchor `\label{sec:arch_cnn}` and `\label{sec:arch_transformer}` so that the existing external `\ref{sec:arch_transformer}` from `experiments.tex:31` continues to resolve.
+
+### FL_TDSC/methodology.tex:32-674 (Overview, Algorithm 1, Phases 1–4, Training Stability, Privacy Analysis, Architecture-Specific Instantiations, Complexity)
+Reason: wholesale replacement of the block-wise HE-IFD content with the encrypted CFD protocol per PRD §§4–6. The "before" is the rejected version's block-wise methodology; the "after" imports PRD §4 (phases + ensemble target + linear accumulator) + PRD §5 (communication complexity) + PRD §6 (two-stage initialisation, variant α only). Inline before/after is intentionally summarised here per PRD §9.6 (bulk-replacement entry style); the verbatim "before" lives at `git HEAD~1:FL_TDSC/methodology.tex` lines 32–674, and the verbatim "after" lives at `git HEAD:FL_TDSC/methodology.tex` lines 32 onwards.
+
+Before:
+```
+(see git HEAD~1:FL_TDSC/methodology.tex lines 32–674 — block-wise HE-IFD protocol;
+ includes "Overview of HE-IFD" paragraph, Algorithm 1 \texttt{HE-IFD: HE-Based
+ Intermediate Feature Distillation}, \subsubsection{Phase~1: Client-Side Training},
+ \subsubsection{Phase~2: Encrypted Upload and Server-Side Distillation} with
+ Eq.~client_stats, Eq.~client_norm, Eq.~normmse, Eq.~magreg, the per-block
+ ciphertext / bridge / magnitude-regularisation discussion,
+ \subsubsection{Phase~3: Threshold Decryption}, \subsubsection{Phase~4:
+ Client-Side Model Assembly and Fine-Tuning}, \subsection{Training Stability}
+ with the bulleted enumeration of mechanisms, \subsection{Privacy Analysis},
+ \subsection{Architecture-Specific Instantiations} with
+ \subsubsection{Convolutional Networks} and PolyResNet-18 / PolyBasicBlock /
+ PolyAct / ChannelScale / MaxPool$\to$Identity machinery and
+ \subsubsection{Transformer and Vision Transformer Architectures},
+ \subsection{Communication and Computation Complexity} with
+ \subsubsection{CKKS Multiplication Budget}, \subsubsection{Computational
+ Cost}, \subsubsection{Communication Cost} and Eq.~comm_cost. Total: 642
+ lines of in-scope content.)
+```
+After:
+```
+(see git HEAD:FL_TDSC/methodology.tex lines 32–228 — encrypted CFD protocol;
+ imports PRD §4 + §5 + §6. New top-level structure:
+   \par\noindent\textbf{Protocol overview.} paragraph (replaces "Overview of HE-IFD"),
+     followed by a Table~\ref{tab:cfd_phases} that carries the PRD §4.1 phase
+     table (Phase / Who / What / HE cost columns) as a LaTeX tabular.
+   Algorithm~\ref{alg:cfd} "Encrypted CFD (one round)" with 20 \STATE lines covering
+     Phase 1 client-side parallel teacher training + encrypted logit/confidence upload,
+     Phase 2a plaintext warm-start, Phase 2b encrypted ensemble target at depth ≤ 3,
+     Phase 2c encrypted SGD as linear accumulator at per-step depth ≤ 3,
+     Phase 3 collective key-switch, Phase 4 optional personalisation.
+   \subsubsection{Phase~1: Client-Side Teacher Training and Encrypted Upload}
+     \label{sec:phase1} — one client-to-server message: encrypted logits +
+     encrypted confidence scalar; optional defences (P1) DP-SGD teachers and
+     (P2) per-row Gaussian noise before encryption.
+   \subsubsection{Phase~2: Encrypted Ensemble Target and Encrypted Student SGD}
+     \label{sec:phase2} — splits into \paragraph{$\beta/\lambda$ secure handling}
+     \label{sec:ensemble_target} (β-boost without division via un-normalised
+     aggregation + temperature absorption; λ-boost via uniform-weight per-row
+     variance; total loss-side depth ≤ 3 levels) and
+     \paragraph{Linear-accumulator construction} \label{sec:linear_accumulator}
+     with the equation $\langle\theta_E\rangle = \langle\theta_0^\star\rangle +
+     \sum_t \eta \cdot \langle g_t\rangle$ (Eq.~linear_accumulator), per-step
+     depth ≤ 3, concrete parameterisation (logN=14, scale ≈ 2^40, ring 16384,
+     no bootstrapping), and the released-student inference-compatibility
+     framing of the operator-replacement triple per cover-letter R1-W2.
+   \subsubsection{Phase~3: Collective Threshold Key-Switch} \label{sec:phase3}
+     — DKG, encrypted upload + computation, collective key-switch, $t{=}N$
+     trust assumption. (Retained Mouchet et al. + Lattigo + RLWE citations.)
+   \subsubsection{Phase~4: Optional Client-Side Personalisation} \label{sec:phase4}
+     — head-only fine-tuning, on-device, post-processing reduction.
+   \subsection{Two-Stage Initialisation} \label{sec:twostage_init}
+     — Stage 1 plaintext warm-start on labelled probe, Stage 2 encrypted SGD;
+     hypothesis, A1 + A2 ablations, γ-variant remark, training-stability
+     remark.
+   \subsection{Communication Complexity} \label{sec:complexity} — carries
+     Table~\ref{tab:comm_complexity} per PRD §5 (per-protocol-run message /
+     direction / volume table with five rows: client logit upload, client
+     confidence upload, client synthetic upload γ-only, student download,
+     key-switch shares). Concrete numbers at headline cell: $|\mathcal P|=5000$,
+     $C=10$, $N=10$, LeNet-5 (~6e4 params): 8 ctxts ≈ 8 MB per client per run.
+   \subsection{Privacy Analysis} \label{sec:privacy_proof} — brief, points at
+     binding invariant + IND-CPA + post-processing on DP-SGD teachers.
+   \subsection{Architecture-Specific Instantiations} \label{sec:architecture}
+     — brief stub preserving \subsubsection{Convolutional Networks} \label{sec:arch_cnn}
+     (one paragraph on LeNet-5 + PolyResNet-style released-inference replacements)
+     and \subsubsection{Transformer and Vision Transformer Architectures}
+     \label{sec:arch_transformer} (one paragraph on ViT-tiny + PolyGELU +
+     AffineNorm at the released-inference surface). The point is to preserve
+     external label resolution from experiments.tex:31; the architecture
+     design surface is decoupled from training by the linear-accumulator
+     construction.)
+```
+
+### Structural diff
+
+Dropped subsections (lines, in pre-edit `methodology.tex`):
+
+- "Overview of HE-IFD" paragraph (lines 34–39) — replaced by the new "Protocol overview" paragraph + Table~\ref{tab:cfd_phases}.
+- `\begin{algorithm}` Algorithm~1 "HE-IFD: HE-Based Intermediate Feature Distillation" (lines 42–93) — replaced by Algorithm~\ref{alg:cfd} "Encrypted CFD (one round)".
+- `\subsubsection{Phase~1: Client-Side Training}` (lines 95–99) — replaced by the new Phase~1 subsubsection.
+- `\subsubsection{Phase~2: Encrypted Upload and Server-Side Distillation}` (lines 101–149) — replaced by the new Phase~2 subsubsection with \paragraph{$\beta/\lambda$ secure handling} and \paragraph{Linear-accumulator construction} children. Equations `eq:client_stats`, `eq:client_norm`, `eq:normmse`, `eq:magreg` all dropped (none externally referenced). The collaborative-normalisation paragraph, the train-inference distribution-gap paragraph, the trainable-bridge construction, the magnitude-regularisation loss, and the MSE-on-logits paragraph are all dropped per PRD §8 deprecation note.
+- `\subsubsection{Phase~3: Threshold Decryption}` (lines 151–162) — replaced by the new Phase~3 subsubsection. The DKG / collective-key-switch / trust-assumption content is preserved verbatim from the post-issue-3 rewrite; the framing now binds the threshold decryption to release of $\theta_E$ only, per the binding invariant.
+- `\subsubsection{Phase~4: Client-Side Model Assembly and Fine-Tuning}` (lines 165–168) — replaced by the new Phase~4 subsubsection.
+- `\subsection{Training Stability}` (lines 175–188) with its bulleted enumeration of mechanisms (client-side normalisation, magnitude-regularised loss, gradient clipping, depth-dependent hyperparameters, per-channel affine bridges) — dropped entirely; the residual content survives as a single "Remark on training stability" paragraph inside Two-Stage Initialisation, per the issue spec.
+- `\subsection{Privacy Analysis}` (lines 192–201) — replaced by a brief two-paragraph subsection that points to `\ref{sec:threat_binding}` and the binding invariant.
+- `\subsection{Architecture-Specific Instantiations}` (lines 205–260) with its full PolyResNet-18 / PolyBasicBlock / PolyAct / ChannelScale / MaxPool$\to$Identity machinery — reduced to two brief paragraphs that preserve the labels `sec:architecture`, `sec:arch_cnn`, `sec:arch_transformer` (the last is externally referenced from `experiments.tex:31`). Equations `eq:polyact`, `eq:channelscale` dropped (none externally referenced).
+- `\subsection{Communication and Computation Complexity}` (lines 263–301) with `\subsubsection{CKKS Multiplication Budget}`, `\subsubsection{Computational Cost}`, `\subsubsection{Communication Cost}` and Eq.~`comm_cost` — replaced by the new `\subsection{Communication Complexity}` with Table~\ref{tab:comm_complexity}. The CKKS-budget content is folded into the linear-accumulator subsection (sec:linear_accumulator) since the depth budget is now part of the protocol design rather than a separate engineering note.
+- All `% ...` commented-out blocks (lines 303–674) — left untouched (they were already inactive). They are the pre-issue-3 backup of the rejected protocol's text.
+
+Inserted subsections (in the new `methodology.tex`):
+
+- "Protocol overview" lead paragraph + binding-invariant paragraph + Table~\ref{tab:cfd_phases} (PRD §4.1 phase table).
+- Algorithm~\ref{alg:cfd} "Encrypted CFD (one round)" with 20 \STATE lines.
+- `\subsubsection{Phase~1: Client-Side Teacher Training and Encrypted Upload}` `\label{sec:phase1}`.
+- `\subsubsection{Phase~2: Encrypted Ensemble Target and Encrypted Student SGD}` `\label{sec:phase2}`, with `\paragraph{β/λ secure handling}` `\label{sec:ensemble_target}` and `\paragraph{Linear-accumulator construction}` `\label{sec:linear_accumulator}` children.
+- `\subsubsection{Phase~3: Collective Threshold Key-Switch}` `\label{sec:phase3}`.
+- `\subsubsection{Phase~4: Optional Client-Side Personalisation}` `\label{sec:phase4}`.
+- `\subsection{Two-Stage Initialisation}` `\label{sec:twostage_init}` with the hypothesis, A1 + A2 ablations, γ-variant remark, training-stability remark.
+- `\subsection{Communication Complexity}` `\label{sec:complexity}` with Table~\ref{tab:comm_complexity} (PRD §5 per-message table).
+- `\subsection{Privacy Analysis}` `\label{sec:privacy_proof}` — brief, points to `\ref{sec:threat_binding}`.
+- `\subsection{Architecture-Specific Instantiations}` `\label{sec:architecture}` brief stub, with `\subsubsection{Convolutional Networks}` `\label{sec:arch_cnn}` and `\subsubsection{Transformer and Vision Transformer Architectures}` `\label{sec:arch_transformer}` brief paragraphs underneath.
+
+### Cross-reference label decisions
+
+- **`\label{sec:phase2}` retained** at the new Phase~2 subsubsection. Issue 17's §I-A C1/C2 cross-refs (`introduction.tex:26, 28`), `methodology.tex:25`'s plaintext-student-weights paragraph (issue 05), and `background.tex:84`'s multiplicative-depth paragraph all target `sec:phase2` for "the depth-bounded ensemble target construction"; the new Phase~2 subsubsection plus its child `\label{sec:ensemble_target}` together carry that content. Downstream agents (issues 16/17, future) may retarget `\ref{sec:phase2}` placeholders to the more specific `\ref{sec:ensemble_target}` or `\ref{sec:linear_accumulator}` labels in a follow-up; this issue does not touch the introduction or background files.
+- **`\label{sec:linear_accumulator}` introduced** at the new \paragraph{Linear-accumulator construction} inside Phase~2. This is the precise anchor for issue 17's C1 cross-ref ("the structural justification for the plaintext student state during training... is the binding invariant developed in Section~\ref{sec:threat_binding}") — a follow-up may retarget the C1 sentence to `\ref{sec:linear_accumulator}` for the per-step depth claim. Did not touch introduction.tex this commit.
+- **`\label{sec:ensemble_target}` introduced** at the \paragraph{β/λ secure handling} inside Phase~2. This is the precise anchor for issue 17's C2 cross-ref; a follow-up may retarget the C2 sentence to `\ref{sec:ensemble_target}`. Did not touch introduction.tex this commit.
+- **`\label{sec:phase3}` retained** at the new collective-key-switch subsubsection. `experiments.tex:64`'s privacy framing targets `sec:phase3`; resolves.
+- **`\label{sec:phase4}` retained** at the new optional-personalisation subsubsection. No external incoming refs; kept for symmetry.
+- **`\label{sec:framework}` retained** at the parent `\subsection{HE-IFD: One-Shot Distillation Framework}` (preserved as part of the issue-05 region at line 12). No external incoming refs (the one in-file ref at line 162 of the pre-edit file was in the dropped Phase~3 subsection); kept because it sits inside the preserve region.
+- **`\label{sec:phase1}` retained** at the new Phase~1 subsubsection. No external incoming refs; kept for symmetry with the other phase labels.
+- **`\label{sec:architecture}` retained** at the brief stub subsection. Referenced from line 14 of the preserve region ("architecture-specific instantiations are deferred to Section~\ref{sec:architecture}"). Resolves.
+- **`\label{sec:arch_cnn}`, `\label{sec:arch_transformer}` retained** at the brief paragraph stubs. `experiments.tex:31` references `sec:arch_transformer`; resolves.
+- **`\label{sec:privacy_proof}` retained** at the brief privacy-analysis subsection. `experiments.tex:430` references `sec:privacy_proof`; resolves.
+- **`\label{sec:complexity}` retained** at the new Communication Complexity subsection. No external incoming refs; kept because it is the natural anchor for the table.
+- **Labels dropped** (no external incoming refs): `sec:stability`, `sec:ckks_budget`, `sec:comp_cost`, `sec:comm_cost`, `alg:heifd`, `eq:client_stats`, `eq:client_norm`, `eq:normmse`, `eq:magreg`, `eq:polyact`, `eq:channelscale`, `eq:comm_cost`. Verified by `grep -rE 'ref\{<label>\}' FL_TDSC/*.tex | grep -v methodology.tex` for each: all return zero live (non-commented) hits.
+
+### Voice / structural decisions
+
+- The "we proudly demonstrate" register is held off. The opening sentence "HE-IFD instantiates an encrypted central federated distillation (CFD) protocol on a public probe set $\mathcal P$ of size $|\mathcal P|$, with the threshold-key structure of Section~\ref{sec:threat_binding} as its security backbone" is the load-bearing structural sentence; no marketing language follows. Every `\par\noindent\textbf{...}` paragraph lead matches the post-issue-05 register at `methodology.tex:19`.
+- The PRD §4.1 phase table is carried as a LaTeX `tabular` with the same four columns (Phase / Who / What / HE cost) and the same seven phase rows (0, 1, 2a, 2b, 2c, 3, 4) per PRD lines 134–148. The column widths are chosen so the table fits a single column; the "What" column uses `p{0.42\linewidth}` to wrap long descriptions.
+- The PRD §5 per-message table is carried as a LaTeX `tabular` with the same three columns (Message / Direction / Volume) and the same five rows (client logit upload, client confidence upload, client synthetic upload γ-only, student download, key-switch shares) per PRD lines 180–185.
+- The PRD §4.3 linear-accumulator content is paraphrased directly into Section~\ref{sec:linear_accumulator} with the canonical equation $\langle\theta_E\rangle = \langle\theta_0^\star\rangle + \sum_t \eta \cdot \langle g_t\rangle$ matching the memory `project_linear_accumulator` exactly. The per-step depth-3 budget is stated with the level-counting walkthrough (residual carry-over level-free, scalar-by-ciphertext learning-rate $+1$, addition level-free) verbatim from PRD lines 161–167.
+- The released-student inference-compatibility framing of operator replacement is contained to the closing paragraph of Section~\ref{sec:linear_accumulator} and matches cover-letter `reports/cover_letter_draft.md` §3 R1-W2 "Largely retired" framing. The operator-replacement accuracy triple $(\mathrm{Acc}_{\text{plain-ReLU}}, \mathrm{Acc}_{\text{plain-poly}}, \mathrm{Acc}_{\text{cipher}})$ is named explicitly and pointed at Section~\ref{sec:experiments}; the headline numbers themselves are not duplicated here per the numbers-freeze convention.
+- The A1 / A2 ablation labels of PRD §6.3 are preserved verbatim in the Two-Stage Initialisation subsection and forward-referenced to Section~\ref{sec:experiments} for the actual ablation table.
+- The PRD §4.3 "no bootstrapping at logN=14, scale=$2^{40}$, ring degree 16384" parameterisation is stated as concrete CKKS parameters in Section~\ref{sec:linear_accumulator}; the per-step latency / per-cell HE compute numbers are stated as orders of magnitude with a pointer to the TenSEAL prototype anchor at `sec:exp_setup`.
+
+### Notes for downstream issues
+
+- The figure on lines 4–9 of `methodology.tex` (`HE-IFD_sysFigure.pdf` with caption describing the rejected block-wise protocol) is inside the preserve region and was not touched by this commit. The caption text refers to "block boundary" and "block by block"; this is a stale figure that lives in `FL_TDSC/figures/`, which is forbidden territory for this issue. The figure replacement (and matching caption rewrite) is tracked separately and would land under a figure-replacement issue (issue 11 / 12 territory). This is the only remaining "block-wise" surface in `methodology.tex` outside the dropped subsections.
+- Introduction §I-A's C1 / C2 cross-refs currently target `\ref{sec:phase2}` (a less specific label) instead of the new `\ref{sec:linear_accumulator}` / `\ref{sec:ensemble_target}`. The retargeting belongs to a follow-up issue 17 patch, not this commit; both targets resolve correctly as-is.
+
+### Syntactic checks performed (cluster compile gate unavailable, `pdflatex.fmt` missing per `ralph/prompt.md` §FEEDBACK LOOPS)
+
+- Balanced braces on `FL_TDSC/methodology.tex` (`python3 -c "t=open(...).read(); print(t.count('{'), t.count('}'))"` reports 286/286; down from the pre-edit 779/779, with the net −493/−493 matching the wholesale deletion of the rejected protocol's content).
+- Forbidden-term grep against the new in-scope content (lines 32 onwards): zero matches for any of `per-block ciphertext`, `block-wise training`, `magnitude regularisation`, `magnitude regularization`, `TrainableBridge`, `scale-aligned loss`, `block boundary`, `bridge construction`, `K{+}1 block`, `MagReg`, `NormMSE`, `PolyBasicBlock`, `scale-anchored`, `per-channel collaborative normalisation`.
+- Every `\cite{...}` in the new content (`baruch2022methodology`, `garimella2021sisyphus`, `cheon2017ckks`, `mouchet2021multiparty`, `lattigo`, `lyubashevsky2010ideal`, `sav2021poseidon`, `zhang2020batchcrypt`) resolves to a single entry in `FL_TDSC/references.bib`.
+- Every `\ref{...}` in the new content (`alg:cfd`, `sec:architecture`, `sec:bg_server_inference`, `sec:conclusion`, `sec:ensemble_target`, `sec:exp_setup`, `sec:experiments`, `sec:linear_accumulator`, `sec:phase2`, `sec:phase3`, `sec:threat_binding`, `tab:cfd_phases`, `tab:comm_complexity`) resolves to a `\label{...}` declared in `FL_TDSC/*.tex`.
+- Every external `\ref{...}` pointing into `methodology.tex` from sibling `.tex` files (`sec:phase2`, `sec:phase3`, `sec:arch_transformer`, `sec:privacy_proof`, `sec:methodology`, `sec:framework`) continues to resolve. Zero dangling references are introduced by this commit.
+- The new `\label{sec:linear_accumulator}`, `\label{sec:ensemble_target}`, `\label{sec:twostage_init}`, `\label{alg:cfd}`, `\label{tab:cfd_phases}`, `\label{tab:comm_complexity}`, `\label{eq:linear_accumulator}` are unique paper-wide.
