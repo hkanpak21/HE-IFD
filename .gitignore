@@ -40,6 +40,18 @@ Thumbs.db
 # Slurm scratch
 slurm-*.out
 *.sbatch.out
+results/smoke_*.out
+results/smoke_*.err
+results/dpdm_*.out
+results/dpdm_*.err
+results/coboost_*.out
+results/coboost_*.err
+results/fedmd_*.out
+results/fedmd_*.err
+results/feddiff_*.out
+results/feddiff_*.err
+results/fedkt_*.out
+results/fedkt_*.err
 
 # Symlink to legacy tree (lives elsewhere on scratch)
 legacy

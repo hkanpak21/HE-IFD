@@ -80,4 +80,42 @@ srun python prototypes/cfd_tenseal_smoke.py --logn 14 --scale 40 --N 10 --probe 
 
 ## Comments
 
-(none yet)
+### 2026-05-17 -- agent build + sbatch submission
+
+**Script structure** (`prototypes/cfd_tenseal_smoke.py`, ~430 LOC):
+
+- `create_context(log_n, scale_bits)` -- builds CKKS context, coeff modulus chain `[60] + [40]*6 + [60]` = 360 bits at logN=14 (depth 6 levels, well inside the 438-bit 128-bit-security cap). Returns `(ctx, bits)` so the chain lands in the JSON output.
+- `chunk_rows_to_ciphertexts` / `encrypt_vector` / `serialize_bytes` -- helpers. Per-row ciphertexts for the smoke (|P|=5000 rows of C=10 << 8192 slots).
+- `beta_aggregation` (Phase 1, PRD section 4.2) -- `alpha_i^2` via one ct*ct mult, then `Y_tilde[r] = sum_i alpha_i^2 * T_i[r]` via N ct*ct mults + N-1 ct+ct adds per row. Depth 2.
+- `lambda_variance` (Phase 2, PRD section 4.2) -- `V[r] = (1/N) sum_i T_i[r]^2 - ((1/N) sum_i T_i[r])^2`; one ct*ct square + one ct*ct square-of-mean. Depth 2.
+- `StudentMLP` -- plaintext 2-layer MLP 10 -> 16 -> 10 with tanh activation. Forward runs in plaintext per the linear-accumulator construction.
+- `poly_softmax_degree3` -- degree-3 polynomial in the encrypted residual; depth 2 (x^2 then x^3 = x^2 * x). Probe-only; not on the gradient path because the chain rule unrolls to plaintext factors under plaintext student weights.
+- `linear_accumulator_step` (Phase 3, PRD section 4.3) -- plaintext forward + encrypted residual (depth 0) + ct*pt gradient (depth +1) + ct*pt lr (depth +1) + ct+ct accumulator update (depth 0). Per-step depth <= 3 from a level-0 residual, matching the PRD claim.
+
+**Sbatch submission.** Job ID **1079639** submitted at 2026-05-17, RUNNING on ai05 in the `t4_ai` partition (QoS `comx29`, account `comx29`) within seconds of submission. The wrapper logs the conda env, tenseal version, and `nvidia-smi -L` for the record. The smoke is CPU-bound (TenSEAL has no GPU path); the GPU GRES request is for partition gating per the issue spec template.
+
+**Conda env.** The dedicated `he_ifd_smoke` env did not exist at agent runtime; the wrapper falls back to `he_ofl` (Python 3.9, tenseal==0.3.16, numpy, torch==2.3.0+cu121) which already has the minimal install. Documented at the top of the wrapper.
+
+**Expected wall-clock budget per phase** (single T4 node, single CPU core dominated):
+
+| Phase | Operation count | Estimate |
+|---|---|---|
+| Context setup | 1 | 1-3 s (galois + relin keygen at logN=14) |
+| Encrypt N*|P| logits | N*|P| = 50,000 ct | 60-180 s (1-4 ms/ct) |
+| Phase 1 beta-aggregation | N + N*|P| ct*ct mults + |P|*(N-1) adds | 60-180 s |
+| Phase 2 lambda variance | 2*|P| ct*ct mults + 2*|P| pt*ct + |P| subs | 30-90 s |
+| Phase 3 SGD step | 1 ct*ct poly probe + |P| ct*pt + 1 update | 5-20 s |
+| Decryption + serialisation | |P| decrypts | 10-30 s |
+
+Total estimate **150-500 s** (~3-8 minutes), comfortably inside the 30-min cap from issue AC bullet 3.
+
+**TenSEAL-specific gotchas noted from the upstream API and the legacy reference (`/scratch/hkanpak21/HE_Distillation_legacy_2026-05-05/toy_ifd_real_he.py`):**
+
+1. **Auto-rescaling and level matching.** TenSEAL silently inserts rescale-after-mult and auto-matches levels in additions; the level counter is not user-visible. This means a `ct + ct` between operands at different levels (e.g. after one branch has been multiplied once and the other has not) still works -- TenSEAL inserts the implicit modulus-switch -- but the absolute level pointer advances to the deeper branch. The depth audit in the script is therefore *analytical* (counted from the multiplicative chain) rather than read off from a TenSEAL accessor.
+2. **Negation is free.** `-enc` is depth-0 (no scalar multiplication). The smoke uses this for `residual = -enc_target + plain_student_logits` per the legacy idiom on line 277 of `toy_ifd_real_he.py`.
+3. **Scalar folding saves one level per multiplied factor.** Multiplying by `(1/N) * inv_P * lr` as a single plaintext scalar consumes 1 level versus 3 if applied sequentially. The script applies `-lr` and `1/P` separately for clarity in the depth audit, but the analytical depth count is unchanged because both are pt*ct.
+4. **`coeff_mod_bit_sizes` shape.** Required as `[60, scale, scale, ..., scale, 60]` -- the leading and trailing 60-bit primes are mandatory for CKKS in TenSEAL; the middle `n_levels` entries are at `scale_bits` (40 here). Total bits must stay <= 438 at logN=14 for 128-bit security.
+5. **`serialize()` returns bytes including metadata.** The ciphertext-bytes-per-phase measurement uses `len(ctxt.serialize())`, which matches the wire-format size for the communication-cost axis of A2.
+6. **The smoke uses TenSEAL's single-key API.** The multiparty key-switch is the production target, not part of this smoke (issue spec lines 17 and the gating note); the assertion "all simulated key shares" is satisfied by single-key decryption because TenSEAL's threshold-key infrastructure is upstream-pending.
+
+**Outstanding.** Move to `issues/done/` only after job 1079639 (or a follow-up) completes successfully and the `results/smoke_tenseal_1079639.json` blob shows all three assertions passing (`beta_err_lt_1e-3`, `lambda_err_lt_1e-3`, `sgd_cosine_gt_0_99`). Per the issue spec the runtime ACs (lines 62-66) require the actual run to land.
