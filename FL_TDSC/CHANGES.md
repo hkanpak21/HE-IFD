@@ -695,3 +695,33 @@ After:
 (deferred; regenerated from threat_model_v2.svg via rsvg-convert --format=pdf
 once librsvg2-bin is available on the build host or via Overleaf compile)
 ```
+
+---
+
+## 11. A11 protocol-overview SVG (2026-05-17)
+
+New protocol-overview figure authored at `FL_TDSC/figures/protocol_overview_v2.svg`, the figure-level counterpart of issue 05's R2-Q6 textual rewrite and the companion to `threat_model_v2.svg` (CHANGES.md §5.1). Per the action plan A11 figure-spec update (`reports/2026-05-10_tdsc_rejection_action_plan.md` lines 420–446) and PRD §4.1 phase table + §4.3 linear-accumulator clarification (`reports/2026-05-05_methodology_pivot.md` lines 134–168). Single panel, plain SVG (no TikZ), left-to-right phase progression 0 → 1 → 2a → 2b → 2c → 3, with Phase 2c rendered as two parallel tracks (plaintext student state on top, encrypted teacher-induced delta accumulator on bottom) and a `+` composition glyph at the 2c → 3 boundary emitting `⟨θ_E⟩ = ⟨θ_0*⟩ + ⟨Δ⟩` in Server colour. Palette per `feedback-colors` memory: Client `#C6A87D`, Server `#8B9EA8`, lightened Client `#E0D2BA` for the plaintext-student track, ColorBrewer Dark2 `#1B9E77` for key-share arrows and `#D95F02` for encrypted upload arrows. Editor-friendly group structure: `<g id="phase-0">`, `<g id="phase-1">`, `<g id="phase-2a">`, `<g id="phase-2b">`, `<g id="plaintext-track">`, `<g id="encrypted-track">`, `<g id="composition">`, `<g id="phase-3">`, `<g id="legend">`. Build wiring (one-line `rsvg-convert` invocation) recorded in `.agent-output/12-build-line.txt` for the orchestrator to fold into `jobs/build_figures.sh` alongside the existing `threat_model_v2.svg` line.
+
+### FL_TDSC/figures/protocol_overview_v2.svg (new file)
+Reason: action plan A11 requires a protocol-overview figure that (i) walks the reader through the six CFD phases 0/1/2a/2b/2c/3 from PRD §4.1, (ii) visually distinguishes the plaintext warm-started student track from the encrypted accumulator track inside Phase 2c per the 2026-05-17 figure-spec update, and (iii) renders the composition `⟨θ_E⟩ = ⟨θ_0*⟩ + ⟨Δ⟩` at the 2c → 3 boundary so anyone reading the figure can see at a glance that the student forward pass runs in plaintext during training and only the teacher-induced delta is encrypted. This pre-empts R2-Q6 visually and is the figure-level counterpart of issue 05's R2-Q6 rewrite (`methodology.tex` / `background.tex`).
+Before:
+```
+(no file)
+```
+After:
+```
+Hand-authored plain SVG at 1200 × 520 viewBox, single panel, left-to-right six-phase progression with vertical dashed `#666666` phase separators between phases. Phase 0 shows the server box (`#8B9EA8`) with a DKG glyph and three client boxes (`#C6A87D`) emitting key-share arrows (`#1B9E77`) that converge into the server, producing a `collective pk` label below. Phase 1 shows three client boxes (re-drawn) each emitting `⟨T_i(P)⟩` encrypted-teacher-logit arrows (`#D95F02`) into Phase 2's region. Phase 2a shows a lightened server box (`#8B9EA8` at 50% opacity) labelled `plaintext SGD on (P, y_P) → θ_0*` with the annotation `α only · plaintext`. Phase 2b shows a full-opacity server box labelled `Ỹ = Σ_i ⟨α_i^β⟩ · ⟨T_i(P)⟩` with the `depth ≤ 3` annotation, and emits two arrows into Phase 2c (a dashed server-grey arrow carrying `θ_0* (plaintext)` into the top track, and an orange `⟨Ỹ⟩` arrow into the bottom track). Phase 2c contains two parallel tracks: the top track `<g id="plaintext-track">` is a box with the lightened-Client fill `#E0D2BA`, labelled `θ (plaintext)` with a `forward pass` glyph and the annotation `student state in the clear`; the bottom track `<g id="encrypted-track">` is a Server-coloured `#8B9EA8` box labelled `⟨Δ⟩ (encrypted accumulator over ⟨g_t⟩)` with the `accumulate ⟨g_t⟩` glyph, the recurrence `Δ ← Δ + lr · ⟨g_t⟩`, and the annotation `per-step depth ≤ 3` (matching `project-linear-accumulator`). At the Phase 2c → 3 boundary a `<g id="composition">` group renders a bracket joining the two tracks, a circled `+` glyph (a `<circle>` with a centred `+` `<text>`), and an output arrow in Server colour `#8B9EA8` carrying the label `⟨θ_E⟩ = ⟨θ_0*⟩ + ⟨Δ⟩`. Phase 3 shows the server doing a `key-switch` (annotated `collective key-switch`) and three fan-out arrows to three client boxes, the bottom one labelled `θ_E (plaintext)` to make the plaintext delivery explicit. A legend at the bottom maps the five visual idioms (Client, Server/encrypted state, plaintext student state, key-share arrows, encrypted upload arrows, server-side encrypted arrows, plaintext delivery) to their colours.
+```
+
+### jobs/build_figures.sh (orchestrator-owned; build-line recorded in sidecar)
+Reason: `jobs/build_figures.sh` is owned by the orchestrator in this wave; the per-figure build line is recorded in `.agent-output/12-build-line.txt` for the orchestrator to append next to the existing `threat_model_v2.svg → threat_model_v2.pdf` invocation. The line is the standard `rsvg-convert --format=pdf …` form used for `threat_model_v2.svg` (`rsvg-convert` is unavailable on the login node, so no PDF is produced in this wave).
+Before:
+```
+(orchestrator-owned; not edited in this issue)
+```
+After:
+```
+rsvg-convert --format=pdf FL_TDSC/figures/protocol_overview_v2.svg -o FL_TDSC/figures/protocol_overview_v2.pdf
+```
+
+---

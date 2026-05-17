@@ -16,3 +16,4 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 rsvg-convert --format=pdf FL_TDSC/figures/threat_model_v2.svg -o FL_TDSC/figures/threat_model_v2.pdf
+rsvg-convert --format=pdf FL_TDSC/figures/protocol_overview_v2.svg -o FL_TDSC/figures/protocol_overview_v2.pdf
