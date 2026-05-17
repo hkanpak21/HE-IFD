@@ -90,7 +90,7 @@ We thank R3 for the recommendation to resubmit-as-new and have followed that pat
 
 ## Section 6 — Closing
 
-We are grateful for the rigour of the previous review cycle. The substantial revisions invited by the AE have been read at the level of *protocol design* rather than *prose polish*, and we believe the resubmission is materially stronger across all three reviewer axes (security, evaluation, presentation). We look forward to the editorial decision.
+We are grateful for the rigour of the previous review cycle. The substantial revisions invited by the AE have been read at the level of *protocol design* rather than *prose polish*, and we believe the resubmission is materially stronger across all three reviewer axes (security, evaluation, presentation). Out-of-scope adversaries — actively malicious clients, encrypted-feature poisoning, and the open problem of HE-compatible robust aggregation — are acknowledged explicitly in §VII Future Work, with verifiable HE cited as the natural extension via the Viand SoK and Atapoor et al.'s lattice-SNARK construction for CKKS. We look forward to the editorial decision.
 
 Sincerely,
 [Author block: corresponding author Sav, with Kanpak, Küpçü]

@@ -550,3 +550,50 @@ After:
 5. **γ-variant (A5).** DP-DDPM profiling, then per-client generators, then γ cells in the A4 grid. Conditional on A4 leaving compute headroom; γ is the optional extension that distinguishes us from the public-probe-only baseline.
 6. **Reference items.** Verifiable-HE citation (Viand SoK + a concrete vCKKS reference) added to `FL_TDSC/references.bib` and cited once in §threat-model. Deferred $(\varepsilon_T, \delta_T), (\varepsilon_P, \delta_P), (\varepsilon_G, \delta_G)$ decisions become defensible only once experimental utility numbers exist; the paper's claim is structural in the interim.
 ```
+
+---
+
+## 8. A9 future-work paragraph on malicious / colluding clients (2026-05-17)
+
+Action plan A9 (resolving R2-Q4 / AE-4) calls for an explicit out-of-scope acknowledgement of actively malicious clients and the open problem of robust aggregation under HE. Concrete edits across `conclusion.tex`, `references.bib`, and `reports/cover_letter_draft.md`. The verifiable-HE citation pair is `viand2023verifiable` (SoK, already in bib per §5.2) plus a newly added `atapoor2024vfhe` (Cryptology ePrint 2024/582, lattice-SNARK construction for verifiable CKKS).
+
+### conclusion.tex:15 (Future work paragraph)
+Reason: the existing one-sentence future-work line conflated three unrelated tracks (upload-cost reduction, Byzantine-resilient aggregation under HE, bootstrapping-free schedules) into a single comma-separated list and named "Byzantine-resilient aggregation under encryption" without distinguishing it from the unaddressed malicious-client threat surface that R2-Q4 / AE-4 explicitly raised. Split into two paragraphs: the first retains the in-scope efficiency-style future work (upload-cost + bootstrapping-free schedules); the second is a half-page dedicated discussion of the out-of-scope adversaries, naming encrypted-feature poisoning, model poisoning under encryption, and the open problem of HE-compatible robust aggregation. The new paragraph also cites verifiable HE (Viand SoK + Atapoor lattice-SNARK CKKS) as the natural extension toward verifiable correctness (orthogonal to robustness) and states the out-of-scope status unambiguously per the `feedback-paper-voice` register.
+Before:
+```
+Future work includes reducing the one-shot upload cost (${\sim}$115\,GB per client at $N{=}4$, $\sim 460$ GB total across all clients) through ciphertext compression and feature selection, integrating Byzantine-resilient aggregation under encryption, and investigating bootstrapping-free training schedules for deeper HE-compatible architectures.
+```
+After:
+```
+Future work along the present threat model includes reducing the one-shot upload cost (${\sim}$115\,GB per client at $N{=}4$, $\sim 460$ GB total across all clients) through ciphertext compression and feature selection, and investigating bootstrapping-free training schedules for deeper HE-compatible architectures.
+
+A second class of future work concerns adversaries that fall outside the present threat model. The semi-honest assumption on clients bounds the contribution to passive collusion; an actively malicious client can craft adversarial logit ciphertexts (encrypted-feature poisoning) or submit ciphertexts engineered to bias the aggregate $\widetilde{Y}$ (model poisoning under encryption), neither of which the binding invariant of Section~\ref{sec:bg_server_inference} addresses. The classical plaintext defences against these threats---coordinate-wise median aggregation, Krum, trimmed mean---do not directly port to the homomorphic setting, since their rank-based statistics are not realisable as low-depth arithmetic circuits on ciphertexts. A robust aggregation primitive compatible with HE is therefore an open problem distinct from the present work's contribution. The natural extension toward verifiable correctness---independent of robustness---is verifiable HE: a server proves in zero knowledge that the computation it performed on ciphertexts was the prescribed one, as surveyed by~\cite{viand2023verifiable} and concretised for CKKS by~\cite{atapoor2024vfhe}. We do not claim defence against any of these adversaries; we acknowledge the threat surface explicitly so that the contribution of HE-IFD is correctly bounded to what is established here: privacy of the client data against a semi-honest server colluding with up to $N{-}1$ clients.
+```
+
+### references.bib:625-626 (atapoor2024vfhe — new entry)
+Reason: `viand2023verifiable` already provides the SoK-level survey of verifiable HE; A9 also requires one concrete vCKKS reference so the natural-extension claim is anchored to a specific construction, not just a survey. Atapoor et al. 2024 (Cryptology ePrint 2024/582, "Verifiable FHE via Lattice-Based SNARKs") instantiates verifiable CKKS via lattice-SNARKs and is the standard recent citation in the verifiable-CKKS line. Filed as `@misc` with `howpublished = {Cryptology ePrint Archive, Paper 2024/582}` because the ePrint version is the canonical reference until a venue acceptance lands; this matches the `@misc`/`howpublished` convention already used in this file for ePrint citations.
+Before:
+```
+(no entry — atapoor2024vfhe did not exist)
+```
+After:
+```
+@misc{atapoor2024vfhe,
+  title        = {Verifiable {FHE} via Lattice-Based {SNARKs}},
+  author       = {Atapoor, Shahla and Baghery, Karim and Pereira, Hilder V. L. and Spiessens, Jannik},
+  howpublished = {Cryptology ePrint Archive, Paper 2024/582},
+  year         = {2024},
+  url          = {https://eprint.iacr.org/2024/582}
+}
+```
+
+### reports/cover_letter_draft.md:91-93 (§6 Closing — one-line cross-reference)
+Reason: the cover letter's §2 AE-4 row already points reviewers at §VII Future Work for the out-of-scope-adversaries acknowledgement. The §6 Closing did not restate this, leaving the editorial reader to backtrack through the §2 table to find the cross-reference. Per issue 26's "Section 6 (or the appropriate out-of-scope concerns section)" guidance, added one sentence at the end of §6 that names the three out-of-scope adversaries explicitly and names both citations (Viand SoK + Atapoor lattice-SNARK CKKS) so the closing paragraph can stand alone without requiring the table.
+Before:
+```
+We are grateful for the rigour of the previous review cycle. The substantial revisions invited by the AE have been read at the level of *protocol design* rather than *prose polish*, and we believe the resubmission is materially stronger across all three reviewer axes (security, evaluation, presentation). We look forward to the editorial decision.
+```
+After:
+```
+We are grateful for the rigour of the previous review cycle. The substantial revisions invited by the AE have been read at the level of *protocol design* rather than *prose polish*, and we believe the resubmission is materially stronger across all three reviewer axes (security, evaluation, presentation). Out-of-scope adversaries — actively malicious clients, encrypted-feature poisoning, and the open problem of HE-compatible robust aggregation — are acknowledged explicitly in §VII Future Work, with verifiable HE cited as the natural extension via the Viand SoK and Atapoor et al.'s lattice-SNARK construction for CKKS. We look forward to the editorial decision.
+```
