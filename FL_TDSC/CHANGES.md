@@ -469,3 +469,84 @@ These do not affect the manuscript and therefore do not generate before/after en
 - The `zhang2022dense` page range (21414–21428) is the most likely NeurIPS 2022 page range for arXiv:2112.12371 based on the proceedings ordering but has not been cross-checked against the official NeurIPS 2022 proceedings index in this audit. Verify on Overleaf compile / proceedings DOI before submit.
 - The `kerkouche2023client` vs `kerkouche2023property` pair retained from CHANGES.md §5.2 still has identical titles; the author/venue distinction was accepted on faith from the §5.2 dup-check. If this is a single paper double-entered under two keys, one must be merged before submit. Out of scope for this pass.
 - Both pre-added entries (`dockhorn2022dpdm`, `viand2023verifiable`) must receive their first `\cite{...}` during A1 (methodology rewrite); flag for the rewriter so the BibTeX warning surface stays empty.
+
+---
+
+## 7. PRD staleness patch (2026-05-17)
+
+The PRD (`reports/2026-05-05_methodology_pivot.md`) had drifted from the user-confirmed protocol semantics. Four internal-consistency patches applied in a single pass. Line numbers refer to the **pre-patch** PRD (baseline commit `8be000f`). No FL_TDSC `.tex` files are touched by this section — patches are PRD-internal — but the entries are recorded here so the audit trail through `CHANGES.md` covers every editable surface of the resubmission, per the rule in PRD §9.5.6.
+
+### reports/2026-05-05_methodology_pivot.md:161-167 (§4.3 — HE depth budget per encrypted SGD step)
+Reason: §4.3 described a full encrypted forward+backward chain with depth +1 per multiplied weight matrix and a projected 1k–5k bootstraps per protocol run. The 2026-05-17 user clarification (action plan A3 "Depth budget clarification", line 222) established that the protocol does **not** forward-propagate through encrypted weights: the encrypted student $\langle\theta\rangle$ is a linear accumulator over encrypted gradient contributions, $\langle\theta_E\rangle = \langle\theta_0\rangle + \sum_t \text{lr}\cdot\langle\text{grad}_t\rangle$, with per-step depth ≤ 3 (residual + scalar × CT for lr + addition). LeNet-5 fits TenSEAL's 7-level chain at logN=14 trivially. No bootstrapping is required for any cell in the §7.2 grid. The PRD prose has been rewritten to match.
+Before:
+```
+The student forward pass on plaintext probe inputs (α) is plaintext-times-ciphertext at each layer (depth +1 per multiplied weight matrix), with polynomial activations (depth +deg). KL loss against $\widetilde Y$ at temperature $T_{\text{eff}}$: depth +1 for the softmax-replacement polynomial. Backprop: another forward-equivalent depth pass.
+
+Single-step depth budget for the student: $O(\text{depth}_{\text{forward}})$, refreshed each step by bootstrapping (CKKS bootstrap once per accumulated depth budget, typically every few steps with reasonable parameters). γ-variant adds $O(\text{depth}_{\text{forward}})$ from the encrypted-input forward, doubling the per-step depth.
+
+Concrete parameter sketch (logN=15, scale=2^40, ring degree 32768): bootstrap latency on a single core ≈ 5–15 s; expected 1k–5k bootstraps per protocol run for an MNIST-scale student; total HE compute on the order of hours on commodity hardware. Numbers to be tightened by the TenSEAL prototype.
+```
+After:
+```
+The protocol does not forward-propagate through encrypted weights. The encrypted student $\langle\theta\rangle$ is a **linear accumulator** over encrypted gradient contributions:
+$$\langle\theta_E\rangle = \langle\theta_0\rangle + \sum_t \text{lr} \cdot \langle\text{grad}_t\rangle,$$
+where each $\langle\text{grad}_t\rangle$ is a per-layer SGD update computed from the encrypted teacher signal applied to plaintext student state at step $t$. There is no backward chain rule on encrypted intermediate activations; there is no per-layer depth accumulation across the network's depth. The student's forward pass at step $t$ runs in plaintext on the current decrypted-for-loss-only copy of the weights — only the *update* contribution is encrypted and added to $\langle\theta\rangle$.
+
+**Per-step encrypted depth ≤ 3 levels**: residual carry-over of $\langle\theta\rangle$ (depth 0), scalar plaintext × ciphertext multiplication for the learning rate (depth +1), and addition to the accumulator (depth 0). The dominant cost is the encrypted ensemble-target depth of §4.2 (loss-side depth-3 from raw logits), incurred once per probe pass, not once per step.
+
+LeNet-5 (or any deeper student architecture) fits TenSEAL's 7-level chain trivially at logN=14. No bootstrapping is required for any cell in the §7.2 grid. γ-variant inherits the same construction; the per-step depth budget is unchanged because the encrypted synthetic probe enters the loss-side computation of §4.2, not the per-step update.
+
+Concrete parameter sketch (logN=14, scale=$2^{40}$, ring degree 16384): per-step ciphertext-arithmetic latency on a single core ≈ tens of milliseconds; total HE compute on the order of minutes per cell on commodity hardware. Numbers to be tightened by the TenSEAL prototype (A2) and the end-to-end single-cell run (A3).
+```
+
+### reports/2026-05-05_methodology_pivot.md:93 (§2.7 — threat-model figure specification, final paragraph)
+Reason: §2.7 closed with the figure being produced from a TikZ source. Appendix A "Closed" (line 422 of the pre-patch PRD) is the authoritative subsequent decision: plain SVG at `FL_TDSC/figures/threat_model_v2.svg`, converted to PDF via `rsvg-convert --format=pdf` at build time, no TikZ. §2.7 has been brought into sync with Appendix A.
+Before:
+```
+I will produce this figure as `FL_TDSC/figures/threat_model_v2.pdf` from a TikZ source. The TikZ source is queued as a follow-up and will be added to `FL_TDSC/CHANGES.md` when committed.
+```
+After:
+```
+The figure is rendered as a plain **SVG** at `FL_TDSC/figures/threat_model_v2.svg` — single panel, minimal decoration, two fills (client `#C6A87D`, server `#8B9EA8`), plain rectangles + arrows + text. The PDF used by the manuscript is produced at build time via `rsvg-convert --format=pdf threat_model_v2.svg -o threat_model_v2.pdf`. No TikZ. The SVG source and the regenerated PDF are committed together and logged in `FL_TDSC/CHANGES.md`. Authority for this decision: Appendix A "Closed".
+```
+
+### reports/2026-05-05_methodology_pivot.md:252,256 (§8 — TenSEAL prototype, step 5 + forgetting point (a))
+Reason: §8 step 5 described "one encrypted forward pass + encrypted-backprop one step", which presumed the full-encrypted-training depth model patched out of §4.3. Forgetting point (a) deferred bootstrapping to a Lattigo prototype. Under the linear accumulator, step 5 is a single-update demonstration of the $\langle\theta_E\rangle = \langle\theta_0\rangle + \sum \text{lr}\cdot\langle\text{grad}\rangle$ recurrence, depth ≤ 3, no bootstrapping needed, the smoke stays inside TenSEAL. Both passages have been rewritten in lock-step with §4.3.
+Before:
+```
+5. Performs one encrypted forward pass of a 2-layer MLP student against $\widetilde Y$, computes encrypted KL with polynomial-softmax approximation, encrypted-backprop one step, asserts the gradient direction matches plaintext.
+
+...
+
+Forgetting points to watch: (a) TenSEAL automatically rescales after each multiplication and consumes a level; bootstrap is **not directly supported in TenSEAL** — for any depth beyond initial-ladder, we either deepen the level chain or move to Lattigo/PyFHEL. The smoke test will use only enough depth to demonstrate the §4.2 computation. Anything that requires bootstrapping (the encrypted student SGD loop) is deferred to a Lattigo prototype.
+```
+After:
+```
+5. Demonstrates one linear-accumulator update step: plaintext student forward on the probe, plaintext gradient computation against a decryption-for-loss-only copy of $\widetilde Y$, encryption of the resulting gradient, and addition $\langle\theta\rangle \mathrel{+}= \text{lr}\cdot\langle\text{grad}\rangle$. Verifies the $\langle\theta_E\rangle = \langle\theta_0\rangle + \sum_t \text{lr}\cdot\langle\text{grad}_t\rangle$ recurrence over $\geq 10$ steps and asserts the decrypted $\langle\theta_E\rangle$ matches a plaintext-equivalent linear accumulator within CKKS noise tolerance (max element-wise error < $10^{-3}$ at scale $2^{40}$).
+
+...
+
+Forgetting points to watch: (a) The linear-accumulator construction consumes ≤ 3 levels per step (residual carry-over of $\langle\theta\rangle$, scalar plaintext × ciphertext for the learning rate, addition). TenSEAL's 7-level chain at logN=14 absorbs this with margin; **no bootstrapping is needed** and the smoke stays entirely inside TenSEAL. The previously-planned Lattigo migration for bootstrapping support is dropped.
+```
+
+### reports/2026-05-05_methodology_pivot.md:379-387 (§10 — Open items, in priority order)
+Reason: §10 predated the 2026-05-17 priority reframe in `reports/2026-05-10_tdsc_rejection_action_plan.md` §0 and ordered work items in roughly authoring-order rather than priority-order. The list also still carried "Generate `figures/threat_model_v2.pdf` from a TikZ source" (stale per the §2.7 patch above) and item 7 "execute §9 archive + restructure" (already completed; the HE_IFD tree exists). Re-ordered to mirror the action-plan priority ladder: A4 (P1, headline tri-axis grid) → A3 (P2, end-to-end CKKS calibration) → A7 (P3, MIA evidence) → text/figure work (A1, A8, A11, A10) → γ-variant (A5) → reference items (verifiable-HE citation, deferred ε/δ decisions). Stale and completed items dropped.
+Before:
+```
+1. Verify the verifiable-HE citation (Viand SoK + a concrete vCKKS reference). Add to `references.bib` and reference once in §threat-model.
+2. Decide $(\varepsilon_T, \delta_T)$ and $(\varepsilon_P, \delta_P)$ (and $(\varepsilon_G, \delta_G)$ for γ). Defer until experimental utility numbers exist; the paper's claim is structural.
+3. Generate `figures/threat_model_v2.pdf` from a TikZ source.
+4. Draft `prototypes/cfd_tenseal_smoke.py` and run on the t4_ai partition (never login-node).
+5. Author `jobs/cfd_v2_*.sh` and execute the §7.2 grid.
+6. Apply the §6 / §7 / §8 numbers to `FL_TDSC/methodology.tex` and `FL_TDSC/experiments.tex`. Log every textual change in `FL_TDSC/CHANGES.md`.
+7. Once user confirms, execute §9 archive + restructure.
+```
+After:
+```
+1. **A4 (P1, headline).** Execute the §7.2 tri-axis accuracy / communication / time grid on Valar `t4_ai`; report $\Delta_{\text{HE}} \leq 1$ pp at every cell. This is the cover-letter's headline-contribution evidence. Authoring `jobs/cfd_v2_*.sh` is the gating sub-task.
+2. **A3 (P2, calibration).** End-to-end CKKS run on a single cell with the linear-accumulator construction (§4.3); serves as anchor for the simulator-vs-real-HE gap claimed by A4. The A2 TenSEAL smoke (`prototypes/cfd_tenseal_smoke.py`, §8) is a prerequisite.
+3. **A7 (P3, privacy evidence).** Membership-inference attack (LiRA + loss-threshold) on the decrypted student weights $\theta_E$. The resubmission needs a concrete MIA number to back the structural privacy argument.
+4. **Text and figure work.** Methodology rewrite (A1), threat-model textual rewrite (A8), threat-model SVG (A11; see §2.7), abstract / §I-A rewrite (A10). Apply the §6 / §7 / §8 numbers to `FL_TDSC/methodology.tex` and `FL_TDSC/experiments.tex`. Log every textual change in `FL_TDSC/CHANGES.md` per the rule in §9.5.6 and the precedent set in §6 of that file.
+5. **γ-variant (A5).** DP-DDPM profiling, then per-client generators, then γ cells in the A4 grid. Conditional on A4 leaving compute headroom; γ is the optional extension that distinguishes us from the public-probe-only baseline.
+6. **Reference items.** Verifiable-HE citation (Viand SoK + a concrete vCKKS reference) added to `FL_TDSC/references.bib` and cited once in §threat-model. Deferred $(\varepsilon_T, \delta_T), (\varepsilon_P, \delta_P), (\varepsilon_G, \delta_G)$ decisions become defensible only once experimental utility numbers exist; the paper's claim is structural in the interim.
+```
