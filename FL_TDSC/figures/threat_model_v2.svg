@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="serif" font-size="13">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="16" font-weight="bold">HE-IFD threat model: N-1 client-server coalition, t=N threshold decryption</text>
+
+  <!-- Public probe (top) -->
+  <rect x="370" y="60" width="160" height="40" fill="#EAE6DC" stroke="#333"/>
+  <text x="450" y="85" text-anchor="middle">Public probe P (plaintext)</text>
+
+  <!-- Coalition lasso around colluding clients + server -->
+  <rect x="20" y="120" width="860" height="380" fill="none" stroke="#999" stroke-dasharray="6 4" rx="8"/>
+  <text x="40" y="140" font-style="italic" fill="#666">Adversary coalition: server + (N-1) semi-honest clients</text>
+
+  <!-- Clients column -->
+  <text x="120" y="170" text-anchor="middle" font-weight="bold">N clients</text>
+
+  <!-- Honest client (highlighted, outside-feeling but still in the coalition box visually) -->
+  <rect x="40" y="190" width="160" height="40" fill="#C6A87D" stroke="#333" stroke-width="2"/>
+  <text x="120" y="215" text-anchor="middle">C_h  (honest)</text>
+
+  <!-- Colluding clients -->
+  <rect x="40" y="240" width="160" height="40" fill="#C6A87D" stroke="#333" stroke-dasharray="3 2" opacity="0.55"/>
+  <text x="120" y="265" text-anchor="middle">C_1  (colluding)</text>
+
+  <rect x="40" y="290" width="160" height="40" fill="#C6A87D" stroke="#333" stroke-dasharray="3 2" opacity="0.55"/>
+  <text x="120" y="315" text-anchor="middle">C_2  (colluding)</text>
+
+  <text x="120" y="350" text-anchor="middle" font-style="italic" fill="#666">…</text>
+
+  <rect x="40" y="365" width="160" height="40" fill="#C6A87D" stroke="#333" stroke-dasharray="3 2" opacity="0.55"/>
+  <text x="120" y="390" text-anchor="middle">C_{N-1}  (colluding)</text>
+
+  <!-- Per-client encrypted upload arrow -->
+  <line x1="200" y1="210" x2="560" y2="240" stroke="#333" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="370" y="200" text-anchor="middle" fill="#333">⟨T_i(P)⟩  encrypted teacher logits  (depth 0)</text>
+
+  <line x1="200" y1="260" x2="560" y2="260" stroke="#333" stroke-width="1" opacity="0.4" marker-end="url(#arrow)"/>
+  <line x1="200" y1="310" x2="560" y2="290" stroke="#333" stroke-width="1" opacity="0.4" marker-end="url(#arrow)"/>
+  <line x1="200" y1="385" x2="560" y2="320" stroke="#333" stroke-width="1" opacity="0.4" marker-end="url(#arrow)"/>
+
+  <!-- Server -->
+  <rect x="560" y="190" width="280" height="220" fill="#8B9EA8" stroke="#333" stroke-width="2"/>
+  <text x="700" y="215" text-anchor="middle" font-weight="bold" fill="#fff">Server (semi-honest)</text>
+
+  <rect x="580" y="235" width="240" height="50" fill="#fff" stroke="#333"/>
+  <text x="700" y="255" text-anchor="middle">⟨Σ_i α_i^β · T_i(P)⟩  encrypted</text>
+  <text x="700" y="272" text-anchor="middle" font-style="italic">aggregation, depth-bounded</text>
+
+  <rect x="580" y="305" width="240" height="85" fill="#fff" stroke="#333"/>
+  <text x="700" y="325" text-anchor="middle">⟨θ⟩ ← encrypted student SGD</text>
+  <text x="700" y="345" text-anchor="middle">on plaintext probe P,</text>
+  <text x="700" y="365" text-anchor="middle">target ⟨Σ_i α_i^β · T_i(P)⟩</text>
+  <text x="700" y="382" text-anchor="middle" font-style="italic">depth-bounded, calibrated noise</text>
+
+  <!-- Probe to server arrow (plaintext) -->
+  <line x1="450" y1="100" x2="630" y2="190" stroke="#666" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="565" y="135" text-anchor="middle" fill="#666" font-style="italic">P  (plaintext)</text>
+
+  <!-- Threshold key-switch (downward) -->
+  <line x1="700" y1="410" x2="120" y2="450" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="450" y="440" text-anchor="middle" font-weight="bold">θ_E  via threshold key-switch  (only ciphertext ever decrypted)</text>
+  <text x="450" y="458" text-anchor="middle" font-style="italic" fill="#666">requires all N secret-key shares (t = N)</text>
+
+  <!-- Footer -->
+  <text x="450" y="510" text-anchor="middle" fill="#333">
+    Binding invariant: no per-client logit ciphertext, no aggregate, no scalar — only θ_E — is ever threshold-decrypted.
+  </text>
+  <text x="450" y="528" text-anchor="middle" fill="#333">
+    Adversary view (server + N-1 colluders): IND-CPA-encrypted ciphertexts ∪ {plaintext P} ∪ {θ_E}; reduces to white-box on θ_E.
+  </text>
+  <text x="450" y="546" text-anchor="middle" fill="#666" font-style="italic">
+    γ-variant: replace plaintext P with encrypted client-side DP-DDPM samples; otherwise identical.
+  </text>
+</svg>

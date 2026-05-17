@@ -1,0 +1,48 @@
+# LaTeX build artefacts
+*.aux
+*.log
+*.toc
+*.bbl
+*.blg
+*.out
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.lof
+*.lot
+*.nav
+*.snm
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Conda / venv
+.conda/
+venv/
+.venv/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Slurm scratch
+slurm-*.out
+*.sbatch.out
+
+# Symlink to legacy tree (lives elsewhere on scratch)
+legacy
+
+# Local-only Claude state
+.claude/

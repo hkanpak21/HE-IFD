@@ -1,0 +1,110 @@
+\section{INTRODUCTION}
+\label{sec:introduction}
+
+Federated Learning (FL) prevents raw data sharing among clients, but joint model training can still leak information through repeated gradient exchange~\cite{zhu2019deep, so2023securing}. One-shot FL reduces communication overhead and privacy exposure by limiting communication to a single round, where intermediate gradient exchanges are not performed. However, if the transferred distillation targets are visible to the server in plaintext, the privacy risk remains~\cite{jagielski2023students}.
+
+Differential Privacy (DP) and secure aggregation partially address this risk, with their own limitations. Strong DP noise degrades distillation quality~\cite{shao2023selective}, while secure aggregation protects individual values without preventing the server from inspecting the aggregate~\cite{kerkouche2023client}. Homomorphic encryption (HE) provides end-to-end cryptographic protection; yet direct iterative HE training of deep models is prohibitively expensive due to multiplicative depth constraints~\cite{zhang2020batchcrypt, jin2023fedml, kanpak2024cure}. This motivates a distillation-based design that is both one-shot and HE-compatible. The main technical challenge is that HE computation supports only addition and multiplication over ciphertexts, whereas standard neural network operations, e.g., ReLU, batch normalisation, softmax, are non-polynomial. Recent work addresses the stability of polynomial activations for HE-compatible networks by deriving tighter ReLU approximations~\cite{agamennone2025polynomial} and proposing boundary-loss and gradient-clipping strategies for deep polynomial training~\cite{alhossain2025training}. However, these methods target centralised inference or single-model training. Stable and efficient training of deep polynomial student models under encrypted federated supervision, where heterogeneous clients produce targets with incompatible magnitude distributions, remains an open problem.
+
+% Also, while existing work on one-shot HE distillation focuses on encrypted inference~\cite{agamennone2025polynomial, alhossain2025training}, training deep student models efficiently under encryption remains an open problem.
+
+
+For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption. In knowledge distillation, a compact \emph{student} model learns by imitating the internal representations of a stronger pre-trained \emph{teacher}, rather than training directly on labelled data. In our setting, each client acts as a teacher by training a local model on its private data and contributing encrypted supervision signals derived from that model in a single communication round. The server then uses these signals to train a privacy-preserving student entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
+
+% For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption: clients contribute encrypted teacher supervision in a single round, and the server trains a privacy-preserving student model entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
+
+\subsection{Our Approach}
+We present \textbf{HE-IFD} (\textbf{H}omomorphic \textbf{E}ncryption-\textbf{I}ntermediate \textbf{F}eature \textbf{D}istillation), a framework in which individual client teacher outputs are protected during knowledge transfer and all subsequent server-side computation. The protocol operates in three phases:
+
+\begin{enumerate}
+\item \textbf{Local training.} Each client trains a standard teacher model (e.g., ResNet-18) on their private data partition, starting from a shared random initialisation.
+\item \textbf{Encrypted upload.} Each client runs its teacher model on its own data and records the inputs and outputs at each layer group boundary. We refer to these groups as \emph{blocks}. These input--output pairs tell the server what each block of the teacher produces, without revealing the raw data. Before encrypting, clients jointly agree on per-channel normalisation statistics so that features from different clients are on a comparable scale. The normalised pairs are then encrypted under Cheon--Kim--Kim--Song (CKKS) scheme and uploaded to the server in a single round; no further client interaction is needed.
+\item \textbf{Server-side encrypted distillation.} The server trains a HE-compatible architecture in which non-polynomial operations such as ReLU and batch normalisation are replaced with polynomial equivalents that can be evaluated directly on ciphertexts (e.g., PolyResNet-18) for the student model on the server, block by block, using only encrypted inputs and targets. Student weights, activations, gradients, and loss values are all ciphertext throughout training.
+\end{enumerate}
+
+The server never observes any individual teacher output, student weight, or intermediate activation in plaintext. It operates as a blind compute delegate that executes the distillation protocol on encrypted data. A key technical difficulty is training an HE-compatible network where non-polynomial operations (ReLU, batch normalisation) are replaced with polynomial equivalents that can be evaluated on ciphertexts, from encrypted intermediate supervision. Several compounding challenges make standard distillation approaches fail. 
+
+\par\noindent\textbf{Polynomial magnitude growth is a structural property of the network class.} A polynomial activation of degree $d$, composed across $L$ blocks, yields an end-to-end map of degree $d^L$ in its input. The induced upper bound on the activation magnitude grows doubly-exponentially in depth, regardless of how the polynomial coefficients are chosen, and this is what distinguishes polynomial deep networks from ReLU networks (whose composition is piecewise $1$-Lipschitz). The federated setting amplifies the effect: heterogeneous clients induce different distributions on each block boundary, and the HE-compatible analogue of batch normalisation, a static per-channel affine map fixed before training, cannot adapt across distributions. Magnitude control is therefore a structural requirement for polynomial deep networks under federated encryption, not a numerical workaround.
+
+\par\noindent\textbf{Training and inference distributions diverge under block-wise composition.} Decomposing the student into blocks and training each block independently confines the CKKS multiplicative depth to a single block (see Section~\ref{sec:ckks_prelim}), but it also introduces a covariate shift across the composition: block $k$ is trained on the distribution of teacher-produced inputs and evaluated on the distribution of student-produced inputs from the frozen prefix. The composed map cannot be consistent at inference unless this gap is closed. We close it through trainable per-channel affine bridges, initialised from the uploaded feature statistics, followed by a sequential refinement pass that exposes each block to its actual inference-time distribution. Both steps remain server-side and require no additional client communication.
+
+
+\par\noindent\textbf{The distillation loss must be scale-aware in magnitude and shape-aware in feature space.} Standard mean squared error is not invariant to the sign asymmetry between ReLU and polynomial features and admits unbounded magnitude drift, which is then amplified through every frozen downstream block. The structural argument above forces the loss to control \textit{shape} and \textit{magnitude} separately. We use a channel-normalised mean-squared error to align the feature shape independently of scale, combined with a log-ratio penalty $(\log\,\sigma_{\hat{f}}/\sigma_{\tilde{f}})^2$ on the per-channel standard deviations. The log-ratio form is the natural choice for matching magnitudes: it is symmetric in over- and under-scaling and invariant to a uniform rescaling of the targets, properties that a plain $\ell_2$ scale penalty does not satisfy.
+
+Together, these three properties of polynomial deep networks under federated encryption (doubly-exponential magnitude growth, train-inference covariate shift across composed blocks, and the need for a scale-aware loss) determine the design of the protocol. Section~\ref{sec:methodology} develops each of them; Section~\ref{sec:experiments} reports the resulting accuracy on CIFAR-10 and FashionMNIST across three architectures (ResNet-18, SimpleCNN, ViT-B/32), confirms that the framework generalises beyond a single model family, and shows that the encrypted student tracks the centralised plaintext Oracle and exceeds the mean individual teacher across all heterogeneity settings.
+
+
+% A key technical difficulty is training an HE-compatible student, which uses polynomial activations and HE-compatible normalisation layers instead of ReLU and batch normalisation, from encrypted supervision. Standard end-to-end distillation diverges for this architecture. We solve this with training the model sequentially, one block at a time, where each block is an independent sub-network spanning a few layers, with each block receiving fresh ciphertexts, combined with magnitude-regularised normalised MSE loss and student-input training. This approach yields stable convergence and competitive accuracy across our CIFAR-10 and Fashion-MNIST experiments.
+
+
+\subsection{Contributions}
+Our contributions are as follows:
+
+\begin{enumerate}
+\item We propose, for the first time, progressive stacking for training HE-compatible student models fully under encryption: a block-by-block procedure with magnitude-regularised normalised MSE loss that achieves stable distillation of a full PolyResNet-18 student (11.17M parameters) from encrypted teacher features, where standard end-to-end distillation diverges.
+
+\item We present a novel, fully encrypted one-shot distillation protocol in which clients upload encrypted per-block feature pairs in a single communication round and the server performs all distillation computation (forward pass, loss evaluation, backward pass, and weight update) entirely on ciphertexts, without exposing any plaintext data at any point during training.
+
+\item We introduce client-side collaborative normalisation, a lightweight technique in which each client normalises its teacher outputs to zero mean and unit variance per channel before encryption, which eliminates magnitude incompatibility across heterogeneous teachers and prevents training divergence for $N \geq 4$ clients.
+
+\item We provide a comprehensive empirical evaluation of HE-IFD across three architectures (ResNet-18, SimpleCNN, ViT-B/32), client counts $N \in \{1, 2, 4, 8, 16, 32\}$, and heterogeneity levels $\alpha \in \{0.1, 1.0\}$, including accuracy comparisons against differential privacy baselines, membership inference attack analysis, and communication and computation cost analysis.
+\end{enumerate}
+
+%The remainder of this paper is organized as follows. Section~\ref{sec:background} surveys federated learning, knowledge distillation, privacy mechanisms, and homomorphic encryption. Section~\ref{sec:methodology} presents the HE-IFD framework. Section~\ref{sec:experiments} reports experimental results. Section~\ref{sec:conclusion} concludes.
+
+    
+
+% \section{INTRODUCTION}
+% \label{sec:introduction}
+
+% Federated Learning (FL) prevents raw data sharing among clients, but joint model training can still leak information through repeated gradient exchange~\cite{zhu2019deep, so2023securing}. One-shot FL reduces communication overhead and privacy exposure by limiting communication to a single round, where intermediate gradient exchanges are not performed. However, if the transferred distillation targets are visible to the server in plaintext, the privacy risk remains~\cite{jagielski2023students}.
+
+% Differential Privacy (DP) and secure aggregation partially address this risk, with their own limitations. Strong DP noise degrades distillation quality~\cite{shao2023selective}, while secure aggregation protects individual values without preventing the server from inspecting the aggregate~\cite{kerkouche2023client}. Homomorphic encryption (HE) provides end-to-end cryptographic protection; yet direct iterative HE training of deep models is prohibitively expensive due to multiplicative depth constraints~\cite{zhang2020batchcrypt, jin2023fedml, kanpak2024cure}. This motivates a distillation-based design that is both one-shot and HE-compatible. The main technical challenge is that HE computation supports only addition and multiplication over ciphertexts, whereas standard neural network operations, e.g., ReLU, batch normalisation, softmax, are non-polynomial. Recent work addresses the stability of polynomial activations for HE-compatible networks---deriving tighter ReLU approximations~\cite{agamennone2025polynomial} and proposing boundary-loss and gradient-clipping strategies for deep polynomial training~\cite{alhossain2025training}, but these methods target centralised inference or single-model training. Stable and efficient training of deep polynomial student models under encrypted federated supervision, where heterogeneous clients produce targets with incompatible magnitude distributions, remains an open problem.
+
+% % Also, while existing work on one-shot HE distillation focuses on encrypted inference~\cite{agamennone2025polynomial, alhossain2025training}, training deep student models efficiently under encryption remains an open problem.
+
+
+
+
+% For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption. In knowledge distillation, a compact \emph{student} model learns by imitating the internal representations of a stronger pre-trained \emph{teacher}, rather than training directly on labelled data. In our setting, each client acts as a teacher by training a local model on its private data and contributing encrypted supervision signals derived from that model in a single communication round. The server then uses these signals to train a privacy-preserving student entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
+
+% % For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption: clients contribute encrypted teacher supervision in a single round, and the server trains a privacy-preserving student model entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
+
+% \subsection{Our Approach}
+% We present \textbf{HE-IFD} (\textbf{H}omomorphic \textbf{E}ncryption-\textbf{I}ntermediate \textbf{F}eature \textbf{D}istillation), a framework in which individual client teacher outputs are protected during knowledge transfer and all subsequent server-side computation. The protocol operates in three phases:
+
+% \begin{enumerate}
+% \item \textbf{Local training.} Each client trains a standard teacher model (e.g., ResNet-18) on their private data partition, starting from a shared random initialisation.
+% \item \textbf{Encrypted upload.} Each client runs its teacher model on its own data and records the inputs and outputs at each layer group boundary — we call these groups \emph{blocks}. These input--output pairs tell the server what each block of the teacher produces, without revealing the raw data. Before encrypting, clients jointly agree on per-channel normalisation statistics so that features from different clients are on a comparable scale. The normalised pairs are then encrypted under CKKS and uploaded to the server in a single round; no further client interaction is needed.
+% \item \textbf{Server-side encrypted distillation.} The server trains a HE-compatible architecture in which non-polynomial operations such as ReLU and batch normalisation are replaced with polynomial equivalents that can be evaluated directly on ciphertexts (e.g., PolyResNet-18) in the student model in server, block by block, using only encrypted inputs and targets. Student weights, activations, gradients, and loss values are all ciphertext throughout training.
+% \end{enumerate}
+
+% The server never observes any individual teacher output, student weight, or intermediate activation in plaintext. It operates as a blind compute delegate that executes the distillation protocol on encrypted data.
+
+% A key technical difficulty is training an HE-compatible student — which replaces ReLU with learnable degree-2 polynomial activations and batch normalisation with static per-channel affine layers — from encrypted intermediate supervision. Several compounding challenges make standard distillation approaches fail.
+
+% \par\noindent\textbf{Polynomial magnitude explosion.} The quadratic activation $ax^2 + bx$ amplifies feature magnitudes at every composition. An input of magnitude 5 produces roughly 11 after one block, 44 after two; across five blocks this can reach $10^4$, causing gradient overflow. The problem is exacerbated in the multi-client setting, where teachers trained on heterogeneous data partitions produce features with incompatible magnitude ranges, and the HE-compatible replacement for batch normalisation — a static per-channel scale-and-shift — cannot dynamically compensate.
+
+% \par\noindent\textbf{Training--distillation distribution gap.} Distilling block by block avoids CKKS depth accumulation, but training block $k$ on teacher-produced inputs creates a mismatch: at inference, block $k$ receives student-produced inputs from the frozen prefix. Without correction this collapses the composed model toward random accuracy. We address this through trainable per-channel affine bridges, initialised from uploaded feature statistics, followed by server-side sequential refinement that exposes each block to its actual inference-time distribution — without any additional client communication.
+
+% \par\noindent\textbf{Scale-anchored distillation loss.} Standard MSE is sensitive to the sign asymmetry between polynomial activations and ReLU features and allows unbounded magnitude drift that amplifies through frozen downstream blocks. Our loss combines channel-normalised MSE, which aligns feature \textit{shape} independently of scale, with a log-ratio penalty $(\log,\sigma_{\hat{f}}/\sigma_{\tilde{f}})^2$ that anchors the student's feature \textit{magnitude} to the teacher's. Unlike a plain $\ell_2$ scale penalty, the log-ratio form penalises multiplicative over- and under-scaling symmetrically and is scale-free.
+
+% Together these mechanisms yield stable convergence and competitive accuracy across our CIFAR-10 and Fashion-MNIST experiments under non-IID federated partitioning.
+
+% % A key technical difficulty is training an HE-compatible student, which uses polynomial activations and HE-compatible normalisation layers instead of ReLU and batch normalisation, from encrypted supervision. Standard end-to-end distillation diverges for this architecture. We solve this with training the model sequentially, one block at a time, where each block is an independent sub-network spanning a few layers, with each block receiving fresh ciphertexts, combined with magnitude-regularised normalised MSE loss and student-input training. This approach yields stable convergence and competitive accuracy across our CIFAR-10 and Fashion-MNIST experiments.
+
+
+% \subsection{Contributions}
+% Our contributions are as follows:
+
+% \begin{enumerate}
+% \item We propose, for the first time, progressive stacking for training HE-compatible student models fully under encryption: a block-by-block procedure with magnitude-regularised normalised MSE loss that achieves stable distillation of a full PolyResNet-18 student (11.17M parameters) from encrypted teacher features, where standard end-to-end distillation diverges.
+
+% \item We present a novel fully encrypted one-shot distillation protocol in which clients upload encrypted per-block feature pairs in a single communication round and the server performs all distillation computation (forward pass, loss evaluation, backward pass, and weight update) entirely on ciphertexts, without exposing any plaintext data at any point during training.
+
+% \item We introduce client-side collaborative normalisation, a lightweight technique in which each client normalises its teacher outputs to zero mean and unit variance per channel before encryption, which eliminates magnitude incompatibility across heterogeneous teachers and prevents training divergence for $N \geq 4$ clients.
+
+% \item We provide a comprehensive empirical evaluation of HE-IFD across client counts ($N \in \{1, 2, 4, 8, 16\}$) and heterogeneity levels ($\alpha \in \{0.1, 0.5, 1.0, 100.0\}$), reporting accuracy, a privacy analysis against membership inference attacks, and a comparison with differential privacy baselines.
+% \end{enumerate}
+
+% %The remainder of this paper is organized as follows. Section~\ref{sec:background} surveys federated learning, knowledge distillation, privacy mechanisms, and homomorphic encryption. Section~\ref{sec:methodology} presents the HE-IFD framework. Section~\ref{sec:experiments} reports experimental results. Section~\ref{sec:conclusion} concludes.
+
