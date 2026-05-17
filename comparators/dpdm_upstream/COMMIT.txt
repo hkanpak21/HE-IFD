@@ -1,0 +1,4 @@
+29bb94d92bb5440a664dbaa915c06a7397ea9ff3
+# Pinned 2026-05-17 from https://github.com/nv-tlabs/DPDM (master HEAD: "updated TMLR")
+# Reference implementation for Dockhorn et al. "Differentially Private Diffusion Models", TMLR 2023.
+# Bibkey: dockhorn2022dpdm.

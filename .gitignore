@@ -49,3 +49,14 @@ legacy
 
 # Wave-orchestrator agent sidecars (merged into commits, then cleaned)
 .agent-output/
+
+# Vendored upstream comparator clones — full trees are large (datasets,
+# .git internals, model checkpoints) and reproducible from each vendor's
+# pinned COMMIT.txt SHA. We track only the audit trail (COMMIT.txt + any
+# patches we apply) and a top-level README. Rehydrate with the recipe in
+# comparators/README.md.
+comparators/**
+!comparators/README.md
+!comparators/*/
+!comparators/*/COMMIT.txt
+!comparators/*/PATCH-NOTES.md
