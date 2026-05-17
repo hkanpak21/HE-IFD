@@ -17,4 +17,9 @@ Entry template:
 
 ---
 
-(no entries yet)
+## 2026-05-17 — A2 — smoke-memory-budget
+
+- Tweak: sbatch --mem 16G → 64G for `jobs/smoke_tenseal.sh`
+- Reason: job 1079639 OOM-killed mid-encryption; TenSEAL key set + ciphertext-mult intermediates exceed 16 GB at logN=14 / N=10 / |P|=5000.
+- Report: reports/2026-05-17_tweak_smoke_memory.md
+- Impact: none on methodology; ≈ 30 min wall-clock to reconfirm the depth-≤-3 claim.

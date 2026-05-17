@@ -4,7 +4,7 @@
 #SBATCH --account=comx29
 #SBATCH --gres=gpu:tesla_t4:1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
+#SBATCH --mem=64G
 #SBATCH --time=00:30:00
 #SBATCH --job-name=smoke_tenseal
 #SBATCH --output=/scratch/hkanpak21/HE_IFD/results/smoke_tenseal_%j.log
