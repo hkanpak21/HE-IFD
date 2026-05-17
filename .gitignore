@@ -46,3 +46,6 @@ legacy
 
 # Local-only Claude state
 .claude/
+
+# Wave-orchestrator agent sidecars (merged into commits, then cleaned)
+.agent-output/
