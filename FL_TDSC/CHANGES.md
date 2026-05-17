@@ -653,3 +653,45 @@ After:
 - Every `\ref{...}` in the new section (`sec:phase2`, `sec:conclusion`, `sec:bg_server_inference`) resolves to a `\label{...}` in `FL_TDSC/*.tex`. The new `\label{sec:threat_binding}` is unique.
 
 **Follow-on cross-reference fix (orchestrator-applied during merge).** Issue 26's future-work paragraph at `conclusion.tex:17` pre-dated this section's new `\label{sec:threat_binding}` and consequently mis-cited `sec:bg_server_inference` (the inference-attack background) as the home of the binding invariant. Re-aimed at `sec:threat_binding` in this same commit so the cross-reference resolves to the actual binding-invariant paragraph from now on; the §8 entry above remains the historical record of issue 26's pre-fix state.
+
+---
+
+## 10. A11 threat-model SVG (2026-05-17)
+
+The threat-model figure called for by PRD section 2.7 and Appendix A "Closed" item (lines 421-422) has been hand-authored as plain SVG at `FL_TDSC/figures/threat_model_v2.svg`. The figure is single-panel, 800x600 px, with all eight elements from PRD section 2.7's spec: N=4 client boxes (one honest, three colluding) on the left; central server box with dashed ciphertext-boundary annotation; encrypted client-to-server arrows in ColorBrewer Dark2 teal `#1B9E77` carrying $\langle T_i(\mathcal P)\rangle$; encrypted server-to-client arrows in ColorBrewer Dark2 orange `#D95F02` carrying the collectively key-switched $\langle\theta_E\rangle$; a threshold-decryption gate inset (top right) showing N key-share triangles fanning into a t=N gate with a single plaintext output; and a side panel (lower right) enumerating the adversary's plaintext view (Subset 2 of PRD section 2.4). Client fill `#C6A87D` and server fill `#8B9EA8` exactly per the `feedback-colors` memory. No TikZ, no design-MCP detour: this matches the Appendix A "Closed" decision authoritatively.
+
+Build conversion to PDF is deferred to a node with `librsvg2-bin` installed (or Overleaf-side at submit time); `rsvg-convert` is not available on the Valar login node. The SVG-only deliverable is acceptable per the orchestrator's environmental note.
+
+### FL_TDSC/figures/threat_model_v2.svg
+Reason: PRD section 2.7 + Appendix A "Closed" call for a hand-authored plain-SVG threat-model figure with two fills (client `#C6A87D`, server `#8B9EA8`) and eight specified elements. The pre-existing 900x560 viewBox-style SVG in the same path predates the spec and omitted half the required content (no threshold-decryption gate inset, no side panel enumerating the plaintext view, no per-direction Dark2 colour discrimination on arrows). Rewritten in full as 800x600 with `<g id="...">` groupings for the major regions (`title`, `clients`, `server`, `upload-arrows`, `download-arrows`, `threshold-gate`, `adversary-view-panel`, `footer`) so the file is editor-friendly. `xmllint --noout` returns clean (exit 0, zero stderr).
+Before:
+```
+(file existed but was incomplete vs the eight-element spec; 900x560 viewBox, no
+threshold-decryption gate inset, no adversary's-plaintext-view side panel, single
+arrow direction, no Dark2 colour discrimination, no `<g id>` groupings)
+```
+After:
+```
+800x600 px plain SVG, 14 rects + 17 lines + 7 paths + 59 text elements; all eight
+PRD section 2.7 elements present (N=4 client boxes with one honest + three colluding,
+server box with dashed IND-CPA boundary annotation, per-direction upload/download
+encrypted arrows in ColorBrewer Dark2 teal `#1B9E77` / orange `#D95F02`, threshold-
+decryption gate inset with N key-share triangles -> t=N gate -> theta_E plaintext
+output, side panel enumerating adversary's plaintext view as four bullets, title
+"Threat model: semi-honest server + up to N-1 colluding clients"). Client fill
+`#C6A87D` x5 (four client rects + one legend swatch), server fill `#8B9EA8` x3
+(server rect + threshold-gate body + legend swatch).
+```
+
+### FL_TDSC/figures/threat_model_v2.pdf
+Reason: the figure's matching PDF (`\includegraphics{...}` resolution target for `methodology.tex`) is regenerated from the SVG via `rsvg-convert --format=pdf FL_TDSC/figures/threat_model_v2.svg -o FL_TDSC/figures/threat_model_v2.pdf`. `rsvg-convert` is not installed on the Valar login node (per `valar` memory + orchestrator note), so the PDF regeneration is deferred to Overleaf-side build (or a future ralph iteration on a node with `librsvg2-bin` installed). The SVG-only deliverable is acceptable per the orchestrator brief; the build line is recorded in `jobs/build_figures.sh` (via this iteration's sidecar `.agent-output/11-build-line.txt`) for re-runnability.
+Before:
+```
+(stale PDF exists at this path from the pre-spec SVG; will be overwritten by the
+deferred rsvg-convert pass)
+```
+After:
+```
+(deferred; regenerated from threat_model_v2.svg via rsvg-convert --format=pdf
+once librsvg2-bin is available on the build host or via Overleaf compile)
+```
