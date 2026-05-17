@@ -66,13 +66,7 @@ In the same broader category, Vanilla FedAvg~\cite{mcmahan2017communication} is 
 
 
 %% ─────────────────────────────────────────────────────
-\par\noindent\textbf{Motivation for One-Shot Communication and Homomorphic Encryption.}
-% \label{sec:bg_motivation}
-One-shot federated learning~\cite{guha2019oneshot, wang2025towards} limits client--server communication to a single round, eliminating the iterative exposure that facilitates multi-round attacks. Knowledge distillation suits this setting naturally: clients train local teachers and transfer knowledge to a server-side student in a single step. However, data heterogeneity causes inconsistent teacher logits, and as shown above, even this single round of plaintext transfer remains exploitable by the server. Encrypting the transferred knowledge is therefore necessary, not optional.
-
-Homomorphic encryption (HE)~\cite{cheon2017ckks} provides end-to-end cryptographic protection without injecting noise, avoiding the utility--privacy tradeoff of DP. However, applying HE to standard iterative training is structurally expensive. The systems reviewed in Section~\ref{sec:bg_he_fl} (POSEIDON, BatchCrypt, FedSHE) all encrypt per-round gradient updates and therefore exhaust the multiplicative-depth budget of CKKS~\cite{cheon2017ckks} (further discussed in Section~\ref{sec:ckks_prelim}) in every round; bootstrapping~\cite{cheon2018bootstrapping} refreshes the budget but at substantial latency. One-shot settings resolve this tension: ciphertexts are used once, and block-independent training with fresh ciphertexts confines the depth budget to a single block of the student rather than the full network. This principle was recently validated for encrypted MLP training~\cite{pirillo2025reboot}. HE-IFD extends it to federated one-shot distillation over heterogeneous clients.
-
-DP partially addresses plaintext leakage but degrades the distillation signal. Applying local DP causes severe accuracy drops (up to $70\%$ on CIFAR-100 at $\epsilon = 0.1$~\cite{gad2024communication}), and one-shot settings consume the entire privacy budget immediately, precluding amplification across rounds. At meaningful privacy levels ($\epsilon \leq 1$), DP reduces FedMD to near random-guessing accuracy~\cite{sun2021fedmdnfdp}. HE avoids this tradeoff entirely.
+% Motivation paragraphs moved to introduction.tex §I-B Motivation (label sec:intro_motivation) per R3-3.
 
 \section{Preliminaries: CKKS Homomorphic Encryption}
 \label{sec:ckks_prelim}

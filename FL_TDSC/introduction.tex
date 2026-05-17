@@ -12,6 +12,15 @@ For this reason, we focus on one-shot federated knowledge distillation under hom
 
 % For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption: clients contribute encrypted teacher supervision in a single round, and the server trains a privacy-preserving student model entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
 
+\subsection{Motivation}
+\label{sec:intro_motivation}
+
+One-shot federated learning~\cite{guha2019oneshot, wang2025towards} limits client--server communication to a single round, eliminating the iterative exposure that facilitates multi-round attacks. Knowledge distillation suits this setting naturally: clients train local teachers and transfer knowledge to a server-side student in a single step. However, data heterogeneity causes inconsistent teacher logits, and as shown in Section~\ref{sec:bg_server_inference}, even this single round of plaintext transfer remains exploitable by the server. Encrypting the transferred knowledge is therefore necessary, not optional.
+
+Homomorphic encryption (HE)~\cite{cheon2017ckks} provides end-to-end cryptographic protection without injecting noise, avoiding the utility--privacy tradeoff of DP. However, applying HE to standard iterative training is structurally expensive. The systems reviewed in Section~\ref{sec:bg_he_fl} (POSEIDON, BatchCrypt, FedSHE) all encrypt per-round gradient updates and therefore exhaust the multiplicative-depth budget of CKKS~\cite{cheon2017ckks} (further discussed in Section~\ref{sec:ckks_prelim}) in every round; bootstrapping~\cite{cheon2018bootstrapping} refreshes the budget but at substantial latency. One-shot settings resolve this tension: ciphertexts are used once, and block-independent training with fresh ciphertexts confines the depth budget to a single block of the student rather than the full network. This principle was recently validated for encrypted MLP training~\cite{pirillo2025reboot}. HE-IFD extends it to federated one-shot distillation over heterogeneous clients.
+
+DP partially addresses plaintext leakage but degrades the distillation signal. Applying local DP causes severe accuracy drops (up to $70\%$ on CIFAR-100 at $\epsilon = 0.1$~\cite{gad2024communication}), and one-shot settings consume the entire privacy budget immediately, precluding amplification across rounds. At meaningful privacy levels ($\epsilon \leq 1$), DP reduces FedMD to near random-guessing accuracy~\cite{sun2021fedmdnfdp}. HE avoids this tradeoff entirely.
+
 \subsection{Our Approach}
 We present \textbf{HE-IFD} (\textbf{H}omomorphic \textbf{E}ncryption-\textbf{I}ntermediate \textbf{F}eature \textbf{D}istillation), a framework in which individual client teacher outputs are protected during knowledge transfer and all subsequent server-side computation. The protocol operates in three phases:
 

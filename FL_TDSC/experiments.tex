@@ -133,7 +133,7 @@ We validate that CKKS operations in our simulation match real encrypted computat
 
 \textbf{Multiplicative depth.} During training, all parameters and data are ciphertexts. A single block training step requires approximately 12 levels, feasible with $\mathcal{N}{=}32768$ (18 levels at 128-bit security) without bootstrapping. Cascade refinement requires bootstrapping to refresh levels between blocks, with each bootstrap taking approximately 20 seconds per ciphertext.
 
-\textbf{Future directions.} Recent work on stable polynomial network training~\cite{agamennone2025polynomial, alhossain2025training} suggests that improved activation initialisation may eliminate the need for cascade refinement, confining the entire protocol to the per-block depth budget. This would remove the bootstrapping requirement entirely and further optimize our framework.
+% Future-directions paragraph moved to conclusion.tex (Extensions and Future Directions, label sec:conclusion_extensions) per R3-6.
 
 
 

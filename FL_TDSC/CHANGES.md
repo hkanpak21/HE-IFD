@@ -968,3 +968,129 @@ Inserted subsections (in the new `methodology.tex`):
 - Every `\ref{...}` in the new content (`alg:cfd`, `sec:architecture`, `sec:bg_server_inference`, `sec:conclusion`, `sec:ensemble_target`, `sec:exp_setup`, `sec:experiments`, `sec:linear_accumulator`, `sec:phase2`, `sec:phase3`, `sec:threat_binding`, `tab:cfd_phases`, `tab:comm_complexity`) resolves to a `\label{...}` declared in `FL_TDSC/*.tex`.
 - Every external `\ref{...}` pointing into `methodology.tex` from sibling `.tex` files (`sec:phase2`, `sec:phase3`, `sec:arch_transformer`, `sec:privacy_proof`, `sec:methodology`, `sec:framework`) continues to resolve. Zero dangling references are introduced by this commit.
 - The new `\label{sec:linear_accumulator}`, `\label{sec:ensemble_target}`, `\label{sec:twostage_init}`, `\label{alg:cfd}`, `\label{tab:cfd_phases}`, `\label{tab:comm_complexity}`, `\label{eq:linear_accumulator}` are unique paper-wide.
+
+---
+
+## 14. A11 structural moves: motivation R3-3 + future-directions R3-6 (2026-05-17)
+
+Action plan A11 (lines 420–446 of `reports/2026-05-10_tdsc_rejection_action_plan.md`) calls for two localised .tex restructurings raised by R3 ("R3-3 motivation belongs in §I, not §II-C" and "R3-6 §V-F future directions belongs outside feasibility analysis"). Both are mechanical cut-paste moves with label renames; no prose was rewritten beyond a single pointer fix flagged below ("as shown above" → `Section~\ref{sec:bg_server_inference}` after losing local context). The figure-replacement portion of A11 (R3-4) is out of scope for issue 16 and is being landed by separate issues. The two moves leave each motivation/future-work paragraph in exactly one live location and preserve every cross-reference in `FL_TDSC/*.tex`.
+
+### Move 1: §II-motivation → §I-Motivation (R3-3)
+
+Source: `FL_TDSC/background.tex:68-75` (pre-edit). Target: `FL_TDSC/introduction.tex:15-22` (post-edit). The three motivation paragraphs that previously sat at the end of §II (between §II-E "Encrypted Federated Learning Systems" and §III "Preliminaries: CKKS Homomorphic Encryption", marked as a `\par\noindent\textbf{Motivation for One-Shot Communication and Homomorphic Encryption.}` block with a commented-out `\label{sec:bg_motivation}`) have been lifted verbatim into `FL_TDSC/introduction.tex` as a new `\subsection{Motivation}` placed BEFORE the issue-17-finalised `\subsection{Our Approach}`. The new subsection carries the live label `\label{sec:intro_motivation}`. The pre-edit commented-out `% \label{sec:bg_motivation}` was unreferenced (verified by `grep -rEn '\\(ref|label)\{sec:bg_motivation' FL_TDSC/*.tex`: four hits, all comment-only), so no referrer rename was required; the dead label has been retired alongside the moved prose. In the post-edit state §I now reads §I-A "Motivation" → §I-B "Our Approach" → §I-C "Contributions" (LaTeX auto-numbering), matching the advisor's R3-3 directive that the reader sees the why before the what. Subsection placement was chosen as BEFORE §I-A rather than AFTER §I-A "Contributions" because the latter would force the reader through approach + contributions before the motivation, which inverts the advisor's intent.
+
+#### background.tex:68-75 (pre-edit) → background.tex:68-69 (post-edit, marker only)
+Reason: the three motivation paragraphs (one-shot motivation, HE motivation, DP comparison) duplicate the §I preamble's argument and read as the lead-in to §III "Preliminaries" rather than as a §II "Related Work" subsection. The advisor's R3-3 highlight flagged the placement as structural: the motivation must precede the protocol description, not follow the related-work survey. Cut from background.tex with a single-line breadcrumb comment so any future reader who searches for the old prose finds the new location. The pre-existing %%-rule separator above the old block is kept; it now precedes the §III heading directly.
+
+Before:
+```
+%% ─────────────────────────────────────────────────────
+\par\noindent\textbf{Motivation for One-Shot Communication and Homomorphic Encryption.}
+% \label{sec:bg_motivation}
+One-shot federated learning~\cite{guha2019oneshot, wang2025towards} limits client--server communication to a single round, eliminating the iterative exposure that facilitates multi-round attacks. Knowledge distillation suits this setting naturally: clients train local teachers and transfer knowledge to a server-side student in a single step. However, data heterogeneity causes inconsistent teacher logits, and as shown above, even this single round of plaintext transfer remains exploitable by the server. Encrypting the transferred knowledge is therefore necessary, not optional.
+
+Homomorphic encryption (HE)~\cite{cheon2017ckks} provides end-to-end cryptographic protection without injecting noise, avoiding the utility--privacy tradeoff of DP. However, applying HE to standard iterative training is structurally expensive. The systems reviewed in Section~\ref{sec:bg_he_fl} (POSEIDON, BatchCrypt, FedSHE) all encrypt per-round gradient updates and therefore exhaust the multiplicative-depth budget of CKKS~\cite{cheon2017ckks} (further discussed in Section~\ref{sec:ckks_prelim}) in every round; bootstrapping~\cite{cheon2018bootstrapping} refreshes the budget but at substantial latency. One-shot settings resolve this tension: ciphertexts are used once, and block-independent training with fresh ciphertexts confines the depth budget to a single block of the student rather than the full network. This principle was recently validated for encrypted MLP training~\cite{pirillo2025reboot}. HE-IFD extends it to federated one-shot distillation over heterogeneous clients.
+
+DP partially addresses plaintext leakage but degrades the distillation signal. Applying local DP causes severe accuracy drops (up to $70\%$ on CIFAR-100 at $\epsilon = 0.1$~\cite{gad2024communication}), and one-shot settings consume the entire privacy budget immediately, precluding amplification across rounds. At meaningful privacy levels ($\epsilon \leq 1$), DP reduces FedMD to near random-guessing accuracy~\cite{sun2021fedmdnfdp}. HE avoids this tradeoff entirely.
+
+\section{Preliminaries: CKKS Homomorphic Encryption}
+```
+After:
+```
+%% ─────────────────────────────────────────────────────
+% Motivation paragraphs moved to introduction.tex §I-B Motivation (label sec:intro_motivation) per R3-3.
+
+\section{Preliminaries: CKKS Homomorphic Encryption}
+```
+
+#### introduction.tex:13-14 (pre-edit, insertion site) → introduction.tex:15-22 (post-edit, new \subsection{Motivation})
+Reason: §I-A "Our Approach" was finalised by issue 17 (the four-properties C1–C4 rewrite at lines 24-35 of the pre-edit state, post-issue-17), so the §I-Motivation insert must not modify the existing §I-A. The chosen placement is BEFORE `\subsection{Our Approach}`, immediately after the §I preamble's third paragraph at pre-edit line 11 and its trailing commented-out backup at line 13. This positions Motivation as the structural lead-in to Our Approach. One pointer fix: the source paragraph's "as shown above" referred to the §II-B "Privacy Risks of Federated Distillation" content that adjoined it in the old location; after the move, "above" would (mis)point to the §I preamble's DP/SA paragraph. The phrase has been retargeted to `Section~\ref{sec:bg_server_inference}` (the canonical label for the inference-attack discussion), which preserves the original semantic intent without introducing new prose. No other rewording.
+
+Before:
+```
+% For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption: clients contribute encrypted teacher supervision in a single round, and the server trains a privacy-preserving student model entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
+
+\subsection{Our Approach}
+```
+After:
+```
+% For this reason, we focus on one-shot federated knowledge distillation under homomorphic encryption: clients contribute encrypted teacher supervision in a single round, and the server trains a privacy-preserving student model entirely on ciphertexts, without ever accessing any plaintext data, weights, or activations.
+
+\subsection{Motivation}
+\label{sec:intro_motivation}
+
+One-shot federated learning~\cite{guha2019oneshot, wang2025towards} limits client--server communication to a single round, eliminating the iterative exposure that facilitates multi-round attacks. Knowledge distillation suits this setting naturally: clients train local teachers and transfer knowledge to a server-side student in a single step. However, data heterogeneity causes inconsistent teacher logits, and as shown in Section~\ref{sec:bg_server_inference}, even this single round of plaintext transfer remains exploitable by the server. Encrypting the transferred knowledge is therefore necessary, not optional.
+
+Homomorphic encryption (HE)~\cite{cheon2017ckks} provides end-to-end cryptographic protection without injecting noise, avoiding the utility--privacy tradeoff of DP. However, applying HE to standard iterative training is structurally expensive. The systems reviewed in Section~\ref{sec:bg_he_fl} (POSEIDON, BatchCrypt, FedSHE) all encrypt per-round gradient updates and therefore exhaust the multiplicative-depth budget of CKKS~\cite{cheon2017ckks} (further discussed in Section~\ref{sec:ckks_prelim}) in every round; bootstrapping~\cite{cheon2018bootstrapping} refreshes the budget but at substantial latency. One-shot settings resolve this tension: ciphertexts are used once, and block-independent training with fresh ciphertexts confines the depth budget to a single block of the student rather than the full network. This principle was recently validated for encrypted MLP training~\cite{pirillo2025reboot}. HE-IFD extends it to federated one-shot distillation over heterogeneous clients.
+
+DP partially addresses plaintext leakage but degrades the distillation signal. Applying local DP causes severe accuracy drops (up to $70\%$ on CIFAR-100 at $\epsilon = 0.1$~\cite{gad2024communication}), and one-shot settings consume the entire privacy budget immediately, precluding amplification across rounds. At meaningful privacy levels ($\epsilon \leq 1$), DP reduces FedMD to near random-guessing accuracy~\cite{sun2021fedmdnfdp}. HE avoids this tradeoff entirely.
+
+\subsection{Our Approach}
+```
+
+### Move 2: §V-F future-directions → §VI extensions (R3-6)
+
+Source: `FL_TDSC/experiments.tex:136` (pre-edit, the `\textbf{Future directions.}` paragraph at the end of §V-F "Encrypted Arithmetic Feasibility"). Target: `FL_TDSC/conclusion.tex:17-18` (post-edit). The other paragraphs in §V-F (`\textbf{Numerical precision}`, `\textbf{SIMD packing}`, `\textbf{Multiplicative depth}` at pre-edit lines 130-134) describe genuine measurement results from the TenSEAL feasibility analysis and remain in §V-F; only the `\textbf{Future directions.}` paragraph, which is forward-looking discussion rather than experimental measurement, is moved. The §V-F section heading and its `\label{sec:ckks_validation}` are preserved because they are referenced from experiments.tex:7. The moved paragraph is placed adjacent to but BEFORE the issue-26 malicious-clients "second class of future work" paragraph at `conclusion.tex:17` (pre-edit, now `:20` post-edit), so the conclusion's future-work region now reads "in-scope (existing) → extensions (moved-in) → out-of-scope (issue-26)". A new live label `\label{sec:conclusion_extensions}` anchors the moved paragraph so future cross-references can target it directly.
+
+#### experiments.tex:136 (pre-edit) → experiments.tex:136 (post-edit, marker only)
+Reason: the `\textbf{Future directions.}` paragraph is the only forward-looking item in §V-F "Encrypted Arithmetic Feasibility"; the three preceding paragraphs are concrete measurements. The advisor's R3-6 highlight is structural: feasibility analysis must report what was measured, not what could be done next, because reviewers stop reading at the perceived end of §V and miss the future work. The other three paragraphs in §V-F remain in place. The section heading `\subsection{Encrypted Arithmetic Feasibility}` and its `\label{sec:ckks_validation}` are NOT moved (the label is referenced from `experiments.tex:7`).
+
+Before:
+```
+\textbf{Multiplicative depth.} During training, all parameters and data are ciphertexts. A single block training step requires approximately 12 levels, feasible with $\mathcal{N}{=}32768$ (18 levels at 128-bit security) without bootstrapping. Cascade refinement requires bootstrapping to refresh levels between blocks, with each bootstrap taking approximately 20 seconds per ciphertext.
+
+\textbf{Future directions.} Recent work on stable polynomial network training~\cite{agamennone2025polynomial, alhossain2025training} suggests that improved activation initialisation may eliminate the need for cascade refinement, confining the entire protocol to the per-block depth budget. This would remove the bootstrapping requirement entirely and further optimize our framework.
+```
+After:
+```
+\textbf{Multiplicative depth.} During training, all parameters and data are ciphertexts. A single block training step requires approximately 12 levels, feasible with $\mathcal{N}{=}32768$ (18 levels at 128-bit security) without bootstrapping. Cascade refinement requires bootstrapping to refresh levels between blocks, with each bootstrap taking approximately 20 seconds per ciphertext.
+
+% Future-directions paragraph moved to conclusion.tex (Extensions and Future Directions, label sec:conclusion_extensions) per R3-6.
+```
+
+#### conclusion.tex:15-17 (pre-edit, insertion site) → conclusion.tex:15-20 (post-edit, with new \label{sec:conclusion_extensions})
+Reason: the issue spec instructs placement "adjacent to but BEFORE the malicious-clients out-of-scope paragraph that issue 26 added (line 17 in current state)" so the conclusion's future-work region reads in-scope → extensions → out-of-scope. The pre-edit line-15 in-scope paragraph already mentions "investigating bootstrapping-free training schedules for deeper HE-compatible architectures" in abstract; the moved-in §V-F paragraph specifies the concrete mechanism (improved activation initialisation per Agamennone 2025 and Al-Hossain 2025). The two paragraphs are therefore complementary: line 15 is the "what" and the moved paragraph is the "how / citation anchor". Insertion is as a standalone paragraph, not as a `\subsection`, because §VI already lacks any subsections (single un-subdivided section) and adding one mid-section would require restructuring all neighbours. A bare `\label{sec:conclusion_extensions}` on its own line anchors the moved paragraph for cross-reference; in LaTeX a label outside a `\section{...}`/`\subsection{...}`/`\caption{...}` resolves to the enclosing section number (here, §VI), which is the right target. Issue-26's malicious-clients paragraph immediately following is preserved verbatim.
+
+Before:
+```
+Future work along the present threat model includes reducing the one-shot upload cost (${\sim}$115\,GB per client at $N{=}4$, $\sim 460$ GB total across all clients) through ciphertext compression and feature selection, and investigating bootstrapping-free training schedules for deeper HE-compatible architectures.
+
+A second class of future work concerns adversaries that fall outside the present threat model.
+```
+After:
+```
+Future work along the present threat model includes reducing the one-shot upload cost (${\sim}$115\,GB per client at $N{=}4$, $\sim 460$ GB total across all clients) through ciphertext compression and feature selection, and investigating bootstrapping-free training schedules for deeper HE-compatible architectures.
+
+\label{sec:conclusion_extensions}
+Recent work on stable polynomial network training~\cite{agamennone2025polynomial, alhossain2025training} suggests that improved activation initialisation may eliminate the need for cascade refinement, confining the entire protocol to the per-block depth budget. This would remove the bootstrapping requirement entirely and further optimize our framework.
+
+A second class of future work concerns adversaries that fall outside the present threat model.
+```
+
+### Cross-reference decisions
+
+- **`sec:bg_motivation` → retired.** Pre-edit `background.tex:70` carried a commented-out `% \label{sec:bg_motivation}`. Pre-edit grep (`grep -rEn '\\(ref|label)\{sec:bg_motivation' FL_TDSC/*.tex`) reports four hits, all commented-out (one near-label at `background.tex:70`, three duplicate placeholders in commented-out legacy blocks at lines 133, 196, 258). No live referrer. The label has been retired alongside the moved prose; no rename of any live `\ref` was required.
+- **`sec:intro_motivation` → introduced.** New live label at `introduction.tex:16`. No incoming references yet from elsewhere in the manuscript; intended for forward-references from §III methodology or §VI conclusion in future edits.
+- **`sec:conclusion_extensions` → introduced.** New live label at `conclusion.tex:17`. No incoming references yet; intended for forward-references from §V-F (the source section that retains the experimental measurements) in future edits if a reverse pointer "see §VI for the extension we mention here" is wanted.
+- **`sec:ckks_validation` → preserved.** Live label at `experiments.tex:126` (the §V-F heading). Referenced from `experiments.tex:7`. Not touched.
+- **`sec:bg_he_fl`, `sec:bg_server_inference`, `sec:ckks_prelim` → preserved.** All three labels live in `background.tex`. The moved-in §I-B Motivation paragraphs forward-reference them; since `main.tex` includes `introduction.tex` before `background.tex`, the forward-reference resolves at the second pdflatex pass as expected (no inter-file ordering hazard).
+
+### Voice / structural decisions
+
+- **§I-B vs §I-A placement of new Motivation subsection.** Resolved as: insert `\subsection{Motivation}` BEFORE `\subsection{Our Approach}`. LaTeX auto-numbering will render the new layout as §I-A Motivation, §I-B Our Approach, §I-C Contributions. The issue spec calls this position "§I-B Motivation" by intent (the second subsection after the §I preamble) but in the rendered TOC it is §I-A. This naming-vs-position quibble is documented for clarity; the structural property the advisor demanded — motivation before approach — is satisfied.
+- **No `\subsection` for the moved-in conclusion extensions paragraph.** §VI is a single un-subdivided section, and introducing the first `\subsection` mid-section would require subdividing the entire conclusion to preserve consistency. The bare `\label{sec:conclusion_extensions}` is the lighter touch.
+- **`as shown above` → `Section~\ref{sec:bg_server_inference}` pointer fix.** This is the only prose modification in either move; everything else is byte-verbatim carry. The phrase "as shown above" in the source paragraph anchored on the adjacent §II-B inference-attack discussion; after the move, "above" would re-point to the §I preamble's DP/SA paragraph, which is the wrong context. The explicit `\ref{sec:bg_server_inference}` resolves to the same target the original phrase intended.
+
+### Syntactic checks performed (cluster compile gate unavailable, pdflatex.fmt missing)
+
+- Balanced braces on every touched file: `python3 -c "t=open('FL_TDSC/introduction.tex').read(); print(t.count('{'), t.count('}'))"` reports 109/109; `background.tex` 337/337; `experiments.tex` 512/512; `conclusion.tex` 17/17.
+- Every `\ref{sec:*}` in `FL_TDSC/*.tex` resolves to a live `\label{sec:*}` somewhere in `FL_TDSC/*.tex`. Cross-tally script (each `\ref` key looked up against live (non-comment) `\label` hits) reports zero orphans.
+- Both new labels `sec:intro_motivation` and `sec:conclusion_extensions` are unique (exactly one live `\label` per key).
+- Motivation paragraphs: 1 live occurrence in `introduction.tex` (correct), 0 in `experiments.tex`/`conclusion.tex` (correct), 3 commented-out residues in `background.tex` legacy-rewrite blocks (lines 128, 191, 253 — all `%`-prefixed, no compile impact).
+- Future-directions paragraph: 1 live occurrence in `conclusion.tex` (correct), 0 in `experiments.tex`/`introduction.tex`/`background.tex` (correct).
+- Issue-26 malicious-clients paragraph in `conclusion.tex:20` (post-edit) preserved verbatim.
+- Issue-17 §I-A "Our Approach" prose at `introduction.tex:24-35` (post-edit) preserved verbatim; the only adjacent change is the new `\subsection{Motivation}` block at lines 15-22 immediately preceding it.
+
+### Sidecar
+
+This entry will be merged into `FL_TDSC/CHANGES.md` as §14 by the orchestrator per the issue-16 spec's "no CHANGES.md touch by worker" rule.
