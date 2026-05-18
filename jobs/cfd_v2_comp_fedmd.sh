@@ -61,7 +61,12 @@ esac
 CONDA_BASE="/opt/ohpc/pub/compiler/conda3/latest"
 # shellcheck disable=SC1091
 source "${CONDA_BASE}/etc/profile.d/conda.sh"
-conda activate he_ifd_comparators
+if conda env list | grep -qE "^he_ifd_comparators[[:space:]]"; then
+    conda activate he_ifd_comparators
+else
+    echo "[fedmd] he_ifd_comparators not found, falling back to he_ofl"
+    conda activate he_ofl
+fi
 
 OUT_JSON="${RESULTS_DIR}/fedmd_smoke_${SLURM_JOB_ID:-local}.json"
 

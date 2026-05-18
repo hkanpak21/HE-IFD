@@ -74,7 +74,12 @@ esac
 # ---------- conda + env ----------
 # shellcheck disable=SC1091
 source /opt/ohpc/pub/compiler/conda3/latest/etc/profile.d/conda.sh
-conda activate he_ifd_comparators
+if conda env list | grep -qE "^he_ifd_comparators[[:space:]]"; then
+    conda activate he_ifd_comparators
+else
+    echo "[fedkt] he_ifd_comparators not found, falling back to he_ofl"
+    conda activate he_ofl
+fi
 
 cd "${FEDKT_ROOT}"
 

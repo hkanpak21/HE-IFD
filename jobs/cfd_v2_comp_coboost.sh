@@ -55,7 +55,12 @@ esac
 # (the upstream needs nothing beyond stock pytorch + tqdm).
 # shellcheck source=/dev/null
 source /opt/ohpc/pub/compiler/conda3/latest/etc/profile.d/conda.sh
-conda activate he_ifd_comparators
+if conda env list | grep -qE "^he_ifd_comparators[[:space:]]"; then
+    conda activate he_ifd_comparators
+else
+    echo "[coboost] he_ifd_comparators not found, falling back to he_ofl"
+    conda activate he_ofl
+fi
 
 # ---- path plumbing --------------------------------------------------------
 REPO_ROOT="/scratch/hkanpak21/HE_IFD"

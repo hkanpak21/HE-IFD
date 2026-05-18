@@ -61,4 +61,4 @@ nvidia-smi -L || true
 
 cd "${REPO_ROOT}"
 exec srun python -u prototypes/cfd_tenseal_smoke.py \
-    --logn 14 --scale 40 --N 10 --probe 5000 --C 10
+    --logn 14 --scale 40 --N 10 --probe 1000 --C 10

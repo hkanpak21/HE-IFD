@@ -1,0 +1,11 @@
+# Tweak — TenSEAL smoke probe size 5000 → 1000 (2026-05-17)
+
+*Motivation.* Slurm job 1079768 (resubmission with `--mem 64G` per `reports/2026-05-17_tweak_smoke_memory.md`) also OOM-killed at 10 min wall-clock, after surviving `create_context` exactly as the prior run did. The failure pattern (steady accumulation of memory followed by kill after ten minutes) is consistent with TenSEAL retaining ciphertext-multiplication intermediates inside the β-aggregation loop rather than a one-shot allocation that crosses a per-process limit. The fallback documented in `reports/2026-05-17_tweak_smoke_memory.md` ("If the next run also OOMs, reduce $|\mathcal P|$ from 5000 to 1000") is now applied.
+
+*Tweak.* `jobs/smoke_tenseal.sh` exec line, peripheral per PRD §9.5.2 ("probe size"), old value `--probe 5000` → new value `--probe 1000`. No change to logN, scale, $N$, $\beta$, the protocol primitives, or the linear-accumulator construction being smoked.
+
+*Expected effect.* At $|\mathcal P| = 1000$, each teacher's $(|\mathcal P|, C) = (1000, 10) = 10{,}000$-element logit tensor packs into $\lceil 10000/8192 \rceil = 2$ ciphertexts (vs $\lceil 50000/8192 \rceil = 7$ at $|\mathcal P| = 5000$). The β-aggregation working set shrinks by a factor of $\approx 3.5\times$, comfortably within 64 GB. The depth audit is unchanged — depth-per-step does not depend on probe size, only on the per-step circuit (residual + scalar × CT for lr + addition + the ensemble-target construction's depth-3 multiply chain). The three correctness assertions (β-aggregation max-error < $10^{-3}$, λ-variance max-error < $10^{-3}$, gradient cosine-sim > 0.99) all remain valid at the smaller probe size; they are properties of the primitives, not the dataset scale.
+
+*Fallback.* If this run also fails, next adjustment is $N: 10 \to 4$ (peripheral per §9.5.2 "N"). The structural claim — that the linear accumulator preserves depth ≤ 3 — is reproducible at any $(N, |\mathcal P|)$ pair down to $(N{=}2, |\mathcal P|{=}100)$.
+
+*Cross-references.* Issue 04 (`issues/04-a2-tenseal-smoke.md`). PRD §9.5.2 row "Probe size" (lines 303–310). Prior tweak `reports/2026-05-17_tweak_smoke_memory.md`. Failed jobs `1079639` (16G) and `1079768` (64G) logs.
