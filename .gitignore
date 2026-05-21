@@ -21,6 +21,9 @@ __pycache__/
 .coverage
 htmlcov/
 
+tools/
+
+
 # Conda / venv
 .conda/
 venv/

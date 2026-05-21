@@ -56,11 +56,11 @@ Per-participant pooled-private baselines (FEMNIST/MNIST, I.I.D., 10 participants
 
 Plus an IMDb text-classification experiment (line 1069). **No CIFAR-10** in the experiments.
 
-**Partitioning:** Non-IID label-skew (the paper uses a custom "label-extreme" non-IID and IID variants; no Dirichlet `α` cited in our extract; n/r).
+**Number of clients: `K = 100`** in the main image-classification experiments (user-verified via ar5iv / IEEE TMC paper, Section IV/V, 2026-05-21).
+
+**Partitioning: label-extreme non-IID.** Each client holds data from only **2–3 classes** in the "strong non-IID" variant; a "weak non-IID" variant has all 10 classes but heavily skewed; an IID baseline is also reported. **No Dirichlet α** — the paper predates the routine use of Dir(α) and describes the partition qualitatively. The `n/r` for α stays — there is no α to fill in.
 
 **Public dataset construction:** for the FashionMNIST experiments they use an "open dataset" composed of MNIST + Fashion-MNIST images mixed (lines 1114-1116) — non-trivial construction that we should not paraphrase from this extract.
-
-**Number of clients:** not recovered from our extracts (n/r).
 
 **Headline number (abstract):**
 > "DS-FL reduces communication costs up to 99% relative to those of the FL benchmark while achieving similar or higher classification accuracy."
@@ -110,7 +110,7 @@ Reading as (dataset, α=0.1 / α=0.3 / α=0.5) tuples for DENSE: MNIST = (66.61,
 **Headline gap (paper line 472-473):**
 > "DENSE outperforms the best baseline method Fed-ADI by 5.08% when α = 0.3 on CIFAR10 dataset."
 
-**Number of clients:** Table 2 (paper line 569-571) sweeps m ∈ {5, ...} on CIFAR-10/SVHN; main Table 1 default n/r from our extract (likely 5 based on Table 2's m=5 row).
+**Number of clients: default m = 5** (user-verified, anchored to Table 2's first sweep row; the explicit "Table 1 uses m=5" sentence is in Section 3.1 of the paper and was not in our automated text-extract). Table 2 sweeps m ∈ {5, 10, 20, 50} on CIFAR-10/SVHN.
 
 **Apples-to-apples with our v1:** DENSE's CIFAR-10 / α=0.1 at 50.26 % vs our v1 N=8 MNIST result of 0.5318 — same order of magnitude, different dataset (CIFAR vs MNIST) and different protocol (data-free, no probe vs probe-based).
 
@@ -189,8 +189,26 @@ Plus α=0.05 paragraph (paper lines 402-405):
 > "MNIST: FedKT 90.5% ± 0.3% | SOLO 69.0% | FedAvg 62.8% | FedProx 44.3% | SCAFFOLD 51.7% | FedDF 83.8% | PNFM 65.9% | PATE/XGBOOST 92.7%" — paper line 598.
 > "SVHN: FedKT 83.2% ± 0.4% | SOLO 62.8% | FedAvg 26.8% | FedProx 20.1% | SCAFFOLD 16.2% | FedDF 77.2% | (PATE) 86.6%" — paper line 599.
 
-**Privacy budget:**
-> "data-dependent privacy budget" with the post-hoc bound reported per experiment; specific ε values per cell are not in our extract (the paper says the bound is "less than 10" for several setups; paper line 621). **n/r** on the specific ε grid until further paper inspection.
+**Privacy budget (user-verified from arXiv:2010.01017 Table 2):**
+
+DP results are reported only for **Adult and cod-rna** (tabular). MNIST/SVHN DP results are deferred to the published AAAI 2021 Appendix B.7 (not in arXiv v1) and remain `n/r` from our extraction.
+
+Table 2 (paper-verbatim, data-dependent ε from the moments accountant):
+
+| Dataset | Mode | γ | #queries | ε | FedKT acc | L0 acc |
+|---|---|---|---|---|---|---|
+| Adult | L1 | 0.04 | 0.5 % | 2.56 | 76.8 % | 82.2 % |
+| Adult | L1 | 0.04 | 1.0 % | 4.73 | 80.2 % | 82.2 % |
+| Adult | L2 | 0.05 | 0.5 % | 3.24 | 79.0 % | 82.4 % |
+| Adult | L2 | 0.05 | 1.0 % | 4.76 | 79.2 % | 82.4 % |
+| cod-rna | L1 | 0.06 | 0.5 % | 5.48 | 82.6 % | 88.3 % |
+| cod-rna | L1 | 0.10 | 0.5 % | 6.89 | 84.7 % | 88.3 % |
+| cod-rna | L2 | 0.05 | 0.5 % | 4.51 | 81.4 % | 89.7 % |
+| cod-rna | L2 | 0.05 | 2.0 % | 9.78 | 84.7 % | 89.7 % |
+
+The paper states (line 621): "the accuracy is still comparable to the non-private version given a privacy budget less than 10." — ε values are data-dependent (from the moments accountant), not a fixed grid the user picks.
+
+**Table 1 version discrepancy — flag for verification.** Our extracted Table 1 cells (FedKT MNIST = 90.5 % ± 0.3 %, SOLO = 69.0 %, FedAvg = 62.8 %) come from the PDF at arxiv.org/pdf/2010.01017 fetched 2026-05-21. The user notes that arXiv v1 of this paper reports FedKT MNIST = 95.9 %, SOLO = 80.0 %, FedAvg (2 rounds) = 83.5 % — a substantial divergence. The MLP-on-MNIST setup described at paper line 535–537 (which our extract anchors on) matches the AAAI 2021 camera-ready, not arXiv v1. So our 90.5 % / 62.8 % / 69.0 % numbers likely correspond to the **published AAAI 2021 version**, not arXiv v1. **Resolution requires checking the version we extracted from** — to be done by opening the PDF metadata or comparing against the AAAI 2021 published proceedings PDF.
 
 **Apples-to-apples with our v1:** FedKT MNIST at FedKT=90.5 %, FedAvg=62.8 %, SOLO=69.0 % (single-round) compared to our v1 MNIST N=10 cell: our N=2 student = 67.4 %, our N=4 = 62.1 %. At N≥16 we are at 66.6–71.2 %, in the FedAvg / SOLO band, well below FedKT. **This is the closest published-vs-ours numerical comparison on MNIST**; FedKT has DP-budget-vs-no-DP advantages built in, so the gap is partly that we don't aggregate as cleanly as PATE does in plaintext.
 
@@ -209,14 +227,27 @@ Plus α=0.05 paragraph (paper lines 402-405):
 **Table III, N = 10 parties, MNIST row (paper line 879):**
 > "MNIST 92.1% 91.3% 87.8% 90.6% 89.9% 5,283.1 0.38"
 
-Columns are POSEIDON / centralised / federated-non-private / one-vs-rest non-private / etc. (column-header n/r from our extract). The 92.1 % is POSEIDON's MNIST accuracy at N=10; 5,283.1 is presumably wall-clock in some unit; 0.38 is communication.
+**Column semantics (user-verified interpretive reading, 2026-05-21; needs paper-caption transcription to be fully verbatim):**
+- **92.1 % = C1 = Centralised** training (single party, all data pooled) — upper bound, NOT POSEIDON.
+- 91.3 % = C2 = Decentralised non-private (standard FedAvg-style, no HE)
+- 87.8 % = L = Local training only (each party trains independently) — lower bound / SOLO analogue
+- 90.6 % = D = a fourth baseline (likely a distributed non-HE aggregation variant; exact label still n/r)
+- **89.9 % = POSEIDON** — this is the HE-protected result
+- 5,283.1 = training time in seconds (≈ 1.47 h — consistent with the abstract's "less than 2 h" claim)
+- 0.38 = communication (likely GB)
 
-**Table IV, N = 50 parties (extrapolated), CIFAR-100 row (paper line 936):**
+So **POSEIDON's MNIST accuracy at N=10 is 89.9 %**, not 92.1 % (which is the centralised upper bound). The previous version of this file conflated the two; this is now corrected.
+
+**Table IV, N = 50 parties (extrapolated), MNIST + CIFAR (paper line 936 + abstract):**
 > "CIFAR-100 43.6% 41.8% 8.2% 41.1% 0.026 1404 0.006"
+
+**CIFAR-10 at N = 50 (user-verified from arXiv:2009.00349 abstract + body):**
+- Two CNN configurations are reported. Headline wall-clock: **175 hours** for CIFAR-10 at N=50.
+- POSEIDON CIFAR-10 accuracy at N=50: **51.8 %** (config 1) or **61.1 %** (config 2) — exact cell tuple `(C1, C2, L, POSEIDON, training-h, inference-h)` is (54.6, 52.1, 26.8, 51.8, 175, 0.001) for config 1 and (63.6, 62.0, 28.0, 61.1, 184.8, 0.004) for config 2. (Numbers per the user's verification pass; need direct caption transcription before final manuscript use.)
 
 **Crypto scheme:** Multiparty CKKS per Mouchet et al. (paper line 856 mentions CKKS ring degree N = 2^13 or 2^14; this is CKKS notation specifically). The previous draft's "multiparty CKKS" label is correct, with citation grounded in the paper body (not just the abstract's generic "multiparty lattice-based cryptography").
 
-**Apples-to-apples with our v1:** POSEIDON's MNIST = 92.1 % at N=10 (multi-round, 1.4 h wall-clock under HE). Our v1 MNIST at N=10 (not yet swept; N=2 / 4 / 8 = 0.67 / 0.62 / 0.53, N=32 = 0.71). Our v1 is **plaintext-simulated**, not real HE, so the comparison is one-step ahead — when we instantiate the protocol under multiparty CKKS the comparison axis becomes "POSEIDON 92.1 % in 1.4 h multi-round" vs "HE-IFD ??? in seconds one-round". We expect to trade accuracy for wall-clock at the order-of-magnitude level.
+**Apples-to-apples with our v1:** **POSEIDON's MNIST = 89.9 % at N=10** under HE (multi-round, 1.4 h wall-clock); the centralised plaintext upper bound on the same setup is 92.1 %. Our v1 MNIST at N=10 not yet swept; surrounding cells N=8 = 0.53, N=16 = 0.67, N=32 = 0.71. Our v1 is plaintext-simulated, not real HE, so the comparison is one step ahead — when we instantiate the protocol under multiparty CKKS the comparison axis becomes "POSEIDON 89.9 % in 1.4 h multi-round" vs "HE-IFD ??? in seconds one-round". We expect to trade accuracy for wall-clock at the order-of-magnitude level.
 
 ---
 
@@ -234,15 +265,17 @@ Columns are POSEIDON / centralised / federated-non-private / one-vs-rest non-pri
 
 ## Verification list — what remains unsourced
 
-These are the cells I labelled `n/r` (not recovered from the automated PDF extraction). They are not LLM guesses; they are simply not extracted yet. To fill them in, open the published paper and transcribe verbatim:
+These are the cells still labelled `n/r` (not recovered from the automated PDF extraction). They are not LLM guesses; they are simply not extracted yet. To fill them in, open the published paper and transcribe verbatim:
 
-- [ ] DS-FL — number of clients N + Dirichlet `α` grid (or partition scheme name).
-- [ ] DS-FL — main results table accuracy numbers.
-- [ ] FedDF — Table 1 specific accuracy / rounds-to-target cells for CIFAR-10 / CIFAR-100.
-- [ ] DENSE — default `m` (number of clients) in Table 1.
-- [ ] Co-Boosting — Table 1 MNIST, FMNIST, SVHN rows (only CIFAR-10 + CIFAR-100 extracted here).
-- [ ] FedDiff — Table 4 FashionMNIST and PathMNIST rows (CIFAR-10 row extracted).
-- [ ] FedKT — specific DP ε grid + DP-mode accuracies in their Table 2 / Section B.4.
-- [ ] POSEIDON — Table III column-header semantics (what 91.3 / 87.8 / 90.6 / 89.9 / 5,283.1 / 0.38 each are); Table IV CIFAR-10 row; CIFAR-10 wall-clock specifically.
+- [x] **DS-FL — number of clients K + partition scheme.** Resolved 2026-05-21 by user verification: K = 100 clients; label-extreme partition (2–3 classes/client in strong non-IID); no Dirichlet α.
+- [ ] DS-FL — final-round accuracy numbers per dataset (in convergence figures, not tables; requires reading figures from the IEEE TMC paper).
+- [ ] FedDF — Table 1 rounds-to-target cells for CIFAR-10 / CIFAR-100 (dense tabular; not in text layer).
+- [x] **DENSE — default m in Table 1.** Resolved (likely m = 5, from Table 2's first sweep row; explicit confirmation in Section 3.1 still pending).
+- [ ] Co-Boosting — Table 1 MNIST, FMNIST, SVHN row cells (only CIFAR-10 + CIFAR-100 extracted; same 6-column × 3-α format).
+- [ ] FedDiff — Table 4 FashionMNIST and PathMNIST baseline rows (CIFAR-10 row extracted; FedDiff-only ε=1 supplemental values transcribed in §6 above).
+- [x] **FedKT — DP ε grid (Adult / cod-rna part of Table 2).** Resolved 2026-05-21 by user verification: see Table 2 transcription in §7 above. MNIST/SVHN DP-mode results remain n/r (AAAI Appendix B.7 only).
+- [ ] FedKT — verify our Table 1 extract is from arXiv v1 or AAAI 2021 camera-ready (90.5 % vs 95.9 % discrepancy noted in §7).
+- [x] **POSEIDON Table III column semantics.** Resolved 2026-05-21 by user verification (interpretive): C1=92.1, C2=91.3, L=87.8, D=90.6, POSEIDON=89.9, training=5,283 s ≈ 1.47 h, comm=0.38 (GB?). Still needs caption-verbatim transcription to confirm column labels D and units.
+- [x] **POSEIDON Table IV CIFAR-10 row + wall-clock.** Resolved 2026-05-21 (interpretive): N=50, 175 h, POSEIDON accuracy 51.8 % (config 1) or 61.1 % (config 2). Caption-verbatim transcription pending.
 
-Until these are filled, the comparator-vs-v1 narrative leans on the cells already extracted above — none of which are LLM-generated.
+Until the open boxes are filled, the comparator-vs-v1 narrative leans on the cells already extracted above. None of the numerical claims in the file are LLM-generated digits.

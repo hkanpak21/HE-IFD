@@ -2,6 +2,8 @@
 
 Homomorphic-encryption federated knowledge distillation. One-shot protocol where clients distil locally against their own teachers, ship per-layer encrypted parameter deltas to a server, server does a single linear aggregation, jointly decrypt the released student.
 
+**Workflow.** Develop locally, run all compute on VALAR via `sbatch`. See [CLAUDE.md](CLAUDE.md) for operational details (conda env, golden rule, common operations cheatsheet).
+
 ## v1 status (2026-05-21)
 
 Plaintext simulation only. No real FHE — server-side operations are restricted to linear primitives so the simulation upper-bounds what the encrypted version would produce. Single dataset (MNIST), single architecture (MLP 784→128→32→10), single seed, one client-side distillation hyperparameter setting (`K=5` epochs, `τ=4`, KL distillation, `α=0.1` Dirichlet). Six N values: 1, 2, 4, 8, 16, 32.
