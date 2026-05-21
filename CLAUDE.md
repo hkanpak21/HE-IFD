@@ -160,19 +160,68 @@ FL_TDSC/                             # paper sources + CHANGES.md (Overleaf repl
 | Cancel a job | `scancel <jobid>` |
 | PDF inspection | `python tools/pdf_extract.py <pdf> "<keywords>" --context 2` |
 
-## Local-side workflow (for the user, not Claude)
+## Local-side workflow
 
 ```sh
 # on local machine
-git pull                                  # pull latest from VALAR-side commits
+git clone https://github.com/hkanpak21/HE-IFD.git
+cd HE-IFD
 # edit src/v1/*.py, jobs/*.sh, comparators/REPORTED_RESULTS.md
 git add -p && git commit -m "..."
-git push                                  # push back to VALAR (or to a shared remote)
+git push origin master
 
 # on VALAR (via ssh)
 cd /scratch/hkanpak21/HE_IFD && git pull
 sbatch jobs/v1_sweep.sh
-# wait for the result, then `git add results/<case>/ && git commit && git push` so local sees it
+# when job lands, `git add results/<case>/ && git commit && git push` so local sees it
 ```
 
-No git remote is configured by default. The user may set one up (GitHub, GitLab) or rsync between local and VALAR directly. Either is fine; this CLAUDE.md doesn't prescribe.
+## Git remote
+
+Origin is **`https://github.com/hkanpak21/HE-IFD.git`**, set up 2026-05-21.
+
+### Auth on VALAR (not configured yet)
+
+The push from VALAR will fail until one of these is done. Pick whichever the user prefers:
+
+**Option A — SSH key (recommended for HPC).** Generate a key on VALAR, add the public half to GitHub, switch the remote to SSH:
+
+```sh
+ssh-keygen -t ed25519 -C "hkanpak21@valar" -f ~/.ssh/id_ed25519     # no passphrase = no prompt per push
+cat ~/.ssh/id_ed25519.pub                                            # paste into https://github.com/settings/keys
+ssh -T git@github.com                                                # verify
+cd /scratch/hkanpak21/HE_IFD
+git remote set-url origin git@github.com:hkanpak21/HE-IFD.git
+git push -u origin master
+```
+
+**Option B — Personal Access Token (HTTPS).** Create a PAT with `repo` scope at https://github.com/settings/tokens, then:
+
+```sh
+git config --global credential.helper 'cache --timeout=86400'
+git push -u origin master         # asks for username + paste PAT as password; cached 24h
+```
+
+**Option C — `gh` CLI**. Not installed on VALAR; `pip install --user gh` doesn't ship one (gh is a Go binary). Skip unless you install the binary manually.
+
+The user almost certainly wants Option A. Once the SSH key is set up once, every future `git pull` / `git push` from VALAR is silent.
+
+### From local machine (Mac / Linux / WSL)
+
+Standard HTTPS-with-credential-helper or SSH key as you already use for other GitHub repos. No special setup beyond the standard `git clone https://...` or `git clone git@github.com:hkanpak21/HE-IFD.git`.
+
+## Rsync alternative (if GitHub auth is painful)
+
+Skip the remote and sync directly:
+
+```sh
+# from local; pulls VALAR -> local
+rsync -avz --exclude '.git/' --exclude 'data/' --exclude 'cache/' \
+  hkanpak21@valar:/scratch/hkanpak21/HE_IFD/ ~/projects/HE-IFD/
+
+# from local; pushes local -> VALAR
+rsync -avz --exclude '.git/' --exclude 'data/' --exclude 'cache/' \
+  ~/projects/HE-IFD/ hkanpak21@valar:/scratch/hkanpak21/HE_IFD/
+```
+
+Cheaper iteration loop if you don't want a GitHub round-trip per change, but loses the PR/diff review surface and bypasses git history on local. Recommended only as a fast experimental loop, with periodic git pushes to GitHub for backup.
