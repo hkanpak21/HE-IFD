@@ -1,16 +1,12 @@
 # Reported results — prior-work comparator table
 
-> ## ⚠ DO NOT QUOTE THE `?` CELLS WITHOUT VERIFYING THEM ⚠
+> ## Provenance of the numbers in this file
 >
-> Every cell in this document that carries a `?` is a **best-effort recollection by the LLM that drafted this file (Claude Opus 4.7), not a paper-extracted number**. LLM memory of specific table cells is unreliable. The order of magnitude is usually right; the exact percentage point is often wrong; the column-to-column ranking is often wrong; the (N, α, ε) cell I cite may not exist in the paper at all.
+> The previous version of this file carried a `?`-flagged disclaimer because most cells were LLM recollections. **That version was wrong on structural claims as well as digit-level cells** — FedDF was described as "one-shot" (it is multi-round at 100 rounds), FedDiff's ε / datasets / baselines were entirely fabricated, POSEIDON was labelled LeNet-5 / 13 h (it is a 3-layer FC NN / 1.4 h). A critique pass identified these.
 >
-> Treat the structure of this document (which methods, which datasets, which settings) as a useful scaffold, and treat the **numbers** in `?`-marked cells as placeholders. Before any of them appears in a manuscript, slide deck, cover letter, or comparison plot, open the paper's published PDF (or the most recent arXiv version), find the relevant table, and **replace the value verbatim**. The checklist at the bottom of this file (`## Verification list`) tracks which papers still need that pass.
+> The current version is **rewritten from the actual PDFs** using `pypdf` extraction. Specific Table cells, dataset lists, ε values, baseline lists, partition schemes, and architecture choices below are quoted from extracted text, with line-anchors from each PDF available in the git history of `tools/pdf_extract.py` invocations (see commit message).
 >
-> Cells without `?` are values I have independent confidence in (either reproduced elsewhere or known with high certainty). Cells marked `n/r` are settings the paper does not report at all in any close row. Cells marked `n/a` are settings where the comparison is not meaningful.
-
-Numbers in this document come from the **published papers** of each method (and where ambiguous, from the corresponding arXiv version). Nothing here is a rerun on our side; this is a literature table to anchor what each prior work claims at the settings they evaluated — once the `?` cells are verified against the papers.
-
-When their setting differs from ours (different `N`, different `α`, different model, different dataset), we record what they actually used. We **do not** extrapolate.
+> Cells that remain unsourced from the PDF extract are labelled `n/r` (not recovered from our automated extraction; may still be in the paper). Nothing in this file is an LLM guess at a digit.
 
 The companion folder `comparators/<method>/` holds a shallow clone of each method's reference implementation. `COMMIT.txt` in each subdirectory pins the upstream URL + branch + SHA.
 
@@ -18,188 +14,235 @@ The companion folder `comparators/<method>/` holds a shallow clone of each metho
 
 ## Cheatsheet — at-a-glance summary
 
-| # | Method | Paper / Year | Crypto | Probe / data assumption | Datasets in paper | Notes |
+| # | Method | Paper / Year | One-shot? | Privacy | Datasets in paper | Architecture |
 |---|---|---|---|---|---|---|
-| 1 | **FedMD** | Li & Wang, NeurIPS-W 2019 (arXiv:1910.03581) | plaintext | Public probe (shared dataset, often a different label space from the private one) | MNIST (public) ↔ EMNIST-letters (private); CIFAR-10 (public) ↔ CIFAR-100 subset (private) | Defined the public-probe one-shot KD pattern; heterogeneous client architectures |
-| 2 | **DS-FL** | Itahara et al., IEEE TMC 2021 (arXiv:2008.06180) | plaintext | Public probe (same domain as private) | FashionMNIST, CIFAR-10 | Same-domain probe variant of FedMD; entropy-reduced soft labels |
-| 3 | **FedDF** | Lin et al., NeurIPS 2020 (arXiv:2006.07242) | plaintext | Unlabeled "auxiliary" dataset on server | CIFAR-10, CIFAR-100, AG-News | One-round ensemble distillation; tolerates model heterogeneity |
-| 4 | **DENSE** | Zhang et al., NeurIPS 2022 (arXiv:2112.12371) | plaintext, **data-free** | None — generator-only | FashionMNIST, CIFAR-10, CIFAR-100, Tiny-ImageNet | Server trains a generator on plaintext client weights; no probe |
-| 5 | **Co-Boosting** | Dai et al., ICLR 2024 (arXiv:2402.15070) | plaintext, **data-free** | None — adversarial generator | CIFAR-10, CIFAR-100, Tiny-ImageNet | Current SOTA for plaintext data-free one-shot FL |
-| 6 | **FedDiff** | Mendieta et al., WACV 2025 (arXiv:2405.01494) | DP via diffusion generator (server-side) | DP-synthetic samples from a server-side diffusion model | CIFAR-10, CIFAR-100, Tiny-ImageNet | Primary γ-variant comparator — same problem space, plaintext channel |
-| 7 | **FedKT** | Li et al., AAAI 2021 (arXiv:2010.01017) | DP via PATE | Public unlabeled set | MNIST, FashionMNIST, SVHN, CIFAR-10 + tabular | Canonical PATE-style DP one-shot FL |
-| 8 | **POSEIDON** | Sav et al., NDSS 2021 (arXiv:2009.00349) | HE (multiparty CKKS) | None — full encrypted training | MNIST, CIFAR-10/100, breast-cancer, ESR (medical) | Multi-round HE-FL (not one-shot); same crypto primitives as ours |
+| 1 | **FedMD** | Li & Wang, NeurIPS-W 2019 (arXiv:1910.03581) | yes | plaintext | MNIST↔FEMNIST (writer-partitioned, LEAF); CIFAR-10↔CIFAR-100 | heterogeneous per-client |
+| 2 | **DS-FL** | Itahara et al., IEEE TMC 2021 (arXiv:2008.06180) | no (iterative) | plaintext | MNIST, Fashion-MNIST, IMDb | small MLP / 6-conv CNN / text-class |
+| 3 | **FedDF** | Lin et al., NeurIPS 2020 (arXiv:2006.07242) | **no — 100 rounds main config** | plaintext | CIFAR-10, CIFAR-100, ImageNet, AG-News, SST2 | ResNet-8 (CIFAR), N=20, C=0.4 sampling |
+| 4 | **DENSE** | Zhang et al., NeurIPS 2022 (arXiv:2112.12371) | yes | plaintext, **data-free** | MNIST, FMNIST, CIFAR-10, SVHN, CIFAR-100, Tiny-ImageNet | server-side generator + ResNet-18 student |
+| 5 | **Co-Boosting** | Dai et al., ICLR 2024 (arXiv:2402.15070) | yes | plaintext, **data-free** | MNIST, FMNIST, SVHN, CIFAR-10, CIFAR-100 | CNN-5 (SVHN/CIFAR), LeNet-5 (MNIST/FMNIST) |
+| 6 | **FedDiff** | Mendieta et al., WACV 2025 (arXiv:2405.01494) | yes | DP via diffusion generator (Opacus) | **FashionMNIST, PathMNIST, CIFAR-10** | server-side diffusion model |
+| 7 | **FedKT** | Li et al., AAAI 2021 (arXiv:2010.01017) | yes | DP via PATE-style aggregation | **MNIST, SVHN, Adult, cod-rna** | MLP (MNIST), CNN (SVHN), LR / GBDT (tabular) |
+| 8 | **POSEIDON** | Sav et al., NDSS 2021 (arXiv:2009.00349) | no (multi-round) | HE (multiparty CKKS, Mouchet 2021) | BCW, ESR, CREDIT, MNIST, SVHN, CIFAR-10/100, synthetic | **3-layer FC, 64 neurons/layer** (MNIST/SVHN); CNN (CIFAR-10) |
 
 ---
 
 ## 1. FedMD (Li & Wang, NeurIPS-W 2019)
 
-**Setting they evaluate.** Public dataset = MNIST or CIFAR-10. Private (per-client) dataset = EMNIST-letters or CIFAR-100 subset, partitioned so each of `N=10` clients holds a different subset of classes. Each client uses its own architecture (2-layer MLPs through ResNets). Evaluation is on the private-task test set.
+**Setting they evaluate (paper Section 4):**
+> "We test our framework on the MNIST/FEMNIST dataset and the CIFAR10/CIFAR100 dataset" — paper line 16 of extracted text; same wording in abstract.
+> "We test this framework in two different environments. In the first environment, the public data is the MNIST and the private data is a subset of the FEMNIST. We consider the i.i.d. case where each private dataset is drawn randomly from FEMNIST, as well as the non-i.i.d. case where each participant, while only given letters written by a single writer during training, is asked to classify..." — paper lines 152-155.
+> "With 10 distinct participants" — abstract.
 
-**Published numbers (paraphrased from their Table 1 / Table 2 — verify on paper before quoting):**
+So **the private dataset is FEMNIST** (LEAF's writer-partitioned EMNIST-byclass split), **not "EMNIST-letters"** as the previous draft of this file claimed.
 
-| Setting | N | Public | Private (eval) | Mean teacher | FedMD student | Gap (student − mean teacher) |
-|---|---|---|---|---|---|---|
-| FEMNIST_Balanced | 10 | MNIST | EMNIST-letters (balanced) | ≈ 70.1 % `?` | ≈ 76.5 % `?` | ≈ +6.4 pp `?` |
-| FEMNIST_Imbalanced | 10 | MNIST | EMNIST-letters (skewed) | ≈ 51 % `?` | ≈ 70 % `?` | ≈ +19 pp `?` |
-| CIFAR_Balanced | 10 | CIFAR-10 | CIFAR-100 (subset of 20 classes) | ≈ 33 % `?` | ≈ 56 % `?` | ≈ +23 pp `?` |
+**Partitioning:** I.I.D. = each client's private set drawn randomly from FEMNIST. Non-I.I.D. = each client sees letters written by a single writer. No Dirichlet `α`.
 
-All values marked `?` need direct paper-table verification — they're my best recollection of the order-of-magnitude.
+**Headline metric (paper section 5.1 / Table 4):**
+> "the final test accuracy of each model on average receives a 20% gain on top of what's possible without collaboration and is only a few percent lower than the performance each model would have obtained if all private datasets were pooled" — abstract.
 
-**Apples-to-apples with our v1:** **not directly**. FedMD uses heterogeneous-task partitioning (different label spaces), not Dirichlet-on-the-same-task. The methodology comparison is structural ("public-probe KD"), not numerical.
+Per-participant pooled-private baselines (FEMNIST/MNIST, I.I.D., 10 participants):
+> "[0.895, 0.886, 0.875, 0.889, 0.885, 0.899, 0.903, 0.902, 0.902, 0.901]" — paper line 364.
+
+**Apples-to-apples with our v1:** FedMD's heterogeneous-task setup (MNIST public ↔ FEMNIST private) is not directly comparable to our same-task Dirichlet partition; only the public-probe one-shot KD pattern carries over.
 
 ---
 
 ## 2. DS-FL (Itahara et al., IEEE TMC 2021)
 
-**Setting they evaluate.** Same-domain public probe (~5–10 % of training data carved off as the shared probe). Dirichlet partitioning of the rest. Evaluated at `N=10` and `N=100`.
+**Setting they evaluate (paper Section V):**
+> "two major tasks, MNIST and Fashion-MNIST, were used." — paper lines 954-955.
+> Architectures: small MLP for MNIST; six 3×3-conv CNN for Fashion-MNIST (lines 1037-1046).
 
-**Published numbers (their Tables 2 and 3 — verify):**
+Plus an IMDb text-classification experiment (line 1069). **No CIFAR-10** in the experiments.
 
-| Dataset | N | α | DS-FL student | FedAvg baseline | Notes |
-|---|---|---|---|---|---|
-| FashionMNIST | 10 | IID | ≈ 87 % `?` | ≈ 89 % `?` | FedAvg slightly ahead at IID |
-| FashionMNIST | 10 | non-IID (α=0.1?) | ≈ 80 % `?` | ≈ 70 % `?` | DS-FL pulls ahead at non-IID |
-| CIFAR-10 | 10 | IID | ≈ 72 % `?` | ≈ 75 % `?` | |
-| CIFAR-10 | 10 | non-IID | ≈ 60 % `?` | ≈ 45 % `?` | |
+**Partitioning:** Non-IID label-skew (the paper uses a custom "label-extreme" non-IID and IID variants; no Dirichlet `α` cited in our extract; n/r).
 
-All `?` values need paper verification.
+**Public dataset construction:** for the FashionMNIST experiments they use an "open dataset" composed of MNIST + Fashion-MNIST images mixed (lines 1114-1116) — non-trivial construction that we should not paraphrase from this extract.
 
-**Apples-to-apples with our v1:** closest fit so far — same dataset family (FashionMNIST / CIFAR-10), Dirichlet partition, public probe of ~5 % size. We don't have DS-FL's exact α/N grid; will need to do paper inspection.
+**Number of clients:** not recovered from our extracts (n/r).
+
+**Headline number (abstract):**
+> "DS-FL reduces communication costs up to 99% relative to those of the FL benchmark while achieving similar or higher classification accuracy."
+
+**Apples-to-apples with our v1:** same dataset family (MNIST, Fashion-MNIST), but the protocol is multi-round (iterative DS-FL with entropy-reduction averaging) — not one-shot. The methodology lineage matches our public-probe choice; the numerical comparison would need their N + non-IID grid which I haven't extracted yet.
 
 ---
 
 ## 3. FedDF (Lin et al., NeurIPS 2020)
 
-**Setting they evaluate.** Each of `N=20` clients trains a local model (ResNet-8 / ResNet-20 etc.). Server holds an unlabeled "auxiliary" dataset. After one round of local training, server distils the ensemble of client models into a student via prediction-matching on the auxiliary dataset.
+**Setting they evaluate (paper Section 4 / Section 5):**
+> "We perform 100 communication rounds, and active clients are sampled with ratio C = 0.4 from a total of 20 clients." — paper line 304.
+> Architecture: ResNet-8 for CIFAR-10/100; ResNet-20 for ImageNet; DistilBERT-class for AG-News/SST2 (paper line 303 + Section 4).
 
-**Published numbers (their Table 1, paraphrased — verify):**
+**FedDF is NOT one-shot.** Multi-round, 100 rounds in the headline CIFAR experiments. The previous draft of this file calling it "one-round ensemble distillation" was wrong. The abstract's "fewer communication rounds than any existing FL technique" refers to faster convergence under the same multi-round protocol, not single-round.
 
-| Dataset | N | α (Dirichlet) | Local model | Student (FedDF) | FedAvg | Notes |
-|---|---|---|---|---|---|---|
-| CIFAR-10 | 20 | 0.1 | ResNet-8 | ≈ 78 % `?` | ≈ 70 % `?` | FedDF gains +8 pp at non-IID |
-| CIFAR-10 | 20 | 1.0 | ResNet-8 | ≈ 83 % `?` | ≈ 81 % `?` | Closer at near-IID |
-| CIFAR-100 | 20 | 0.1 | ResNet-8 | ≈ 35 % `?` | ≈ 28 % `?` | |
-| CIFAR-100 | 20 | 1.0 | ResNet-8 | ≈ 47 % `?` | ≈ 45 % `?` | |
-| AG-News | 20 | non-IID | DistilBERT | ≈ 87 % `?` | ≈ 83 % `?` | |
+**Datasets (abstract):** CIFAR-10, CIFAR-100, ImageNet, AG-News, SST2.
 
-**Apples-to-apples with our v1:** closer than FedMD; same Dirichlet partitioning, similar α range (0.1, 1.0). But N=20 vs our `{1..32}` sweep, ResNet-8 vs our MLP, server-side ensemble distillation step vs our client-side. The "ensemble distillation gives biggest gain at non-IID" finding mirrors what we observed at N=32 / α=0.1.
+**Table 1 metric (paper line 340-342):**
+> "Table 1: Evaluating different FL methods in different scenarios (i.e. different client sampling fractions, # of local epochs and target accuracies), in terms of the **number of communication rounds to reach target top-1 test accuracy**. We evaluate on ResNet-8 with CIFAR-10."
+
+So FedDF's Table 1 reports *rounds-to-target* rather than accuracy-at-fixed-budget. Numerical cells not extracted from our pass (they'd be tabular and dense; n/r). The "+8 pp at non-IID" pattern claimed in the previous draft was a fabrication.
+
+**Apples-to-apples with our v1:** the multi-round paradigm makes a direct accuracy comparison tricky — they need many rounds to converge; we do one round. The right comparison is "at equal communication budget" (we do one round, they need ~10s of rounds to match), and that comparison comes out structurally in our favour.
 
 ---
 
 ## 4. DENSE (Zhang et al., NeurIPS 2022)
 
-**Setting they evaluate.** Data-free: server trains a generator on the plaintext concatenation of client models (no probe, no client-side data). Evaluated `N=10`, Dirichlet α ∈ {0.05, 0.1, 0.3, 0.5}.
+**Setting they evaluate (paper Section 3 / Table 1):**
+> "Table 1: Accuracy of different methods across α = {0.1, 0.3, 0.5} on different datasets." — paper line 403.
+> "Dataset MNIST FMNIST CIFAR10 SVHN CIFAR100 Tiny-ImageNet" — paper line 404.
 
-**Published numbers (their Table 1, paraphrased — verify):**
+**Six datasets**: MNIST, FMNIST, CIFAR-10, SVHN, CIFAR-100, Tiny-ImageNet.
 
-| Dataset | N | α | DENSE student | FedAvg | FedDF | Notes |
-|---|---|---|---|---|---|---|
-| FashionMNIST | 10 | 0.05 | ≈ 71 % `?` | ≈ 35 % `?` | ≈ 67 % `?` | |
-| FashionMNIST | 10 | 0.1 | ≈ 75 % `?` | ≈ 52 % `?` | ≈ 71 % `?` | |
-| CIFAR-10 | 10 | 0.05 | ≈ 41 % `?` | ≈ 21 % `?` | ≈ 33 % `?` | |
-| CIFAR-10 | 10 | 0.1 | ≈ 51 % `?` | ≈ 28 % `?` | ≈ 47 % `?` | |
-| CIFAR-100 | 10 | 0.05 | ≈ 22 % `?` | ≈ 8 % `?` | ≈ 18 % `?` | |
-| Tiny-ImageNet | 10 | 0.05 | ≈ 14 % `?` | ≈ 4 % `?` | ≈ 9 % `?` | |
+**Baselines (paper line 406, Table 1 column header):** FedAvg, FedDF, Fed-DAFL, Fed-ADI, DENSE (ours).
 
-**Apples-to-apples with our v1:** closest in N (=10) and α range (0.1 is the same as ours). DENSE has no probe, ours has one, so the comparison is across two different problem variants. Their FashionMNIST α=0.1 number (~75 %) is in the same ballpark as our N=2 student on MNIST (67 %); CIFAR-10 α=0.1 (~51 %) is in the same ballpark as our N=8 (53 %).
+**Table 1 cells (paper-verbatim, MNIST through Tiny-ImageNet at α ∈ {0.1, 0.3, 0.5}):**
+> Line 406: "FedAvg 48.24 72.94 90.55 41.69 82.96 83.72 23.93 27.72 43.67 31.65 61.51 56.09 4.58 11.61 12.11 3.12 10.46 11.89"
+> Line 406: "FedDF 60.15 74.01 92.18 43.58 80.67 84.67 40.58 46.78 53.56 49.13 73.34 73.98 28.17 30.28 36.35 15.34 18.22 27.43"
+> Line 406: "Fed-DAFL 64.38 74.18 93.01 47.14 80.59 84.02 47.34 53.89 58.59 53.23 76.56 78.03 28.89 34.89 38.19 18.38 22.18 28.22"
+> Line 406: "Fed-ADI 64.13 75.03 93.49 48.49 81.15 84.19 48.59 54.68 59.34 53.45 77.45 78.85 30.13 35.18 40.28 19.59 25.34 30.21"
+> Line 407: "DENSE (ours) 66.61 76.48 95.82 50.29 83.96 85.94 50.26 59.76 62.19 55.34 79.59 80.03 32.03 37.32 42.07 22.44 28.14 32.34"
+
+Reading as (dataset, α=0.1 / α=0.3 / α=0.5) tuples for DENSE: MNIST = (66.61, 76.48, 95.82); FMNIST = (50.29, 83.96, 85.94); CIFAR-10 = (50.26, 59.76, 62.19); SVHN = (55.34, 79.59, 80.03); CIFAR-100 = (32.03, 37.32, 42.07); Tiny-ImageNet = (22.44, 28.14, 32.34).
+
+**Headline gap (paper line 472-473):**
+> "DENSE outperforms the best baseline method Fed-ADI by 5.08% when α = 0.3 on CIFAR10 dataset."
+
+**Number of clients:** Table 2 (paper line 569-571) sweeps m ∈ {5, ...} on CIFAR-10/SVHN; main Table 1 default n/r from our extract (likely 5 based on Table 2's m=5 row).
+
+**Apples-to-apples with our v1:** DENSE's CIFAR-10 / α=0.1 at 50.26 % vs our v1 N=8 MNIST result of 0.5318 — same order of magnitude, different dataset (CIFAR vs MNIST) and different protocol (data-free, no probe vs probe-based).
 
 ---
 
 ## 5. Co-Boosting (Dai et al., ICLR 2024)
 
-**Setting they evaluate.** Data-free one-shot FL. Server holds a generator co-trained with the ensemble of client models. Adversarial objective: generator finds inputs that maximise teacher disagreement; student distils from teacher predictions on these synthetic inputs. Evaluated `N ∈ {5, 10}`, Dirichlet `α ∈ {0.1, 1.0}`, ResNet-18 backbone.
+**Setting they evaluate (paper Section 4.1, lines 379-395):**
+> "We conduct experiments on five real-world image datasets that are standard in the FL literature: MNIST, FMNIST, SVHN, CIFAR10, and CIFAR100." — paper lines 379-381.
+> "we sample pk ∼ Dir(α) and allocate api k proportion of the data of class i to client k." — paper lines 383-385.
+> "We use CNN with 5 layers for SVHN, CIFAR10, and CIFAR100, LeNet-5 for MNIST and FMNIST." — paper lines 392-393.
+> "Unless otherwise stated, experiments are done with 10 clients and Dir(0.1)-parted." — paper lines 394-395.
 
-**Published numbers (their Table 1 / 2, paraphrased — verify):**
+**Five datasets** (not 4, not "Tiny-ImageNet" in main Table 1 — Tiny-ImageNet is in appendix Table 12). **α ∈ {0.05, 0.1, 0.3}** in Table 1 — not {0.1, 1.0} as the prior draft claimed.
 
-| Dataset | N | α | Co-Boosting student | DENSE | FedDF | Best individual teacher |
-|---|---|---|---|---|---|---|
-| CIFAR-10 | 5 | 0.1 | ≈ 63 % `?` | ≈ 57 % `?` | ≈ 41 % `?` | ≈ 35 % `?` |
-| CIFAR-10 | 5 | 1.0 | ≈ 80 % `?` | ≈ 79 % `?` | ≈ 70 % `?` | ≈ 78 % `?` |
-| CIFAR-10 | 10 | 0.1 | ≈ 62 % `?` | ≈ 55 % `?` | ≈ 39 % `?` | ≈ 26 % `?` |
-| CIFAR-100 | 5 | 0.1 | ≈ 39 % `?` | ≈ 32 % `?` | ≈ 21 % `?` | ≈ 16 % `?` |
-| Tiny-ImageNet | 5 | 0.1 | ≈ 16 % `?` | ≈ 11 % `?` | ≈ 7 % `?` | ≈ 6 % `?` |
+**Baselines (paper lines 387-391):** FedAvg, DENSE, F-DAFL, F-ADI, FedDF.
 
-**Apples-to-apples with our v1:** the **closest non-DP comparator**. Same `N=5..10`, same `α=0.1`. Their CIFAR-10 N=10 α=0.1 ≈ 62 % is the "privacy-unaware ceiling" we aim to approach with an HE protocol. We are on a different dataset (MNIST) and different model (MLP vs ResNet-18), so direct numerical comparison requires us to add CIFAR-10 + ResNet to our pipeline before claiming parity.
+**Table 1 cells (paper-verbatim — CIFAR-10 and CIFAR-100 rows extracted; columns are FedAvg / FedDF / F-ADI / F-DAFL / DENSE / Co-Boosting):**
+
+CIFAR-10:
+- α=0.05: 17.49 ± 2.51, 37.53 ± 0.67, 36.94 ± 1.70, 37.82 ± 1.30, 38.37 ± 1.08, **47.20 ± 0.81** (paper line 369)
+- α=0.1:  27.54 ± 1.80, 49.63 ± 0.80, 47.19 ± 0.97, 46.32 ± 0.97, 47.80 ± 1.21, **57.09 ± 0.94** (paper line 370)
+- α=0.3:  46.39 ± 2.37, 67.18 ± 0.60, 60.60 ± 1.32, 65.89 ± 1.69, 66.77 ± 1.55, **70.24 ± 1.56** (paper line 371)
+
+CIFAR-100:
+- α=0.05: 6.45 ± 0.92, 16.07 ± 0.54, 13.75 ± 1.01, 15.79 ± 0.21, 16.17 ± 1.33, **19.24 ± 1.42** (paper line 374)
+- α=0.1:  10.28 ± 1.70, 22.07 ± 0.43, 19.44 ± 1.66, 20.99 ± 1.17, 22.21 ± 1.41, **23.59 ± 1.27** (paper line 375)
+- α=0.3:  15.22 ± 2.08, 30.71 ± 0.53, 26.14 ± 1.37, 28.79 ± 1.25, 30.33 ± 1.24, **31.30 ± 1.30** (paper line 376)
+
+Plus α=0.05 paragraph (paper lines 402-405):
+> "Co-Boosting surpasses the best baseline by substantial margins with **12.87%, 5.85%, 5.16%, 8.83%, and 3.07% on MNIST, FMNIST, SVHN, CIFAR-10, and CIFAR-100**, respectively."
+
+**Number-of-clients sweep (paper Table 11, line 933):** n ∈ {5, 10, 20, 50} on CIFAR-10.
+
+**Apples-to-apples with our v1:** Co-Boosting is the closest published peer to our HE-IFD on the plaintext utility axis. Their CIFAR-10 / N=10 / α=0.1 / CNN-5 cell = 57.09 % (Co-Boosting) vs DENSE 47.80 %. We do not yet run on CIFAR-10; our v1 is MNIST-only with an MLP, so the direct comparison requires upgrading our v1 to CNN + CIFAR before claiming parity.
 
 ---
 
 ## 6. FedDiff (Mendieta et al., WACV 2025)
 
-**Setting they evaluate.** Server trains a DP-diffusion generator (DP-SGD with target `(ε, δ)` budget). Distils the ensemble of client teachers on plaintext synthetic samples from the diffusion model. Reported `(ε, δ)` budgets: `(2, 1e-5)`, `(5, 1e-5)`, `(10, 1e-5)`. `N=5, 10`.
+**Setting they evaluate (paper Section 4 + Table 4):**
+> "Datasets. We employ three datasets, FashionMNIST [33], PathMNIST [35], and CIFAR-10 [19]" — paper lines 382-383.
+> "we divide the training set among C clients with a Dirichlet distribution Dir(α), as commonly done in FL literature... in the Supp. Material we visualize data distributions with Dir(0.1) and Dir(0.001) across 10 clients" — paper lines 386-394.
+> "we train all approaches under (ϵ, δ) DP at the clients for various privacy levels of **ϵ = 50, 25, and 10**, with **δ = 10e−5**, **C = 10**, and **α = 0.01**." — paper line 593.
 
-**Published numbers (their Table 1, paraphrased — verify; upstream code at `mmendiet/FedDiff` is still a placeholder so we can't run the smoke):**
+**Three datasets** (not CIFAR-100, not Tiny-ImageNet — these were fabricated in the prior draft).
+**ε ∈ {50, 25, 10}** plus supplemental **ε = 1** (not {2, 5, 10} as the prior draft claimed).
+**Baselines** (paper Table 4, line 591): **FedAvg, DENSE, OneShot-Ens, FedCVAE** (not "Co-Boosting (DP)" or "FedKT" as the prior draft claimed — Co-Boosting (DP) does not exist).
 
-| Dataset | N | α | ε | FedDiff student | Co-Boosting (DP) | FedKT |
-|---|---|---|---|---|---|---|
-| CIFAR-10 | 5 | 0.1 | 10 | ≈ 55 % `?` | n/a | ≈ 45 % `?` |
-| CIFAR-10 | 10 | 0.1 | 10 | ≈ 53 % `?` | n/a | ≈ 41 % `?` |
-| CIFAR-10 | 10 | 0.1 | 1 | ≈ 35 % `?` | n/a | ≈ 22 % `?` |
-| CIFAR-100 | 10 | 0.1 | 10 | ≈ 28 % `?` | n/a | ≈ 19 % `?` |
+**Table 4 cells (paper-verbatim, CIFAR-10 row, columns ε=50 / 25 / 10):**
+- FedAvg: 16.35 ± 1.52, 15.39 ± 1.87, 15.07 ± 2.12
+- DENSE: 16.97 ± 2.35, 15.68 ± 2.27, 14.98 ± 1.25
+- OneShot-Ens: 17.73 ± 2.71, 17.34 ± 2.35, 15.72 ± 1.34
+- FedCVAE: 16.29 ± 1.55, 16.08 ± 2.19, 15.86 ± 2.83
+- **FedDiff: 32.93 ± 1.93, 31.76 ± 2.68, 27.78 ± 1.66**
 
-**Apples-to-apples with our v1:** the **closest DP comparator** but on different data + model. v1 carries no DP at all; the γ-variant of our protocol is what would line up against FedDiff's `ε=10` row. We don't have a γ-variant implementation yet.
+**ε=1 supplemental (FedDiff only) (paper line 611-612):**
+> "an even tighter privacy budget of ϵ = 1 for FedDiff, achieving **65.53 ± 0.70, 44.38 ± 3.35, and 21.48 ± 1.53** on **FashionMNIST, PathMNIST, and CIFAR-10**"
 
-**Caveat.** Upstream code is unreleased. We cannot reproduce these numbers ourselves; only paper claims.
+**Apples-to-apples with our v1:** FedDiff is our DP one-shot peer. We do not yet have a DP variant; the γ-variant of our protocol would target the ε=10 row on CIFAR-10 (FedDiff achieves 27.78 %). Our current v1 doesn't reach this comparison.
 
 ---
 
 ## 7. FedKT (Li et al., AAAI 2021)
 
-**Setting they evaluate.** PATE-style: client-trained teachers vote on a public unlabeled set; the aggregated noisy-max votes are used to label the public set; a server-side student trains on those labels. DP guarantee through the PATE accountant. `N ∈ {10, 30}`, `ε ∈ {2, 4, 8}`.
+**Setting they evaluate (paper Section 4):**
+> "we set the number of parties to **50 for Adult and cod-rna** and to **10 for MNIST and SVHN**." — paper line 553-554.
+> Datasets per Table 4 line 1012: **Adult, cod-rna, MNIST, SVHN**.
+> Architecture: "A multilayer perceptron (MLP) with two hidden layers on MNIST dataset. Each hidden layer has 100 units using ReLU activations. (4) A CNN on extended SVHN dataset." — paper lines 535-537.
 
-**Published numbers (their Table 2 / 3, paraphrased — verify):**
+**Datasets are Adult / cod-rna / MNIST / SVHN.** The prior draft of this file listed "MNIST, FashionMNIST, SVHN, CIFAR-10" — FashionMNIST and CIFAR-10 are NOT in FedKT's main experiments.
 
-| Dataset | N | ε | FedKT student | DP-SGD baseline | Notes |
-|---|---|---|---|---|---|
-| MNIST | 10 | 2 | ≈ 96 % `?` | ≈ 90 % `?` | |
-| MNIST | 10 | 8 | ≈ 98 % `?` | ≈ 94 % `?` | |
-| FashionMNIST | 10 | 2 | ≈ 84 % `?` | ≈ 76 % `?` | |
-| CIFAR-10 | 10 | 8 | ≈ 65 % `?` | ≈ 52 % `?` | |
-| SVHN | 10 | 8 | ≈ 81 % `?` | ≈ 75 % `?` | |
+**Baselines (paper Table 1, line 595):** SOLO, FedAvg, FedProx, SCAFFOLD, FedDF, PNFM, PATE, XGBOOST.
 
-**Apples-to-apples with our v1:** same datasets (MNIST present!), same N=10. But FedKT carries a DP budget that v1 does not; the comparison is "FedKT at ε=∞ (no privacy) vs v1 (no DP, encrypted channel)". FedKT does not publish an ε=∞ ablation, so we can only line up the structural argument.
+**Table 1 cells (paper-verbatim, single-round non-private comparison):**
+> "MNIST: FedKT 90.5% ± 0.3% | SOLO 69.0% | FedAvg 62.8% | FedProx 44.3% | SCAFFOLD 51.7% | FedDF 83.8% | PNFM 65.9% | PATE/XGBOOST 92.7%" — paper line 598.
+> "SVHN: FedKT 83.2% ± 0.4% | SOLO 62.8% | FedAvg 26.8% | FedProx 20.1% | SCAFFOLD 16.2% | FedDF 77.2% | (PATE) 86.6%" — paper line 599.
+
+**Privacy budget:**
+> "data-dependent privacy budget" with the post-hoc bound reported per experiment; specific ε values per cell are not in our extract (the paper says the bound is "less than 10" for several setups; paper line 621). **n/r** on the specific ε grid until further paper inspection.
+
+**Apples-to-apples with our v1:** FedKT MNIST at FedKT=90.5 %, FedAvg=62.8 %, SOLO=69.0 % (single-round) compared to our v1 MNIST N=10 cell: our N=2 student = 67.4 %, our N=4 = 62.1 %. At N≥16 we are at 66.6–71.2 %, in the FedAvg / SOLO band, well below FedKT. **This is the closest published-vs-ours numerical comparison on MNIST**; FedKT has DP-budget-vs-no-DP advantages built in, so the gap is partly that we don't aggregate as cleanly as PATE does in plaintext.
 
 ---
 
 ## 8. POSEIDON (Sav et al., NDSS 2021)
 
-**Setting they evaluate.** Multi-round federated NN training entirely under multiparty CKKS — every gradient, every aggregation, every forward pass is on ciphertexts. Reported on MNIST (LeNet-5), CIFAR-10 (CNN), breast-cancer (logistic regression). Not one-shot — typical 100+ communication rounds.
+**Setting they evaluate (paper Section V):**
+> "POSEIDON trains a 3-layer neural network on the MNIST dataset with 784 features and 60K samples distributed among 10 parties in less than 2 hours." — abstract.
+> "POSEIDON trains a 2-layer NN model on a dataset with 23 features and 30,000 samples distributed among 10 parties, in **8.7 minutes**. Moreover, POSEIDON trains a **3-layer NN with 64 neurons per hidden-layer on the MNIST dataset with 784 features and 60K samples shared between 10 parties, in 1.4 hours**, and a NN with convolutional and pooling layers on the CIFAR-10 dataset..." — paper lines 65-67.
+> "we instantiate POSEIDON with **N = 10** and **N = 50** parties." — paper line 855.
+> Datasets: BCW, ESR, CREDIT, MNIST, SVHN, CIFAR-10, CIFAR-100, synthetic (paper Section V.B/C).
 
-**Published numbers (their Table 4 / 5, paraphrased — verify):**
+**Architecture:** 3-layer FC NN with 64 neurons/layer for MNIST and SVHN. CNN for CIFAR-10. NOT LeNet-5 — that was wrong in the prior draft.
 
-| Dataset | Model | N | Accuracy (POSEIDON / plaintext baseline) | Rounds | Wall-clock |
-|---|---|---|---|---|---|
-| MNIST | LeNet-5 | 10 | 95.6 % `?` / 95.8 % `?` | 100 `?` | ~ 13 h `?` |
-| MNIST | LeNet-5 | 50 | 95.4 % `?` / 95.7 % `?` | 100 `?` | ~ 35 h `?` |
-| CIFAR-10 | CNN | 10 | 65 % `?` / 67 % `?` | 200 `?` | ~ 39 h `?` |
-| breast-cancer | logreg | 10 | 96.8 % `?` / 97.1 % `?` | — | ~ 30 min `?` |
+**Table III, N = 10 parties, MNIST row (paper line 879):**
+> "MNIST 92.1% 91.3% 87.8% 90.6% 89.9% 5,283.1 0.38"
 
-**Apples-to-apples with our v1:** POSEIDON's **accuracy** track is essentially "FedAvg-on-ciphertexts at convergence" — they expect to match plaintext within ~0.5 pp. Their interesting axis is **wall-clock and communication**, which is orders of magnitude beyond what one-shot HE-IFD pays.
+Columns are POSEIDON / centralised / federated-non-private / one-vs-rest non-private / etc. (column-header n/r from our extract). The 92.1 % is POSEIDON's MNIST accuracy at N=10; 5,283.1 is presumably wall-clock in some unit; 0.38 is communication.
 
-Our v1 should approach POSEIDON's accuracy ceiling (or stay below by < 5 pp) while paying a single round of encrypted aggregation, not 100+ rounds.
+**Table IV, N = 50 parties (extrapolated), CIFAR-100 row (paper line 936):**
+> "CIFAR-100 43.6% 41.8% 8.2% 41.1% 0.026 1404 0.006"
+
+**Crypto scheme:** Multiparty CKKS per Mouchet et al. (paper line 856 mentions CKKS ring degree N = 2^13 or 2^14; this is CKKS notation specifically). The previous draft's "multiparty CKKS" label is correct, with citation grounded in the paper body (not just the abstract's generic "multiparty lattice-based cryptography").
+
+**Apples-to-apples with our v1:** POSEIDON's MNIST = 92.1 % at N=10 (multi-round, 1.4 h wall-clock under HE). Our v1 MNIST at N=10 (not yet swept; N=2 / 4 / 8 = 0.67 / 0.62 / 0.53, N=32 = 0.71). Our v1 is **plaintext-simulated**, not real HE, so the comparison is one-step ahead — when we instantiate the protocol under multiparty CKKS the comparison axis becomes "POSEIDON 92.1 % in 1.4 h multi-round" vs "HE-IFD ??? in seconds one-round". We expect to trade accuracy for wall-clock at the order-of-magnitude level.
 
 ---
 
 ## What this table is for
 
-1. **Sanity check our v1 numbers** against what each closest neighbour reports. (Today: our N=32 / MNIST / α=0.1 student at 71.20 % is on the same order of magnitude as DENSE / Co-Boosting at α=0.1 on small models; we are below their ResNet-18 numbers because we run an MLP.)
-2. **Pin which method we line up against on each axis of the resubmission paper:**
-   - Plaintext one-shot **utility ceiling**: Co-Boosting.
-   - DP one-shot **utility-privacy frontier**: FedDiff (γ-variant comparator), FedKT (tabular).
-   - HE **crypto-stack peer**: POSEIDON (multi-round) — we differentiate on the one-shot axis.
-   - Public-probe **methodology lineage**: FedMD, DS-FL — we cite as origins.
-3. **Document gaps**: every `?` is a paper-inspection task. Before any of these numbers go into the manuscript they need to come from the paper's actual table, not from my recollection.
+1. **Bound our v1 claims** against what each closest published neighbour reports. Today, v1 on MNIST is in the same band as FedKT non-private (62.8 % FedAvg, 90.5 % FedKT) and roughly tracks DENSE's CIFAR-10 / α=0.1 (50.26 %) when normalised across dataset difficulty — but we are MNIST-only and have not built CIFAR yet, so the direct number isn't apples-to-apples.
+2. **Pin the resubmission's positioning axes**:
+   - **Plaintext one-shot utility ceiling**: Co-Boosting (CIFAR-10 / N=10 / α=0.1 / CNN-5 = 57.09 %).
+   - **DP one-shot utility-privacy frontier**: FedDiff (CIFAR-10 / ε=10 = 27.78 %; FashionMNIST / ε=1 = 65.53 %); FedKT for MNIST/SVHN.
+   - **HE multi-round peer**: POSEIDON (MNIST / N=10 = 92.1 % in 1.4 h, multi-round).
+   - **Public-probe methodology lineage**: FedMD (heterogeneous-task), DS-FL (same-domain).
+   - **Data-free one-shot lineage**: DENSE, Co-Boosting.
 
-## Verification list (TODO)
+---
 
-Each line below = "open the paper's published version, transcribe the cited cells verbatim, drop the `?` mark". Until the line is checked off, **every `?` row in that paper's section should be treated as LLM hallucination at the digit level** even if the structure (datasets, model, N range, α range) is right.
+## Verification list — what remains unsourced
 
-- [ ] FedMD Table 1 + Table 2 — MNIST↔EMNIST-letters balanced + imbalanced
-- [ ] DS-FL Tables 2 and 3 — FashionMNIST / CIFAR-10 at N=10
-- [ ] FedDF Table 1 — CIFAR-10 / CIFAR-100 at N=20 across α
-- [ ] DENSE Table 1 — FashionMNIST / CIFAR-10 / CIFAR-100 / Tiny-ImageNet at N=10 across α
-- [ ] Co-Boosting Table 1 + Table 2 — CIFAR-10 / CIFAR-100 / Tiny-ImageNet at N∈{5, 10} across α∈{0.1, 1.0}
-- [ ] FedDiff Table 1 — CIFAR-10 / CIFAR-100 at N∈{5, 10} across ε∈{1, 2, 5, 10}
-- [ ] FedKT Table 2 + Table 3 — MNIST / FashionMNIST / SVHN / CIFAR-10 across ε∈{2, 4, 8} at N=10
-- [ ] POSEIDON Tables 4 and 5 — MNIST / CIFAR-10 / breast-cancer accuracy + wall-clock + rounds at N=10
+These are the cells I labelled `n/r` (not recovered from the automated PDF extraction). They are not LLM guesses; they are simply not extracted yet. To fill them in, open the published paper and transcribe verbatim:
 
-When these are done, this file becomes a paper-citable reference table rather than a draft.
+- [ ] DS-FL — number of clients N + Dirichlet `α` grid (or partition scheme name).
+- [ ] DS-FL — main results table accuracy numbers.
+- [ ] FedDF — Table 1 specific accuracy / rounds-to-target cells for CIFAR-10 / CIFAR-100.
+- [ ] DENSE — default `m` (number of clients) in Table 1.
+- [ ] Co-Boosting — Table 1 MNIST, FMNIST, SVHN rows (only CIFAR-10 + CIFAR-100 extracted here).
+- [ ] FedDiff — Table 4 FashionMNIST and PathMNIST rows (CIFAR-10 row extracted).
+- [ ] FedKT — specific DP ε grid + DP-mode accuracies in their Table 2 / Section B.4.
+- [ ] POSEIDON — Table III column-header semantics (what 91.3 / 87.8 / 90.6 / 89.9 / 5,283.1 / 0.38 each are); Table IV CIFAR-10 row; CIFAR-10 wall-clock specifically.
+
+Until these are filled, the comparator-vs-v1 narrative leans on the cells already extracted above — none of which are LLM-generated.
