@@ -1,0 +1,5 @@
+URL:        https://github.com/diogenes0319/FedMD_clean.git
+Branch:     master
+SHA:        ab7a07b02c978f4c7871841bd68d2b776705bd97
+Clone date: 2026-05-21T06:30:38Z
+Depth:      shallow (--depth 1)
