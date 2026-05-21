@@ -1,0 +1,42 @@
+{
+  "method": "he-ifd-v1",
+  "dataset": "MNIST",
+  "N": 1,
+  "alpha": 0.1,
+  "seed": 42,
+  "K": 5,
+  "tau": 4.0,
+  "probe_size": 5000,
+  "student_acc": 0.9806,
+  "mean_teacher_acc": 0.9834,
+  "per_teacher_acc": [
+    0.9834
+  ],
+  "per_client_total": [
+    60000
+  ],
+  "per_client_per_class": [
+    [
+      5923,
+      6742,
+      5958,
+      6131,
+      5842,
+      5421,
+      5918,
+      6265,
+      5851,
+      5949
+    ]
+  ],
+  "wall_clock_sec": 427.748961687088,
+  "phase_teacher_sec": 298.22778153419495,
+  "phase_distill_sec": 55.082690954208374,
+  "phase_aggregate_sec": 0.001214742660522461,
+  "phase_eval_sec": 1.7964842319488525,
+  "job_id": "1088941",
+  "node": "ai01.kuvalar.ku.edu.tr",
+  "status": "success",
+  "error": null,
+  "notes": "v1 simulation: plaintext, server linear-only. loss=KL(tau=4.0), inputs=P\u222aD_i, alpha_i=1/N, end-of-K cumulative deltas, CKS-decrypt deferred."
+}

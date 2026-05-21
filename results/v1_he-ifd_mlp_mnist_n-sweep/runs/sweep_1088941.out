@@ -1,0 +1,49 @@
+[v1_sweep] job 1088941 on ai01.kuvalar.ku.edu.tr
+[v1_sweep] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-710b5b28-b85d-d35a-f69d-d1f7fd6774b6)
+[v1_sweep] PYTHONPATH=/scratch/hkanpak21/HE_IFD
+[sweep] start  N=1 seed=42 alpha=0.1 K=5
+Downloading http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+Failed to download (trying next):
+HTTP Error 404: Not Found
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz to data/mnist/MNIST/raw/train-images-idx3-ubyte.gz
+Extracting data/mnist/MNIST/raw/train-images-idx3-ubyte.gz to data/mnist/MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz
+Failed to download (trying next):
+HTTP Error 404: Not Found
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz to data/mnist/MNIST/raw/train-labels-idx1-ubyte.gz
+Extracting data/mnist/MNIST/raw/train-labels-idx1-ubyte.gz to data/mnist/MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz
+Failed to download (trying next):
+HTTP Error 404: Not Found
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz to data/mnist/MNIST/raw/t10k-images-idx3-ubyte.gz
+Extracting data/mnist/MNIST/raw/t10k-images-idx3-ubyte.gz to data/mnist/MNIST/raw
+
+Downloading http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz
+Failed to download (trying next):
+HTTP Error 404: Not Found
+
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz
+Downloading https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz to data/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz
+Extracting data/mnist/MNIST/raw/t10k-labels-idx1-ubyte.gz to data/mnist/MNIST/raw
+
+[sweep] ok    N=1 seed=42  student=0.9806  mean_teacher=0.9834  wall=427.7s
+[sweep] start  N=2 seed=42 alpha=0.1 K=5
+[sweep] ok    N=2 seed=42  student=0.6744  mean_teacher=0.5932  wall=361.4s
+[sweep] start  N=4 seed=42 alpha=0.1 K=5
+[sweep] ok    N=4 seed=42  student=0.6212  mean_teacher=0.4870  wall=370.2s
+[sweep] start  N=8 seed=42 alpha=0.1 K=5
+[sweep] ok    N=8 seed=42  student=0.5318  mean_teacher=0.4506  wall=390.3s
+[sweep] start  N=16 seed=42 alpha=0.1 K=5
+[sweep] ok    N=16 seed=42  student=0.6662  mean_teacher=0.4314  wall=437.4s
+[sweep] start  N=32 seed=42 alpha=0.1 K=5
+[sweep] ok    N=32 seed=42  student=0.7120  mean_teacher=0.3634  wall=515.7s
+[sweep] done. report at /scratch/hkanpak21/HE_IFD/results/v1_he-ifd_mlp_mnist_n-sweep/README.md

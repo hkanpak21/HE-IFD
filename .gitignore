@@ -1,17 +1,17 @@
-# LaTeX build artefacts
-*.aux
-*.log
-*.toc
-*.bbl
-*.blg
-*.out
-*.fdb_latexmk
-*.fls
-*.synctex.gz
-*.lof
-*.lot
-*.nav
-*.snm
+# LaTeX build artefacts (scoped to FL_TDSC/ so they don't mask slurm .out files)
+FL_TDSC/*.aux
+FL_TDSC/*.log
+FL_TDSC/*.toc
+FL_TDSC/*.bbl
+FL_TDSC/*.blg
+FL_TDSC/*.out
+FL_TDSC/*.fdb_latexmk
+FL_TDSC/*.fls
+FL_TDSC/*.synctex.gz
+FL_TDSC/*.lof
+FL_TDSC/*.lot
+FL_TDSC/*.nav
+FL_TDSC/*.snm
 
 # Python
 __pycache__/
@@ -37,38 +37,21 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Slurm scratch
+# Slurm scratch from the v1 sweep (the per-case runs/ dir keeps them).
 slurm-*.out
 *.sbatch.out
-results/smoke_*.out
-results/smoke_*.err
-results/dpdm_*.out
-results/dpdm_*.err
-results/coboost_*.out
-results/coboost_*.err
-results/fedmd_*.out
-results/fedmd_*.err
-results/feddiff_*.out
-results/feddiff_*.err
-results/fedkt_*.out
-results/fedkt_*.err
 
-# Symlink to legacy tree (lives elsewhere on scratch)
-legacy
+# Datasets live under data/. Don't track them; they're large and
+# reproducible by torchvision download or by copying from the user's cache.
+data/MNIST/
+data/FashionMNIST/
+data/cifar-10-batches-py/
+data/cifar-10-python.tar.gz
+data/mnist/
+
+# Teacher cache. Reproducible by re-running training (we keep the seed),
+# but heavy and not worth tracking.
+cache/
 
 # Local-only Claude state
 .claude/
-
-# Wave-orchestrator agent sidecars (merged into commits, then cleaned)
-.agent-output/
-
-# Vendored upstream comparator clones — full trees are large (datasets,
-# .git internals, model checkpoints) and reproducible from each vendor's
-# pinned COMMIT.txt SHA. We track only the audit trail (COMMIT.txt + any
-# patches we apply) and a top-level README. Rehydrate with the recipe in
-# comparators/README.md.
-comparators/**
-!comparators/README.md
-!comparators/*/
-!comparators/*/COMMIT.txt
-!comparators/*/PATCH-NOTES.md

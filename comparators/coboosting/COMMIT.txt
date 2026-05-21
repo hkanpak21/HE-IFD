@@ -1,9 +1,0 @@
-b95d715ebf04307192094160e49334d3ab7519f0
-upstream: https://github.com/rong-dai/Co-Boosting
-clone-date: 2026-05-17
-note: cloned full upstream tree; HEAD at clone time = b95d715. Upstream paper:
-      Dai et al., "Enhancing One-Shot Federated Learning Through Data and
-      Ensemble Co-Boosting", ICLR 2024 (bibkey dai2024coboosting). The
-      prompt's referenced URL github.com/yuanyuanyuan/Co-Boosting returns 404;
-      the canonical repo is rong-dai/Co-Boosting (verified via GitHub search
-      API on 2026-05-17). No upstream files were modified.

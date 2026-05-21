@@ -1,2 +1,0 @@
-ab7a07b02c978f4c7871841bd68d2b776705bd97
-# Pinned 2026-05-17 from https://github.com/diogenes0319/FedMD_clean (master HEAD: "Update README.md")

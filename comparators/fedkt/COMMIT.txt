@@ -1,8 +1,0 @@
-repo: https://github.com/QinbinLi/FedKT
-sha:  0bb9a89ea266c057990a4a326b586ed3d2fb2df8
-date: 2026-05-17 (cloned)
-upstream commit message: "update" (2021-05-21, only commit on master)
-notes: vendored verbatim, no patches applied. PATE-style aggregation
-       with moments accountant in privacy_analysis.py; --gamma controls
-       per-query noise (Laplace 1/gamma) and --dp_level={1,2} selects
-       server-side vs party-side noise injection.
