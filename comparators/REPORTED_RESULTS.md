@@ -1,8 +1,16 @@
 # Reported results — prior-work comparator table
 
-Numbers in this document come from the **published papers** of each method (and where ambiguous, from the corresponding arXiv version). Nothing here is a rerun on our side; this is a literature table to anchor what each prior work claims at the settings they evaluated.
+> ## ⚠ DO NOT QUOTE THE `?` CELLS WITHOUT VERIFYING THEM ⚠
+>
+> Every cell in this document that carries a `?` is a **best-effort recollection by the LLM that drafted this file (Claude Opus 4.7), not a paper-extracted number**. LLM memory of specific table cells is unreliable. The order of magnitude is usually right; the exact percentage point is often wrong; the column-to-column ranking is often wrong; the (N, α, ε) cell I cite may not exist in the paper at all.
+>
+> Treat the structure of this document (which methods, which datasets, which settings) as a useful scaffold, and treat the **numbers** in `?`-marked cells as placeholders. Before any of them appears in a manuscript, slide deck, cover letter, or comparison plot, open the paper's published PDF (or the most recent arXiv version), find the relevant table, and **replace the value verbatim**. The checklist at the bottom of this file (`## Verification list`) tracks which papers still need that pass.
+>
+> Cells without `?` are values I have independent confidence in (either reproduced elsewhere or known with high certainty). Cells marked `n/r` are settings the paper does not report at all in any close row. Cells marked `n/a` are settings where the comparison is not meaningful.
 
-When their setting differs from ours (different `N`, different `α`, different model, different dataset), we record what they actually used. We **do not** extrapolate. Cells marked `n/r` are not reported by the paper in any closely related row. Cells marked `?` are values we should confirm by direct paper inspection before quoting in any manuscript.
+Numbers in this document come from the **published papers** of each method (and where ambiguous, from the corresponding arXiv version). Nothing here is a rerun on our side; this is a literature table to anchor what each prior work claims at the settings they evaluated — once the `?` cells are verified against the papers.
+
+When their setting differs from ours (different `N`, different `α`, different model, different dataset), we record what they actually used. We **do not** extrapolate.
 
 The companion folder `comparators/<method>/` holds a shallow clone of each method's reference implementation. `COMMIT.txt` in each subdirectory pins the upstream URL + branch + SHA.
 
@@ -183,7 +191,7 @@ Our v1 should approach POSEIDON's accuracy ceiling (or stay below by < 5 pp) whi
 
 ## Verification list (TODO)
 
-Each line below = "open the paper's published version, transcribe the cited cell verbatim, drop the `?` mark":
+Each line below = "open the paper's published version, transcribe the cited cells verbatim, drop the `?` mark". Until the line is checked off, **every `?` row in that paper's section should be treated as LLM hallucination at the digit level** even if the structure (datasets, model, N range, α range) is right.
 
 - [ ] FedMD Table 1 + Table 2 — MNIST↔EMNIST-letters balanced + imbalanced
 - [ ] DS-FL Tables 2 and 3 — FashionMNIST / CIFAR-10 at N=10
