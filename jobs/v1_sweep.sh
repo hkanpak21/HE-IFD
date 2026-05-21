@@ -19,7 +19,7 @@
 set -euo pipefail
 
 REPO_ROOT="/scratch/hkanpak21/HE_IFD"
-RESULTS_DIR="${REPO_ROOT}/results/v1_he-ifd_mlp_mnist_n-sweep"
+RESULTS_DIR="${REPO_ROOT}/${V1_RESULTS_DIR:-results/v1_he-ifd_mlp_mnist_n-sweep}"
 mkdir -p "${RESULTS_DIR}/runs"
 
 source /opt/ohpc/pub/compiler/conda3/latest/etc/profile.d/conda.sh
