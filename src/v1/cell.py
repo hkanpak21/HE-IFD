@@ -42,8 +42,11 @@ class CellResult:
     K: int
     tau: float
     probe_size: int
+    use_probe: bool
     student_acc: Optional[float]
     mean_teacher_acc: Optional[float]
+    best_teacher_acc: Optional[float]
+    worst_teacher_acc: Optional[float]
     per_teacher_acc: List[float]
     per_client_total: List[int]
     per_client_per_class: List[List[int]]
@@ -78,6 +81,7 @@ def run_cell(
     K: int = 5,
     tau: float = 4.0,
     probe_size: int = 5000,
+    use_probe: bool = False,
     teacher_epochs: int = 30,
     distill_lr: float = 1e-2,
     distill_batch_size: int = 64,
@@ -89,25 +93,33 @@ def run_cell(
     node = socket.gethostname()
     t_start = time.time()
 
+    effective_probe_size = probe_size if use_probe else 0
+    distill_inputs_label = "P∪D_i" if use_probe else "D_i"
     result = CellResult(
         method="he-ifd-v1",
         dataset="MNIST",
-        N=N, alpha=alpha, seed=seed, K=K, tau=tau, probe_size=probe_size,
+        N=N, alpha=alpha, seed=seed, K=K, tau=tau,
+        probe_size=effective_probe_size, use_probe=use_probe,
         student_acc=None, mean_teacher_acc=None,
+        best_teacher_acc=None, worst_teacher_acc=None,
         per_teacher_acc=[], per_client_total=[], per_client_per_class=[],
         wall_clock_sec=0.0, phase_teacher_sec=0.0, phase_distill_sec=0.0,
         phase_aggregate_sec=0.0, phase_eval_sec=0.0,
         job_id=job_id, node=node, status="failed",
         error=None,
         notes=(f"v1 simulation: plaintext, server linear-only. "
-               f"loss=KL(tau={tau}), inputs=P∪D_i, alpha_i=1/N, "
+               f"loss=KL(tau={tau}), inputs={distill_inputs_label}, alpha_i=1/N, "
                f"end-of-K cumulative deltas, CKS-decrypt deferred."),
     )
 
     try:
         # Data.
         train_ds, test_ds = load_mnist()
-        probe_ds, eval_ds = split_probe_from_test(test_ds, probe_size=probe_size, seed=seed)
+        if use_probe:
+            probe_ds, eval_ds = split_probe_from_test(test_ds, probe_size=probe_size, seed=seed)
+        else:
+            probe_ds = None
+            eval_ds = test_ds
         idx_per_client, per_class_holdings = dirichlet_partition(
             train_ds, n_clients=N, alpha=alpha, seed=seed,
         )
@@ -131,9 +143,12 @@ def run_cell(
         t0 = time.time()
         client_deltas: List[Dict[str, torch.Tensor]] = []
         for i, (teacher, local_subset) in enumerate(zip(teachers, subsets)):
-            union = probe_and_local_union_dataset(probe_ds, local_subset)
+            distill_ds = (
+                probe_and_local_union_dataset(probe_ds, local_subset)
+                if use_probe else local_subset
+            )
             delta = local_distill(
-                teacher=teacher, union_ds=union, theta0=theta0,
+                teacher=teacher, union_ds=distill_ds, theta0=theta0,
                 epochs=K, batch_size=distill_batch_size, lr=distill_lr,
                 momentum=0.9, tau=tau, device=device, seed=2000 + i,
             )
@@ -153,6 +168,8 @@ def run_cell(
         result.student_acc = student_acc
         result.mean_teacher_acc = mt_acc
         result.per_teacher_acc = per_teacher
+        result.best_teacher_acc = max(per_teacher) if per_teacher else None
+        result.worst_teacher_acc = min(per_teacher) if per_teacher else None
         result.status = "success"
 
     except Exception as exc:  # pragma: no cover - defensive

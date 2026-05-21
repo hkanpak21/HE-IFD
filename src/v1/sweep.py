@@ -24,6 +24,9 @@ def parse_args() -> argparse.Namespace:
                    help="Client-side distillation epochs.")
     p.add_argument("--tau", type=float, default=4.0)
     p.add_argument("--probe-size", type=int, default=5000)
+    p.add_argument("--use-probe", action="store_true",
+                   help="Include public probe P in distillation set (P ∪ D_i). "
+                        "Default: False (D_i only).")
     p.add_argument("--teacher-epochs", type=int, default=30)
     p.add_argument("--results-dir", default="results/v1_he-ifd_mlp_mnist_n-sweep")
     p.add_argument("--cache-root", default="cache")
@@ -48,7 +51,8 @@ def main() -> None:
             print(f"[sweep] start  N={N} seed={seed} alpha={args.alpha} K={args.K}", flush=True)
             res = run_cell(
                 N=N, seed=seed, alpha=args.alpha, K=args.K, tau=args.tau,
-                probe_size=args.probe_size, teacher_epochs=args.teacher_epochs,
+                probe_size=args.probe_size, use_probe=args.use_probe,
+                teacher_epochs=args.teacher_epochs,
                 cache_root=args.cache_root, results_dir=str(results_dir),
             )
             cells.append(res)

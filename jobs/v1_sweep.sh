@@ -37,6 +37,11 @@ echo "[v1_sweep] PYTHONPATH=${REPO_ROOT}"
 #   seeds = 42 (one seed for first run; bump to multi-seed later)
 #   alpha = 0.1
 #   K = 5
+#   use_probe = unset (no probe) -- set V1_USE_PROBE=1 to include P in distillation
+USE_PROBE_FLAG=""
+if [[ "${V1_USE_PROBE:-0}" == "1" ]]; then
+    USE_PROBE_FLAG="--use-probe"
+fi
 PYTHONPATH="${REPO_ROOT}" exec srun python -u -m src.v1.sweep \
     --Ns "${V1_NS:-1,2,4,8,16,32}" \
     --seeds "${V1_SEEDS:-42}" \
@@ -44,6 +49,7 @@ PYTHONPATH="${REPO_ROOT}" exec srun python -u -m src.v1.sweep \
     --K "${V1_K:-5}" \
     --tau "${V1_TAU:-4.0}" \
     --probe-size "${V1_PROBE_SIZE:-5000}" \
+    ${USE_PROBE_FLAG} \
     --teacher-epochs "${V1_TEACHER_EPOCHS:-30}" \
     --results-dir "${RESULTS_DIR}" \
     --cache-root "${REPO_ROOT}/cache"
