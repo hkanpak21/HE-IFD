@@ -12,7 +12,7 @@ FL_TDSC/*.lof
 FL_TDSC/*.lot
 FL_TDSC/*.nav
 FL_TDSC/*.snm
-
+git_token.txt
 # Python
 __pycache__/
 *.pyc
@@ -58,3 +58,4 @@ cache/
 
 # Local-only Claude state
 .claude/
+git_token.txt

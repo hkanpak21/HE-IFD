@@ -180,7 +180,13 @@ sbatch jobs/v1_sweep.sh
 
 Origin is **`https://github.com/hkanpak21/HE-IFD.git`**, set up 2026-05-21.
 
-### Auth on VALAR (not configured yet)
+### Auth on VALAR (configured 2026-05-21)
+
+Credentials are stored at `~/.git-credentials` (mode 600), populated via `git config --global credential.helper store` and a Personal Access Token the user left at `/scratch/hkanpak21/HE_IFD/git_token.txt` (gitignored). Future `git pull` / `git push` from VALAR work silently.
+
+**Do NOT echo or commit the token.** `git_token.txt` is in `.gitignore`; `~/.git-credentials` lives outside the repo. If the token rotates, the user updates `~/.git-credentials` directly or re-runs the setup below.
+
+### Auth setup options (for reference / future machines)
 
 The push from VALAR will fail until one of these is done. Pick whichever the user prefers:
 
