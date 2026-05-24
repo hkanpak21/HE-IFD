@@ -30,6 +30,8 @@ def main():
     ap.add_argument("--alpha", type=float, default=0.1)
     ap.add_argument("--K", type=int, default=3)
     ap.add_argument("--tau", type=float, default=4.0)
+    ap.add_argument("--use-lora", action="store_true",
+                    help="Enable LoRA fine-tuning (default: full ViT fine-tune)")
     ap.add_argument("--rank", type=int, default=8)
     ap.add_argument("--lora-alpha", type=int, default=16)
     ap.add_argument("--weight-mode", default="samples")
@@ -57,7 +59,9 @@ def main():
                 r = run_cell(
                     method=method, dataset=args.dataset,
                     N=N, seed=seed, alpha=args.alpha,
-                    K=args.K, tau=args.tau, rank=args.rank,
+                    K=args.K, tau=args.tau,
+                    use_lora=args.use_lora,
+                    rank=args.rank,
                     lora_alpha=args.lora_alpha, weight_mode=args.weight_mode,
                     teacher_epochs=args.teacher_epochs,
                     teacher_lr=args.teacher_lr,

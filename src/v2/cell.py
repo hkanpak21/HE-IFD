@@ -29,8 +29,8 @@ from .data import (client_subsets, dirichlet_partition, load_cifar10,
                    load_cifar100, split_probe_from_test)
 from .distill import local_distill, fresh_student
 from .evaluation import evaluate_module
-from .model import (build_vit, wrap_with_lora, lora_trainable_state,
-                    lora_trainable_load, trainable_param_count)
+from .model import (build_student, trainable_state, trainable_load,
+                    trainable_param_count)
 from .teacher import build_teacher_model, train_all_teachers
 
 
@@ -44,6 +44,7 @@ class CellResult:
     seed: int
     K: int
     tau: float
+    use_lora: bool
     rank: int
     lora_alpha: int
     weight_mode: str
@@ -90,6 +91,7 @@ def load_dataset(name: str):
 def run_cell(*, method: str, dataset: str, N: int, seed: int,
              alpha: float = 0.1,
              K: int = 3, tau: float = 4.0,
+             use_lora: bool = False,
              rank: int = 8, lora_alpha: int = 16,
              weight_mode: str = "samples",
              teacher_epochs: int = 3, teacher_lr: float = 5e-4,
@@ -108,6 +110,7 @@ def run_cell(*, method: str, dataset: str, N: int, seed: int,
     result = CellResult(
         method=method, dataset=dataset, num_classes=num_classes,
         N=N, alpha=alpha, seed=seed, K=K, tau=tau,
+        use_lora=use_lora,
         rank=rank, lora_alpha=lora_alpha, weight_mode=weight_mode,
         teacher_epochs=teacher_epochs, teacher_lr=teacher_lr,
         distill_lr=distill_lr, distill_batch_size=distill_batch_size,
@@ -120,8 +123,8 @@ def run_cell(*, method: str, dataset: str, N: int, seed: int,
         phase_aggregate_sec=0.0, phase_eval_sec=0.0,
         job_id=job_id, node=node, status="failed",
         error=None,
-        notes=(f"v2 ViT-B/16 + LoRA fine-tune, dataset={dataset}, "
-               f"weight_mode={weight_mode}, method={method}"),
+        notes=(f"v2 ViT-B/16 {'+ LoRA' if use_lora else 'full-FT'} fine-tune, "
+               f"dataset={dataset}, weight_mode={weight_mode}, method={method}"),
     )
 
     try:
@@ -131,28 +134,33 @@ def run_cell(*, method: str, dataset: str, N: int, seed: int,
         result.per_client_total = client_sizes
         result.per_client_per_class = holdings.tolist()
 
-        # ---- Phase 1: teacher LoRA per client ----
+        # ---- Phase 1: teacher fine-tune per client ----
         t0 = time.time()
         teacher_states = train_all_teachers(
             subs, dataset=dataset, num_classes=num_classes,
             N=N, alpha=alpha, seed=seed, cache_root=cache_root,
             epochs=teacher_epochs, lr=teacher_lr,
             batch_size=teacher_batch_size,
-            rank=rank, lora_alpha=lora_alpha, device=device,
+            use_lora=use_lora, rank=rank, lora_alpha=lora_alpha,
+            device=device,
         )
         result.phase_teacher_sec = time.time() - t0
 
         # Materialize teachers for distillation / eval
         teachers = [build_teacher_model(s, num_classes=num_classes,
-                                        rank=rank, alpha=lora_alpha,
+                                        use_lora=use_lora,
+                                        rank=rank, lora_alpha=lora_alpha,
                                         device=device)
                     for s in teacher_states]
 
         # ---- Shared student init (deterministic) ----
         student_init_seed = seed + 7
-        ref_student = fresh_student(num_classes, rank, lora_alpha,
-                                    student_init_seed, device)
-        initial = lora_trainable_state(ref_student)
+        ref_student = fresh_student(num_classes,
+                                    use_lora=use_lora, rank=rank,
+                                    lora_alpha=lora_alpha,
+                                    init_seed=student_init_seed,
+                                    device=device)
+        initial = trainable_state(ref_student)
         result.trainable_params_per_client = trainable_param_count(ref_student)
         del ref_student
 
@@ -165,11 +173,12 @@ def run_cell(*, method: str, dataset: str, N: int, seed: int,
             for ts in teacher_states:
                 client_deltas.append({k: ts[k] - initial[k] for k in initial})
         elif method == "M1":
-            # HE-IFD-LoRA: distill teacher into a fresh student via KL on D_i.
+            # HE-IFD: distill teacher into a fresh student via KL on D_i.
             for ci, (teacher, sub) in enumerate(zip(teachers, subs)):
                 d = local_distill(
                     teacher, sub, num_classes=num_classes,
-                    rank=rank, alpha=lora_alpha, init_seed=student_init_seed,
+                    use_lora=use_lora, rank=rank, lora_alpha=lora_alpha,
+                    init_seed=student_init_seed,
                     K=K, lr=distill_lr, batch_size=distill_batch_size,
                     tau=tau, device=device, run_seed=2000 + ci,
                 )
@@ -187,9 +196,12 @@ def run_cell(*, method: str, dataset: str, N: int, seed: int,
 
         # ---- Phase 4: eval ----
         t0 = time.time()
-        student_for_eval = fresh_student(num_classes, rank, lora_alpha,
-                                         student_init_seed, device)
-        lora_trainable_load(student_for_eval, W_E)
+        student_for_eval = fresh_student(num_classes,
+                                         use_lora=use_lora, rank=rank,
+                                         lora_alpha=lora_alpha,
+                                         init_seed=student_init_seed,
+                                         device=device)
+        trainable_load(student_for_eval, W_E)
         s_acc, s_per_class = evaluate_module(student_for_eval, test_ds, device)
 
         per_teacher = []

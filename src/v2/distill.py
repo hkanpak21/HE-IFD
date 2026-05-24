@@ -1,14 +1,12 @@
-"""Client-side local distillation in the LoRA fine-tuning regime.
+"""Client-side local distillation. Supports full-FT and LoRA modes.
 
 Each client:
-  - Builds a fresh student LoRA from the shared init (teacher LoRA, freshly
-    constructed each call from the same seed -> deterministic shared init).
-  - KL-distills against its teacher T_i (the per-client LoRA model) on D_i.
+  - Builds a fresh student from a deterministic shared init.
+  - KL-distills against its teacher on D_i.
   - Returns the trainable-parameter delta {student_final - student_init}.
 
-Backbone weights NEVER move. Only the LoRA A/B matrices and the classification
-head receive updates. The "delta" is therefore much smaller than full-model
-FL (typically a few hundred K parameters per client vs 86M).
+Full-FT: every ViT parameter moves; delta is ~86M floats per layer-key.
+LoRA: only adapter + head move; delta is ~hundreds of K floats.
 """
 from __future__ import annotations
 
@@ -20,8 +18,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 
-from .model import (build_vit, wrap_with_lora, lora_trainable_state,
-                    lora_deltas)
+from .model import build_student, trainable_state, model_deltas
 
 
 def kl_distillation_loss(student_logits: torch.Tensor,
@@ -33,35 +30,36 @@ def kl_distillation_loss(student_logits: torch.Tensor,
     return F.kl_div(s, t, reduction="batchmean") * (tau ** 2)
 
 
-def fresh_student(num_classes: int, rank: int, alpha: int,
-                  init_seed: int, device) -> nn.Module:
-    """Build a student LoRA from a deterministic init (same on every client).
+def fresh_student(num_classes: int, *, use_lora: bool, rank: int,
+                  lora_alpha: int, init_seed: int, device) -> nn.Module:
+    """Build a student from a deterministic init (same on every client).
 
-    The pretrained backbone + classification head init are deterministic across
-    clients because pretrained weights are public. The LoRA A/B init is
-    Kaiming/zero (deterministic from the torch seed we set here).
+    Pretrained backbone weights are public/deterministic. In LoRA mode the
+    A matrix is Kaiming-init (seeded), B is zero. In full-FT mode the
+    "init" is the pretrained weights themselves.
     """
     torch.manual_seed(init_seed)
-    base = build_vit(num_classes=num_classes, pretrained=True)
-    m = wrap_with_lora(base, rank=rank, alpha=alpha).to(device)
+    m = build_student(num_classes=num_classes, use_lora=use_lora,
+                      rank=rank, lora_alpha=lora_alpha).to(device)
     return m
 
 
 def local_distill(teacher: nn.Module, distill_ds: Dataset, *,
-                  num_classes: int, rank: int, alpha: int, init_seed: int,
-                  K: int, lr: float, batch_size: int, tau: float,
-                  device, run_seed: int) -> Dict[str, torch.Tensor]:
-    """One client's local KL distillation of a teacher into a fresh student LoRA.
+                  num_classes: int, use_lora: bool, rank: int, lora_alpha: int,
+                  init_seed: int, K: int, lr: float, batch_size: int,
+                  tau: float, device, run_seed: int) -> Dict[str, torch.Tensor]:
+    """One client's local KL distillation of a teacher into a fresh student.
 
     Returns the trainable-param delta from the deterministic shared init.
     """
     torch.manual_seed(run_seed)
-    s = fresh_student(num_classes, rank, alpha, init_seed, device)
-    initial = lora_trainable_state(s)
+    s = fresh_student(num_classes, use_lora=use_lora, rank=rank,
+                      lora_alpha=lora_alpha, init_seed=init_seed, device=device)
+    initial = trainable_state(s)
     teacher = teacher.to(device).eval()
 
     if len(distill_ds) == 0:
-        return lora_deltas(initial, initial)
+        return model_deltas(initial, initial)
 
     loader = DataLoader(distill_ds, batch_size=batch_size, shuffle=True,
                         num_workers=2, pin_memory=True)
@@ -78,5 +76,5 @@ def local_distill(teacher: nn.Module, distill_ds: Dataset, *,
             opt.zero_grad()
             loss.backward()
             opt.step()
-    final = lora_trainable_state(s)
-    return lora_deltas(initial, final)
+    final = trainable_state(s)
+    return model_deltas(initial, final)

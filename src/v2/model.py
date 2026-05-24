@@ -1,14 +1,25 @@
-"""ViT-B/16 backbone + LoRA adapters via PEFT.
+"""ViT-B/16 backbone, supporting two fine-tuning modes.
 
 Backbone: timm vit_base_patch16_224.augreg_in21k_ft_in1k (pretrained on
 ImageNet-21k, fine-tuned on ImageNet-1k). Loaded from local HF cache on VALAR.
 
-LoRA: PEFT LoraConfig targeting the attention projection layers (q, k, v) and
-optionally the FFN. Default rank=8, alpha=16. Only LoRA matrices are trainable.
+Two modes selected by the `use_lora` flag:
 
-Per-client "delta" is the set of LoRA A and B matrices. Since A is init Kaiming
-and B is init zero, the initial LoRA output is identically zero — so each
-client's "delta from shared init" can be expressed as the final LoRA state.
+(a) `use_lora=False` (default, "v1 method on ViT"):
+    Every parameter of the ViT is trainable from the pretrained init.
+    Each client's "delta" is the full 86M-parameter difference. Faithful
+    translation of v1 — fine-tunes the entire model, KL-distills, ships
+    the parameter delta, server linear-averages.
+
+(b) `use_lora=True`:
+    PEFT LoraConfig wraps q/k/v/proj attention projections with rank-r
+    adapters (default rank=8, alpha=16). Backbone is frozen; only LoRA
+    matrices + classification head are trainable. Delta per client is
+    ~hundreds of K parameters instead of 86M.
+
+`trainable_state()` etc. work uniformly: they return only the parameters
+that have requires_grad=True. In full-FT mode that's everything; in LoRA
+mode that's the adapter + head.
 """
 from __future__ import annotations
 
@@ -65,33 +76,52 @@ def wrap_with_lora(model: nn.Module, *, rank: int = 8, alpha: int = 16,
     return get_peft_model(model, cfg)
 
 
-def lora_trainable_state(pmodel: PeftModel) -> Dict[str, torch.Tensor]:
-    """Return clones of all trainable parameters in a LoRA-wrapped model.
+def build_student(num_classes: int, *, use_lora: bool, rank: int = 8,
+                  lora_alpha: int = 16, pretrained: bool = True) -> nn.Module:
+    """Unified factory: returns either a plain ViT (all params trainable)
+    or a LoRA-wrapped ViT (only LoRA + head trainable)."""
+    base = build_vit(num_classes=num_classes, pretrained=pretrained)
+    if not use_lora:
+        for p in base.parameters():
+            p.requires_grad = True
+        return base
+    return wrap_with_lora(base, rank=rank, alpha=lora_alpha)
 
-    These are the LoRA A/B tensors and the classification head (if
-    modules_to_save lists it). What gets shipped to the server.
+
+def trainable_state(model: nn.Module) -> Dict[str, torch.Tensor]:
+    """Return clones of all trainable parameters in the given model.
+
+    For full-FT mode: returns the full state dict (everything is trainable).
+    For LoRA mode: returns only the LoRA + head tensors. What gets shipped
+    to the server in either case.
     """
     state = {}
-    for name, p in pmodel.named_parameters():
+    for name, p in model.named_parameters():
         if p.requires_grad:
             state[name] = p.detach().clone()
     return state
 
 
-def lora_trainable_load(pmodel: PeftModel, state: Dict[str, torch.Tensor]) -> None:
-    """Load trainable-parameter values into a fresh LoRA model with the same arch."""
-    own = dict(pmodel.named_parameters())
+def trainable_load(model: nn.Module, state: Dict[str, torch.Tensor]) -> None:
+    """Copy trainable-parameter values into the model."""
+    own = dict(model.named_parameters())
     with torch.no_grad():
         for k, v in state.items():
             if k in own and own[k].requires_grad:
                 own[k].copy_(v.to(own[k].device))
 
 
-def lora_deltas(initial: Dict[str, torch.Tensor],
-                final: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+def model_deltas(initial: Dict[str, torch.Tensor],
+                 final: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
     """Per-tensor diff. Used by the server's linear aggregator."""
     return {k: (final[k] - initial[k]) for k in initial}
 
 
-def trainable_param_count(pmodel: PeftModel) -> int:
-    return sum(p.numel() for p in pmodel.parameters() if p.requires_grad)
+def trainable_param_count(model: nn.Module) -> int:
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+# ---- backwards-compatible aliases (used by earlier code paths) ----
+lora_trainable_state = trainable_state
+lora_trainable_load = trainable_load
+lora_deltas = model_deltas
