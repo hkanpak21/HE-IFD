@@ -201,20 +201,23 @@ def extract_text_features(
 ) -> Tuple:
     """Extract & cache text features for a pretrained text backbone.
 
-    Returns (X_train, y_train, X_test, y_test, in_dim). Ported verbatim from
-    notebook Section C.1.
+    Returns (X_train, y_train, X_test, y_test, in_dim). Ported from notebook
+    Section C.1.
 
-    # NOTE: GPT-2 pooling fixed in issue 002.
-    # This faithfully replicates the notebook's CURRENT pooling, which is a
-    # masked MEAN-pool over `last_hidden_state`:
-    #     pooled = (last * mask).sum(1) / mask.sum(1).clamp_min(1)
-    # For a bidirectional encoder (DistilBERT) mean-pooling is fine. For GPT-2
-    # (causal LM, right-padded by default) mean-pooling over the causal sequence
-    # destroys the signal and pins every GPT-2 cell at chance (~25% on AG News).
-    # The fix (left-pad the tokenizer + take the last non-pad token's hidden
-    # state) is deliberately NOT applied here — it is the subject of issue 002.
-    # Porting the bug verbatim keeps this consolidation a pure refactor and lets
-    # issue 002's regression test prove the fix moves GPT-2 off chance.
+    Pooling depends on the backbone's attention pattern:
+
+    * **DistilBERT** is a *bidirectional* encoder: every token's hidden state
+      sees the whole sentence, so a masked **mean-pool** over real tokens is a
+      sound sentence embedding (verbatim from the notebook).
+    * **GPT-2** is a *causal* LM: a token's hidden state attends only to itself
+      and earlier tokens, so only the **last** real token has seen the entire
+      sentence. The notebook mean-pooled GPT-2 over a *right-padded* causal
+      sequence (pad = eos), which mixes low-context early states (and GPT-2's
+      large-magnitude outlier dims) into a degenerate vector — pinning every
+      GPT-2 / AG-News cell at chance (~0.25 for 4 classes), even IID α=1.0 with
+      no protocol. The fix (this code) **left-pads** the tokenizer so the final
+      sequence position is always a real token, then takes that last token's
+      hidden state (``last_hidden_state[:, -1, :]``) as the sentence embedding.
     """
     import torch
     from transformers import AutoModel, AutoTokenizer
@@ -229,14 +232,22 @@ def extract_text_features(
 
     if backbone_name == "distilbert":
         model_id = "distilbert-base-uncased"
+        causal = False
     elif backbone_name == "gpt2_small":
         model_id = "gpt2"
+        causal = True
     else:
         raise ValueError(backbone_name)
 
     tok = AutoTokenizer.from_pretrained(model_id)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
+    # GPT-2 fix: left-pad so the LAST sequence position is always a real token
+    # (the final token of the sentence, which has attended to the whole sequence
+    # under causal attention). DistilBERT keeps its default right padding —
+    # bidirectional mean-pooling is unaffected by pad side.
+    if causal:
+        tok.padding_side = "left"
     dev = _device()
     model = AutoModel.from_pretrained(model_id).to(dev).eval()
     in_dim = model.config.hidden_size if hasattr(model.config, "hidden_size") else 768
@@ -256,9 +267,14 @@ def extract_text_features(
                           return_tensors="pt").to(dev)
                 out = model(**enc)
                 last = out.last_hidden_state
-                mask = enc["attention_mask"].unsqueeze(-1).float()
-                # NOTE: GPT-2 pooling fixed in issue 002 (masked mean-pool below).
-                pooled = (last * mask).sum(1) / mask.sum(1).clamp_min(1)
+                if causal:
+                    # GPT-2: last real token. Under left padding the final
+                    # position (-1) is always the sentence's last token.
+                    pooled = last[:, -1, :]
+                else:
+                    # DistilBERT: masked mean-pool over real tokens (unchanged).
+                    mask = enc["attention_mask"].unsqueeze(-1).float()
+                    pooled = (last * mask).sum(1) / mask.sum(1).clamp_min(1)
                 feats.append(pooled.cpu())
         return torch.cat(feats)
 
