@@ -86,7 +86,7 @@ Single env: **`he_ofl`** (`/home/hkanpak21/.conda/envs/he_ofl`). Has `torch 2.3.
 #SBATCH --gres=gpu:tesla_t4:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=24G              # bump to 64G+ for TenSEAL / multiparty CKKS work
-#SBATCH --time=04:00:00
+#SBATCH --time=03:00:00        # VALAR HARD CAP is 3h per job — never exceed
 #SBATCH --job-name=<name>
 #SBATCH --output=/scratch/hkanpak21/HE_IFD/results/<case>/runs/<name>_%j.out
 #SBATCH --error=/scratch/hkanpak21/HE_IFD/results/<case>/runs/<name>_%j.err
@@ -100,6 +100,8 @@ exec srun python -u -m src.<entrypoint> "$@"   # flat src/ package (post-consoli
 ```
 
 The Lattigo (Go) real-FHE job is the exception — it builds/runs a Go binary, may use a CPU partition (no GPU needed), and lives under `fhe/`.
+
+**VALAR job time limit: 3 hours, hard.** Any job that would exceed 3h must be split into resumable ≤3h chunks (`sweep.py` skips already-completed cells; select cell subsets via env vars or a job-array index). A sweep that dies at the wall-clock should resume, not restart, on the next submission.
 
 ## Datasets
 
