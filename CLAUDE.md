@@ -2,6 +2,21 @@
 
 Read this first when you (Claude) attach to this repo. It tells you how the user wants to work and what NOT to do.
 
+## Deprecated material lives in this repo — be paranoid
+
+This repository has accumulated **deprecated implementations, deprecated methodology drafts, and deprecated paper sections** that the user has explicitly retired. They are kept on disk for audit and provenance, **not** because they describe the current method. If you treat them as authoritative you will describe the wrong protocol, build on the wrong code, and reproduce numbers that were rejected.
+
+Current source of truth (2026-05-21):
+- **Methodology / protocol** → `src/v1/` (plaintext simulation of the *current* one-shot linear-aggregation design) plus whatever the user confirms in conversation.
+- **Results** → `results/v1_he-ifd_mlp_mnist_n-sweep/` and any newer cases that follow the same `results/<case>/` convention.
+
+Known-deprecated locations (do **not** mine these for methodology, equations, threat model, or experiment design):
+- `FL_TDSC/archive/` — old methodology / experiments sections from the rejected draft. The earlier protocol there (encrypted ensemble target, encrypted SGD on the server, β/λ confidence-boost, encrypted-feature distillation, ViT/LeNet polynomial-activation stack) is **not** what we now do. The current protocol is: clients distil locally on `P ∪ D_i` against their own teachers, ship one encrypted per-layer parameter delta, server does only `θ₀ + (1/N)·Σ ΔW_i`, threshold-decrypt.
+- `comparators/` — vendored upstream code (FedMD, FedDF, DENSE, etc.) for citation/audit; many vendors have stale APIs and are not runnable. Numbers we cite come from `comparators/REPORTED_RESULTS.md`, which is verbatim from the published papers.
+- Anything else under `FL_TDSC/` outside `main.tex`, `methodology.tex`, `experiments.tex` (the *non-archive* copies) — older drafts will live in git history; do not resurrect them without explicit user direction.
+
+**Rule of thumb.** If a file's content disagrees with `src/v1/` or with what the user just said in this conversation, the file is wrong, not the conversation. Ask before relying on it. The Overleaf-style `methodology.tex` and `experiments.tex` at the root of `FL_TDSC/` will be rewritten in a separate intentional pass to match the current code; until then, treat them as stale too.
+
 ## The workflow
 
 The user develops on a local machine (Mac/Linux/Windows) and runs all compute on the **VALAR** HPC cluster. Specifically:

@@ -59,3 +59,5 @@ cache/
 # Local-only Claude state
 .claude/
 git_token.txt
+
+FL_TDSC/archive/
