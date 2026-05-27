@@ -11,3 +11,75 @@
 [sweep] start mlp_mnist N=5 a=0.05 dp_avg_eps8_K20 s=44 K=300
 [sweep] ok   dp_avg_eps8_K20 acc=0.4951 mean_teacher=0.3521 wall=31.7s err=None
 [sweep] start mlp_mnist N=5 a=0.1 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.5548 mean_teacher=0.4995 wall=32.1s err=None
+[sweep] start mlp_mnist N=5 a=0.1 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.5531 mean_teacher=0.4797 wall=32.3s err=None
+[sweep] start mlp_mnist N=5 a=0.3 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2927 mean_teacher=0.7479 wall=27.6s err=None
+[sweep] start mlp_mnist N=5 a=0.3 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.7741 mean_teacher=0.7896 wall=31.8s err=None
+[sweep] start mlp_mnist N=5 a=1.0 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.4358 mean_teacher=0.9251 wall=28.0s err=None
+[sweep] start mlp_mnist N=5 a=1.0 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.9207 mean_teacher=0.8957 wall=30.9s err=None
+[sweep] start mlp_mnist N=10 a=0.01 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.3832 mean_teacher=0.1835 wall=40.9s err=None
+[sweep] start mlp_mnist N=10 a=0.01 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.7905 mean_teacher=0.1824 wall=38.9s err=None
+[sweep] start mlp_mnist N=10 a=0.01 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4084 mean_teacher=0.1597 wall=40.9s err=None
+[sweep] start mlp_mnist N=10 a=0.05 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7120 mean_teacher=0.3327 wall=45.0s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.5093 mean_teacher=0.3337 wall=41.9s err=None
+[sweep] start mlp_mnist N=10 a=0.1 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2927 mean_teacher=0.4191 wall=30.5s err=None
+[sweep] start mlp_mnist N=10 a=0.1 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4159 mean_teacher=0.3316 wall=30.3s err=None
+[sweep] start mlp_mnist N=10 a=0.3 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.4358 mean_teacher=0.6727 wall=32.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.9251 mean_teacher=0.7126 wall=44.5s err=None
+[sweep] start mlp_mnist N=10 a=1.0 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.8693 mean_teacher=0.8886 wall=42.3s err=None
+[sweep] start mlp_mnist N=10 a=1.0 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.9360 mean_teacher=0.8937 wall=41.9s err=None
+[sweep] start mlp_mnist N=10 a=1.0 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.8251 mean_teacher=0.8992 wall=36.0s err=None
+[sweep] start mlp_mnist N=20 a=0.01 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4575 mean_teacher=0.1329 wall=50.6s err=None
+[sweep] start mlp_mnist N=20 a=0.01 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3934 mean_teacher=0.1529 wall=51.2s err=None
+[sweep] start mlp_mnist N=20 a=0.05 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2927 mean_teacher=0.2730 wall=27.5s err=None
+[sweep] start mlp_mnist N=20 a=0.05 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.5063 mean_teacher=0.2643 wall=45.2s err=None
+[sweep] start mlp_mnist N=20 a=0.1 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.4358 mean_teacher=0.3979 wall=28.0s err=None
+[sweep] start mlp_mnist N=20 a=0.1 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.9181 mean_teacher=0.3700 wall=45.2s err=None
+[sweep] start mlp_mnist N=20 a=0.3 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.7328 mean_teacher=0.6115 wall=43.9s err=None
+[sweep] start mlp_mnist N=20 a=0.3 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.9438 mean_teacher=0.6595 wall=46.1s err=None
+[sweep] start mlp_mnist N=20 a=0.3 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.7317 mean_teacher=0.6077 wall=46.3s err=None
+[sweep] start mlp_mnist N=20 a=1.0 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8782 mean_teacher=0.8426 wall=47.0s err=None
+[sweep] start mlp_mnist N=20 a=1.0 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.8879 mean_teacher=0.8596 wall=46.5s err=None
+[sweep] start mlp_mnist N=50 a=0.01 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2927 mean_teacher=0.1177 wall=28.8s err=None
+[sweep] start mlp_mnist N=50 a=0.01 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.2448 mean_teacher=0.1321 wall=49.2s err=None
+[sweep] start mlp_mnist N=50 a=0.05 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.4358 mean_teacher=0.2029 wall=28.2s err=None
+[sweep] start mlp_mnist N=50 a=0.05 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.9123 mean_teacher=0.2005 wall=77.6s err=None
+[sweep] start mlp_mnist N=50 a=0.1 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.7093 mean_teacher=0.3236 wall=80.6s err=None
+[sweep] start mlp_mnist N=50 a=0.1 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.9384 mean_teacher=0.3210 wall=78.4s err=None
+[sweep] start mlp_mnist N=50 a=0.1 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6098 mean_teacher=0.3003 wall=79.3s err=None
+[sweep] start mlp_mnist N=50 a=0.3 labelled_probe_warmup s=43 K=300
