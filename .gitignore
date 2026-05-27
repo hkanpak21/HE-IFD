@@ -61,3 +61,9 @@ cache/
 git_token.txt
 
 FL_TDSC/archive/
+
+# Heavy/binary artifacts — track the notebook, CSVs, scripts, and text instead,
+# so a context-zero agent has readable source without binary bloat.
+*.xlsx
+results/colab_results/bundle/figures/
+REJECTED_PAPER/*.pdf
