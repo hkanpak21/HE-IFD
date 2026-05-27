@@ -21,12 +21,10 @@ Faithful-port notes
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Tuple
+from typing import List, Tuple
 
 import numpy as np
-
-if TYPE_CHECKING:  # type-only; never imported at runtime (login-node safe)
-    import torch
+import torch
 
 
 # ----------------------------------------------------------------------------
