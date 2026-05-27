@@ -183,9 +183,10 @@ def _load_features(spec: BackboneSpec, data_root: str, cache_root: str):
     from (in_dim, num_classes).
     """
     from . import backbones as bk
+    from . import data as dt
 
     if spec.feature_loader == "mnist":
-        Xtr, ytr, Xte, yte = bk.load_mnist_tensors(data_root, cache_root)
+        Xtr, ytr, Xte, yte = dt.load_mnist_tensors(data_root, cache_root)
         return Xtr, ytr, Xte, yte, None, bk.make_mnist_mlp
     if spec.feature_loader.startswith("cifar10:"):
         name = spec.feature_loader.split(":", 1)[1]
