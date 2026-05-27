@@ -1,0 +1,13 @@
+[fs] job 1112402 task 3/8 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=360 cells; chunk 3/8 -> 45 cells; case=heifd_mlp_mnist_headline
+[sweep] start mlp_mnist N=5 a=0.01 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.4358 mean_teacher=0.2389 wall=36.1s err=None
+[sweep] start mlp_mnist N=5 a=0.01 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.7495 mean_teacher=0.2182 wall=28.6s err=None
+[sweep] start mlp_mnist N=5 a=0.05 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.5762 mean_teacher=0.2590 wall=31.9s err=None
+[sweep] start mlp_mnist N=5 a=0.05 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.8299 mean_teacher=0.3903 wall=32.2s err=None
+[sweep] start mlp_mnist N=5 a=0.05 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4951 mean_teacher=0.3521 wall=31.7s err=None
+[sweep] start mlp_mnist N=5 a=0.1 labelled_probe_warmup s=43 K=300
