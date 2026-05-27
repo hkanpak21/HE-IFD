@@ -175,9 +175,18 @@ def main() -> None:
     for desc in my_cells:
         out_path = results_dir / cell_filename(desc)
         if out_path.exists() and not args.force:
-            n_skip += 1
-            print(f"[sweep] skip  {out_path.name} (exists)", flush=True)
-            continue
+            # Resume only past SUCCESSFUL cells; a prior FAIL (or corrupt JSON)
+            # must be retried, not treated as done.
+            prior_ok = False
+            try:
+                prior_ok = json.loads(out_path.read_text()).get("status") == "success"
+            except (json.JSONDecodeError, OSError):
+                prior_ok = False
+            if prior_ok:
+                n_skip += 1
+                print(f"[sweep] skip  {out_path.name} (success exists)", flush=True)
+                continue
+            print(f"[sweep] retry {out_path.name} (prior status != success)", flush=True)
         print(f"[sweep] start {desc['backbone']} N={desc['N']} a={desc['alpha']} "
               f"{desc['method']} s={desc['seed']} K={desc['K']}", flush=True)
         res = run_cell(
