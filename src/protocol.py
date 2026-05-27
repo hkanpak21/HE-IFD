@@ -110,6 +110,24 @@ class CellResult:
     best_teacher: Optional[float] = None
     oracle: Optional[float] = None
     per_teacher_acc: List[float] = field(default_factory=list)
+    # standalone θ₀: test accuracy of the aligned init clients receive, BEFORE
+    # any local distillation (for no_phase0 this is the fresh random init).
+    theta0_acc: Optional[float] = None
+    # M3 — per-client teacher-vs-aggregate gap on each client's own data D_i:
+    #   acc(final_student, D_i) − acc(teacher_i, D_i). Positive ⇒ federation
+    #   helped client i. (See evaluate.per_client_gap.)
+    m3_student_acc_on_Di: List[Optional[float]] = field(default_factory=list)
+    m3_teacher_acc_on_Di: List[Optional[float]] = field(default_factory=list)
+    m3_gap: List[Optional[float]] = field(default_factory=list)
+    m3_mean_gap: Optional[float] = None
+    m3_clients_helped: Optional[int] = None
+    m3_clients_evaluated: Optional[int] = None
+    # M4 — per-client OOD-class accuracy: final student's accuracy on TEST
+    #   examples from classes client i held ZERO local examples of. All-None /
+    #   m4_mean=None when vacuous (every client saw every class, e.g. α=1.0).
+    m4_ood_acc: List[Optional[float]] = field(default_factory=list)
+    m4_mean: Optional[float] = None
+    m4_clients_evaluated: Optional[int] = None
     # partition diagnostics
     per_client_total: List[int] = field(default_factory=list)
     per_client_per_class: List[List[int]] = field(default_factory=list)
@@ -234,7 +252,7 @@ def run_cell(
     from .backbones import get_params
     from .data import partition_pool, per_client_per_class_counts, reserve_probe_and_pool
     from .distill import distill_all_clients
-    from .evaluate import accuracy_on
+    from .evaluate import accuracy_on, ood_accuracy, per_client_gap
     from .teacher import train_supervised_model
 
     spec = BACKBONES[backbone]
@@ -275,6 +293,29 @@ def run_cell(
         def eval_model(m):
             return accuracy_on(m, Xte_dev, yte_dev)
 
+        def theta0_test_acc(params):
+            """Standalone θ₀ accuracy: build a model from the aligned init params
+            and evaluate it on the test set, BEFORE any local distillation."""
+            m = make_model_fn()
+            m.load_state_dict(params)
+            return float(eval_model(m))
+
+        def populate_incentive_ood(final_student):
+            """Populate M3 (per-client gap on D_i) and M4 (OOD-class acc) on the
+            CellResult. Reuses the already-trained ``teachers`` and the
+            per-client partition tensors — trains nothing, decodes nothing."""
+            m3 = per_client_gap(final_student, teachers, client_X_list, client_y_list)
+            res.m3_student_acc_on_Di = m3["student_acc"]
+            res.m3_teacher_acc_on_Di = m3["teacher_acc"]
+            res.m3_gap = m3["gap"]
+            res.m3_mean_gap = m3["mean_gap"]
+            res.m3_clients_helped = m3["n_clients_helped"]
+            res.m3_clients_evaluated = m3["n_clients_evaluated"]
+            m4 = ood_accuracy(final_student, Xte_dev, yte_dev, res.per_client_per_class)
+            res.m4_ood_acc = m4["per_client"]
+            res.m4_mean = m4["mean"]
+            res.m4_clients_evaluated = m4["n_clients_evaluated"]
+
         # --- teachers (one per client) + oracle reference ---
         t0 = time.time()
         teachers, t_accs = [], []
@@ -309,9 +350,10 @@ def run_cell(
             clip = p0.compute_feature_norms_percentile(pool_X)
 
         if phase0_kind == "none":
-            theta0 = init_params
+            theta0 = init_params  # no alignment: θ₀ is the fresh random init
             res.probe_size_actual = 0
             res.sigma = 0.0
+            res.theta0_acc = theta0_test_acc(theta0)
 
         elif phase0_kind == "warmup_only":
             # Probe-only baseline: warm on the labelled probe, NO distillation.
@@ -324,6 +366,11 @@ def run_cell(
             warmed.load_state_dict(theta0)
             t0e = time.time()
             res.acc = float(eval_model(warmed))
+            # θ₀ IS the output here (no distillation), so standalone-θ₀ acc == acc;
+            # M3/M4 are reported against the warmed model so the probe-only
+            # baseline row is complete rather than empty.
+            res.theta0_acc = res.acc
+            populate_incentive_ood(warmed)
             res.phase_eval_sec = time.time() - t0e
             res.probe_size_actual = int(probe_size)
             res.sigma = 0.0
@@ -339,6 +386,7 @@ def run_cell(
                 momentum=momentum, bs=spec.bs)
             res.probe_size_actual = int(probe_size)
             res.sigma = 0.0
+            res.theta0_acc = theta0_test_acc(theta0)
 
         elif phase0_kind in ("raw_union", "dp_avg"):
             probe_seed = seed * 100003
@@ -352,6 +400,7 @@ def run_cell(
                 momentum=momentum, bs=spec.bs)
             res.probe_size_actual = int(info["probe_size"])
             res.sigma = float(info["sigma"])
+            res.theta0_acc = theta0_test_acc(theta0)
         else:
             raise ValueError(phase0_kind)
         res.phase_phase0_sec = time.time() - t0
@@ -370,11 +419,14 @@ def run_cell(
         final_params = agg.aggregate(theta0, deltas, weights)
         res.phase_aggregate_sec = time.time() - t0
 
-        # --- evaluate ---
+        # --- evaluate: IID acc + M3 (per-client gap) + M4 (OOD-class acc) ---
+        # θ₀_acc was recorded above right after warmup (before distill); M3/M4
+        # reuse the trained teachers + per-client tensors, so no retraining here.
         t0 = time.time()
         model = make_model_fn()
         model.load_state_dict(final_params)
         res.acc = float(eval_model(model))
+        populate_incentive_ood(model)
         res.phase_eval_sec = time.time() - t0
 
         res.status = "success"
