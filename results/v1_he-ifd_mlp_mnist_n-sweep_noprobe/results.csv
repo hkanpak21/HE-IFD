@@ -1,0 +1,2 @@
+method,dataset,N,alpha,seed,K,tau,probe_size,use_probe,student_acc,mean_teacher_acc,best_teacher_acc,worst_teacher_acc,wall_clock_sec,phase_teacher_sec,phase_distill_sec,phase_aggregate_sec,phase_eval_sec,job_id,node,status,error
+he-ifd-v1,MNIST,10,0.1,42,5,4.0,0,False,0.6209,0.46358999999999995,0.6818,0.2984,677.3293151855469,541.6573252677917,97.34193396568298,0.0018775463104248047,25.06590485572815,1094680,ai02.kuvalar.ku.edu.tr,success,

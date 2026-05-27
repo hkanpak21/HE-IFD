@@ -1,0 +1,6 @@
+[v2 smoke] job 1098069 on ai06.kuvalar.ku.edu.tr
+[v2 smoke] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-a3b26740-fa36-6412-7c6b-b88995263144)
+[v2 sweep] start  method=M0 dataset=cifar10 N=4 seed=42
+[v2 sweep] ok    method=M0 N=4 seed=42  student=0.1800  best_t=0.3684  mean_t=0.2517  wall=4925.2s
+[v2 sweep] start  method=M1 dataset=cifar10 N=4 seed=42

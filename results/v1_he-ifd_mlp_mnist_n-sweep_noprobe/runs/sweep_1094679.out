@@ -1,0 +1,5 @@
+[v1_sweep] job 1094679 on ai06.kuvalar.ku.edu.tr
+[v1_sweep] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-ed7a49ef-ea21-637a-ea79-58574a231e38)
+[v1_sweep] PYTHONPATH=/scratch/hkanpak21/HE_IFD
+[sweep] start  N=10 seed=42 alpha=0.1 K=5

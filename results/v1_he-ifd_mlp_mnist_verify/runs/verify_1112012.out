@@ -1,0 +1,13 @@
+[verify] job 1112012 on ai05.kuvalar.ku.edu.tr
+[verify] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-4426320e-71b4-30fd-ac36-342a15cd89a0)
+[sweep] grid=4 cells; chunk 0/1 -> 4 cells; case=v1_he-ifd_mlp_mnist_verify
+[sweep] start mlp_mnist N=16 a=0.05 no_phase0 s=42 K=300
+[sweep] FAIL   no_phase0 acc=n/a mean_teacher=n/a wall=0.1s err=AttributeError: module 'src.backbones' has no attribute 'load_mnist_tensors'
+[sweep] start mlp_mnist N=16 a=0.05 raw_union_K20 s=42 K=300
+[sweep] FAIL   raw_union_K20 acc=n/a mean_teacher=n/a wall=0.0s err=AttributeError: module 'src.backbones' has no attribute 'load_mnist_tensors'
+[sweep] start mlp_mnist N=16 a=1.0 no_phase0 s=42 K=300
+[sweep] FAIL   no_phase0 acc=n/a mean_teacher=n/a wall=0.0s err=AttributeError: module 'src.backbones' has no attribute 'load_mnist_tensors'
+[sweep] start mlp_mnist N=16 a=1.0 raw_union_K20 s=42 K=300
+[sweep] FAIL   raw_union_K20 acc=n/a mean_teacher=n/a wall=0.0s err=AttributeError: module 'src.backbones' has no attribute 'load_mnist_tensors'
+[sweep] done. ran=0 skipped=0 failed=4. report at /scratch/hkanpak21/HE_IFD/results/v1_he-ifd_mlp_mnist_verify/README.md

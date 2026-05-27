@@ -1,0 +1,13 @@
+[verify] job 1112072 on ai06.kuvalar.ku.edu.tr
+[verify] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-d8fb5486-93f4-b8bb-2ff9-c4d8f492b09e)
+[sweep] grid=4 cells; chunk 0/1 -> 4 cells; case=v1_he-ifd_mlp_mnist_verify
+[sweep] start mlp_mnist N=16 a=0.05 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.4227 mean_teacher=0.2532 wall=60.3s err=None
+[sweep] start mlp_mnist N=16 a=0.05 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.8999 mean_teacher=0.2532 wall=50.1s err=None
+[sweep] start mlp_mnist N=16 a=1.0 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.8850 mean_teacher=0.8835 wall=56.5s err=None
+[sweep] start mlp_mnist N=16 a=1.0 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.9482 mean_teacher=0.8835 wall=57.9s err=None
+[sweep] done. ran=4 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/v1_he-ifd_mlp_mnist_verify/README.md

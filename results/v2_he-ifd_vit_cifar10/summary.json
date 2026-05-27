@@ -1,0 +1,28 @@
+[
+  {
+    "method": "M0",
+    "dataset": "cifar10",
+    "N": 32,
+    "seed": 42,
+    "student_acc": 0.7214,
+    "best_teacher_acc": 0.7299,
+    "mean_teacher_acc": 0.42647499999999994,
+    "worst_teacher_acc": 0.1993,
+    "wall_clock_sec": 7268.066474437714,
+    "trainable_params_per_client": 462346,
+    "status": "success"
+  },
+  {
+    "method": "M1",
+    "dataset": "cifar10",
+    "N": 32,
+    "seed": 42,
+    "student_acc": 0.7195,
+    "best_teacher_acc": 0.7299,
+    "mean_teacher_acc": 0.42647499999999994,
+    "worst_teacher_acc": 0.1993,
+    "wall_clock_sec": 8882.010866165161,
+    "trainable_params_per_client": 462346,
+    "status": "success"
+  }
+]

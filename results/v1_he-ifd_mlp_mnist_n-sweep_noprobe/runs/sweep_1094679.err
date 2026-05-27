@@ -1,0 +1,6 @@
+srun: got SIGCONT
+slurmstepd: error: *** JOB 1094679 ON ai06 CANCELLED AT 2026-05-22T00:56:52 ***
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: forcing job termination
+slurmstepd: error: *** STEP 1094679.0 ON ai06 CANCELLED AT 2026-05-22T00:56:52 ***
+srun: error: ai06: task 0: Terminated

@@ -1,0 +1,9 @@
+[verify] job 1112033 on ai05.kuvalar.ku.edu.tr
+[verify] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-4426320e-71b4-30fd-ac36-342a15cd89a0)
+[sweep] grid=4 cells; chunk 0/1 -> 4 cells; case=v1_he-ifd_mlp_mnist_verify
+[sweep] skip  cell_mlp_mnist_N16_a0.05_no_phase0_s42_K300_9034f2287d34.json (exists)
+[sweep] skip  cell_mlp_mnist_N16_a0.05_raw_union_K20_s42_K300_a9764e6ef49c.json (exists)
+[sweep] skip  cell_mlp_mnist_N16_a1.0_no_phase0_s42_K300_427fac96c2db.json (exists)
+[sweep] skip  cell_mlp_mnist_N16_a1.0_raw_union_K20_s42_K300_7404ed6558ce.json (exists)
+[sweep] done. ran=0 skipped=4 failed=0. report at /scratch/hkanpak21/HE_IFD/results/v1_he-ifd_mlp_mnist_verify/README.md

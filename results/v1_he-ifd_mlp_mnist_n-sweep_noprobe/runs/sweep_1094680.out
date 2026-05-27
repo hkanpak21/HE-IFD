@@ -1,0 +1,7 @@
+[v1_sweep] job 1094680 on ai02.kuvalar.ku.edu.tr
+[v1_sweep] python: /home/hkanpak21/.conda/envs/he_ofl/bin/python
+GPU 0: Tesla T4 (UUID: GPU-00e440a7-d470-9295-0a1a-19ba3f6831e0)
+[v1_sweep] PYTHONPATH=/scratch/hkanpak21/HE_IFD
+[sweep] start  N=10 seed=42 alpha=0.1 K=5
+[sweep] ok    N=10 seed=42  student=0.6209  mean_teacher=0.4636  wall=677.3s
+[sweep] done. report at /scratch/hkanpak21/HE_IFD/results/v1_he-ifd_mlp_mnist_n-sweep_noprobe/README.md
