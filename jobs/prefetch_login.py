@@ -14,6 +14,13 @@ not fetched here. Only AG News (HF) + the four pretrained backbones are.
 """
 from __future__ import annotations
 
+import os
+import sys
+
+# Make the repo root (parent of jobs/) importable so `import src.*` resolves
+# regardless of cwd / launcher (python jobs/prefetch_login.py, setsid, etc.).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 def main() -> None:
     # AG News dataset (the only dataset not already under data/).
