@@ -20,6 +20,15 @@
 #                 raw_union_K20, dp_avg_eps2_K20, dp_avg_eps8_K20}
 #       × seeds{42,43,44}  = 360 cells, split into 8 resumable chunks (≤3h each).
 # Reports IID acc + M3 + M4 + θ₀ + no-align baseline inline (issue 005).
+#
+# Issue 014 Sub-task B (extension in-place): the N grid is overridable via the
+# HEIFD_NS env var, e.g. `HEIFD_NS=1 sbatch jobs/heifd_headline_fromscratch.sh`
+# extends the existing 5/10/20/50 matrix with the Phase-II N=1 degenerate-baseline
+# cells (90 new cells: 5α × 6methods × 3seeds). Because sweep.py is resumable,
+# the original 360 cells stay cached (their JSONs already exist with
+# status=success) and only the new N=1 cells run. Same case slug
+# `heifd_mlp_mnist_headline` — extends in place. K is similarly overridable via
+# HEIFD_K (legacy from-scratch default 300).
 
 set -euo pipefail
 REPO=/scratch/hkanpak21/HE_IFD
@@ -32,7 +41,7 @@ echo "[fs] job ${SLURM_ARRAY_JOB_ID:-?} task ${SLURM_ARRAY_TASK_ID:-0}/${SLURM_A
 
 exec srun python -u -m src.sweep \
     --backbones mlp_mnist \
-    --Ns 5,10,20,50 \
+    --Ns "${HEIFD_NS:-5,10,20,50}" \
     --alphas 0.01,0.05,0.1,0.3,1.0 \
     --methods no_phase0,warmup_only_labelled,labelled_probe_warmup,raw_union_K20,dp_avg_eps2_K20,dp_avg_eps8_K20 \
     --seeds 42,43,44 \

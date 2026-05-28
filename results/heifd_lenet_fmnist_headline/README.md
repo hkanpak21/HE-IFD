@@ -1,0 +1,3 @@
+# heifd_lenet_fmnist_headline
+
+Issue 014 Sub-task A — Phase II from-scratch headline grid for LeNet-5 on FashionMNIST, the second of the three from-scratch datasets in the headline matrix (MNIST/MLP already landed; CNN-5/CIFAR-10 pending Round-2.5 gate). 450 cells = 1 backbone × 5 N values {1, 5, 10, 20, 50} × 5 α values {0.01, 0.05, 0.1, 0.3, 1.0} × 6 methods {no_phase0, warmup_only_labelled, labelled_probe_warmup, raw_union_K20, dp_avg_eps2_K20, dp_avg_eps8_K20} × 3 seeds {42, 43, 44}; K=300 (from-scratch legacy default). Submitted via `jobs/heifd_014_lenet_fmnist.sh` (8-task SLURM array, ≤3h per chunk, resumable). Placeholder README — auto-overwritten by `src.report.write_report` once the first sweep cell lands.
