@@ -1,5 +1,24 @@
 # heifd_016b_distill_debug_cnn5
 
+## VERDICT (24/24 cells) — from-scratch CNN-5/CIFAR-10 is OUTSIDE the basin-coherence envelope at low α
+
+**Core question:** does correct KD (τ=1) make the HE-secure distillation beat θ₀ (positive distillation lift) on from-scratch CNN-5, where τ=4 failed? **Answer: τ=1 helps a lot vs τ=4, but does NOT flip the sign at low α.** This is the structural ceiling, not a hyperparameter bug.
+
+| τ | mean lift (acc−θ₀) | cells positive | best |
+|---|---:|---:|---:|
+| **1** | −0.008 | 6/12 | +0.021 |
+| **4** | −0.043 | 1/12 | +0.017 |
+
+Split by heterogeneity:
+- **α=0.05 (heterogeneous — the regime that matters): distillation does NOT beat θ₀.** τ=1 best lift = +0.006 (K=30, lr=0.001) ≈ zero; most cells negative (−0.003 to −0.040). The bounded-trajectory + linear-aggregation premise breaks: per-client Δ over a full from-scratch conv net diverge under non-IID, and the linear aggregate cancels/degrades (issue-013 basin-cancellation taken to the deep-net limit; issue-011 "deeper scope escapes the basin" at the limit of full-net training).
+- **α=1.0 (IID): distillation marginally beats θ₀ with τ=1.** Best +0.021 (K=300, lr=0.01); most τ=1 IID cells slightly positive (+0.000 to +0.021). So the mechanism is *not fundamentally broken* — at IID the per-client trajectories agree enough that the linear aggregate adds a little. It is specifically **low-α heterogeneity × deep-from-scratch net** that breaks it.
+
+**τ=1 ≫ τ=4 throughout** (confirms issue 010 generalizes from resnet18 to from-scratch). Best overall acc: α=1.0, K=300, τ=1, lr=0.01 → 0.5064 (θ₀ 0.4858, mean_teacher 0.4782).
+
+**Scoping statement for the paper (not a bug to chase):** the HE-secure distillation carries the learning for *shallow trainable scopes on strong frozen backbones* (resnet18-head +2.2pp, ViT/CIFAR-100 client-benefit win) and *marginally at IID* on from-scratch nets, but **does not add value under heterogeneity when the trainable scope is a full deep net trained from scratch.** CNN-5/CIFAR-10 at low α therefore sits outside the method's envelope; the from-scratch story rests on the easy regimes that work (MLP/MNIST, LeNet/FMNIST). Do not fatten alignment to mask this (locked thesis). No further CNN-5 distillation tuning warranted.
+
+---
+
 HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
 ## Sweep configuration
