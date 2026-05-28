@@ -39,6 +39,18 @@ Method panel (``method`` -> (phase0 strategy)):
                                             warmup uses KL against the soft-
                                             label prototypes rather than CE
                                             against one-hot labels)
+  noprobe_raw_union_K{K}
+                        -> noprobe_raw_union (issue 017 — NO labelled public
+                                              probe; the raw-union per-(client,
+                                              class) prototypes themselves are
+                                              the supervised warmup set, giving
+                                              a WEAK θ₀)
+  noprobe_dp_avg_eps{E}_K{K}
+                        -> noprobe_dp_avg (issue 017 — NO labelled public probe;
+                                           the DP-noisy per-(client, class)
+                                           prototypes themselves are the
+                                           supervised warmup set; same averaging-
+                                           variant DP accounting as dp_avg)
 """
 from __future__ import annotations
 
@@ -277,6 +289,21 @@ def parse_method(method: str) -> tuple:
         return "warmup_only", {}
     if method in ("labelled_probe_warmup", "labelled"):
         return "labelled", {}
+    # Issue 017 — no-probe alignment family. Checked BEFORE the bare
+    # raw_union / dp_avg prefixes: the no-probe tokens start with ``noprobe_``
+    # so they would never collide, but keeping them first makes the no-probe
+    # branch self-evidently distinct. No labelled public probe is consumed; the
+    # (raw-union or DP-noisy) per-(client, class) prototypes ARE the supervised
+    # warmup set (see phase0.build_noprobe_*).
+    if method.startswith("noprobe_raw_union"):
+        # noprobe_raw_union_K20 -> K_per_class=20 ; bare -> default 20
+        k = _extract_int_after(method, "K", default=20)
+        return "noprobe_raw_union", {"K_per_class": k}
+    if method.startswith("noprobe_dp_avg"):
+        # noprobe_dp_avg_eps2_K20 / noprobe_dp_avg_eps8_K20
+        k = _extract_int_after(method, "K", default=20)
+        eps = _extract_eps(method)
+        return "noprobe_dp_avg", {"K_per_class": k, "eps": eps}
     if method.startswith("raw_union"):
         # raw_union_K20 -> K_per_class=20 ; bare raw_union -> default 20
         k = _extract_int_after(method, "K", default=20)
@@ -643,11 +670,12 @@ def run_cell(
         align_X = None
 
         clip = None
-        if phase0_kind in ("dp_avg", "synthetic_dp"):
+        if phase0_kind in ("dp_avg", "synthetic_dp", "noprobe_dp_avg"):
             # Percentile feature-norm clip in flat space (image data -> flatten).
-            # Shared between dp_avg and synthetic_dp because both apply the
-            # averaging-variant Gaussian mechanism to the per-(client, class)
-            # mean μ_ic; sensitivity = clip / K_per_class is identical.
+            # Shared between dp_avg, synthetic_dp and noprobe_dp_avg because all
+            # three apply the averaging-variant Gaussian mechanism to the
+            # per-(client, class) mean μ_ic; sensitivity = clip / K_per_class is
+            # identical.
             clip = p0.compute_feature_norms_percentile(
                 pool_X.reshape(pool_X.shape[0], -1) if is_image else pool_X)
 
@@ -703,6 +731,40 @@ def run_cell(
             # keeping phase0.py and the conv warmup input shape-consistent
             # without touching aggregation/distill.
             flat_image = is_image and phase0_kind in ("dp_avg", "synthetic", "synthetic_dp")
+            probe_clients = _flatten_clients(client_X_list) if flat_image else client_X_list
+            align_X, align_y, info = p0.build_probe(
+                phase0_kind, client_X_list=probe_clients, client_y_list=client_y_list,
+                num_classes=nc, K_per_class=kwargs.get("K_per_class"),
+                eps=kwargs.get("eps"), clip=clip, seed=probe_seed)
+            if flat_image:
+                align_X = _reshape_probe_to_image(align_X)
+            theta0 = p0.warmup_init(
+                make_model_fn, align_X, align_y, init_params,
+                epochs=spec.warmup_epochs, lr=spec.teacher_lr,
+                momentum=momentum, bs=spec.bs,
+                lr_schedule=spec.teacher_lr_schedule)
+            res.probe_size_actual = int(info["probe_size"])
+            res.sigma = float(info["sigma"])
+            res.theta0_acc = theta0_test_acc(theta0)
+
+        elif phase0_kind in ("noprobe_raw_union", "noprobe_dp_avg"):
+            # Issue 017 — NO labelled public probe. The (raw-union or DP-noisy)
+            # per-(client, class) prototypes ARE the supervised warmup set: each
+            # prototype is one feature-space sample with its class as the label
+            # (~num_classes × N_contributors points). θ₀ is therefore warmed on a
+            # deliberately WEAK, possibly-noisy set; the K-step distillation must
+            # carry the learning above it. probe_X (the held-out labelled probe)
+            # is NEVER touched on this path.
+            #
+            # The no-probe builders always emit FLAT-space prototypes (the
+            # per-feature μ statistics are defined per flat dim), so for image
+            # backbones we flatten the per-client tensors going in and reshape
+            # the returned (P, C*H*W) prototype set back to (P, C, H, W) for the
+            # conv warmup — reusing the SAME flatten/reshape bridge as the
+            # dp_avg path (``_flatten_clients`` / ``_reshape_probe_to_image``),
+            # not a duplicate.
+            probe_seed = seed * 100003
+            flat_image = is_image
             probe_clients = _flatten_clients(client_X_list) if flat_image else client_X_list
             align_X, align_y, info = p0.build_probe(
                 phase0_kind, client_X_list=probe_clients, client_y_list=client_y_list,
