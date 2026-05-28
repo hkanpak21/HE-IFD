@@ -103,3 +103,13 @@
 [sweep] start lenet_fmnist N=50 a=0.1 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
 [sweep] ok   raw_union_K20 acc=0.8172 mean_teacher=0.2504 wall=57.1s err=None
 [sweep] start lenet_fmnist N=50 a=0.1 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.4398 mean_teacher=0.2445 wall=56.6s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4918 mean_teacher=0.4184 wall=56.4s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5863 mean_teacher=0.4118 wall=56.3s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.5720 wall=22.2s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6279 mean_teacher=0.5816 wall=56.3s err=None
+[sweep] done. ran=54 skipped=0 failed=2. report at /scratch/hkanpak21/HE_IFD/results/heifd_lenet_fmnist_headline/README.md
