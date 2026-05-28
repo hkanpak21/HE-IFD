@@ -1,0 +1,59 @@
+[fs] job 1112402 task 6/8 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=360 cells; chunk 6/8 -> 45 cells; case=heifd_mlp_mnist_headline
+[sweep] start mlp_mnist N=5 a=0.01 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.5017 mean_teacher=0.2389 wall=43.4s err=None
+[sweep] start mlp_mnist N=5 a=0.01 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.5822 mean_teacher=0.2182 wall=35.9s err=None
+[sweep] start mlp_mnist N=5 a=0.05 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.5519 mean_teacher=0.2590 wall=31.7s err=None
+[sweep] start mlp_mnist N=5 a=0.05 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3250 mean_teacher=0.3903 wall=37.4s err=None
+[sweep] start mlp_mnist N=5 a=0.1 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.5069 mean_teacher=0.4397 wall=29.3s err=None
+[sweep] start mlp_mnist N=5 a=0.1 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.7446 mean_teacher=0.4995 wall=27.0s err=None
+[sweep] start mlp_mnist N=5 a=0.3 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.6549 mean_teacher=0.7179 wall=34.8s err=None
+[sweep] start mlp_mnist N=5 a=0.3 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6547 mean_teacher=0.7479 wall=36.4s err=None
+[sweep] start mlp_mnist N=5 a=0.3 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.7923 mean_teacher=0.7896 wall=38.1s err=None
+[sweep] start mlp_mnist N=5 a=1.0 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8870 mean_teacher=0.9251 wall=36.3s err=None
+[sweep] start mlp_mnist N=5 a=1.0 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.8195 mean_teacher=0.8957 wall=35.4s err=None
+[sweep] start mlp_mnist N=10 a=0.01 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.5519 mean_teacher=0.1835 wall=30.9s err=None
+[sweep] start mlp_mnist N=10 a=0.01 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4075 mean_teacher=0.1824 wall=37.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.5236 mean_teacher=0.3385 wall=29.4s err=None
+[sweep] start mlp_mnist N=10 a=0.05 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.8539 mean_teacher=0.3327 wall=40.8s err=None
+[sweep] start mlp_mnist N=10 a=0.1 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.5560 mean_teacher=0.4275 wall=41.4s err=None
+[sweep] start mlp_mnist N=10 a=0.1 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6320 mean_teacher=0.4191 wall=40.1s err=None
+[sweep] start mlp_mnist N=10 a=0.1 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4017 mean_teacher=0.3316 wall=38.0s err=None
+[sweep] start mlp_mnist N=10 a=0.3 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8221 mean_teacher=0.6727 wall=35.1s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.7820 mean_teacher=0.7126 wall=40.2s err=None
+[sweep] start mlp_mnist N=10 a=1.0 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.5519 mean_teacher=0.8886 wall=31.1s err=None
+[sweep] start mlp_mnist N=10 a=1.0 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.8817 mean_teacher=0.8937 wall=41.0s err=None
+[sweep] start mlp_mnist N=20 a=0.01 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.2471 mean_teacher=0.1353 wall=45.2s err=None
+[sweep] start mlp_mnist N=20 a=0.01 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.7730 mean_teacher=0.1329 wall=44.3s err=None
+[sweep] start mlp_mnist N=20 a=0.05 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.2340 mean_teacher=0.2578 wall=47.7s err=None
+[sweep] start mlp_mnist N=20 a=0.05 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.5445 mean_teacher=0.2730 wall=44.9s err=None
+[sweep] start mlp_mnist N=20 a=0.05 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.5171 mean_teacher=0.2643 wall=48.6s err=None
+[sweep] start mlp_mnist N=20 a=0.1 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6010 mean_teacher=0.3979 wall=47.9s err=None
+[sweep] start mlp_mnist N=20 a=0.1 dp_avg_eps2_K20 s=44 K=300
