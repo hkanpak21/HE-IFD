@@ -1,3 +1,19 @@
 [016 amp] job 1115754 on ai08.kuvalar.ku.edu.tr
 [sweep] grid=8 cells; chunk 0/1 -> 8 cells; case=heifd_016_signal_amp_cnn5
 [sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.2073 mean_teacher=0.1493 wall=303.7s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K100 acc=0.3022 mean_teacher=0.1494 wall=297.9s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 synthetic_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   synthetic_K100 acc=0.1057 mean_teacher=0.1495 wall=301.0s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 synthetic_logit_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   synthetic_logit_K100 acc=n/a mean_teacher=0.1493 wall=281.4s err=RuntimeError: Expected 3D (unbatched) or 4D (batched) input to conv2d, but got input of size: [3388, 3072]
+[sweep] start cnn5_cifar10 N=16 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5194 mean_teacher=0.4770 wall=296.8s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 raw_union_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K100 acc=0.6577 mean_teacher=0.4787 wall=300.3s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 synthetic_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   synthetic_K100 acc=0.3905 mean_teacher=0.4784 wall=302.7s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 synthetic_logit_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   synthetic_logit_K100 acc=n/a mean_teacher=0.4773 wall=281.2s err=RuntimeError: Expected 3D (unbatched) or 4D (batched) input to conv2d, but got input of size: [2734, 3072]
+[sweep] done. ran=6 skipped=0 failed=2. report at /scratch/hkanpak21/HE_IFD/results/heifd_016_signal_amp_cnn5/README.md

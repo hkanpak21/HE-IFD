@@ -1,0 +1,731 @@
+[012-headline] job 1115755 backbone=vit_b32_cifar100 chunk=0/1 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=450 cells; chunk 0/1 -> 450 cells; case=heifd_012_harder_vision_headline
+[sweep] start vit_b32_cifar100 N=1 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0399 mean_teacher=0.8610 wall=10.0s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0338 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0429 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.8610 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.8676 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.8670 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4531 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.5007 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4847 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7873 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7962 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7929 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0965 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0823 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0967 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1425 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1278 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1529 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0399 mean_teacher=0.8610 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0338 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0429 mean_teacher=0.8670 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.8610 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.8676 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.8670 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4531 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.5007 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4847 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7873 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7962 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7929 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0965 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0823 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0967 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1425 mean_teacher=0.8610 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1278 mean_teacher=0.8676 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1529 mean_teacher=0.8670 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0414 mean_teacher=0.8619 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0344 mean_teacher=0.8633 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0470 mean_teacher=0.8641 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.8619 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.8633 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.8641 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4544 mean_teacher=0.8619 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.5034 mean_teacher=0.8633 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4828 mean_teacher=0.8641 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7900 mean_teacher=0.8619 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7910 mean_teacher=0.8633 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7926 mean_teacher=0.8641 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0990 mean_teacher=0.8619 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0808 mean_teacher=0.8633 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1028 mean_teacher=0.8641 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1422 mean_teacher=0.8619 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1283 mean_teacher=0.8633 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1554 mean_teacher=0.8641 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0396 mean_teacher=0.8644 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0340 mean_teacher=0.8661 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0469 mean_teacher=0.8620 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.8644 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.8661 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.8620 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4533 mean_teacher=0.8644 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.5029 mean_teacher=0.8661 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4808 mean_teacher=0.8620 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7932 mean_teacher=0.8644 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7891 mean_teacher=0.8661 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7912 mean_teacher=0.8620 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0976 mean_teacher=0.8644 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0816 mean_teacher=0.8661 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1036 mean_teacher=0.8620 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1429 mean_teacher=0.8644 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1251 mean_teacher=0.8661 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1559 mean_teacher=0.8620 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0395 mean_teacher=0.8692 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0329 mean_teacher=0.8651 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0453 mean_teacher=0.8667 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.8692 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.8651 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.8667 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4554 mean_teacher=0.8692 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.5022 mean_teacher=0.8651 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4845 mean_teacher=0.8667 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7930 mean_teacher=0.8692 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7932 mean_teacher=0.8651 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7915 mean_teacher=0.8667 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1006 mean_teacher=0.8692 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0813 mean_teacher=0.8651 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0985 mean_teacher=0.8667 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1463 mean_teacher=0.8692 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1273 mean_teacher=0.8651 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=1 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1510 mean_teacher=0.8667 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0315 mean_teacher=0.2177 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0265 mean_teacher=0.1956 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0338 mean_teacher=0.2183 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.2177 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.1956 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.2183 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4333 mean_teacher=0.2177 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4781 mean_teacher=0.1956 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4654 mean_teacher=0.2183 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7980 mean_teacher=0.2177 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7883 mean_teacher=0.1956 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7950 mean_teacher=0.2183 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0856 mean_teacher=0.2177 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0684 mean_teacher=0.1956 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0869 mean_teacher=0.2183 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1222 mean_teacher=0.2177 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1046 mean_teacher=0.1956 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1300 mean_teacher=0.2183 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0337 mean_teacher=0.2850 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0267 mean_teacher=0.2863 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0333 mean_teacher=0.2902 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.2850 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.2863 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.2902 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4358 mean_teacher=0.2850 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4811 mean_teacher=0.2863 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4676 mean_teacher=0.2902 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8002 mean_teacher=0.2850 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8056 mean_teacher=0.2863 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8018 mean_teacher=0.2902 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0995 mean_teacher=0.2850 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0804 mean_teacher=0.2863 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1018 mean_teacher=0.2902 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1288 mean_teacher=0.2850 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1064 mean_teacher=0.2863 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1323 mean_teacher=0.2902 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0349 mean_teacher=0.4141 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0271 mean_teacher=0.3775 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0355 mean_teacher=0.3806 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.4141 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.3775 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.3806 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4405 mean_teacher=0.4141 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4865 mean_teacher=0.3775 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4698 mean_teacher=0.3806 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8203 mean_teacher=0.4141 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8040 mean_teacher=0.3775 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8115 mean_teacher=0.3806 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1090 mean_teacher=0.4141 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0850 mean_teacher=0.3775 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1135 mean_teacher=0.3806 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1336 mean_teacher=0.4141 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1050 mean_teacher=0.3775 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1411 mean_teacher=0.3806 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0350 mean_teacher=0.5658 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0316 mean_teacher=0.5837 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0370 mean_teacher=0.5729 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.5658 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.5837 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.5729 wall=2.4s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4461 mean_teacher=0.5658 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4916 mean_teacher=0.5837 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4781 mean_teacher=0.5729 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8328 mean_teacher=0.5658 wall=3.2s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8284 mean_teacher=0.5837 wall=3.2s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8332 mean_teacher=0.5729 wall=3.2s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1191 mean_teacher=0.5658 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1049 mean_teacher=0.5837 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1240 mean_teacher=0.5729 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1375 mean_teacher=0.5658 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1177 mean_teacher=0.5837 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1469 mean_teacher=0.5729 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0352 mean_teacher=0.7579 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0310 mean_teacher=0.7650 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0395 mean_teacher=0.7532 wall=2.9s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.7579 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.7650 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.7532 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4499 mean_teacher=0.7579 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4985 mean_teacher=0.7650 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4788 mean_teacher=0.7532 wall=3.0s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8410 mean_teacher=0.7579 wall=3.2s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8443 mean_teacher=0.7650 wall=3.3s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8387 mean_teacher=0.7532 wall=3.3s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1244 mean_teacher=0.7579 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1086 mean_teacher=0.7650 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1394 mean_teacher=0.7532 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1394 mean_teacher=0.7579 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1220 mean_teacher=0.7650 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=5 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1536 mean_teacher=0.7532 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0239 mean_teacher=0.1292 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0215 mean_teacher=0.1211 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0221 mean_teacher=0.1234 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.1292 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.1211 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.1234 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4236 mean_teacher=0.1292 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4635 mean_teacher=0.1211 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4423 mean_teacher=0.1234 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7935 mean_teacher=0.1292 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7976 mean_teacher=0.1211 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7889 mean_teacher=0.1234 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0720 mean_teacher=0.1292 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0588 mean_teacher=0.1211 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0783 mean_teacher=0.1234 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1077 mean_teacher=0.1292 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.0843 mean_teacher=0.1211 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1129 mean_teacher=0.1234 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0284 mean_teacher=0.2243 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0246 mean_teacher=0.2262 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0285 mean_teacher=0.2283 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.2243 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.2262 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.2283 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4332 mean_teacher=0.2243 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4732 mean_teacher=0.2262 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4541 mean_teacher=0.2283 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8104 mean_teacher=0.2243 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8072 mean_teacher=0.2262 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8143 mean_teacher=0.2283 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0934 mean_teacher=0.2243 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0870 mean_teacher=0.2262 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1086 mean_teacher=0.2283 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1149 mean_teacher=0.2243 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1017 mean_teacher=0.2262 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1261 mean_teacher=0.2283 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0265 mean_teacher=0.3173 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0264 mean_teacher=0.2990 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0323 mean_teacher=0.3236 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.3173 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.2990 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.3236 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4338 mean_teacher=0.3173 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4768 mean_teacher=0.2990 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4600 mean_teacher=0.3236 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8231 mean_teacher=0.3173 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8246 mean_teacher=0.2990 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8316 mean_teacher=0.3236 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1037 mean_teacher=0.3173 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0891 mean_teacher=0.2990 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1165 mean_teacher=0.3236 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1169 mean_teacher=0.3173 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1024 mean_teacher=0.2990 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1340 mean_teacher=0.3236 wall=3.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0335 mean_teacher=0.5070 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0315 mean_teacher=0.4954 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0352 mean_teacher=0.4917 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.5070 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.4954 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.4917 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4415 mean_teacher=0.5070 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4884 mean_teacher=0.4954 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4715 mean_teacher=0.4917 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8427 mean_teacher=0.5070 wall=3.9s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8457 mean_teacher=0.4954 wall=3.9s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8402 mean_teacher=0.4917 wall=3.9s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1255 mean_teacher=0.5070 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1120 mean_teacher=0.4954 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1310 mean_teacher=0.4917 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1354 mean_teacher=0.5070 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1155 mean_teacher=0.4954 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1434 mean_teacher=0.4917 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0358 mean_teacher=0.7064 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0320 mean_teacher=0.7021 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0389 mean_teacher=0.6989 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.7064 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.7021 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.6989 wall=2.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4486 mean_teacher=0.7064 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4967 mean_teacher=0.7021 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4789 mean_teacher=0.6989 wall=3.5s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8547 mean_teacher=0.7064 wall=4.1s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8529 mean_teacher=0.7021 wall=4.1s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8510 mean_teacher=0.6989 wall=4.1s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1349 mean_teacher=0.7064 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1188 mean_teacher=0.7021 wall=3.8s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1487 mean_teacher=0.6989 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1401 mean_teacher=0.7064 wall=3.7s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1216 mean_teacher=0.7021 wall=3.8s err=None
+[sweep] start vit_b32_cifar100 N=10 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1538 mean_teacher=0.6989 wall=3.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0197 mean_teacher=0.0833 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0184 mean_teacher=0.0816 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0166 mean_teacher=0.0787 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.0833 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.0816 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.0787 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4139 mean_teacher=0.0833 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4515 mean_teacher=0.0816 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4361 mean_teacher=0.0787 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8005 mean_teacher=0.0833 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8018 mean_teacher=0.0816 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8032 mean_teacher=0.0787 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0665 mean_teacher=0.0833 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0527 mean_teacher=0.0816 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0650 mean_teacher=0.0787 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.0911 mean_teacher=0.0833 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.0714 mean_teacher=0.0816 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.0985 mean_teacher=0.0787 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0243 mean_teacher=0.1869 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0219 mean_teacher=0.1774 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0233 mean_teacher=0.1828 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.1869 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.1774 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.1828 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4262 mean_teacher=0.1869 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4658 mean_teacher=0.1774 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4465 mean_teacher=0.1828 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8330 mean_teacher=0.1869 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8257 mean_teacher=0.1774 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8249 mean_teacher=0.1828 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0890 mean_teacher=0.1869 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0812 mean_teacher=0.1774 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1007 mean_teacher=0.1828 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1032 mean_teacher=0.1869 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.0871 mean_teacher=0.1774 wall=4.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1123 mean_teacher=0.1828 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0286 mean_teacher=0.2749 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0238 mean_teacher=0.2531 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0267 mean_teacher=0.2531 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.2749 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.2531 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.2531 wall=2.7s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4300 mean_teacher=0.2749 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4729 mean_teacher=0.2531 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4526 mean_teacher=0.2531 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8427 mean_teacher=0.2749 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8373 mean_teacher=0.2531 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8419 mean_teacher=0.2531 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1099 mean_teacher=0.2749 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.0921 mean_teacher=0.2531 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1146 mean_teacher=0.2531 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1164 mean_teacher=0.2749 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.0967 mean_teacher=0.2531 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1224 mean_teacher=0.2531 wall=4.8s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0319 mean_teacher=0.4483 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0295 mean_teacher=0.4441 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0348 mean_teacher=0.4403 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.4483 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.4441 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.4403 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4413 mean_teacher=0.4483 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4849 mean_teacher=0.4441 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4686 mean_teacher=0.4403 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8557 mean_teacher=0.4483 wall=5.2s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8539 mean_teacher=0.4441 wall=5.2s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8511 mean_teacher=0.4403 wall=5.2s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1254 mean_teacher=0.4483 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1049 mean_teacher=0.4441 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1361 mean_teacher=0.4403 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1287 mean_teacher=0.4483 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1098 mean_teacher=0.4441 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1407 mean_teacher=0.4403 wall=4.9s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0351 mean_teacher=0.6264 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0314 mean_teacher=0.6286 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0372 mean_teacher=0.6310 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.6264 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.6286 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.6310 wall=2.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4484 mean_teacher=0.6264 wall=4.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4967 mean_teacher=0.6286 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4785 mean_teacher=0.6310 wall=4.6s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8582 mean_teacher=0.6264 wall=5.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8627 mean_teacher=0.6286 wall=5.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8613 mean_teacher=0.6310 wall=5.5s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1331 mean_teacher=0.6264 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1149 mean_teacher=0.6286 wall=5.1s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1508 mean_teacher=0.6310 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1348 mean_teacher=0.6264 wall=5.0s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1179 mean_teacher=0.6286 wall=5.1s err=None
+[sweep] start vit_b32_cifar100 N=20 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1523 mean_teacher=0.6310 wall=5.1s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0169 mean_teacher=0.0485 wall=7.8s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0167 mean_teacher=0.0469 wall=7.8s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0144 mean_teacher=0.0498 wall=7.8s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.0485 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only

@@ -1,41 +1,31 @@
 # heifd_016_signal_amp_cnn5
 
-Signal-amplification diagnostic on the failing CNN-5/CIFAR-10 regime: results/heifd_fromscratch_verify shows the protocol misses BOTH participation-incentive gates here (IID raw_union α=1.0 = 0.5071 vs gate 0.60; m4_ood α=0.05 = 0.1702 vs gate 0.40), with 6/16 teachers stuck at random at α=0.05 and bounded-K distillation actively degrading the warmed init (θ₀=0.2374 → final=0.2058). This case amplifies the Phase-0 channel across four arms (raw_union_K20 baseline, raw_union_K100 byte-budget bump, synthetic_K100 Gaussian-around-mean MVP, synthetic_logit_K100 novel teacher-logit-prototype mechanism) holding distillation constant (K=300, τ=4.0, student_lr=0.01), to answer the headline question: does any Phase-0 lever lift θ₀ AND m4_ood substantially over the baseline?
-
-## Method-arm dictionary
-
-| Arm | Phase 0 payload | Mechanism modality | Bytes/client/class | DP-extensible? |
-|---|---|---|---|---|
-| `raw_union_K20` | 20 raw clipped samples per class per client | feature space | 20·D | yes (existing `dp_avg`) |
-| `raw_union_K100` | 100 raw clipped samples per class per client | feature space | 100·D | yes |
-| `synthetic_K100` | 100 N(μ_ic, diag(σ²_ic)) synthetic samples per (i, c) | feature space (variance-aware) | 100·D | yes (issue 016+: `synthetic_dp_eps<ε>_K<K>` parsed, implements DP-on-μ) |
-| `synthetic_logit_K100` | 100 synthetic samples PLUS C-dim per-class teacher-softmax consensus | feature space ⊕ output space | 100·D + C·C | feature: yes; logit: future work |
-
-D = 3·32·32 = 3072 (raw-pixel space, CNN-5 from-scratch); C = 10. Soft-label payload C·C = 100 scalars total — negligible vs the feature payload.
+HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
 ## Sweep configuration
 
-- Backbone: `cnn5_cifar10` (from-scratch CNN-5 on raw 3×32×32 CIFAR-10 images)
-- N: 16 · Dirichlet α: 0.05, 1.0
-- Methods: `raw_union_K20, raw_union_K100, synthetic_K100, synthetic_logit_K100`
-- Seeds: 42 (single seed — this is a diagnostic, not a sweep)
-- K (bounded trajectory length): 300 (legacy from-scratch default — issue 010's K=100 finding is pretrained-regime only)
-- τ (distill temperature): 4.0 (legacy default — Phase-0 lever isolation; τ is orthogonal to this comparison)
-- Student LR: 0.01 (legacy default)
-- 8 cells × ~5 min each ≈ 30-50 min wall-clock; one task, no array.
+- Backbones: `cnn5_cifar10`
+- N values: `16`
+- Dirichlet α: `0.05,1.0`
+- Methods: `raw_union_K20,raw_union_K100,synthetic_K100,synthetic_logit_K100`
+- Seeds: `42`
+- K (bounded trajectory length): `300`
+- τ (distill temperature): `4.0`
+- Student LR: `0.01`
+- Labelled-probe size P: `None` (None = backbone default)
 
 ## Results
 
-(populated by `src.report.write_report` after the job completes)
+| backbone | N | α | method | seed | acc | mean_teacher | best_teacher | oracle | θ₀_acc | M3_mean_gap | M3_helped | M4_ood_acc | σ | status |
+|---|---|---|--------|------|-----|--------------|--------------|--------|--------|-------------|-----------|------------|---|--------|
+| cnn5_cifar10 | 16 | 0.05 | raw_union_K100 | 42 | 0.3022 | 0.1494 | 0.2665 | 0.7824 | 0.4185 | -0.6493 | 0/16 | 0.2531 | 0.0000 | success |
+| cnn5_cifar10 | 16 | 0.05 | raw_union_K20 | 42 | 0.2073 | 0.1493 | 0.2666 | 0.7877 | 0.2370 | -0.7564 | 0/16 | 0.1720 | 0.0000 | success |
+| cnn5_cifar10 | 16 | 0.05 | synthetic_K100 | 42 | 0.1057 | 0.1495 | 0.2659 | 0.7811 | 0.2601 | -0.8072 | 0/16 | 0.0654 | 0.0000 | success |
+| cnn5_cifar10 | 16 | 0.05 | synthetic_logit_K100 | 42 | n/a | 0.1493 | 0.2658 | 0.7831 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| cnn5_cifar10 | 16 | 1.0 | raw_union_K100 | 42 | 0.6577 | 0.4787 | 0.5311 | 0.7824 | 0.6896 | -0.3024 | 0/16 | n/a | 0.0000 | success |
+| cnn5_cifar10 | 16 | 1.0 | raw_union_K20 | 42 | 0.5194 | 0.4770 | 0.5269 | 0.7753 | 0.4854 | -0.4765 | 0/16 | n/a | 0.0000 | success |
+| cnn5_cifar10 | 16 | 1.0 | synthetic_K100 | 42 | 0.3905 | 0.4784 | 0.5272 | 0.7854 | 0.2493 | -0.6079 | 0/16 | n/a | 0.0000 | success |
+| cnn5_cifar10 | 16 | 1.0 | synthetic_logit_K100 | 42 | n/a | 0.4773 | 0.5234 | 0.7826 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
 
-## Pre-run hypothesis
-
-Each arm "wins" if it lifts both θ₀ AND m4_ood substantially over the `raw_union_K20` baseline (θ₀=0.2374, m4_ood=0.1702 at α=0.05; θ₀=0.4850, m4_ood n/a at α=1.0). Concretely:
-
-- **`raw_union_K100` wins iff** θ₀ ≥ 0.30 AND m4_ood ≥ 0.25 at α=0.05 — would mean the byte budget itself was the bottleneck (mean-feature mechanism scales).
-- **`synthetic_K100` wins iff** θ₀ ≥ 0.35 AND m4_ood ≥ 0.30 at α=0.05 — would mean class-variance structure carries useful information that mean-only prototypes lack.
-- **`synthetic_logit_K100` wins iff** θ₀ ≥ 0.40 AND m4_ood ≥ 0.30 at α=0.05 — would mean inter-class confusion structure (output-space prototype) carries signal modality orthogonal to feature-space.
-
-If all four arms stay within ±5pp of each other at α=0.05, Phase-0-only amplification is insufficient and the failure is teacher-side (6 random teachers are dragging the federation down regardless of payload richness); next step would be teacher-quality interventions (teacher_epochs ↑, stronger augmentation, or filtering random-acc teachers from the aggregate).
-
-Raw per-cell JSONs live here as `cell_<backbone>_N<n>_a<α>_<method>_s<seed>_K<k>_<hash>.json`. Per-client per-class counts at `partition_diagnostic.jsonl`. Slurm stdout/stderr at `runs/`. Long-form rows at `results.csv`.
+Raw per-cell JSONs live here as `cell_<backbone>_N<n>_a<α>_<method>_s<seed>_K<k>_<hash>.json`.
+Per-client per-class counts at `partition_diagnostic.jsonl`. Slurm stdout/stderr at `runs/`. Long-form rows at `results.csv`.
