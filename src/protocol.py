@@ -125,6 +125,50 @@ BACKBONES: Dict[str, BackboneSpec] = {
         labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128, feature_loader="cifar10:vit_b32",
     ),
+    # Pretrained vision heads on CIFAR-100 (issue 012; harder regime to escape
+    # ViT-on-CIFAR-10's 0.97 saturation). 100 classes ⇒ probe ≥ 1 sample per
+    # class is the floor; we set 300 so each class sees ~3 examples on
+    # average (still small enough that the linear-head probe remains an
+    # honest "small-labelled-public" baseline, large enough that warmup
+    # doesn't collapse the way a 100-sample probe over 100 classes would).
+    # Hyperparams otherwise mirror the CIFAR-10 head cells (per issue 011's
+    # finding that head_only/(K=100, τ=1, lr=0.001) is the right pretrained
+    # default; per-cell KD hparams come through the sweep CLI). Issue 011
+    # also showed last_block harms via warmup-underfit on a 100-sample probe;
+    # the 300-sample probe used here gives last_block a fairer test on harder
+    # data if the orchestrator later sweeps scopes (issue 012 itself stays
+    # head_only per the brief).
+    "resnet18_cifar100": BackboneSpec(
+        label="resnet18_cifar100", kind="head", num_classes=100,
+        labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="cifar100:resnet18",
+    ),
+    "vit_b32_cifar100": BackboneSpec(
+        label="vit_b32_cifar100", kind="head", num_classes=100,
+        labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="cifar100:vit_b32",
+    ),
+    # Pretrained vision heads on Tiny-ImageNet (issue 012; 200 classes, 64×64).
+    # Probe set to 600 so every class sees ~3 examples on average — the same
+    # per-class probe density as the CIFAR-100 entries (300/100=3). The
+    # ResNet/ViT backbones are ImageNet-trained and Tiny-ImageNet's classes
+    # overlap ImageNet, so the frozen features are informative; the linear-
+    # probe ceiling is ~0.55-0.65 (ViT) / 0.45-0.55 (ResNet) per the issue
+    # 012 brief — substantial headroom for distillation to add value.
+    "resnet18_tiny_imagenet": BackboneSpec(
+        label="resnet18_tiny_imagenet", kind="head", num_classes=200,
+        labelled_probe_default=600, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="tiny_imagenet:resnet18",
+    ),
+    "vit_b32_tiny_imagenet": BackboneSpec(
+        label="vit_b32_tiny_imagenet", kind="head", num_classes=200,
+        labelled_probe_default=600, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="tiny_imagenet:vit_b32",
+    ),
     # Pretrained text heads (Section C) on AG News (4 classes).
     "distilbert_agnews": BackboneSpec(
         label="distilbert_agnews", kind="head", num_classes=4,
@@ -312,6 +356,26 @@ def _load_features(
         def _head_factory(in_dim_, num_classes_):
             return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
         return Xtr, ytr, Xte, yte, in_dim, _head_factory
+    if spec.feature_loader.startswith("cifar100:"):
+        # Pretrained-feature path on CIFAR-100 (issue 012). Same head-on-cached-
+        # features pattern as CIFAR-10, the only difference is the number of
+        # classes and the harder linear-probe ceiling. Scope dispatch is shared.
+        name = spec.feature_loader.split(":", 1)[1]
+        Xtr, ytr, Xte, yte, in_dim = bk.extract_cifar100_features(name, data_root, cache_root)
+        def _head_factory(in_dim_, num_classes_):
+            return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
+        return Xtr, ytr, Xte, yte, in_dim, _head_factory
+    if spec.feature_loader.startswith("tiny_imagenet:"):
+        # Pretrained-feature path on Tiny-ImageNet (issue 012). 200 classes,
+        # native 64×64 (the extractor upsamples to 224 for the ImageNet
+        # backbones). Same head-on-cached-features pattern; same scope
+        # dispatch as the CIFAR paths.
+        name = spec.feature_loader.split(":", 1)[1]
+        Xtr, ytr, Xte, yte, in_dim = bk.extract_tiny_imagenet_features(
+            name, data_root, cache_root)
+        def _head_factory(in_dim_, num_classes_):
+            return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
+        return Xtr, ytr, Xte, yte, in_dim, _head_factory
     if spec.feature_loader.startswith("text:"):
         name = spec.feature_loader.split(":", 1)[1]
         Xtr, ytr, Xte, yte, in_dim = bk.extract_text_features(name, "ag_news", data_root, cache_root)
@@ -392,13 +456,16 @@ def run_cell(
     nc = spec.num_classes
     # Human-readable dataset label from the feature_loader. Keyed on the prefix
     # so both the from-scratch loaders ("mnist"/"fmnist"/"cifar10_raw") and the
-    # pretrained ones ("cifar10:<bb>"/"text:<bb>") resolve correctly.
+    # pretrained ones ("cifar10:<bb>"/"cifar100:<bb>"/"tiny_imagenet:<bb>"/
+    # "text:<bb>") resolve correctly.
     _loader_prefix = spec.feature_loader.split(":")[0]
     dataset = {
         "mnist": "MNIST",
         "fmnist": "FashionMNIST",
         "cifar10_raw": "CIFAR10",
         "cifar10": "CIFAR10",
+        "cifar100": "CIFAR100",
+        "tiny_imagenet": "TinyImageNet",
     }.get(_loader_prefix, "CIFAR10" if "cifar" in spec.feature_loader else "AGNews")
 
     res = CellResult(

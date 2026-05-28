@@ -276,3 +276,182 @@ def load_cifar10_raw_tensors(
         cache,
     )
     return X_train, y_train, X_test, y_test
+
+
+# ----------------------------------------------------------------------------
+# CIFAR-100 RAW-image loader (issue 012; 100 classes, 3x32x32; download=False)
+# ----------------------------------------------------------------------------
+def load_cifar100_tensors(
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Return (X_train[N,3,32,32], y_train, X_test[M,3,32,32], y_test) for CIFAR-100.
+
+    Mirrors ``load_cifar10_raw_tensors`` but for the 100-class variant — drives
+    the harder-vision-dataset cells in issue 012 (ViT-B/32 on CIFAR-10 is
+    saturated at 0.97 IID; CIFAR-100's ~0.75-0.80 linear-probe ceiling gives
+    the protocol headroom to demonstrate distillation value). Same channel
+    stats as CIFAR-10 (the two datasets share images; mean/std are nearly
+    identical and reusing the CIFAR-10 stats is the standard torchvision
+    convention — minimises preprocessing skew vs the existing CIFAR-10 path).
+    Cached to ``cache/features/cifar100_raw.pt`` (regenerable; gitignored).
+
+    GOLDEN RULE: ``download=False`` — the python batches must already be present
+    at ``data/cifar-100-python/`` on VALAR; ``jobs/prefetch_login.py`` populates
+    them on the login node when ``--include-cifar100`` is set. torchvision is
+    imported inside the function so a login-node syntax/CLI check does not pull
+    in torch.
+    """
+    from torchvision import datasets, transforms  # local import: heavy, VALAR-only
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / "cifar100_raw.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"]
+
+    tfm = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
+    ])
+    train_ds = datasets.CIFAR100(data_root, train=True, download=False, transform=tfm)
+    test_ds = datasets.CIFAR100(data_root, train=False, download=False, transform=tfm)
+    X_train, y_train, X_test, y_test = _stack_image_tensors(train_ds, test_ds)
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},
+        cache,
+    )
+    return X_train, y_train, X_test, y_test
+
+
+# ----------------------------------------------------------------------------
+# Tiny-ImageNet RAW-image loader (issue 012; 200 classes, 3x64x64; ImageFolder)
+# ----------------------------------------------------------------------------
+def load_tiny_imagenet_tensors(
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Return (X_train[N,3,64,64], y_train, X_test[M,3,64,64], y_test) for Tiny-ImageNet.
+
+    Stanford CS231n Tiny-ImageNet-200: 200 classes × 500 train images each
+    (100K total), 50 images per class in the validation set. Native 64×64.
+    Layout produced by the prefetch script's extraction:
+
+        data/tiny-imagenet-200/
+            wnids.txt
+            train/<wnid>/images/<filename>.JPEG    (500 images per wnid)
+            val/images/<filename>.JPEG             (10000 images, flat dir)
+            val/val_annotations.txt                 (<filename>\\t<wnid>\\t...)
+
+    The ``val`` directory is used as the **test set** (Tiny-ImageNet's test
+    split has no labels, by convention val is treated as test for evaluation).
+    Class indices are assigned by sorting the 200 wnids lexicographically so
+    train and val agree.
+
+    Normalised with the standard ImageNet channel stats (this is an ImageNet
+    subset; the ImageNet-pretrained backbones in ``backbones.py`` expect those
+    stats anyway, and the from-scratch path is not used on this dataset).
+    Cached to ``cache/features/tiny_imagenet_raw.pt`` (regenerable; gitignored).
+
+    GOLDEN RULE: ``download=False`` — the extracted directory must already exist
+    at ``data/tiny-imagenet-200/`` on VALAR. ``jobs/prefetch_login.py`` populates
+    it on the login node when ``--include-tiny-imagenet`` is set (download +
+    unzip; ~250MB on disk). torchvision is imported inside the function so a
+    login-node syntax/CLI check does not pull in torch.
+
+    NOTE: This loader is **best-effort** per issue 012. CIFAR-100 is the
+    higher-value cell; Tiny-ImageNet is included so the orchestrator can
+    optionally run those rows in the verify wrapper. If the on-disk layout
+    deviates from the standard Stanford zip layout, this loader raises
+    FileNotFoundError with a clear message rather than silently returning
+    garbage.
+    """
+    from PIL import Image
+    from torchvision import transforms  # local import: heavy, VALAR-only
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / "tiny_imagenet_raw.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"]
+
+    root = Path(data_root) / "tiny-imagenet-200"
+    if not root.exists():
+        raise FileNotFoundError(
+            f"Tiny-ImageNet directory {root} not found. Run "
+            f"`python jobs/prefetch_login.py --include-tiny-imagenet` on the "
+            f"VALAR login node first."
+        )
+
+    # Class index = lexicographic position of wnid in wnids.txt (consistent
+    # with the standard CS231n convention).
+    wnids_path = root / "wnids.txt"
+    if not wnids_path.exists():
+        raise FileNotFoundError(
+            f"Expected {wnids_path} (Tiny-ImageNet class-id manifest)."
+        )
+    wnids = sorted(wnids_path.read_text().split())
+    wnid_to_idx = {w: i for i, w in enumerate(wnids)}
+
+    tfm = transforms.Compose([
+        transforms.ToTensor(),  # PIL -> (C, H, W) float in [0,1]
+        # ImageNet stats: this is an ImageNet subset and the linear-probe
+        # head consumes ImageNet-pretrained features (ResNet/ViT) further on.
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+    ])
+
+    def _load_pil(p: Path) -> "torch.Tensor":
+        # Tiny-ImageNet ships a handful of grayscale images; ``convert("RGB")``
+        # promotes them to 3 channels so the tensor stack is uniform shape.
+        with Image.open(p) as img:
+            return tfm(img.convert("RGB"))
+
+    # Train: data/tiny-imagenet-200/train/<wnid>/images/*.JPEG (500 per wnid).
+    train_root = root / "train"
+    train_X_list = []
+    train_y_list = []
+    for wnid in wnids:
+        img_dir = train_root / wnid / "images"
+        if not img_dir.exists():
+            raise FileNotFoundError(
+                f"Expected {img_dir} (Tiny-ImageNet train images for {wnid})."
+            )
+        idx = wnid_to_idx[wnid]
+        for p in sorted(img_dir.iterdir()):
+            train_X_list.append(_load_pil(p))
+            train_y_list.append(idx)
+    X_train = torch.stack(train_X_list)
+    y_train = torch.tensor(train_y_list, dtype=torch.long)
+
+    # Val: data/tiny-imagenet-200/val/images/*.JPEG (flat) + val_annotations.txt
+    val_root = root / "val"
+    val_ann = val_root / "val_annotations.txt"
+    if not val_ann.exists():
+        raise FileNotFoundError(
+            f"Expected {val_ann} (Tiny-ImageNet val_annotations)."
+        )
+    val_img_dir = val_root / "images"
+    val_X_list = []
+    val_y_list = []
+    # Each line: <filename>\t<wnid>\t<bbox_x1>\t<bbox_y1>\t<bbox_x2>\t<bbox_y2>
+    for line in val_ann.read_text().splitlines():
+        parts = line.split("\t")
+        if len(parts) < 2:
+            continue
+        fname, wnid = parts[0], parts[1]
+        if wnid not in wnid_to_idx:
+            # Unknown wnid (shouldn't happen for a clean Stanford dump); skip
+            # so a corrupted line doesn't poison the whole tensor stack.
+            continue
+        val_X_list.append(_load_pil(val_img_dir / fname))
+        val_y_list.append(wnid_to_idx[wnid])
+    X_test = torch.stack(val_X_list)
+    y_test = torch.tensor(val_y_list, dtype=torch.long)
+
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},
+        cache,
+    )
+    return X_train, y_train, X_test, y_test
