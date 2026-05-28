@@ -1,0 +1,3 @@
+[016 amp] job 1115754 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=8 cells; chunk 0/1 -> 8 cells; case=heifd_016_signal_amp_cnn5
+[sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only

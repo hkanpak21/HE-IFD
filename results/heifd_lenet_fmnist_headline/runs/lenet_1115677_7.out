@@ -61,3 +61,55 @@
 [sweep] start lenet_fmnist N=10 a=0.3 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
 [sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.5563 wall=21.2s err=None
 [sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5607 mean_teacher=0.5036 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.7663 wall=21.1s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7842 mean_teacher=0.7563 wall=28.0s err=None
+[sweep] start lenet_fmnist N=20 a=0.01 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.1000 mean_teacher=0.1145 wall=31.0s err=None
+[sweep] start lenet_fmnist N=20 a=0.01 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5288 mean_teacher=0.1138 wall=31.7s err=None
+[sweep] start lenet_fmnist N=20 a=0.01 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   dp_avg_eps8_K20 acc=n/a mean_teacher=0.1529 wall=21.0s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start lenet_fmnist N=20 a=0.05 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.1966 mean_teacher=0.1771 wall=35.1s err=None
+[sweep] start lenet_fmnist N=20 a=0.05 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.3227 mean_teacher=0.2435 wall=35.2s err=None
+[sweep] start lenet_fmnist N=20 a=0.1 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.3153 wall=21.5s err=None
+[sweep] start lenet_fmnist N=20 a=0.1 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.4116 mean_teacher=0.2807 wall=35.2s err=None
+[sweep] start lenet_fmnist N=20 a=0.3 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.5164 wall=21.5s err=None
+[sweep] start lenet_fmnist N=20 a=0.3 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7971 mean_teacher=0.5263 wall=35.3s err=None
+[sweep] start lenet_fmnist N=20 a=1.0 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.6187 mean_teacher=0.7033 wall=35.0s err=None
+[sweep] start lenet_fmnist N=20 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8234 mean_teacher=0.6815 wall=35.3s err=None
+[sweep] start lenet_fmnist N=20 a=1.0 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6181 mean_teacher=0.6929 wall=35.1s err=None
+[sweep] start lenet_fmnist N=50 a=0.01 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.1008 mean_teacher=0.1118 wall=44.1s err=None
+[sweep] start lenet_fmnist N=50 a=0.01 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   dp_avg_eps8_K20 acc=n/a mean_teacher=0.1142 wall=21.4s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start lenet_fmnist N=50 a=0.05 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.1609 wall=22.6s err=None
+[sweep] start lenet_fmnist N=50 a=0.05 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   dp_avg_eps2_K20 acc=n/a mean_teacher=0.1808 wall=21.7s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start lenet_fmnist N=50 a=0.1 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.2502 wall=22.4s err=None
+[sweep] start lenet_fmnist N=50 a=0.1 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8028 mean_teacher=0.2444 wall=56.6s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.4916 mean_teacher=0.4185 wall=56.1s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8378 mean_teacher=0.4094 wall=57.0s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5113 mean_teacher=0.4159 wall=56.3s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.6199 mean_teacher=0.5807 wall=56.0s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6291 mean_teacher=0.5717 wall=56.3s err=None
+[sweep] done. ran=53 skipped=0 failed=3. report at /scratch/hkanpak21/HE_IFD/results/heifd_lenet_fmnist_headline/README.md
