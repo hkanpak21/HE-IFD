@@ -1,0 +1,15 @@
+[fsverify] job 1115604 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=8 cells; chunk 0/1 -> 8 cells; case=heifd_fromscratch_verify
+[sweep] skip  cell_lenet_fmnist_N16_a0.05_no_phase0_s42_K300_ec3b39e383e2.json (success exists)
+[sweep] skip  cell_lenet_fmnist_N16_a0.05_raw_union_K20_s42_K300_38c8cb6a00c8.json (success exists)
+[sweep] skip  cell_lenet_fmnist_N16_a1.0_no_phase0_s42_K300_214a1a0e0fee.json (success exists)
+[sweep] skip  cell_lenet_fmnist_N16_a1.0_raw_union_K20_s42_K300_9c6663bf925d.json (success exists)
+[sweep] start cnn5_cifar10 N=16 a=0.05 no_phase0 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.1016 mean_teacher=0.1494 wall=301.9s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.2058 mean_teacher=0.1495 wall=297.4s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 no_phase0 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.3665 mean_teacher=0.4785 wall=295.8s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5071 mean_teacher=0.4777 wall=296.7s err=None
+[sweep] done. ran=4 skipped=4 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_fromscratch_verify/README.md
