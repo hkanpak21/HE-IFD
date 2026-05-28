@@ -1,0 +1,11 @@
+[fsverify] job 1115538 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=8 cells; chunk 0/1 -> 8 cells; case=heifd_fromscratch_verify
+[sweep] skip  cell_lenet_fmnist_N16_a0.05_no_phase0_s42_K300_ec3b39e383e2.json (success exists)
+[sweep] skip  cell_lenet_fmnist_N16_a0.05_raw_union_K20_s42_K300_38c8cb6a00c8.json (success exists)
+[sweep] skip  cell_lenet_fmnist_N16_a1.0_no_phase0_s42_K300_214a1a0e0fee.json (success exists)
+[sweep] skip  cell_lenet_fmnist_N16_a1.0_raw_union_K20_s42_K300_9c6663bf925d.json (success exists)
+[sweep] skip  cell_cnn5_cifar10_N16_a0.05_no_phase0_s42_K300_a05e86612a54.json (success exists)
+[sweep] skip  cell_cnn5_cifar10_N16_a0.05_raw_union_K20_s42_K300_dec069948c7f.json (success exists)
+[sweep] skip  cell_cnn5_cifar10_N16_a1.0_no_phase0_s42_K300_56a33434c983.json (success exists)
+[sweep] skip  cell_cnn5_cifar10_N16_a1.0_raw_union_K20_s42_K300_0d411056abb6.json (success exists)
+[sweep] done. ran=0 skipped=8 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_fromscratch_verify/README.md

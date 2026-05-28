@@ -1,0 +1,39 @@
+[011] job 1115537 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=18 cells; chunk 0/1 -> 18 cells; case=heifd_011_scope_resnet18
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.2358 mean_teacher=0.2297 wall=10.5s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=lora_8
+[sweep] ok   no_phase0 acc=0.2358 mean_teacher=0.2298 wall=4.5s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=last_block
+[sweep] ok   no_phase0 acc=0.1705 mean_teacher=0.2200 wall=4.2s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.1961 mean_teacher=0.2879 wall=3.3s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=lora_8
+[sweep] ok   no_phase0 acc=0.1963 mean_teacher=0.2881 wall=4.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=last_block
+[sweep] ok   no_phase0 acc=0.1407 mean_teacher=0.2605 wall=4.1s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.1899 mean_teacher=0.2493 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=lora_8
+[sweep] ok   no_phase0 acc=0.1902 mean_teacher=0.2489 wall=4.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=last_block
+[sweep] ok   no_phase0 acc=0.1787 mean_teacher=0.2126 wall=4.1s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7486 mean_teacher=0.2297 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=lora_8
+[sweep] ok   raw_union_K20 acc=0.7502 mean_teacher=0.2298 wall=4.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=last_block
+[sweep] ok   raw_union_K20 acc=0.6299 mean_teacher=0.2200 wall=4.2s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7630 mean_teacher=0.2879 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=lora_8
+[sweep] ok   raw_union_K20 acc=0.7627 mean_teacher=0.2881 wall=4.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=last_block
+[sweep] ok   raw_union_K20 acc=0.6638 mean_teacher=0.2605 wall=4.2s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7734 mean_teacher=0.2493 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=lora_8
+[sweep] ok   raw_union_K20 acc=0.7741 mean_teacher=0.2489 wall=4.5s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=last_block
+[sweep] ok   raw_union_K20 acc=0.6454 mean_teacher=0.2126 wall=4.2s err=None
+[sweep] done. ran=18 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_011_scope_resnet18/README.md
