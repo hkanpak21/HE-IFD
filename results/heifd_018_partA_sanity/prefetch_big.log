@@ -1,0 +1,9 @@
+[prefetch] ag_news ok
+[prefetch] hf distilbert-base-uncased ok
+[prefetch] hf gpt2 ok
+[prefetch] resnet18 ok
+[prefetch] vit ok
+[prefetch] hf bert-large-uncased ok
+[prefetch] hf gpt2-medium ok
+[prefetch] vit_l ok
+[prefetch] PREFETCH DONE

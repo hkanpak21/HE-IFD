@@ -1,3 +1,7 @@
 [016b distill] job 1116351 on ai08.kuvalar.ku.edu.tr
 [sweep] grid=24 cells; chunk 0/1 -> 24 cells; case=heifd_016b_distill_debug_cnn5
 [sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=30 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.2428 mean_teacher=0.1495 wall=289.7s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=30 tau=1.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.2075 mean_teacher=0.1496 wall=284.6s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=30 tau=4.0 lr=0.001 scope=head_only

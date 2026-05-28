@@ -1,0 +1,14 @@
+[016b synlogit] job 1116352 on ai08.kuvalar.ku.edu.tr
+[016b synlogit] arm A: cnn5_cifar10 (K=300, tau=4, lr=0.01)
+[sweep] grid=6 cells; chunk 0/1 -> 6 cells; case=heifd_016b_synthetic_logit
+[sweep] start cnn5_cifar10 N=16 a=0.05 synthetic_logit_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   synthetic_logit_K100 acc=0.1613 mean_teacher=0.1495 wall=307.3s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 synthetic_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   synthetic_K100 acc=0.1323 mean_teacher=0.1495 wall=300.8s err=None
+[sweep] start cnn5_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.2057 mean_teacher=0.1495 wall=296.6s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 synthetic_logit_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   synthetic_logit_K100 acc=0.4123 mean_teacher=0.4787 wall=303.2s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 synthetic_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   synthetic_K100 acc=0.3919 mean_teacher=0.4780 wall=302.2s err=None
+[sweep] start cnn5_cifar10 N=16 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
