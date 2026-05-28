@@ -79,6 +79,116 @@ def make_mnist_mlp() -> Callable:
 
 
 # ----------------------------------------------------------------------------
+# From-scratch LeNet-5 for FashionMNIST (1x28x28)
+# ----------------------------------------------------------------------------
+def _build_lenet5_class():
+    """Classic LeNet-5 sized for 1x28x28 inputs (the Co-Boosting / DENSE / FedLPA
+    "LeNet-5 for MNIST and FMNIST" convention; see comparators/REPORTED_RESULTS.md
+    rows 5/11). Two 5x5 conv blocks with 2x2 max-pool, then 3 FC layers, ReLU
+    throughout. Unlike ``MLP_MNIST`` (which consumes flat 784-vectors), this is a
+    CONV net: ``forward`` expects an image-shaped batch ``(B, 1, 28, 28)`` and
+    flattens internally before the FC head, so the loader must hand it
+    ``(N, 1, 28, 28)`` tensors (see ``data.load_fmnist_tensors``). Output logits
+    are 10-way; activations are all ReLU (FHE-friendliness lives in the linear
+    server aggregate, not in the student, so no polynomial approximation here)."""
+    import torch.nn as nn
+
+    class LeNet5_FMNIST(nn.Module):
+        def __init__(self, num_classes: int = 10):
+            super().__init__()
+            # conv1: 1->6, 5x5, pad 2 keeps 28x28; pool -> 14x14
+            # conv2: 6->16, 5x5, no pad -> 10x10; pool -> 5x5
+            self.features = nn.Sequential(
+                nn.Conv2d(1, 6, kernel_size=5, padding=2), nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Conv2d(6, 16, kernel_size=5), nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+            )
+            self.classifier = nn.Sequential(
+                nn.Linear(16 * 5 * 5, 120), nn.ReLU(),
+                nn.Linear(120, 84), nn.ReLU(),
+                nn.Linear(84, num_classes),
+            )
+
+        def forward(self, x):
+            x = self.features(x)
+            x = x.flatten(1)  # (B, 16*5*5); image -> flat happens INSIDE the net
+            return self.classifier(x)
+
+    return LeNet5_FMNIST
+
+
+def make_fmnist_lenet5(num_classes: int = 10) -> Callable:
+    """Zero-arg factory for a fresh LeNet-5 on DEVICE (FashionMNIST, 1x28x28).
+
+    Parameter-free factory matching the ``scratch`` make_model_fn contract used
+    by ``protocol.run_cell`` (it calls ``model_fn_src()`` with no args for scratch
+    backbones). Every fresh model lands on the resolved DEVICE so distillation /
+    aggregation tensors stay co-located, exactly as for the MNIST MLP."""
+    LeNet5_FMNIST = _build_lenet5_class()
+    dev = _device()
+
+    def _factory():
+        return LeNet5_FMNIST(num_classes).to(dev)
+
+    return _factory
+
+
+# ----------------------------------------------------------------------------
+# From-scratch CNN-5 for CIFAR-10 (3x32x32)
+# ----------------------------------------------------------------------------
+def _build_cnn5_class():
+    """5-layer conv net for 3x32x32 inputs (the Co-Boosting / DENSE / FedLPA
+    "CNN with 5 layers for SVHN/CIFAR-10/CIFAR-100" convention; see
+    comparators/REPORTED_RESULTS.md rows 5/11). Three 3x3 conv blocks (each
+    conv+ReLU+2x2 max-pool, 32->64->128 channels) reduce 32x32 -> 4x4, then 2 FC
+    layers (5 weight layers total: 3 conv + 2 linear), ReLU throughout. Like
+    LeNet-5 it is a CONV net: ``forward`` expects ``(B, 3, 32, 32)`` and flattens
+    internally before the FC head, so the loader hands it ``(N, 3, 32, 32)``
+    IMAGE tensors (``data.load_cifar10_raw_tensors``) — distinct from the
+    pretrained-feature path in ``extract_cifar10_features``. 10-way logits."""
+    import torch.nn as nn
+
+    class CNN5_CIFAR10(nn.Module):
+        def __init__(self, num_classes: int = 10):
+            super().__init__()
+            # 3x conv blocks, each halves H,W via 2x2 pool: 32->16->8->4
+            self.features = nn.Sequential(
+                nn.Conv2d(3, 32, kernel_size=3, padding=1), nn.ReLU(),
+                nn.MaxPool2d(2, 2),
+                nn.Conv2d(32, 64, kernel_size=3, padding=1), nn.ReLU(),
+                nn.MaxPool2d(2, 2),
+                nn.Conv2d(64, 128, kernel_size=3, padding=1), nn.ReLU(),
+                nn.MaxPool2d(2, 2),
+            )
+            self.classifier = nn.Sequential(
+                nn.Linear(128 * 4 * 4, 256), nn.ReLU(),
+                nn.Linear(256, num_classes),
+            )
+
+        def forward(self, x):
+            x = self.features(x)
+            x = x.flatten(1)  # (B, 128*4*4); image -> flat happens INSIDE the net
+            return self.classifier(x)
+
+    return CNN5_CIFAR10
+
+
+def make_cifar10_cnn5(num_classes: int = 10) -> Callable:
+    """Zero-arg factory for a fresh CNN-5 on DEVICE (CIFAR-10, 3x32x32).
+
+    Parameter-free factory matching the ``scratch`` make_model_fn contract (see
+    ``make_fmnist_lenet5``). Consumes raw image tensors, NOT pretrained features."""
+    CNN5_CIFAR10 = _build_cnn5_class()
+    dev = _device()
+
+    def _factory():
+        return CNN5_CIFAR10(num_classes).to(dev)
+
+    return _factory
+
+
+# ----------------------------------------------------------------------------
 # Linear classifier head on pretrained features (notebook Section B.2)
 # ----------------------------------------------------------------------------
 def _build_head_class():

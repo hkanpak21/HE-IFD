@@ -14,9 +14,26 @@ Faithful-port notes
   pre-cached on VALAR under ``data/``; the compute node has no internet). Raw
   feature tensors are cached under ``cache/features/`` so a partition/teacher
   sweep does not re-decode the images every cell.
-* Vision/text feature tensors are produced by ``backbones.py`` (they need the
-  pretrained extractor); the loaders here cover only the from-scratch MNIST
-  path that the M1 verification cell exercises.
+* Vision/text feature tensors for the *pretrained-backbone* path are produced by
+  ``backbones.py`` (they need the frozen extractor). The loaders here cover the
+  *from-scratch* image paths: MNIST (flat 784-vectors for the MLP) and the two
+  conv-net datasets FashionMNIST + CIFAR-10, which return image-shaped
+  ``(N, C, H, W)`` tensors that the LeNet-5 / CNN-5 backbones consume directly.
+
+Shape contract (read before adding a from-scratch backbone)
+-----------------------------------------------------------
+A from-scratch loader returns exactly the tensor shape its backbone's
+``forward`` consumes — the protocol passes ``X[idx]`` straight into ``model(...)``
+with no reshape. ``load_mnist_tensors`` flattens to ``(N, 784)`` because
+``MLP_MNIST`` takes flat vectors; the conv loaders keep ``(N, C, H, W)`` because
+``LeNet5_FMNIST`` / ``CNN5_CIFAR10`` flatten internally. The Dirichlet partition,
+teacher/oracle/warmup SGD, raw-union probe build, distillation, aggregation and
+evaluation are all shape-agnostic (they only index dim 0 or operate on the
+model's ``state_dict``), so image-shaped data flows end-to-end unchanged on the
+``no_phase0`` / ``raw_union`` / ``labelled`` / ``warmup_only`` paths. The single
+exception is the ``dp_avg`` Phase-0 mechanism, which is defined in flat feature
+space; ``protocol.run_cell`` flattens for that probe build and reshapes the
+returned probe back to image shape before warmup (see the note there).
 """
 from __future__ import annotations
 
@@ -154,6 +171,106 @@ def load_mnist_tensors(
     y_train = torch.tensor([train_ds[i][1] for i in range(len(train_ds))])
     X_test = torch.stack([test_ds[i][0] for i in range(len(test_ds))]).view(-1, 784)
     y_test = torch.tensor([test_ds[i][1] for i in range(len(test_ds))])
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},
+        cache,
+    )
+    return X_train, y_train, X_test, y_test
+
+
+def _stack_image_tensors(train_ds, test_ds):
+    """Materialise a torchvision dataset into image-shaped (N, C, H, W) tensors.
+
+    ``transforms.ToTensor`` already yields ``(C, H, W)`` per sample, so stacking
+    preserves the image shape — we deliberately do NOT flatten (unlike the MNIST
+    MLP loader). Used by the conv-net from-scratch loaders below.
+    """
+    X_train = torch.stack([train_ds[i][0] for i in range(len(train_ds))])
+    y_train = torch.tensor([train_ds[i][1] for i in range(len(train_ds))])
+    X_test = torch.stack([test_ds[i][0] for i in range(len(test_ds))])
+    y_test = torch.tensor([test_ds[i][1] for i in range(len(test_ds))])
+    return X_train, y_train, X_test, y_test
+
+
+# ----------------------------------------------------------------------------
+# FashionMNIST raw-image loader for LeNet-5 (1x28x28; download=False)
+# ----------------------------------------------------------------------------
+def load_fmnist_tensors(
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Return (X_train[N,1,28,28], y_train, X_test[M,1,28,28], y_test) for FashionMNIST.
+
+    IMAGE-shaped (NOT flattened): the from-scratch LeNet-5 (``backbones.make_fmnist_lenet5``)
+    is a conv net and consumes ``(B, 1, 28, 28)`` directly, so this loader keeps
+    the channel/spatial dims rather than viewing to 784 the way the MNIST MLP
+    loader does. Normalised with the standard FashionMNIST stats (0.2860, 0.3530).
+    Cached to ``cache/features/fmnist.pt`` (regenerable; gitignored on VALAR).
+
+    GOLDEN RULE: ``download=False`` — the raw IDX files must already be present at
+    ``data/FashionMNIST/raw/`` (they are, on VALAR). torchvision is imported inside
+    the function so a login-node syntax/CLI check does not pull in torch.
+    """
+    from torchvision import datasets, transforms  # local import: heavy, VALAR-only
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / "fmnist.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"]
+
+    tfm = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.2860,), (0.3530,)),
+    ])
+    train_ds = datasets.FashionMNIST(data_root, train=True, download=False, transform=tfm)
+    test_ds = datasets.FashionMNIST(data_root, train=False, download=False, transform=tfm)
+    X_train, y_train, X_test, y_test = _stack_image_tensors(train_ds, test_ds)
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},
+        cache,
+    )
+    return X_train, y_train, X_test, y_test
+
+
+# ----------------------------------------------------------------------------
+# CIFAR-10 RAW-image loader for CNN-5 (3x32x32; download=False)
+# ----------------------------------------------------------------------------
+def load_cifar10_raw_tensors(
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    """Return (X_train[N,3,32,32], y_train, X_test[M,3,32,32], y_test) for CIFAR-10.
+
+    RAW IMAGE tensors for the from-scratch CNN-5 (``backbones.make_cifar10_cnn5``)
+    — this is the pixel-space path and is DISTINCT from the pretrained-feature
+    path in ``backbones.extract_cifar10_features`` (which returns frozen
+    ResNet/ViT embeddings for the linear-head protocol). No resize: the conv net
+    trains on native 32x32. Normalised with the standard CIFAR-10 channel stats
+    (mean (0.4914, 0.4822, 0.4465), std (0.2470, 0.2435, 0.2616)). Cached to
+    ``cache/features/cifar10_raw.pt`` (regenerable; gitignored on VALAR).
+
+    GOLDEN RULE: ``download=False`` — the python batches must already be present
+    at ``data/cifar-10-batches-py/`` (they are, on VALAR). torchvision is imported
+    inside the function so a login-node syntax/CLI check does not pull in torch.
+    """
+    from torchvision import datasets, transforms  # local import: heavy, VALAR-only
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / "cifar10_raw.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"]
+
+    tfm = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
+    ])
+    train_ds = datasets.CIFAR10(data_root, train=True, download=False, transform=tfm)
+    test_ds = datasets.CIFAR10(data_root, train=False, download=False, transform=tfm)
+    X_train, y_train, X_test, y_test = _stack_image_tensors(train_ds, test_ds)
     torch.save(
         {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},
         cache,
