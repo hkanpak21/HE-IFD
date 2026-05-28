@@ -1,0 +1,2 @@
+/home/hkanpak21/.conda/envs/he_ofl/bin/python: No module named pytest
+srun: error: ai05: task 0: Exited with exit code 1

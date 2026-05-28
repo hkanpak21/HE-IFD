@@ -711,3 +711,13 @@
 [sweep] start gpt2_agnews N=50 a=1.0 dp_avg_eps2_K20 s=42 K=300
 [sweep] ok   dp_avg_eps2_K20 acc=0.3887 mean_teacher=0.3439 wall=36.4s err=None
 [sweep] start gpt2_agnews N=50 a=1.0 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4154 mean_teacher=0.3424 wall=39.0s err=None
+[sweep] start gpt2_agnews N=50 a=1.0 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4183 mean_teacher=0.3362 wall=45.5s err=None
+[sweep] start gpt2_agnews N=50 a=1.0 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3938 mean_teacher=0.3439 wall=46.1s err=None
+[sweep] start gpt2_agnews N=50 a=1.0 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4161 mean_teacher=0.3424 wall=43.2s err=None
+[sweep] start gpt2_agnews N=50 a=1.0 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4020 mean_teacher=0.3362 wall=38.2s err=None
+[sweep] done. ran=360 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_pretrained_headline/README.md
