@@ -1,0 +1,11 @@
+[012-verify] job 1115633 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=4 cells; chunk 0/1 -> 4 cells; case=heifd_012_harder_vision_verify
+[sweep] start vit_b32_cifar100 N=16 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0248 mean_teacher=0.1840 wall=174.7s err=None
+[sweep] start vit_b32_cifar100 N=16 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8305 mean_teacher=0.1840 wall=4.4s err=None
+[sweep] start resnet18_cifar100 N=16 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.0172 mean_teacher=0.1107 wall=65.6s err=None
+[sweep] start resnet18_cifar100 N=16 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5385 mean_teacher=0.1107 wall=4.2s err=None
+[sweep] done. ran=4 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_012_harder_vision_verify/README.md
