@@ -64,6 +64,24 @@ BACKBONES: Dict[str, BackboneSpec] = {
         labelled_probe_default=100, teacher_epochs=5, teacher_lr=0.05,
         oracle_epochs=10, warmup_epochs=_WARMUP_EPOCHS, bs=64, feature_loader="mnist",
     ),
+    # From-scratch FashionMNIST LeNet-5 (issue 007): same from-scratch training
+    # regime as mlp_mnist (teacher_epochs=5, lr=0.05, oracle=10, warmup=5, bs=64),
+    # the notebook Section-0.2 from-scratch convention. Conv net on 1x28x28 raw
+    # images — Co-Boosting/FedLPA "LeNet-5 for FMNIST" peer setup.
+    "lenet_fmnist": BackboneSpec(
+        label="lenet_fmnist", kind="scratch", num_classes=10,
+        labelled_probe_default=100, teacher_epochs=5, teacher_lr=0.05,
+        oracle_epochs=10, warmup_epochs=_WARMUP_EPOCHS, bs=64, feature_loader="fmnist",
+    ),
+    # From-scratch CIFAR-10 CNN-5 (issue 007): CIFAR-10 is harder, so give the
+    # teacher/oracle a few more epochs (teacher 10 / oracle 20) and the slightly
+    # smaller LR conv nets prefer (0.01), batch 64 — Co-Boosting/FedLPA "CNN-5 for
+    # CIFAR-10" peer setup. Conv net on RAW 3x32x32 images (NOT pretrained feats).
+    "cnn5_cifar10": BackboneSpec(
+        label="cnn5_cifar10", kind="scratch", num_classes=10,
+        labelled_probe_default=100, teacher_epochs=10, teacher_lr=0.01,
+        oracle_epochs=20, warmup_epochs=_WARMUP_EPOCHS, bs=64, feature_loader="cifar10_raw",
+    ),
     # Pretrained vision heads (Section B): head training is faster/smaller-LR.
     "resnet18_cifar10": BackboneSpec(
         label="resnet18_cifar10", kind="head", num_classes=10,
@@ -206,6 +224,15 @@ def _load_features(spec: BackboneSpec, data_root: str, cache_root: str):
     if spec.feature_loader == "mnist":
         Xtr, ytr, Xte, yte = dt.load_mnist_tensors(data_root, cache_root)
         return Xtr, ytr, Xte, yte, None, bk.make_mnist_mlp
+    if spec.feature_loader == "fmnist":
+        # From-scratch LeNet-5 on raw 1x28x28 FashionMNIST images.
+        Xtr, ytr, Xte, yte = dt.load_fmnist_tensors(data_root, cache_root)
+        return Xtr, ytr, Xte, yte, None, bk.make_fmnist_lenet5
+    if spec.feature_loader == "cifar10_raw":
+        # From-scratch CNN-5 on RAW 3x32x32 CIFAR-10 images (pixel space — NOT the
+        # pretrained-feature "cifar10:<backbone>" path below).
+        Xtr, ytr, Xte, yte = dt.load_cifar10_raw_tensors(data_root, cache_root)
+        return Xtr, ytr, Xte, yte, None, bk.make_cifar10_cnn5
     if spec.feature_loader.startswith("cifar10:"):
         name = spec.feature_loader.split(":", 1)[1]
         Xtr, ytr, Xte, yte, in_dim = bk.extract_cifar10_features(name, data_root, cache_root)
@@ -260,10 +287,16 @@ def run_cell(
     probe_size = spec.labelled_probe_default if probe_size is None else probe_size
     momentum = _TEACHER_MOMENTUM
     nc = spec.num_classes
-    dataset = {"mnist": "MNIST"}.get(
-        spec.feature_loader.split(":")[0],
-        "CIFAR10" if "cifar" in spec.feature_loader else "AGNews",
-    )
+    # Human-readable dataset label from the feature_loader. Keyed on the prefix
+    # so both the from-scratch loaders ("mnist"/"fmnist"/"cifar10_raw") and the
+    # pretrained ones ("cifar10:<bb>"/"text:<bb>") resolve correctly.
+    _loader_prefix = spec.feature_loader.split(":")[0]
+    dataset = {
+        "mnist": "MNIST",
+        "fmnist": "FashionMNIST",
+        "cifar10_raw": "CIFAR10",
+        "cifar10": "CIFAR10",
+    }.get(_loader_prefix, "CIFAR10" if "cifar" in spec.feature_loader else "AGNews")
 
     res = CellResult(
         backbone=backbone, dataset=dataset, N=N, alpha=alpha, seed=seed,
@@ -283,6 +316,26 @@ def run_cell(
         yte_dev = yte.to(device)
 
         make_model_fn = model_fn_src() if spec.kind == "scratch" else model_fn_src(in_dim, nc)
+
+        # Per-sample shape (everything after dim 0). For the MLP / pretrained
+        # heads this is (D,) — already flat. For the conv backbones it is
+        # (C, H, W). The dp_avg Phase-0 mechanism is defined in FLAT feature
+        # space (it L2-clips, averages and Gaussian-noises per-feature), so for
+        # image-shaped data we flatten into it and reshape its probe back to the
+        # image shape before warmup. raw_union/none/labelled/warmup_only need no
+        # such bridge — they index/concat along dim 0 only and so flow with the
+        # native shape straight into the conv net. (See data.py shape contract.)
+        sample_shape = tuple(Xtr.shape[1:])
+        is_image = len(sample_shape) > 1
+
+        def _flatten_clients(xs):
+            """Flatten a list of per-client tensors to (n_i, prod(sample_shape))."""
+            return [x.reshape(x.shape[0], -1) for x in xs]
+
+        def _reshape_probe_to_image(probe_X_flat):
+            """Reshape a flat dp_avg probe (P, prod(sample_shape)) back to images
+            (P, C, H, W) so the conv warmup consumes the same shape as training."""
+            return probe_X_flat.reshape(probe_X_flat.shape[0], *sample_shape)
 
         probe_X, probe_y, pool_X, pool_y = reserve_probe_and_pool(Xtr, ytr, probe_size, seed)
         client_X_list, client_y_list, sample_sizes = partition_pool(
@@ -347,7 +400,9 @@ def run_cell(
 
         clip = None
         if phase0_kind == "dp_avg":
-            clip = p0.compute_feature_norms_percentile(pool_X)
+            # Percentile feature-norm clip in flat space (image data -> flatten).
+            clip = p0.compute_feature_norms_percentile(
+                pool_X.reshape(pool_X.shape[0], -1) if is_image else pool_X)
 
         if phase0_kind == "none":
             theta0 = init_params  # no alignment: θ₀ is the fresh random init
@@ -390,10 +445,19 @@ def run_cell(
 
         elif phase0_kind in ("raw_union", "dp_avg"):
             probe_seed = seed * 100003
+            # raw_union selects raw samples (preserves the native image shape).
+            # dp_avg works in flat feature space, so for image data we flatten the
+            # per-client tensors going in and reshape its (P, C*H*W) probe back to
+            # (P, C, H, W) coming out — keeping phase0.py and the conv warmup
+            # input shape-consistent without touching aggregation/distill.
+            dp_image = is_image and phase0_kind == "dp_avg"
+            probe_clients = _flatten_clients(client_X_list) if dp_image else client_X_list
             align_X, align_y, info = p0.build_probe(
-                phase0_kind, client_X_list=client_X_list, client_y_list=client_y_list,
+                phase0_kind, client_X_list=probe_clients, client_y_list=client_y_list,
                 num_classes=nc, K_per_class=kwargs.get("K_per_class"),
                 eps=kwargs.get("eps"), clip=clip, seed=probe_seed)
+            if dp_image:
+                align_X = _reshape_probe_to_image(align_X)
             theta0 = p0.warmup_init(
                 make_model_fn, align_X, align_y, init_params,
                 epochs=spec.warmup_epochs, lr=spec.teacher_lr,
