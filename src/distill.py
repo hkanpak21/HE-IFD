@@ -121,19 +121,46 @@ def distill_all_clients(
     momentum: float,
     tau: float,
     bs: int,
-) -> List[Dict]:
+    diagnose: bool = False,
+) -> Union[List[Dict], Tuple[List[Dict], List[List[Dict]]]]:
     """Run the bounded trajectory for every client; return the list of Δ_i.
 
     Each Δ_i is what client i would encrypt under the multiparty CKKS key. The
     server never sees the trajectory, only Δ_i (here, the plaintext simulation
     of it).
+
+    Parameters
+    ----------
+    diagnose : bool
+        If ``False`` (default) — return only the list of cumulative Δ_i;
+        the per-client call sets ``return_steps=False`` and the function is
+        BYTE-IDENTICAL to its pre-issue-013 behaviour. If ``True`` —
+        additionally collect per-step deltas via ``return_steps=True`` and
+        return ``(deltas, step_deltas_per_client)`` so ``src.diagnostics`` can
+        compute per-step ‖Δ⁽ᵏ⁾‖₂. The diagnostic branch is opt-in and never
+        runs in normal sweeps.
     """
-    deltas: List[Dict] = []
-    for i in range(len(teachers)):
-        deltas.append(
-            local_distill_trajectory(
-                teachers[i], init_params, make_model_fn,
-                client_X_list[i], K_steps, lr, momentum, tau, bs,
+    if not diagnose:
+        # Default sweep path — no semantic change vs. pre-issue-013.
+        deltas: List[Dict] = []
+        for i in range(len(teachers)):
+            deltas.append(
+                local_distill_trajectory(
+                    teachers[i], init_params, make_model_fn,
+                    client_X_list[i], K_steps, lr, momentum, tau, bs,
+                )
             )
+        return deltas
+
+    # Diagnostic path — also retain the per-step trajectory for issue 013.
+    deltas_d: List[Dict] = []
+    step_deltas_per_client: List[List[Dict]] = []
+    for i in range(len(teachers)):
+        delta_i, steps_i = local_distill_trajectory(
+            teachers[i], init_params, make_model_fn,
+            client_X_list[i], K_steps, lr, momentum, tau, bs,
+            return_steps=True,
         )
-    return deltas
+        deltas_d.append(delta_i)
+        step_deltas_per_client.append(steps_i)
+    return deltas_d, step_deltas_per_client

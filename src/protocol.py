@@ -163,6 +163,13 @@ class CellResult:
     status: str = "success"
     error: Optional[str] = None
     notes: str = ""
+    # KD-dynamics diagnostics (issue 013). ``None`` (the default) means this
+    # cell was run WITHOUT diagnostics — the default for every sweep — and the
+    # field is simply absent from the JSON's information content (still
+    # serialised so the schema is stable). When populated, this dict carries
+    # teacher entropy / per-step Δ norms / pairwise cosine / per-class θ₀-vs-
+    # final accuracy. JSON-serialisable plain types only. See src.diagnostics.
+    diagnostics: Optional[Dict] = None
 
     def to_dict(self) -> Dict:
         return asdict(self)
@@ -262,6 +269,7 @@ def run_cell(
     cache_root: str = "cache",
     job_id: Optional[str] = None,
     node: Optional[str] = None,
+    diagnose: bool = False,
 ) -> CellResult:
     """Run one protocol cell end-to-end and return a CellResult.
 
@@ -270,6 +278,14 @@ def run_cell(
     is always sample-weighted. ``warmup_only`` short-circuits before distillation
     (its "result" is the warmed model, not a protocol output) — this is the
     probe-only baseline used to isolate what the K-step trajectory adds.
+
+    ``diagnose`` (default ``False``) — when ``False`` this function is
+    byte-identical to its pre-issue-013 behaviour (no new code paths execute).
+    When ``True`` the distill loop additionally retains per-step deltas, and
+    after aggregation the issue-013 diagnostics (teacher entropy / Δ-norm
+    profile / pairwise cosine / per-class θ₀-vs-final acc) are computed once
+    and stuffed into ``res.diagnostics``. The flag is opt-in and reserved for
+    diagnostic cells; sweeps that omit it see zero behaviour change.
     """
     import numpy as np
     import torch
@@ -398,6 +414,13 @@ def run_cell(
         torch.manual_seed(seed)
         init_params = get_params(make_model_fn())  # fresh random init
 
+        # The augmented-probe tensors the warmup actually consumes. Tracked
+        # purely so issue-013 diagnostics (when ``diagnose=True``) can compute
+        # teacher entropy on the same tensor that warmed θ₀. ``None`` for
+        # ``no_phase0`` and ``warmup_only`` (the latter returns before
+        # distillation anyway). Not used unless ``diagnose=True``.
+        align_X = None
+
         clip = None
         if phase0_kind == "dp_avg":
             # Percentile feature-norm clip in flat space (image data -> flatten).
@@ -439,6 +462,7 @@ def run_cell(
                 make_model_fn, probe_X, probe_y, init_params,
                 epochs=spec.warmup_epochs, lr=spec.teacher_lr,
                 momentum=momentum, bs=spec.bs)
+            align_X = probe_X       # for issue-013 entropy (no-op unless diagnose=True)
             res.probe_size_actual = int(probe_size)
             res.sigma = 0.0
             res.theta0_acc = theta0_test_acc(theta0)
@@ -470,10 +494,22 @@ def run_cell(
         res.phase_phase0_sec = time.time() - t0
 
         # --- distillation: each client runs the bounded K-step trajectory -> Δ_i ---
+        # ``diagnose=False`` (the sweep default) takes the byte-identical path
+        # — distill_all_clients returns only the cumulative Δ list. With
+        # ``diagnose=True`` the per-step trajectories are additionally collected
+        # so src.diagnostics can compute the per-step ‖Δ⁽ᵏ⁾‖₂ profile (issue 013).
         t0 = time.time()
-        deltas = distill_all_clients(
-            teachers, theta0, make_model_fn, client_X_list,
-            K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs)
+        if diagnose:
+            deltas, step_deltas_per_client = distill_all_clients(
+                teachers, theta0, make_model_fn, client_X_list,
+                K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
+                diagnose=True,
+            )
+        else:
+            deltas = distill_all_clients(
+                teachers, theta0, make_model_fn, client_X_list,
+                K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs)
+            step_deltas_per_client = None
         res.phase_distill_sec = time.time() - t0
 
         # --- aggregate: θ = θ₀ + Σ_i w_i·Δ_i (sample-weighted, linear-only) ---
@@ -492,6 +528,29 @@ def run_cell(
         res.acc = float(eval_model(model))
         populate_incentive_ood(model)
         res.phase_eval_sec = time.time() - t0
+
+        # --- (optional) issue-013 KD-dynamics diagnostics ---
+        # Strictly opt-in. When ``diagnose=False`` this block does not run and
+        # ``res.diagnostics`` stays ``None`` (the default) — so the produced
+        # CellResult is unchanged from the pre-issue-013 sweep behaviour.
+        if diagnose:
+            from .diagnostics import build_diagnostics
+
+            res.diagnostics = build_diagnostics(
+                teachers=teachers,
+                align_X=align_X,
+                align_y=None,
+                client_X_list=client_X_list,
+                deltas=deltas,
+                step_deltas_per_client=step_deltas_per_client,
+                theta0_params=theta0,
+                final_params=final_params,
+                make_model_fn=make_model_fn,
+                X_test=Xte_dev,
+                y_test=yte_dev,
+                num_classes=nc,
+                bs=spec.bs,
+            )
 
         res.status = "success"
     except Exception as exc:  # noqa: BLE001 — record failure, keep sweep alive
