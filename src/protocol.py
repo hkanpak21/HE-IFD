@@ -24,6 +24,21 @@ Method panel (``method`` -> (phase0 strategy)):
   labelled_probe_warmup -> labelled    (warm θ₀ on labelled probe, then distil)
   raw_union_K{K}        -> raw_union   (K_per_class kwarg)
   dp_avg_eps{E}_K{K}    -> dp_avg      (K_per_class + eps kwargs)
+  synthetic_K{K}        -> synthetic   (issue 016+ — per-(client, class)
+                                        Gaussian-around-mean synthetic
+                                        samples; same byte budget as
+                                        raw_union_K, no raw records crossing
+                                        the P2P boundary; no DP)
+  synthetic_dp_eps{E}_K{K}
+                        -> synthetic_dp (issue 016+ — DP-protected μ release
+                                         on the synthetic path; same averaging-
+                                         variant accounting as dp_avg)
+  synthetic_logit_K{K}  -> synthetic_logit (issue 016+ NOVEL — synthetic-
+                                            sample payload composed with per-
+                                            class teacher-logit prototypes;
+                                            warmup uses KL against the soft-
+                                            label prototypes rather than CE
+                                            against one-hot labels)
 """
 from __future__ import annotations
 
@@ -271,6 +286,23 @@ def parse_method(method: str) -> tuple:
         k = _extract_int_after(method, "K", default=20)
         eps = _extract_eps(method)
         return "dp_avg", {"K_per_class": k, "eps": eps}
+    # Issue 016+: synthetic-sample alignment family. Order matters — the more-
+    # specific prefixes (synthetic_logit, synthetic_dp) must be checked before
+    # the bare ``synthetic_`` prefix.
+    if method.startswith("synthetic_logit"):
+        # synthetic_logit_K100 -> K_per_class=100 ; bare -> default 20.
+        # No DP for this MVP (see build_logit_prototypes' DP-extensibility note).
+        k = _extract_int_after(method, "K", default=20)
+        return "synthetic_logit", {"K_per_class": k}
+    if method.startswith("synthetic_dp"):
+        # synthetic_dp_eps2_K100 — DP-protected μ release on the synthetic path.
+        k = _extract_int_after(method, "K", default=20)
+        eps = _extract_eps(method)
+        return "synthetic_dp", {"K_per_class": k, "eps": eps}
+    if method.startswith("synthetic"):
+        # synthetic_K100 -> K_per_class=100 ; bare synthetic -> default 20.
+        k = _extract_int_after(method, "K", default=20)
+        return "synthetic", {"K_per_class": k}
     raise ValueError(f"unknown method {method!r}")
 
 
@@ -585,8 +617,11 @@ def run_cell(
         align_X = None
 
         clip = None
-        if phase0_kind == "dp_avg":
+        if phase0_kind in ("dp_avg", "synthetic_dp"):
             # Percentile feature-norm clip in flat space (image data -> flatten).
+            # Shared between dp_avg and synthetic_dp because both apply the
+            # averaging-variant Gaussian mechanism to the per-(client, class)
+            # mean μ_ic; sensitivity = clip / K_per_class is identical.
             clip = p0.compute_feature_norms_percentile(
                 pool_X.reshape(pool_X.shape[0], -1) if is_image else pool_X)
 
@@ -632,20 +667,22 @@ def run_cell(
             res.sigma = 0.0
             res.theta0_acc = theta0_test_acc(theta0)
 
-        elif phase0_kind in ("raw_union", "dp_avg"):
+        elif phase0_kind in ("raw_union", "dp_avg", "synthetic", "synthetic_dp"):
             probe_seed = seed * 100003
             # raw_union selects raw samples (preserves the native image shape).
-            # dp_avg works in flat feature space, so for image data we flatten the
-            # per-client tensors going in and reshape its (P, C*H*W) probe back to
-            # (P, C, H, W) coming out — keeping phase0.py and the conv warmup
-            # input shape-consistent without touching aggregation/distill.
-            dp_image = is_image and phase0_kind == "dp_avg"
-            probe_clients = _flatten_clients(client_X_list) if dp_image else client_X_list
+            # dp_avg / synthetic / synthetic_dp work in flat feature space (the
+            # μ/σ² statistics are defined per-feature-dim), so for image data
+            # we flatten the per-client tensors going in and reshape the
+            # returned (P, C*H*W) probe back to (P, C, H, W) coming out —
+            # keeping phase0.py and the conv warmup input shape-consistent
+            # without touching aggregation/distill.
+            flat_image = is_image and phase0_kind in ("dp_avg", "synthetic", "synthetic_dp")
+            probe_clients = _flatten_clients(client_X_list) if flat_image else client_X_list
             align_X, align_y, info = p0.build_probe(
                 phase0_kind, client_X_list=probe_clients, client_y_list=client_y_list,
                 num_classes=nc, K_per_class=kwargs.get("K_per_class"),
                 eps=kwargs.get("eps"), clip=clip, seed=probe_seed)
-            if dp_image:
+            if flat_image:
                 align_X = _reshape_probe_to_image(align_X)
             theta0 = p0.warmup_init(
                 make_model_fn, align_X, align_y, init_params,
@@ -654,6 +691,40 @@ def run_cell(
                 lr_schedule=spec.teacher_lr_schedule)
             res.probe_size_actual = int(info["probe_size"])
             res.sigma = float(info["sigma"])
+            res.theta0_acc = theta0_test_acc(theta0)
+
+        elif phase0_kind == "synthetic_logit":
+            # Issue 016+ NOVEL — synthetic-sample payload composed with per-
+            # class teacher-logit prototypes. The synthetic samples flow
+            # through the same flat → reshape bridge as ``synthetic`` (they
+            # are also Gaussian-around-mean in flat feature space). The logit
+            # prototypes are computed on the NATIVE-shape per-client tensors
+            # because they pass through the trained teachers, which were
+            # trained on the native shape.
+            probe_seed = seed * 100003
+            flat_image = is_image
+            probe_clients = _flatten_clients(client_X_list) if flat_image else client_X_list
+            align_X, align_y, soft_labels, info = (
+                p0.build_probe_synthetic_with_logits(
+                    client_X_list=probe_clients,
+                    client_y_list=client_y_list,
+                    teachers=teachers,           # native-shape teachers
+                    K_per_class=kwargs.get("K_per_class"),
+                    num_classes=nc,
+                    seed=probe_seed,
+                )
+            )
+            if flat_image:
+                align_X = _reshape_probe_to_image(align_X)
+            theta0 = p0.warmup_init(
+                make_model_fn, align_X, align_y, init_params,
+                epochs=spec.warmup_epochs, lr=spec.teacher_lr,
+                momentum=momentum, bs=spec.bs,
+                lr_schedule=spec.teacher_lr_schedule,
+                soft_targets=soft_labels,
+            )
+            res.probe_size_actual = int(info["probe_size"])
+            res.sigma = float(info.get("sigma", 0.0))
             res.theta0_acc = theta0_test_acc(theta0)
         else:
             raise ValueError(phase0_kind)
