@@ -97,3 +97,19 @@
 [sweep] start lenet_fmnist N=50 a=0.05 no_phase0 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
 [sweep] ok   no_phase0 acc=0.1000 mean_teacher=0.1609 wall=56.5s err=None
 [sweep] start lenet_fmnist N=50 a=0.05 raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7676 mean_teacher=0.1809 wall=55.5s err=None
+[sweep] start lenet_fmnist N=50 a=0.1 no_phase0 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.3938 mean_teacher=0.2506 wall=56.5s err=None
+[sweep] start lenet_fmnist N=50 a=0.1 labelled_probe_warmup s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4256 mean_teacher=0.2451 wall=56.6s err=None
+[sweep] start lenet_fmnist N=50 a=0.1 dp_avg_eps8_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5442 mean_teacher=0.2405 wall=56.7s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 labelled_probe_warmup s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.5560 mean_teacher=0.4105 wall=56.5s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.4856 mean_teacher=0.4176 wall=56.5s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 warmup_only_labelled s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1735 mean_teacher=0.5810 wall=22.3s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6282 mean_teacher=0.5722 wall=56.4s err=None
+[sweep] done. ran=54 skipped=0 failed=2. report at /scratch/hkanpak21/HE_IFD/results/heifd_lenet_fmnist_headline/README.md
