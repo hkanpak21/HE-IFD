@@ -10,11 +10,14 @@ from a compute node (which has no internet and would blow the 3h job cap).
     cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py
     cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py --include-cifar100
     cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py --include-cifar100 --include-tiny-imagenet
+    # issue 018 Part A (ViT-L needs CIFAR-100 too):
+    cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py --include-cifar100 --include-big-backbones
 
 Datasets MNIST / FashionMNIST / CIFAR-10 are already on VALAR under data/ —
 not fetched here. AG News (HF), the four pretrained backbones, plus the
 optional CIFAR-100 + Tiny-ImageNet datasets (issue 012, harder-vision-dataset
-extension) are.
+extension) and the optional big backbones (issue 018: ViT-L, BERT-large,
+GPT-2-medium, behind --include-big-backbones) are.
 """
 from __future__ import annotations
 
@@ -107,7 +110,36 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--include-tiny-imagenet", action="store_true",
                    help="Also fetch + extract Tiny-ImageNet-200 (~250MB). "
                         "Idempotent (skipped if already extracted).")
+    p.add_argument("--include-big-backbones", action="store_true",
+                   help="Also fetch the issue-018 big pretrained backbones "
+                        "(ViT-L/16 ~1.2GB via timm, BERT-large-uncased ~1.3GB, "
+                        "GPT-2-medium ~1.5GB via HF). Idempotent (each loader "
+                        "is a cache no-op if the weights are already present). "
+                        "Off by default so the normal prefetch is unchanged.")
     return p.parse_args()
+
+
+def _prefetch_big_backbones() -> None:
+    """Download the issue-018 big backbones into the HF/timm caches (no compute).
+
+    Idempotent: each ``from_pretrained`` / ``timm.create_model(pretrained=True)``
+    is a cache hit (no network) once the weights are present. Pulls:
+      * ViT-L/16  (timm ``vit_large_patch16_224``, ~1.2GB)
+      * BERT-large-uncased  (HF, ~1.3GB)
+      * GPT-2-medium  (HF, ~1.5GB)
+    These are the Large variants of the existing ViT/BERT-family/GPT-2
+    extractors; the feature-extraction code paths in ``src.backbones`` are the
+    same (timm num_classes=0 / HF AutoModel), only the model id differs.
+    """
+    from transformers import AutoModel, AutoTokenizer
+    for mid in ("bert-large-uncased", "gpt2-medium"):
+        AutoTokenizer.from_pretrained(mid)
+        AutoModel.from_pretrained(mid)
+        print(f"[prefetch] hf {mid} ok", flush=True)
+
+    import src.backbones as bk
+    bk.build_vit_l_extractor()
+    print("[prefetch] vit_l ok", flush=True)
 
 
 def main() -> None:
@@ -137,6 +169,10 @@ def main() -> None:
         _prefetch_cifar100(args.data_root)
     if args.include_tiny_imagenet:
         _prefetch_tiny_imagenet(args.data_root)
+
+    # Optional, issue-018 big-backbone extension (ViT-L, BERT-large, GPT-2-medium).
+    if args.include_big_backbones:
+        _prefetch_big_backbones()
 
     print("[prefetch] PREFETCH DONE", flush=True)
 

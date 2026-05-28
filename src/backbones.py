@@ -429,6 +429,24 @@ def build_vit_extractor():
     return m.to(_device()).eval(), m.num_features
 
 
+def build_vit_l_extractor():
+    """Frozen ViT-L/16 (timm ``vit_large_patch16_224``) feature extractor (issue 018).
+
+    The "big-backbone" analogue of ``build_vit_extractor``: identical timm
+    ``num_classes=0`` global-pooled-feature pattern, just the Large variant
+    (≈304M params, 1024-d features vs ViT-B/32's 768-d). Patch-16 (not 32) is
+    the standard ImageNet-21k→1k ViT-L checkpoint timm ships and the one whose
+    published CIFAR-100 linear-probe transfer the Part-A sanity gate
+    (IID ≥ 0.78) is calibrated against. Weights are large (~1.2GB) so the
+    login-node prefetch (``jobs/prefetch_login.py --include-big-backbones``)
+    must populate the timm/HF cache before any compute-node run.
+    """
+    import timm
+
+    m = timm.create_model("vit_large_patch16_224", pretrained=True, num_classes=0)
+    return m.to(_device()).eval(), m.num_features
+
+
 def _build_vision_extractor(backbone_name: str):
     """Build a frozen vision extractor + the input transform appropriate for it.
 
@@ -458,6 +476,18 @@ def _build_vision_extractor(backbone_name: str):
             transforms.Resize(224),
             transforms.ToTensor(),
             transforms.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]),
+        ])
+    elif backbone_name == "vit_l":
+        # ViT-L/16 (issue 018 big-backbone). The timm augreg ImageNet-21k→1k
+        # ViT-L checkpoint uses ImageNet mean/std normalisation (unlike the
+        # vit_base_patch32_224 weights this repo loads, which expect
+        # [0.5,0.5,0.5]). Resize to the backbone's native 224×224 as for the
+        # other vision extractors.
+        extractor, in_dim = build_vit_l_extractor()
+        tfm = transforms.Compose([
+            transforms.Resize(224),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ])
     else:
         raise ValueError(backbone_name)
@@ -706,6 +736,20 @@ def extract_text_features(
         causal = False
     elif backbone_name == "gpt2_small":
         model_id = "gpt2"
+        causal = True
+    elif backbone_name == "bert_large":
+        # BERT-large-uncased (issue 018 big-backbone). Like DistilBERT it is a
+        # *bidirectional* encoder, so masked mean-pool over real tokens is the
+        # sound sentence embedding and default right-padding is fine. 1024-d
+        # hidden size (vs DistilBERT's 768).
+        model_id = "bert-large-uncased"
+        causal = False
+    elif backbone_name == "gpt2_medium":
+        # GPT-2-medium (issue 018 big-backbone). Same *causal* LM family as
+        # gpt2_small, so it inherits the issue-002 left-pad + last-token pooling
+        # fix below (NOT mean-pool, which pins GPT-2 at chance). 1024-d hidden
+        # size (vs gpt2_small's 768).
+        model_id = "gpt2-medium"
         causal = True
     else:
         raise ValueError(backbone_name)

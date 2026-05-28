@@ -207,6 +207,44 @@ BACKBONES: Dict[str, BackboneSpec] = {
         labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128, feature_loader="text:gpt2_small",
     ),
+    # ------------------------------------------------------------------------
+    # Big pretrained backbones (issue 018). Head-on-cached-features pattern is
+    # identical to the existing pretrained entries — only the frozen extractor
+    # is the Large model variant (1024-d features for all three vs 768-d for
+    # the base models). ``head_only`` scope per issue 011's finding (the linear
+    # head suffices; LoRA is the deferred Part-B capacity lever reserved for the
+    # big backbones if head_only under-capacitates). Part A's sanity-check
+    # reuses the centralised ``oracle`` field (a supervised head trained on the
+    # full training pool, evaluated on held-out test) that ``run_cell`` already
+    # computes — no protocol run on a big backbone is authorised until the HITL
+    # review of Part A passes.
+    # ViT-L/16 on CIFAR-100 (the harder dataset from issue 012; CIFAR-10
+    # saturates). Probe=300 mirrors vit_b32_cifar100 (≈3 labelled samples/class).
+    "vit_l_cifar100": BackboneSpec(
+        label="vit_l_cifar100", kind="head", num_classes=100,
+        labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="cifar100:vit_l",
+    ),
+    # BERT-large-uncased on AG-News (4 classes). Bidirectional encoder — masked
+    # mean-pool, like distilbert_agnews. Mirrors the AG-News head hyperparams.
+    "bert_large_agnews": BackboneSpec(
+        label="bert_large_agnews", kind="head", num_classes=4,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:bert_large",
+    ),
+    # GPT-2-medium on AG-News (4 classes). Causal LM — inherits the issue-002
+    # left-pad + last-token pooling fix (NOT mean-pool) via the gpt2_medium
+    # branch in extract_text_features. GPT-2 family is deferred per issue 002;
+    # its Part-A gate (IID ≥ 0.50) is informational only — a failure here does
+    # NOT block Part B.
+    "gpt2_medium_agnews": BackboneSpec(
+        label="gpt2_medium_agnews", kind="head", num_classes=4,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:gpt2_medium",
+    ),
 }
 
 
