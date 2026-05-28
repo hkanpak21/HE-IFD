@@ -429,27 +429,21 @@ def build_vit_extractor():
     return m.to(_device()).eval(), m.num_features
 
 
-def extract_cifar10_features(
-    backbone_name: str,
-    data_root: str = "data",
-    cache_root: str = "cache",
-) -> Tuple:
-    """Extract & cache CIFAR-10 features for a pretrained vision backbone.
+def _build_vision_extractor(backbone_name: str):
+    """Build a frozen vision extractor + the input transform appropriate for it.
 
-    Returns (X_train, y_train, X_test, y_test, in_dim). Ported verbatim from
-    notebook Section B.1 (same transforms, same ResNet-18 IMAGENET1K_V1 / ViT
-    vit_base_patch32_224 backbones). ``download=False`` per CLAUDE.md.
+    Returns (extractor, in_dim, tfm). Centralised here so the CIFAR-10 /
+    CIFAR-100 / Tiny-ImageNet feature paths share one set of (backbone, tfm)
+    decisions — adding a new dataset only requires a new ``extract_*_features``
+    wrapper around this builder.
+
+    The transforms exactly match notebook Section B.1 (the CIFAR-10 path):
+    ResNet-18 expects ImageNet normalisation; ViT-B/32 (timm
+    vit_base_patch32_224) expects [0.5,0.5,0.5] mean/std. Both backbones are
+    designed for 224×224 ImageNet-sized inputs, so 32×32 (CIFAR) and 64×64
+    (Tiny-ImageNet) images are ``Resize(224)``-upsampled identically.
     """
-    import torch
-    from torch.utils.data import DataLoader
-    from torchvision import datasets, transforms
-
-    cache_dir = Path(cache_root) / "features"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    cache = cache_dir / f"cifar10_{backbone_name}.pt"
-    if cache.exists():
-        d = torch.load(cache)
-        return d["X_train"], d["y_train"], d["X_test"], d["y_test"], d["in_dim"]
+    from torchvision import transforms
 
     if backbone_name == "resnet18":
         extractor, in_dim = build_resnet18_extractor()
@@ -467,23 +461,196 @@ def extract_cifar10_features(
         ])
     else:
         raise ValueError(backbone_name)
+    return extractor, in_dim, tfm
 
+
+def _collate_features(extractor, ds, dev):
+    """Run a torchvision dataset through a frozen extractor; return (X, y) on CPU.
+
+    Identical to the ``collate`` helper that used to be nested inside
+    ``extract_cifar10_features`` — pulled out so CIFAR-100 / Tiny-ImageNet
+    share the iteration logic. ``num_workers=2`` keeps the loader behaviour
+    byte-identical to the legacy CIFAR-10 path.
+    """
+    import torch
+    from torch.utils.data import DataLoader
+
+    loader = DataLoader(ds, batch_size=128, shuffle=False, num_workers=2)
+    feats, labels = [], []
+    with torch.no_grad():
+        for x, y in loader:
+            f = extractor(x.to(dev)).cpu()
+            feats.append(f)
+            labels.append(y)
+    return torch.cat(feats), torch.cat(labels)
+
+
+def extract_cifar10_features(
+    backbone_name: str,
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple:
+    """Extract & cache CIFAR-10 features for a pretrained vision backbone.
+
+    Returns (X_train, y_train, X_test, y_test, in_dim). Ported verbatim from
+    notebook Section B.1 (same transforms, same ResNet-18 IMAGENET1K_V1 / ViT
+    vit_base_patch32_224 backbones). ``download=False`` per CLAUDE.md.
+    """
+    import torch
+    from torchvision import datasets
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / f"cifar10_{backbone_name}.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"], d["in_dim"]
+
+    extractor, in_dim, tfm = _build_vision_extractor(backbone_name)
     train_ds = datasets.CIFAR10(data_root, train=True, download=False, transform=tfm)
     test_ds = datasets.CIFAR10(data_root, train=False, download=False, transform=tfm)
     dev = _device()
 
-    def collate(ds):
-        loader = DataLoader(ds, batch_size=128, shuffle=False, num_workers=2)
-        feats, labels = [], []
-        with torch.no_grad():
-            for x, y in loader:
-                f = extractor(x.to(dev)).cpu()
-                feats.append(f)
-                labels.append(y)
-        return torch.cat(feats), torch.cat(labels)
+    X_train, y_train = _collate_features(extractor, train_ds, dev)
+    X_test, y_test = _collate_features(extractor, test_ds, dev)
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test,
+         "y_test": y_test, "in_dim": in_dim},
+        cache,
+    )
+    del extractor
+    torch.cuda.empty_cache()
+    return X_train, y_train, X_test, y_test, in_dim
 
-    X_train, y_train = collate(train_ds)
-    X_test, y_test = collate(test_ds)
+
+def extract_cifar100_features(
+    backbone_name: str,
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple:
+    """Extract & cache CIFAR-100 features for a pretrained vision backbone (issue 012).
+
+    Returns (X_train, y_train, X_test, y_test, in_dim). Mirrors
+    ``extract_cifar10_features`` — same transforms, same ResNet-18 /
+    ViT-B/32 backbones — but for the 100-class variant. CIFAR-10 saturates
+    ViT linear-probe at 0.97 IID (no headroom to demonstrate distillation
+    value); CIFAR-100's ~0.75-0.80 ceiling is the harder regime issue 012
+    targets. ``download=False`` per CLAUDE.md (the prefetch script populates
+    ``data/cifar-100-python/`` on the login node).
+    """
+    import torch
+    from torchvision import datasets
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / f"cifar100_{backbone_name}.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"], d["in_dim"]
+
+    extractor, in_dim, tfm = _build_vision_extractor(backbone_name)
+    train_ds = datasets.CIFAR100(data_root, train=True, download=False, transform=tfm)
+    test_ds = datasets.CIFAR100(data_root, train=False, download=False, transform=tfm)
+    dev = _device()
+
+    X_train, y_train = _collate_features(extractor, train_ds, dev)
+    X_test, y_test = _collate_features(extractor, test_ds, dev)
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test,
+         "y_test": y_test, "in_dim": in_dim},
+        cache,
+    )
+    del extractor
+    torch.cuda.empty_cache()
+    return X_train, y_train, X_test, y_test, in_dim
+
+
+def extract_tiny_imagenet_features(
+    backbone_name: str,
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple:
+    """Extract & cache Tiny-ImageNet features for a pretrained vision backbone (issue 012).
+
+    Returns (X_train, y_train, X_test, y_test, in_dim). Tiny-ImageNet is 200
+    classes × 500 train images × 50 val images, native 64×64; the linear-probe
+    ceiling on ImageNet-pretrained ResNet/ViT is ~0.55-0.65 (Tiny-ImageNet's
+    classes overlap ImageNet so the frozen features are still informative,
+    just less than on CIFAR).
+
+    Uses ``data.load_tiny_imagenet_tensors`` to pull pre-decoded (N, 3, 64, 64)
+    tensors and runs them through the frozen vision extractor in batches.
+    Unlike CIFAR-10/100 (which read torchvision datasets directly under the
+    ``Resize(224)``-into-PIL transform), the Tiny-ImageNet loader normalises
+    on disk in ImageNet stats; here we **un-normalise** to [0,1] image space
+    and re-apply the backbone's native transform pipeline so the extractor
+    sees the same input distribution as the ImageNet training data — the
+    cleanest way to share the existing ``_build_vision_extractor`` plumbing
+    without forking transforms.
+
+    ``download=False`` per CLAUDE.md (the prefetch script populates
+    ``data/tiny-imagenet-200/`` on the login node when
+    ``--include-tiny-imagenet`` is set).
+    """
+    import torch
+
+    from . import data as dt
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / f"tiny_imagenet_{backbone_name}.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"], d["in_dim"]
+
+    # The raw loader normalises with ImageNet stats. Un-normalise before
+    # passing to ``_build_vision_extractor``'s tfm (which expects PIL-ish
+    # [0,1] input → its own normalisation). We do this in a small helper
+    # that ingests (N, 3, 64, 64) ImageNet-normalised tensors and yields
+    # back the same shape *as if* it were the ToTensor() output.
+    X_train_raw, y_train, X_test_raw, y_test = dt.load_tiny_imagenet_tensors(
+        data_root, cache_root)
+    extractor, in_dim, _tfm_pil = _build_vision_extractor(backbone_name)
+    dev = _device()
+
+    # Tiny-ImageNet on-disk tensors are already ImageNet-normalised and
+    # 64×64. For the backbone we need the *backbone's own* normalisation
+    # (ImageNet for ResNet, [0.5,0.5,0.5] for ViT) at 224×224. Approach:
+    # un-normalise to [0,1], optionally re-normalise to ViT stats, then
+    # bilinear-resize to 224. This avoids a second PIL round-trip and works
+    # on GPU.
+    mean_in = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
+    std_in = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
+    if backbone_name == "vit_b32":
+        mean_out = torch.tensor([0.5, 0.5, 0.5]).view(1, 3, 1, 1)
+        std_out = torch.tensor([0.5, 0.5, 0.5]).view(1, 3, 1, 1)
+    else:
+        # resnet18: backbone shares ImageNet stats with the loader. We can
+        # skip the un-/re-normalise pair entirely.
+        mean_out = mean_in
+        std_out = std_in
+
+    def _extract_batched(X_raw, bs=128):
+        import torch.nn.functional as F
+
+        feats = []
+        with torch.no_grad():
+            for i in range(0, X_raw.shape[0], bs):
+                x = X_raw[i:i + bs].to(dev, non_blocking=True)
+                # ImageNet-norm -> [0,1] -> backbone-norm. For resnet18 this is
+                # a no-op pair (mean_in/std_in == mean_out/std_out).
+                x = x * std_in.to(dev) + mean_in.to(dev)
+                x = (x - mean_out.to(dev)) / std_out.to(dev)
+                # 64×64 -> 224×224 bilinear so the ImageNet backbones see their
+                # native input size.
+                x = F.interpolate(x, size=(224, 224), mode="bilinear",
+                                  align_corners=False)
+                f = extractor(x).cpu()
+                feats.append(f)
+        return torch.cat(feats)
+
+    X_train = _extract_batched(X_train_raw)
+    X_test = _extract_batched(X_test_raw)
     torch.save(
         {"X_train": X_train, "y_train": y_train, "X_test": X_test,
          "y_test": y_test, "in_dim": in_dim},
