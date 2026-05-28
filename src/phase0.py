@@ -191,6 +191,157 @@ def build_probe_dp_averaged(
 
 
 # ----------------------------------------------------------------------------
+# Issue 017: no-probe DP-common-basin alignment
+# ----------------------------------------------------------------------------
+# In the no-probe deployment story there is NO labelled public probe at all. The
+# per-(client, class) prototypes — the *same* signal already released over the
+# P2P channel for raw_union / dp_avg — ARE the supervised dataset that warms θ₀.
+# Each prototype becomes ONE feature-space training sample whose label is its
+# class. This yields ~num_classes × N_contributors points (every (client, class)
+# pair that has ≥1 local sample contributes one prototype), so θ₀ is warmed on a
+# very small, possibly DP-noisy set: a deliberately WEAK θ₀ whose job is to put
+# every client in the same loss basin, not to be accurate on its own. The K-step
+# distillation then carries the learning above this weak init.
+#
+# Note the difference from ``build_probe_dp_averaged`` / ``build_probe_raw_union``
+# used by the WITH-probe paths: those release the same per-(client, class)
+# contributions but the dp_avg path additionally *server-averages* them down to
+# one prototype per class. Here we keep every per-(client, class) prototype as a
+# distinct labelled sample so the warmup sees the cross-client spread (and so the
+# point count grows with N, matching the issue's "~num_classes × N" expectation).
+def build_noprobe_raw_union(
+    client_X_list: List,
+    client_y_list: List,
+    K_per_class: int,
+    num_classes: int,
+    seed: int = 0,
+) -> Tuple:
+    """No-probe raw-union prototype set (issue 017).
+
+    Per (client, class) with ≥1 local sample: take the mean of ``K_per_class``
+    L2-unclipped raw samples as one prototype. The prototype set
+    ``(proto_X[n_pairs, feature_dim], proto_y[n_pairs])`` IS the supervised
+    warmup dataset — no labelled public probe is involved. No DP (σ = 0).
+
+    Returns ``(proto_X, proto_y, info)`` with the same shape contract as
+    ``build_probe_dp_averaged`` (flat feature space; the conv-net path flattens
+    on the way in and reshapes on the way out — see ``protocol.run_cell``).
+    ``info`` carries ``probe_size`` (number of prototypes), ``sigma`` (0.0) and
+    ``n_pairs_used``.
+    """
+    import numpy as np
+    import torch
+
+    rng = np.random.default_rng(seed)
+    feature_dim = client_X_list[0].cpu().reshape(client_X_list[0].shape[0], -1).shape[1]
+    proto_X_list, proto_y_list = [], []
+    n_pairs = 0
+    for i in range(len(client_X_list)):
+        X_i = client_X_list[i].cpu().reshape(client_X_list[i].shape[0], -1)
+        y_i = client_y_list[i].cpu().numpy()
+        for c in range(num_classes):
+            mask = (y_i == c)
+            n_avail = int(mask.sum())
+            if n_avail == 0:
+                continue
+            X_c = X_i[mask]
+            n_take = min(K_per_class, n_avail)
+            idx = rng.choice(n_avail, n_take, replace=False)
+            proto = X_c[idx].mean(dim=0)
+            proto_X_list.append(proto.unsqueeze(0))
+            proto_y_list.append(torch.full((1,), c, dtype=torch.long))
+            n_pairs += 1
+
+    if n_pairs == 0:
+        return (
+            torch.zeros(0, feature_dim, dtype=torch.float32),
+            torch.zeros(0, dtype=torch.long),
+            {"probe_size": 0, "sigma": 0.0, "n_pairs_used": 0},
+        )
+    proto_X = torch.cat(proto_X_list, dim=0)
+    proto_y = torch.cat(proto_y_list, dim=0)
+    return proto_X, proto_y, {
+        "probe_size": int(proto_X.shape[0]),
+        "sigma": 0.0,
+        "n_pairs_used": int(n_pairs),
+    }
+
+
+def build_noprobe_dp_averaged(
+    client_X_list: List,
+    client_y_list: List,
+    K_per_class: int,
+    num_classes: int,
+    clip: float,
+    eps_per_client: float,
+    delta: float = DP_DELTA,
+    seed: int = 0,
+) -> Tuple:
+    """No-probe DP-averaged prototype set (issue 017).
+
+    Per (client, class) with ≥1 local sample: L2-clip ``K_per_class`` samples to
+    ``clip``, average to one contribution, add Gaussian noise with σ =
+    ``dp_sigma(...)`` (averaging-variant accounting, identical to
+    ``build_probe_dp_averaged``). Unlike ``build_probe_dp_averaged``, the
+    per-(client, class) noisy means are NOT server-averaged down to one
+    prototype per class — every contribution is kept as a distinct labelled
+    sample so the warmup set is ``~num_classes × N_contributors`` noisy
+    prototypes (a weak θ₀). No labelled public probe is involved.
+
+    Returns ``(proto_X, proto_y, info)`` matching
+    ``build_noprobe_raw_union``; ``info`` carries ``probe_size``, ``sigma`` and
+    ``n_pairs_used``.
+    """
+    import numpy as np
+    import torch
+
+    rng = np.random.default_rng(seed)
+    sigma = dp_sigma(clip, K_per_class, eps_per_client, delta)
+    feature_dim = client_X_list[0].cpu().reshape(client_X_list[0].shape[0], -1).shape[1]
+
+    proto_X_list, proto_y_list = [], []
+    n_pairs = 0
+    for i in range(len(client_X_list)):
+        X_i = client_X_list[i].cpu().reshape(client_X_list[i].shape[0], -1)
+        y_i = client_y_list[i].cpu().numpy()
+        for c in range(num_classes):
+            mask = (y_i == c)
+            n_avail = int(mask.sum())
+            if n_avail == 0:
+                continue
+            X_c = X_i[mask]
+            n_take = min(K_per_class, n_avail)
+            idx = rng.choice(n_avail, n_take, replace=False)
+            samples = X_c[idx].clone()
+            norms = samples.norm(dim=1, keepdim=True)
+            scale = torch.minimum(torch.ones_like(norms),
+                                  clip / norms.clamp_min(1e-6))
+            samples = samples * scale
+            contribution = samples.mean(dim=0)
+            if sigma > 0:
+                noise = torch.from_numpy(
+                    rng.normal(0, sigma, contribution.shape).astype(np.float32))
+                contribution = contribution + noise
+            proto_X_list.append(contribution.unsqueeze(0))
+            proto_y_list.append(torch.full((1,), c, dtype=torch.long))
+            n_pairs += 1
+
+    if n_pairs == 0:
+        return (
+            torch.zeros(0, feature_dim, dtype=torch.float32),
+            torch.zeros(0, dtype=torch.long),
+            {"probe_size": 0, "sigma": float(sigma), "n_pairs_used": 0},
+        )
+    proto_X = torch.cat(proto_X_list, dim=0)
+    proto_y = torch.cat(proto_y_list, dim=0)
+    return proto_X, proto_y, {
+        "probe_size": int(proto_X.shape[0]),
+        "sigma": float(sigma),
+        "n_pairs_used": int(n_pairs),
+    }
+
+
+# ----------------------------------------------------------------------------
 # Issue 016+: synthetic-sample alignment + per-class logit prototypes
 # ----------------------------------------------------------------------------
 def build_probe_synthetic(
@@ -502,6 +653,19 @@ def build_probe(
         return build_probe_synthetic(
             client_X_list, client_y_list, K_per_class, num_classes, seed=seed,
             dp_clip=clip, dp_eps=eps, dp_delta=delta)
+    if strategy == "noprobe_raw_union":
+        # Issue 017 — no labelled public probe; the raw-union per-(client, class)
+        # prototypes themselves are the supervised warmup set.
+        return build_noprobe_raw_union(
+            client_X_list, client_y_list, K_per_class, num_classes, seed=seed)
+    if strategy == "noprobe_dp_avg":
+        # Issue 017 — no labelled public probe; the DP-noisy per-(client, class)
+        # prototypes themselves are the supervised warmup set.
+        if clip is None:
+            raise ValueError("strategy 'noprobe_dp_avg' requires a clip bound")
+        return build_noprobe_dp_averaged(
+            client_X_list, client_y_list, K_per_class, num_classes,
+            clip=clip, eps_per_client=eps, delta=delta, seed=seed)
     raise ValueError(f"build_probe: no probe for strategy {strategy!r}")
 
 
