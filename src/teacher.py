@@ -29,6 +29,7 @@ def train_supervised_model(
     seed: int,
     init_params: Optional[Dict] = None,
     loss_fn=None,
+    lr_schedule: Optional[str] = None,
 ):
     """Generic supervised SGD trainer. ``make_model_fn()`` returns a fresh model.
 
@@ -38,6 +39,17 @@ def train_supervised_model(
       * Empty data (n == 0) returns the freshly-initialised model untouched —
         this is how zero-sample clients get a chance-level teacher.
       * SGD with momentum; full-batch reshuffle each epoch.
+
+    Optional ``lr_schedule`` (issue 011 Part 3 Round 2, opt-in):
+      * ``None`` (default) — constant LR, byte-identical to the legacy notebook
+        path. Every existing backbone keeps this.
+      * ``"cosine"`` — ``torch.optim.lr_scheduler.CosineAnnealingLR`` over
+        ``T_max=epochs`` from ``lr`` down to ``eta_min = lr/100``, stepping at
+        the END of each epoch (matches the formula
+        ``lr(t) = lr_min + (lr_max - lr_min)·(1 + cos(π·t/T))/2``). Only enters
+        the new code path when the caller explicitly passes ``"cosine"``;
+        unknown strings raise ``ValueError`` so a typo doesn't silently
+        downgrade to constant LR.
     """
     import torch
     import torch.nn.functional as F
@@ -55,6 +67,18 @@ def train_supervised_model(
     if n == 0:
         return model
     opt = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+    # Opt-in LR scheduler. ``None`` keeps the legacy constant-LR loop
+    # untouched (no torch.optim.lr_scheduler import, no .step() call) so every
+    # pre-existing call path stays byte-identical.
+    scheduler = None
+    if lr_schedule is not None:
+        if lr_schedule == "cosine":
+            scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                opt, T_max=max(1, epochs), eta_min=lr / 100.0)
+        else:
+            raise ValueError(
+                f"unsupported lr_schedule={lr_schedule!r}; "
+                "expected None or 'cosine'")
     for _ in range(epochs):
         perm = torch.randperm(n, device=device)
         for i in range(0, n, bs):
@@ -63,6 +87,8 @@ def train_supervised_model(
             loss = loss_fn(model(X[idx]), y[idx])
             loss.backward()
             opt.step()
+        if scheduler is not None:
+            scheduler.step()
     return model
 
 
@@ -78,6 +104,7 @@ def train_client_teachers(
     bs: int,
     seed: int,
     eval_fn=None,
+    lr_schedule: Optional[str] = None,
 ):
     """Train one teacher per client; return (teachers, per_teacher_acc).
 
@@ -85,7 +112,9 @@ def train_client_teachers(
     zero-sample client gets a fresh (chance-level) model and ``1/num_classes``
     accuracy; otherwise SGD with teacher seed ``seed*1000 + i``. ``eval_fn`` is
     an optional ``model -> float`` accuracy callback (so teacher caching / eval
-    policy lives in the caller, not here).
+    policy lives in the caller, not here). ``lr_schedule`` is opt-in
+    (forwarded to ``train_supervised_model``); ``None`` keeps the legacy
+    constant-LR teacher loop byte-identical.
     """
     teachers, t_accs = [], []
     for i in range(len(client_X_list)):
@@ -97,7 +126,7 @@ def train_client_teachers(
         t = train_supervised_model(
             make_model_fn, client_X_list[i], client_y_list[i],
             epochs=epochs, lr=lr, momentum=momentum, bs=bs,
-            seed=seed * 1000 + i,
+            seed=seed * 1000 + i, lr_schedule=lr_schedule,
         )
         teachers.append(t)
         t_accs.append(eval_fn(t) if eval_fn is not None else float("nan"))

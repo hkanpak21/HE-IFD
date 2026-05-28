@@ -56,6 +56,17 @@ class BackboneSpec:
     # Valid tokens: ``"head_only"`` (default), ``"lora_<rank>"``,
     # ``"last_block"``, ``"last_n_blocks_<n>"``. See ``backbones.parse_scope``.
     trainable_scope: str = "head_only"
+    # Optional LR schedule for the supervised SGD trainer (teacher / oracle /
+    # Phase-0 warmup — all three go through ``teacher.train_supervised_model``).
+    # ``None`` (the legacy default) keeps the constant-LR behaviour byte-identical
+    # for every pre-issue-011-Part-3-round-2 backbone. ``"cosine"`` enables
+    # ``CosineAnnealingLR`` with ``T_max=epochs``, ``eta_min=teacher_lr/100``,
+    # stepping at the end of each epoch — useful when the budget is large
+    # enough (e.g. CNN-5/CIFAR-10 at teacher_epochs=60) that a constant LR
+    # over-shoots late in training. Opt-in: only the backbone that sets this
+    # field will hit the scheduler path; every other backbone keeps the
+    # SGD-with-constant-LR loop. See ``teacher.train_supervised_model``.
+    teacher_lr_schedule: Optional[str] = None
 
 
 # Notebook Section 0.2 constants
@@ -80,20 +91,28 @@ BACKBONES: Dict[str, BackboneSpec] = {
         labelled_probe_default=100, teacher_epochs=5, teacher_lr=0.05,
         oracle_epochs=10, warmup_epochs=_WARMUP_EPOCHS, bs=64, feature_loader="fmnist",
     ),
-    # From-scratch CIFAR-10 CNN-5 (issue 007 + issue 011 Part 3): CIFAR-10 is
-    # harder, and the original (teacher_epochs=10 / oracle_epochs=20 /
-    # teacher_lr=0.01 / warmup_epochs=5) hit a 27pp IID gap to oracle in
+    # From-scratch CIFAR-10 CNN-5 (issue 007 + issue 011 Part 3 + Round 2):
+    # CIFAR-10 is harder, and the original (teacher_epochs=10 / oracle_epochs=20
+    # / teacher_lr=0.01 / warmup_epochs=5) hit a 27pp IID gap to oracle in
     # issue 007's verify run — raw_union IID 0.48 vs oracle 0.75 — i.e. the
-    # teacher (and the warmup) were under-trained. Issue 011 Part 3 bumps to
-    # teacher_epochs=30 / oracle_epochs=50 / teacher_lr=0.005 / warmup_epochs=10
-    # so the teacher reaches a representative accuracy and the probe warmup has
-    # enough budget to land θ₀ inside the loss basin (Co-Boosting/FedLPA "CNN-5
-    # for CIFAR-10" peer setup). Conv net on RAW 3x32x32 images (NOT pretrained
-    # feats). Sanity gate: CIFAR-10 IID raw_union ≥ 0.60 at α=1.0 after refit.
+    # teacher (and the warmup) were under-trained. Issue 011 Part 3's first
+    # bump (teacher_epochs=30 / oracle_epochs=50 / teacher_lr=0.005 /
+    # warmup_epochs=10) lifted IID raw_union to 0.5159 but still missed the
+    # ≥0.60 gate; teachers at 30 epochs / constant lr=0.005 only reached
+    # mean_teacher ≈ 0.46 (vs oracle 0.78 at 50 epochs), so distillation
+    # bottlenecks on weak teacher signal and m4_ood at α=0.05 sat at 0.16.
+    # Round 2 doubles the teacher / oracle budget AND switches the trainer to
+    # cosine LR decay (lr_max=0.01 → lr_min=1e-4 over T=teacher_epochs / or
+    # oracle_epochs / warmup_epochs respectively): higher starting LR + cosine
+    # tail tends to land better than a constant low LR with the same step
+    # count. Sanity gate: CIFAR-10 IID raw_union ≥ 0.60 at α=1.0 AND m4_ood ≥
+    # 0.40 at α=0.05 after refit. Conv net on RAW 3x32x32 images (NOT
+    # pretrained feats). Co-Boosting/FedLPA "CNN-5 for CIFAR-10" peer setup.
     "cnn5_cifar10": BackboneSpec(
         label="cnn5_cifar10", kind="scratch", num_classes=10,
-        labelled_probe_default=100, teacher_epochs=30, teacher_lr=0.005,
-        oracle_epochs=50, warmup_epochs=10, bs=64, feature_loader="cifar10_raw",
+        labelled_probe_default=100, teacher_epochs=60, teacher_lr=0.01,
+        oracle_epochs=100, warmup_epochs=10, bs=64, feature_loader="cifar10_raw",
+        teacher_lr_schedule="cosine",
     ),
     # Pretrained vision heads (Section B): head training is faster/smaller-LR.
     "resnet18_cifar10": BackboneSpec(
@@ -471,7 +490,8 @@ def run_cell(
             t = train_supervised_model(
                 make_model_fn, client_X_list[i], client_y_list[i],
                 epochs=spec.teacher_epochs, lr=spec.teacher_lr,
-                momentum=momentum, bs=spec.bs, seed=seed * 1000 + i)
+                momentum=momentum, bs=spec.bs, seed=seed * 1000 + i,
+                lr_schedule=spec.teacher_lr_schedule)
             teachers.append(t)
             t_accs.append(eval_model(t))
         res.per_teacher_acc = [float(a) for a in t_accs]
@@ -480,7 +500,8 @@ def run_cell(
 
         oracle_m = train_supervised_model(
             make_model_fn, pool_X, pool_y, epochs=spec.oracle_epochs,
-            lr=spec.teacher_lr, momentum=momentum, bs=spec.bs, seed=seed * 7919)
+            lr=spec.teacher_lr, momentum=momentum, bs=spec.bs, seed=seed * 7919,
+            lr_schedule=spec.teacher_lr_schedule)
         res.oracle = float(eval_model(oracle_m))
         res.phase_teacher_sec = time.time() - t0
 
@@ -513,7 +534,8 @@ def run_cell(
             theta0 = p0.warmup_init(
                 make_model_fn, probe_X, probe_y, init_params,
                 epochs=spec.warmup_epochs, lr=spec.teacher_lr,
-                momentum=momentum, bs=spec.bs)
+                momentum=momentum, bs=spec.bs,
+                lr_schedule=spec.teacher_lr_schedule)
             res.phase_phase0_sec = time.time() - t0
             warmed = make_model_fn()
             warmed.load_state_dict(theta0)
@@ -536,7 +558,8 @@ def run_cell(
             theta0 = p0.warmup_init(
                 make_model_fn, probe_X, probe_y, init_params,
                 epochs=spec.warmup_epochs, lr=spec.teacher_lr,
-                momentum=momentum, bs=spec.bs)
+                momentum=momentum, bs=spec.bs,
+                lr_schedule=spec.teacher_lr_schedule)
             align_X = probe_X       # for issue-013 entropy (no-op unless diagnose=True)
             res.probe_size_actual = int(probe_size)
             res.sigma = 0.0
@@ -560,7 +583,8 @@ def run_cell(
             theta0 = p0.warmup_init(
                 make_model_fn, align_X, align_y, init_params,
                 epochs=spec.warmup_epochs, lr=spec.teacher_lr,
-                momentum=momentum, bs=spec.bs)
+                momentum=momentum, bs=spec.bs,
+                lr_schedule=spec.teacher_lr_schedule)
             res.probe_size_actual = int(info["probe_size"])
             res.sigma = float(info["sigma"])
             res.theta0_acc = theta0_test_acc(theta0)
