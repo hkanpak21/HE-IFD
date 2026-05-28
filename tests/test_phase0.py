@@ -209,3 +209,95 @@ def test_dp_averaged_sigma_recorded_matches_dp_sigma():
     )
     assert info["sigma"] == pytest.approx(dp_sigma(clip, K, eps, delta=delta), rel=1e-12)
     assert info["sigma"] > 0.0  # finite eps -> some noise
+
+
+# ---------------------------------------------------------------------------
+# Extreme-heterogeneity regression (the 14 failing lenet_fmnist cells)
+# ---------------------------------------------------------------------------
+#
+# At N=50, α=0.01 the Dirichlet partition can hand a client ZERO samples. The
+# conv-net dp_avg path in ``protocol.run_cell`` flattens each per-client tensor
+# (n_i, C, H, W) -> (n_i, C*H*W) before calling ``build_probe_dp_averaged``,
+# because the averaging-variant mechanism is defined in flat feature space. The
+# original flatten used ``x.reshape(x.shape[0], -1)``, which raises
+#   "cannot reshape tensor of 0 elements into shape [0, -1] ... -1 is ambiguous"
+# on an empty (0, C, H, W) client. raw_union never hits this bridge (it keeps
+# the native image shape), which is exactly why only dp_avg / synthetic /
+# synthetic_dp failed at that corner. These tests pin both halves of the fix.
+def test_dp_averaged_with_empty_client_in_flat_space_returns_cleanly():
+    """A client with ZERO samples (post-flatten shape (0, D)) must not break the
+    DP-averaged builder, and absent classes must still be dropped. Mirrors the
+    raw_union zero-contributor contract for the dp_avg path the failing cells
+    actually exercise (flat feature space)."""
+    torch = pytest.importorskip("torch")
+    from src.phase0 import build_probe_dp_averaged
+
+    D = 1 * 28 * 28  # lenet_fmnist flat dim
+    # client 0 holds classes {0, 1}; client 1 is EMPTY (0 samples); class 2 has
+    # zero contributors across the whole federation.
+    X0 = torch.randn(4, D)
+    y0 = torch.tensor([0, 0, 1, 1])
+    X1 = torch.zeros(0, D)          # empty client — the N=50/α=0.01 reality
+    y1 = torch.zeros(0, dtype=torch.long)
+
+    pX, pY, info = build_probe_dp_averaged(
+        [X0, X1], [y0, y1],
+        K_per_class=20, num_classes=3,
+        clip=1e9, eps_per_client=float("inf"), seed=0,
+    )
+
+    # class 2 has no contributor -> dropped; classes {0,1} survive.
+    assert pY.tolist() == [0, 1]
+    assert pX.shape == (2, D)
+    assert info["probe_size"] == 2
+    assert 2 not in set(int(c) for c in pY.tolist())
+
+
+def test_protocol_flatten_bridge_handles_empty_client():
+    """Reproduce the EXACT reshape that threw in the failing cells.
+
+    ``protocol.run_cell``'s ``_flatten_clients`` closure isn't independently
+    importable, but its body is the load-bearing line. The original
+    ``x.reshape(x.shape[0], -1)`` raises on a (0, C, H, W) tensor; the fix uses
+    the explicit trailing product so the inferred axis is never the size-0 one.
+    This test asserts the fixed expression is well-defined for an empty client
+    AND byte-identical to ``reshape(n_i, -1)`` for a non-empty one."""
+    torch = pytest.importorskip("torch")
+
+    sample_shape = (1, 28, 28)  # lenet_fmnist
+    flat_dim = 1
+    for d in sample_shape:
+        flat_dim *= d
+
+    # empty client (0 elements) — the case that produced the ambiguous-(-1) error
+    empty = torch.zeros((0, *sample_shape))
+    # the old code path: this is what threw
+    with pytest.raises(RuntimeError):
+        empty.reshape(empty.shape[0], -1)
+    # the fixed code path: explicit trailing dim -> no ambiguity, shape (0, D)
+    flat_empty = empty.reshape(empty.shape[0], flat_dim)
+    assert flat_empty.shape == (0, flat_dim)
+
+    # non-empty client: fix is identical to reshape(n_i, -1)
+    full = torch.randn((7, *sample_shape))
+    assert torch.equal(
+        full.reshape(full.shape[0], flat_dim),
+        full.reshape(full.shape[0], -1),
+    )
+
+
+def test_reshape_probe_to_image_handles_empty_probe():
+    """The all-empty pathological probe (every class absent -> P==0) must reshape
+    back to (0, C, H, W) without an ambiguous -1. This mirrors the
+    ``_reshape_probe_to_image`` guard added to ``protocol.run_cell``."""
+    torch = pytest.importorskip("torch")
+
+    sample_shape = (1, 28, 28)
+    flat_dim = 1
+    for d in sample_shape:
+        flat_dim *= d
+
+    probe_flat = torch.zeros(0, flat_dim)
+    # explicit sample_shape reshape (no -1) is well-defined for P==0
+    img = probe_flat.reshape(probe_flat.shape[0], *sample_shape)
+    assert img.shape == (0, *sample_shape)

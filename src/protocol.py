@@ -537,13 +537,39 @@ def run_cell(
         sample_shape = tuple(Xtr.shape[1:])
         is_image = len(sample_shape) > 1
 
+        flat_dim = 1
+        for _d in sample_shape:
+            flat_dim *= int(_d)
+
         def _flatten_clients(xs):
-            """Flatten a list of per-client tensors to (n_i, prod(sample_shape))."""
-            return [x.reshape(x.shape[0], -1) for x in xs]
+            """Flatten a list of per-client tensors to (n_i, prod(sample_shape)).
+
+            At extreme heterogeneity (N=50, α=0.01) the Dirichlet partition can
+            hand a client ZERO samples — its tensor is (0, C, H, W), 0 elements.
+            ``x.reshape(0, -1)`` then raises because ``-1`` is ambiguous on an
+            empty tensor. We use the explicit trailing dim ``flat_dim`` so the
+            inferred axis is never the size-0 one; for a non-empty client this is
+            identical to ``reshape(n_i, -1)`` (flat_dim == prod(sample_shape)),
+            so the non-pathological path is byte-identical. raw_union never hits
+            this bridge (it keeps native shape), which is why only dp_avg /
+            synthetic / synthetic_dp failed at the corner."""
+            return [x.reshape(x.shape[0], flat_dim) for x in xs]
 
         def _reshape_probe_to_image(probe_X_flat):
             """Reshape a flat dp_avg probe (P, prod(sample_shape)) back to images
-            (P, C, H, W) so the conv warmup consumes the same shape as training."""
+            (P, C, H, W) so the conv warmup consumes the same shape as training.
+
+            Guard the all-empty pathological case (every class had zero
+            contributors -> P == 0): ``reshape(0, *sample_shape)`` is well-defined
+            (no ambiguous ``-1``), but we build the empty tensor explicitly to be
+            unambiguous and dtype/-device-stable. For P > 0 this is identical to
+            the original reshape."""
+            if probe_X_flat.shape[0] == 0:
+                import torch as _torch
+                return _torch.empty(
+                    (0, *sample_shape),
+                    dtype=probe_X_flat.dtype, device=probe_X_flat.device,
+                )
             return probe_X_flat.reshape(probe_X_flat.shape[0], *sample_shape)
 
         probe_X, probe_y, pool_X, pool_y = reserve_probe_and_pool(Xtr, ytr, probe_size, seed)
