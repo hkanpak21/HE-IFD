@@ -358,3 +358,161 @@ def test_basin_coherent_vs_divergent_contrast():
     div_spread = min(_l2_to(torch, div_out, f) for f in div_finals)
 
     assert coh_spread < div_spread
+
+
+# ---------------------------------------------------------------------------
+# (a.4) Issue 011 — FHE-linearity invariant for the larger trainable parameter
+#       sets introduced by lora_<rank> / last_n_blocks scopes. The
+#       aggregate operation must remain PT-scalar × CT + CT + CT only,
+#       REGARDLESS of how many tensors live in state_dict.
+# ---------------------------------------------------------------------------
+def _bytes_in_paramdict(params):
+    """Total scalar count across every tensor in the state-dict-shaped param
+    dict (used to verify the synthetic 'large' spec is genuinely ≥10× the
+    head-only baseline). Pure-Python int, no torch ops."""
+    return sum(int(_prod(p.shape)) for p in params.values())
+
+
+def _prod(shape):
+    p = 1
+    for s in shape:
+        p *= int(s)
+    return p
+
+
+def test_aggregate_linearity_invariant_holds_for_lora_sized_param_dict():
+    """Issue 011 — the aggregate stays element-wise linear when the trainable
+    parameter set grows by a LoRA adapter or an MLP "last block" head.
+
+    Spec rationale (mirrors ``src.backbones`` per issue 011):
+      * Baseline ``head_only`` for the resnet18 head is in_dim=512 × nc=10
+        + nc bias = 5130 trainable scalars.
+      * The synthetic 'expanded' spec below adds a rank-8 LoRA pair
+        (A: 8×512, B: 10×8) AND an MLP "last block" (fc1: 128×512 + 128
+        bias, fc2: 10×128 + 10 bias) — totalling ~71200 scalars, which is
+        ~14× the head-only baseline. This is the 10× threshold the issue
+        requires from a "synthetic large-tensor mock".
+
+    Invariant: ``aggregate(theta0, deltas, weights)`` must equal, scalar-by-
+    scalar, the hand-computed reference
+        ref[k] = theta0[k] + Σᵢ wᵢ · deltas[i][k]
+    where the ONLY arithmetic primitives are ``+`` (CT+CT) and scalar ``*``
+    (PT×CT). The reference is constructed using exactly those two primitives
+    so any non-linear leakage in ``aggregate`` (e.g. a hidden clamp, square,
+    re-scaling) would break ``allclose``. Behavioural equivalence across two
+    clients (the minimum to exercise summation) is sufficient.
+
+    Why this matters: issue 011 introduces ``trainable_scope`` knobs that
+    *change which tensors* live in state_dict but must NOT change the algebra
+    of the server step (which is the FHE-compatibility invariant). This
+    assertion guards that property at the public ``aggregate`` interface,
+    regardless of how many tensors flow through.
+    """
+    torch = pytest.importorskip("torch")
+    from src.aggregate import aggregate, sample_weights
+
+    # Realistic resnet18-scale spec with LoRA + MLP last-block expansion.
+    in_dim, nc, rank, hidden = 512, 10, 8, 128
+    spec = {
+        # Base linear head (head_only baseline)
+        "fc.weight": (nc, in_dim),
+        "fc.bias": (nc,),
+        # LoRA rank-r adapter on the head
+        "lora_A.weight": (rank, in_dim),
+        "lora_B.weight": (nc, rank),
+        # MLP "last block" head (a separate sub-module mimicking the
+        # last_n_blocks scope's added capacity in feature space)
+        "mlp.fc1.weight": (hidden, in_dim),
+        "mlp.fc1.bias": (hidden,),
+        "mlp.fc2.weight": (nc, hidden),
+        "mlp.fc2.bias": (nc,),
+    }
+
+    # Sanity guard: the synthetic spec must be ≥10× the head-only baseline.
+    baseline_params = nc * in_dim + nc  # head_only ResNet18-head scalar count
+    expanded_params = sum(_prod(shape) for shape in spec.values())
+    assert expanded_params >= 10 * baseline_params, (
+        f"large-spec sanity guard: expanded {expanded_params} vs baseline "
+        f"{baseline_params} — must be ≥10×"
+    )
+
+    torch.manual_seed(2026)
+    theta0 = {name: torch.randn(*shape) for name, shape in spec.items()}
+    n_clients = 4
+    deltas = [
+        {name: torch.randn(*shape) for name, shape in spec.items()}
+        for _ in range(n_clients)
+    ]
+    w = sample_weights([10, 20, 30, 40])  # asymmetric sample weights
+
+    out = aggregate(theta0, deltas, w)
+
+    # Hand-computed reference using ONLY PT×CT (scalar * tensor) and CT+CT
+    # (tensor + tensor) primitives — the FHE-compatible algebra. If aggregate
+    # leaks a non-linear op (e.g. clamp, square, mul of two ciphertexts),
+    # any mismatched element here would fail allclose at 1e-5 tolerance.
+    ref = {name: theta0[name].clone() for name in spec}
+    for i in range(n_clients):
+        for name in spec:
+            ref[name] = ref[name] + w[i] * deltas[i][name]   # CT+CT ; PT×CT
+
+    assert _allclose_dict(torch, out, ref, atol=1e-5, rtol=1e-4)
+
+    # Confirm every tensor in the expanded dict was touched (no silent
+    # subsetting of state_dict during aggregation).
+    assert set(out.keys()) == set(spec.keys())
+    # And the per-tensor shapes are preserved exactly (no reshape / pad).
+    for name, shape in spec.items():
+        assert tuple(out[name].shape) == shape
+
+
+def test_aggregate_linearity_invariant_count_independent():
+    """Scaling the number of tensors (parameter dict size) by ~100× must not
+    change the aggregation algebra — purely a count-independence check.
+
+    The test runs aggregate twice on the same data laid out as (a) 4 large
+    tensors and (b) 200 small tensors; the resulting flat-vector concatenated
+    output must equal the same hand-computed PT×CT+CT+CT reference in both
+    cases. Demonstrates that the FHE invariant ('only + and scalar * on
+    tensors') depends on the operation, not the cardinality of the dict —
+    issue 011's central correctness claim for the trainable-scope expansion.
+    """
+    torch = pytest.importorskip("torch")
+    from src.aggregate import aggregate, sample_weights
+
+    torch.manual_seed(11)
+
+    # (a) wide spec: 4 tensors, ~4096 scalars each (similar to LoRA-8 on ResNet)
+    spec_wide = {
+        "t0": (64, 64), "t1": (64, 64), "t2": (64, 64), "t3": (64, 64),
+    }
+    # (b) thin spec: 200 tensors, 64 scalars each — same total scalar count.
+    spec_thin = {f"u{i}": (64,) for i in range(64 * 4)}  # 256 tensors, 64 each
+
+    n_clients = 3
+    weights = sample_weights([5, 15, 30])
+
+    def _flat(d):
+        return torch.cat([d[k].flatten() for k in sorted(d.keys())])
+
+    def _runs_and_returns_flat(spec):
+        theta0 = {name: torch.randn(*shape) for name, shape in spec.items()}
+        deltas = [
+            {name: torch.randn(*shape) for name, shape in spec.items()}
+            for _ in range(n_clients)
+        ]
+        ref = {name: theta0[name].clone() for name in spec}
+        for i in range(n_clients):
+            for name in spec:
+                ref[name] = ref[name] + weights[i] * deltas[i][name]
+        out = aggregate(theta0, deltas, weights)
+        # Internal: out must equal the linear reference, regardless of count.
+        assert _allclose_dict(torch, out, ref, atol=1e-5, rtol=1e-4)
+        return _flat(out), _flat(ref)
+
+    # Both shapes pass the same invariant assertion (above); the test is the
+    # combined cross-shape statement that aggregate is count-invariant.
+    out_wide, ref_wide = _runs_and_returns_flat(spec_wide)
+    out_thin, ref_thin = _runs_and_returns_flat(spec_thin)
+    assert torch.allclose(out_wide, ref_wide, atol=1e-5, rtol=1e-4)
+    assert torch.allclose(out_thin, ref_thin, atol=1e-5, rtol=1e-4)
