@@ -1,3 +1,221 @@
 [pt] job 1112416 backbone=distilbert_agnews on ai05.kuvalar.ku.edu.tr
 [sweep] grid=360 cells; chunk 0/1 -> 360 cells; case=heifd_pretrained_headline
 [sweep] start distilbert_agnews N=5 a=0.01 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.8038 mean_teacher=0.4080 wall=417.4s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.3808 mean_teacher=0.3023 wall=13.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.4313 mean_teacher=0.3536 wall=13.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.3986 mean_teacher=0.4080 wall=11.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2511 mean_teacher=0.3023 wall=11.6s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2500 mean_teacher=0.3536 wall=11.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8063 mean_teacher=0.4080 wall=14.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4117 mean_teacher=0.3023 wall=14.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4318 mean_teacher=0.3536 wall=8.4s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.8159 mean_teacher=0.4080 wall=8.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.4337 mean_teacher=0.3023 wall=14.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.4303 mean_teacher=0.3536 wall=14.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.8097 mean_teacher=0.4080 wall=14.6s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3984 mean_teacher=0.3023 wall=14.0s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4329 mean_teacher=0.3536 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.8126 mean_teacher=0.4080 wall=14.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4089 mean_teacher=0.3023 wall=13.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.01 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4342 mean_teacher=0.3536 wall=14.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.6763 mean_teacher=0.3436 wall=15.2s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.6443 mean_teacher=0.4514 wall=15.3s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.4189 mean_teacher=0.4255 wall=13.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.3986 mean_teacher=0.3436 wall=10.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2511 mean_teacher=0.4514 wall=10.6s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2500 mean_teacher=0.4255 wall=10.6s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7078 mean_teacher=0.3436 wall=13.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6470 mean_teacher=0.4514 wall=13.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4241 mean_teacher=0.4255 wall=13.6s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.7439 mean_teacher=0.3436 wall=14.0s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.6503 mean_teacher=0.4514 wall=13.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.4312 mean_teacher=0.4255 wall=12.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.6901 mean_teacher=0.3436 wall=10.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.6439 mean_teacher=0.4514 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4224 mean_teacher=0.4255 wall=13.6s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6974 mean_teacher=0.3436 wall=14.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6449 mean_teacher=0.4514 wall=14.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.05 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4247 mean_teacher=0.4255 wall=14.4s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.6191 mean_teacher=0.4217 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.7593 mean_teacher=0.4791 wall=14.3s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.3661 mean_teacher=0.4593 wall=14.0s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.3986 mean_teacher=0.4217 wall=11.3s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2511 mean_teacher=0.4791 wall=11.3s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2500 mean_teacher=0.4593 wall=11.2s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6243 mean_teacher=0.4217 wall=14.3s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7689 mean_teacher=0.4791 wall=9.2s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3842 mean_teacher=0.4593 wall=13.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.6338 mean_teacher=0.4217 wall=15.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.8036 mean_teacher=0.4791 wall=14.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.4389 mean_teacher=0.4593 wall=14.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.6243 mean_teacher=0.4217 wall=14.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.7678 mean_teacher=0.4791 wall=14.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3858 mean_teacher=0.4593 wall=14.5s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6246 mean_teacher=0.4217 wall=14.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.7707 mean_teacher=0.4791 wall=15.0s err=None
+[sweep] start distilbert_agnews N=5 a=0.1 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3980 mean_teacher=0.4593 wall=14.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.5868 mean_teacher=0.5903 wall=14.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.6589 mean_teacher=0.6203 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.7724 mean_teacher=0.5428 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.3986 mean_teacher=0.5903 wall=10.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2511 mean_teacher=0.6203 wall=10.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2500 mean_teacher=0.5428 wall=10.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6000 mean_teacher=0.5903 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6637 mean_teacher=0.6203 wall=13.9s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7816 mean_teacher=0.5428 wall=14.0s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.6445 mean_teacher=0.5903 wall=9.2s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.6836 mean_teacher=0.6203 wall=11.3s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.7975 mean_teacher=0.5428 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.5907 mean_teacher=0.5903 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.6667 mean_teacher=0.6203 wall=14.2s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.7718 mean_teacher=0.5428 wall=13.7s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.5953 mean_teacher=0.5903 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6671 mean_teacher=0.6203 wall=14.8s err=None
+[sweep] start distilbert_agnews N=5 a=0.3 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.7755 mean_teacher=0.5428 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.8593 mean_teacher=0.8598 wall=13.6s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.8176 mean_teacher=0.7946 wall=13.8s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.8120 mean_teacher=0.7635 wall=13.7s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.3986 mean_teacher=0.8598 wall=10.6s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2511 mean_teacher=0.7946 wall=10.9s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2500 mean_teacher=0.7635 wall=10.6s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8601 mean_teacher=0.8598 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8196 mean_teacher=0.7946 wall=13.7s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8192 mean_teacher=0.7635 wall=14.0s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.8636 mean_teacher=0.8598 wall=13.9s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.8407 mean_teacher=0.7946 wall=14.3s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.8407 mean_teacher=0.7635 wall=14.3s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.8609 mean_teacher=0.8598 wall=12.9s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.8200 mean_teacher=0.7946 wall=9.2s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.8145 mean_teacher=0.7635 wall=13.5s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.8614 mean_teacher=0.8598 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.8213 mean_teacher=0.7946 wall=14.1s err=None
+[sweep] start distilbert_agnews N=5 a=1.0 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.8166 mean_teacher=0.7635 wall=13.9s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.4680 mean_teacher=0.2729 wall=14.2s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.6711 mean_teacher=0.2500 wall=16.4s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.4767 mean_teacher=0.2500 wall=15.4s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.3986 mean_teacher=0.2729 wall=10.7s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2511 mean_teacher=0.2500 wall=10.5s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2500 mean_teacher=0.2500 wall=10.9s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4689 mean_teacher=0.2729 wall=13.9s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7712 mean_teacher=0.2500 wall=16.5s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6293 mean_teacher=0.2500 wall=10.8s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.4691 mean_teacher=0.2729 wall=14.3s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.7658 mean_teacher=0.2500 wall=16.0s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.7857 mean_teacher=0.2500 wall=15.4s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4676 mean_teacher=0.2729 wall=13.7s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.6855 mean_teacher=0.2500 wall=15.5s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.5693 mean_teacher=0.2500 wall=15.2s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4680 mean_teacher=0.2729 wall=13.3s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.7650 mean_teacher=0.2500 wall=16.4s err=None
+[sweep] start distilbert_agnews N=10 a=0.01 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6199 mean_teacher=0.2500 wall=16.9s err=None
+[sweep] start distilbert_agnews N=10 a=0.05 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3322 mean_teacher=0.2790 wall=17.3s err=None
+[sweep] start distilbert_agnews N=10 a=0.05 no_phase0 s=43 K=300

@@ -1,0 +1,123 @@
+{
+  "backbone": "distilbert_agnews",
+  "dataset": "AGNews",
+  "N": 5,
+  "alpha": 0.3,
+  "seed": 44,
+  "K": 300,
+  "tau": 4.0,
+  "method": "dp_avg_eps2_K20",
+  "phase0_kind": "dp_avg",
+  "probe_size_actual": 4,
+  "sigma": 1.0309443066476602,
+  "acc": 0.7718421052631579,
+  "mean_teacher": 0.5428157894736843,
+  "best_teacher": 0.8178947368421052,
+  "oracle": 0.9025,
+  "per_teacher_acc": [
+    0.4744736842105263,
+    0.45289473684210524,
+    0.48289473684210527,
+    0.8178947368421052,
+    0.4859210526315789
+  ],
+  "theta0_acc": 0.33907894736842104,
+  "m3_student_acc_on_Di": [
+    0.5599081987970876,
+    0.9305391485139158,
+    0.879271660338281,
+    0.6966110119102406,
+    0.8899950470529965
+  ],
+  "m3_teacher_acc_on_Di": [
+    0.9358974358974359,
+    0.9666871426546331,
+    0.9689333793579565,
+    0.902380207278685,
+    0.9811788013868251
+  ],
+  "m3_gap": [
+    -0.37598923710034826,
+    -0.03614799414071723,
+    -0.08966171901967557,
+    -0.2057691953684444,
+    -0.09118375433382864
+  ],
+  "m3_mean_gap": -0.15975037999260283,
+  "m3_clients_helped": 0,
+  "m3_clients_evaluated": 5,
+  "m4_ood_acc": [
+    0.8752631578947369,
+    null,
+    null,
+    null,
+    null
+  ],
+  "m4_mean": 0.8752631578947369,
+  "m4_clients_evaluated": 1,
+  "per_client_total": [
+    12636,
+    21163,
+    11588,
+    54323,
+    20190
+  ],
+  "per_client_per_class": [
+    [
+      3095,
+      0,
+      9249,
+      292
+    ],
+    [
+      18911,
+      61,
+      17,
+      2174
+    ],
+    [
+      2079,
+      9325,
+      120,
+      64
+    ],
+    [
+      852,
+      5449,
+      20578,
+      27444
+    ],
+    [
+      5041,
+      15147,
+      1,
+      1
+    ]
+  ],
+  "sample_weights": [
+    0.10538782318598833,
+    0.17650542118432028,
+    0.09664720600500418,
+    0.453069224353628,
+    0.1683903252710592
+  ],
+  "wall_clock_sec": 13.721014738082886,
+  "phase_teacher_sec": 9.822155714035034,
+  "phase_phase0_sec": 0.12568283081054688,
+  "phase_distill_sec": 2.9269587993621826,
+  "phase_aggregate_sec": 0.0005061626434326172,
+  "phase_eval_sec": 0.32881641387939453,
+  "job_id": "1112416",
+  "node": "ai05",
+  "status": "success",
+  "error": null,
+  "notes": "HE-IFD plaintext simulation: sample-weighted linear aggregate \u03b8\u2080+\u03a3 w_i\u00b7\u0394_i of bounded K-step cumulative displacements; server op is PT\u00d7CT + CT+CT only (FHE-compatible).",
+  "_descriptor": {
+    "backbone": "distilbert_agnews",
+    "N": 5,
+    "alpha": 0.3,
+    "method": "dp_avg_eps2_K20",
+    "seed": 44,
+    "K": 300
+  }
+}
