@@ -1,65 +1,473 @@
 # heifd_012_harder_vision_headline
 
-Issue 012 — full-grid headline sweep on the harder-vision-dataset extension.
-Mirrors `heifd_pretrained_headline` (issue 008) but on CIFAR-100 (and
-optionally Tiny-ImageNet) rather than the saturated CIFAR-10 / ViT pair.
+HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
-HE-IFD plaintext simulation of the one-shot federated distillation protocol:
-each client distils its own teacher into a student over a bounded K-step
-trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative
-trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only
-operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i =
-n_i/Σ_j n_j), which uses PT×CT and CT+CT only and is thus FHE-compatible by
-construction. IID test accuracy is the lead metric, with mean/best teacher
-and a centralised oracle as references, plus the standalone accuracy of the
-aligned init θ₀, M3 (per-client teacher-vs-aggregate gap), and M4 (per-client
-accuracy on classes a client held zero local examples of).
+## Sweep configuration
 
-## Status — pending verify gate
-
-This job runs **only after** `heifd_012_harder_vision_verify.sh` produces
-sensible numbers (ViT/CIFAR-100 IID ≥ 0.60 + `raw_union > θ₀` at α=0.05). The
-orchestrator handles the gate.
-
-## Sweep configuration (per backbone)
-
-- Backbones: one of `vit_b32_cifar100` (highest-value cell — the cell issue
-  012 was created to enable), `resnet18_cifar100`, `vit_b32_tiny_imagenet`,
-  `resnet18_tiny_imagenet`. ONE per job (set via `HEIFD_BACKBONE`).
-- N: `1,5,10,20,50` (Phase II N-grid per `docs/prd/he-ifd-tnse-resubmission.md`)
+- Backbones: `vit_b32_cifar100`
+- N values: `1,5,10,20,50`
 - Dirichlet α: `0.01,0.05,0.1,0.3,1.0`
 - Methods: `no_phase0,warmup_only_labelled,labelled_probe_warmup,raw_union_K20,dp_avg_eps2_K20,dp_avg_eps8_K20`
-- Seeds: `42,43,44` (3-seed replication for mean ± std)
-- KD: K=100, τ=1, lr=0.001 (issue 010 best defaults for the pretrained-head regime)
-- Scope: `head_only` (issue 011 confirmed sufficient)
-- Per-backbone cell count: 5 × 5 × 6 × 3 = **450 cells**
-- Chunking: SLURM job-array (`--array=0-7 --export=ALL,NUM_CHUNKS=8`) so each
-  chunk lands well under the 3h VALAR cap.
+- Seeds: `42,43,44`
+- K (bounded trajectory length): `100`
+- τ (distill temperature): `1.0`
+- Student LR: `0.001`
+- Labelled-probe size P: `None` (None = backbone default)
 
-## Triggering
+## Results
 
-```sh
-# Verify gate first (see results/heifd_012_harder_vision_verify/README.md).
+| backbone | N | α | method | seed | acc | mean_teacher | best_teacher | oracle | θ₀_acc | M3_mean_gap | M3_helped | M4_ood_acc | σ | status |
+|---|---|---|--------|------|-----|--------------|--------------|--------|--------|-------------|-----------|------------|---|--------|
+| vit_b32_cifar100 | 1 | 0.01 | dp_avg_eps2_K20 | 42 | 0.0965 | 0.8610 | 0.8610 | 0.8692 | 0.0316 | -0.8273 | 0/1 | n/a | 6.4499 | success |
+| vit_b32_cifar100 | 1 | 0.01 | dp_avg_eps2_K20 | 43 | 0.0823 | 0.8676 | 0.8676 | 0.8683 | 0.0243 | -0.8466 | 0/1 | n/a | 6.4427 | success |
+| vit_b32_cifar100 | 1 | 0.01 | dp_avg_eps2_K20 | 44 | 0.0967 | 0.8670 | 0.8670 | 0.8673 | 0.0291 | -0.8345 | 0/1 | n/a | 6.4456 | success |
+| vit_b32_cifar100 | 1 | 0.01 | dp_avg_eps8_K20 | 42 | 0.1425 | 0.8610 | 0.8610 | 0.8692 | 0.0545 | -0.7795 | 0/1 | n/a | 1.6125 | success |
+| vit_b32_cifar100 | 1 | 0.01 | dp_avg_eps8_K20 | 43 | 0.1278 | 0.8676 | 0.8676 | 0.8683 | 0.0444 | -0.7958 | 0/1 | n/a | 1.6107 | success |
+| vit_b32_cifar100 | 1 | 0.01 | dp_avg_eps8_K20 | 44 | 0.1529 | 0.8670 | 0.8670 | 0.8673 | 0.0593 | -0.7794 | 0/1 | n/a | 1.6114 | success |
+| vit_b32_cifar100 | 1 | 0.01 | labelled_probe_warmup | 42 | 0.4531 | 0.8610 | 0.8610 | 0.8692 | 0.3924 | -0.4662 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | labelled_probe_warmup | 43 | 0.5007 | 0.8676 | 0.8676 | 0.8683 | 0.4211 | -0.4269 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | labelled_probe_warmup | 44 | 0.4847 | 0.8670 | 0.8670 | 0.8673 | 0.4062 | -0.4400 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | no_phase0 | 42 | 0.0399 | 0.8610 | 0.8610 | 0.8692 | 0.0121 | -0.8834 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | no_phase0 | 43 | 0.0338 | 0.8676 | 0.8676 | 0.8683 | 0.0110 | -0.8956 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | no_phase0 | 44 | 0.0429 | 0.8670 | 0.8670 | 0.8673 | 0.0072 | -0.8852 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | raw_union_K20 | 42 | 0.7873 | 0.8610 | 0.8610 | 0.8692 | 0.7815 | -0.1292 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | raw_union_K20 | 43 | 0.7962 | 0.8676 | 0.8676 | 0.8683 | 0.7900 | -0.1296 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | raw_union_K20 | 44 | 0.7929 | 0.8670 | 0.8670 | 0.8673 | 0.7863 | -0.1315 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | warmup_only_labelled | 42 | 0.3924 | 0.8610 | 0.8610 | 0.8692 | 0.3924 | -0.5292 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | warmup_only_labelled | 43 | 0.4211 | 0.8676 | 0.8676 | 0.8683 | 0.4211 | -0.5075 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.01 | warmup_only_labelled | 44 | 0.4062 | 0.8670 | 0.8670 | 0.8673 | 0.4062 | -0.5239 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | dp_avg_eps2_K20 | 42 | 0.0965 | 0.8610 | 0.8610 | 0.8692 | 0.0316 | -0.8273 | 0/1 | n/a | 6.4499 | success |
+| vit_b32_cifar100 | 1 | 0.05 | dp_avg_eps2_K20 | 43 | 0.0823 | 0.8676 | 0.8676 | 0.8683 | 0.0243 | -0.8466 | 0/1 | n/a | 6.4427 | success |
+| vit_b32_cifar100 | 1 | 0.05 | dp_avg_eps2_K20 | 44 | 0.0967 | 0.8670 | 0.8670 | 0.8673 | 0.0291 | -0.8345 | 0/1 | n/a | 6.4456 | success |
+| vit_b32_cifar100 | 1 | 0.05 | dp_avg_eps8_K20 | 42 | 0.1425 | 0.8610 | 0.8610 | 0.8692 | 0.0545 | -0.7795 | 0/1 | n/a | 1.6125 | success |
+| vit_b32_cifar100 | 1 | 0.05 | dp_avg_eps8_K20 | 43 | 0.1278 | 0.8676 | 0.8676 | 0.8683 | 0.0444 | -0.7958 | 0/1 | n/a | 1.6107 | success |
+| vit_b32_cifar100 | 1 | 0.05 | dp_avg_eps8_K20 | 44 | 0.1529 | 0.8670 | 0.8670 | 0.8673 | 0.0593 | -0.7794 | 0/1 | n/a | 1.6114 | success |
+| vit_b32_cifar100 | 1 | 0.05 | labelled_probe_warmup | 42 | 0.4531 | 0.8610 | 0.8610 | 0.8692 | 0.3924 | -0.4662 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | labelled_probe_warmup | 43 | 0.5007 | 0.8676 | 0.8676 | 0.8683 | 0.4211 | -0.4269 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | labelled_probe_warmup | 44 | 0.4847 | 0.8670 | 0.8670 | 0.8673 | 0.4062 | -0.4400 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | no_phase0 | 42 | 0.0399 | 0.8610 | 0.8610 | 0.8692 | 0.0121 | -0.8834 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | no_phase0 | 43 | 0.0338 | 0.8676 | 0.8676 | 0.8683 | 0.0110 | -0.8956 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | no_phase0 | 44 | 0.0429 | 0.8670 | 0.8670 | 0.8673 | 0.0072 | -0.8852 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | raw_union_K20 | 42 | 0.7873 | 0.8610 | 0.8610 | 0.8692 | 0.7815 | -0.1292 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | raw_union_K20 | 43 | 0.7962 | 0.8676 | 0.8676 | 0.8683 | 0.7900 | -0.1296 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | raw_union_K20 | 44 | 0.7929 | 0.8670 | 0.8670 | 0.8673 | 0.7863 | -0.1315 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | warmup_only_labelled | 42 | 0.3924 | 0.8610 | 0.8610 | 0.8692 | 0.3924 | -0.5292 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | warmup_only_labelled | 43 | 0.4211 | 0.8676 | 0.8676 | 0.8683 | 0.4211 | -0.5075 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.05 | warmup_only_labelled | 44 | 0.4062 | 0.8670 | 0.8670 | 0.8673 | 0.4062 | -0.5239 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | dp_avg_eps2_K20 | 42 | 0.0990 | 0.8619 | 0.8619 | 0.8692 | 0.0332 | -0.8269 | 0/1 | n/a | 6.4499 | success |
+| vit_b32_cifar100 | 1 | 0.1 | dp_avg_eps2_K20 | 43 | 0.0808 | 0.8633 | 0.8633 | 0.8683 | 0.0235 | -0.8479 | 0/1 | n/a | 6.4427 | success |
+| vit_b32_cifar100 | 1 | 0.1 | dp_avg_eps2_K20 | 44 | 0.1028 | 0.8641 | 0.8641 | 0.8673 | 0.0283 | -0.8283 | 0/1 | n/a | 6.4456 | success |
+| vit_b32_cifar100 | 1 | 0.1 | dp_avg_eps8_K20 | 42 | 0.1422 | 0.8619 | 0.8619 | 0.8692 | 0.0566 | -0.7814 | 0/1 | n/a | 1.6125 | success |
+| vit_b32_cifar100 | 1 | 0.1 | dp_avg_eps8_K20 | 43 | 0.1283 | 0.8633 | 0.8633 | 0.8683 | 0.0426 | -0.7991 | 0/1 | n/a | 1.6107 | success |
+| vit_b32_cifar100 | 1 | 0.1 | dp_avg_eps8_K20 | 44 | 0.1554 | 0.8641 | 0.8641 | 0.8673 | 0.0595 | -0.7738 | 0/1 | n/a | 1.6114 | success |
+| vit_b32_cifar100 | 1 | 0.1 | labelled_probe_warmup | 42 | 0.4544 | 0.8619 | 0.8619 | 0.8692 | 0.3924 | -0.4665 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | labelled_probe_warmup | 43 | 0.5034 | 0.8633 | 0.8633 | 0.8683 | 0.4211 | -0.4266 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | labelled_probe_warmup | 44 | 0.4828 | 0.8641 | 0.8641 | 0.8673 | 0.4062 | -0.4362 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | no_phase0 | 42 | 0.0414 | 0.8619 | 0.8619 | 0.8692 | 0.0121 | -0.8845 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | no_phase0 | 43 | 0.0344 | 0.8633 | 0.8633 | 0.8683 | 0.0110 | -0.8981 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | no_phase0 | 44 | 0.0470 | 0.8641 | 0.8641 | 0.8673 | 0.0072 | -0.8782 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | raw_union_K20 | 42 | 0.7900 | 0.8619 | 0.8619 | 0.8692 | 0.7869 | -0.1287 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | raw_union_K20 | 43 | 0.7910 | 0.8633 | 0.8633 | 0.8683 | 0.7824 | -0.1291 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | raw_union_K20 | 44 | 0.7926 | 0.8641 | 0.8641 | 0.8673 | 0.7848 | -0.1253 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | warmup_only_labelled | 42 | 0.3924 | 0.8619 | 0.8619 | 0.8692 | 0.3924 | -0.5307 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | warmup_only_labelled | 43 | 0.4211 | 0.8633 | 0.8633 | 0.8683 | 0.4211 | -0.5087 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.1 | warmup_only_labelled | 44 | 0.4062 | 0.8641 | 0.8641 | 0.8673 | 0.4062 | -0.5205 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | dp_avg_eps2_K20 | 42 | 0.0976 | 0.8644 | 0.8644 | 0.8692 | 0.0327 | -0.8295 | 0/1 | n/a | 6.4499 | success |
+| vit_b32_cifar100 | 1 | 0.3 | dp_avg_eps2_K20 | 43 | 0.0816 | 0.8661 | 0.8661 | 0.8683 | 0.0227 | -0.8488 | 0/1 | n/a | 6.4427 | success |
+| vit_b32_cifar100 | 1 | 0.3 | dp_avg_eps2_K20 | 44 | 0.1036 | 0.8620 | 0.8620 | 0.8673 | 0.0283 | -0.8237 | 0/1 | n/a | 6.4456 | success |
+| vit_b32_cifar100 | 1 | 0.3 | dp_avg_eps8_K20 | 42 | 0.1429 | 0.8644 | 0.8644 | 0.8692 | 0.0558 | -0.7831 | 0/1 | n/a | 1.6125 | success |
+| vit_b32_cifar100 | 1 | 0.3 | dp_avg_eps8_K20 | 43 | 0.1251 | 0.8661 | 0.8661 | 0.8683 | 0.0431 | -0.8002 | 0/1 | n/a | 1.6107 | success |
+| vit_b32_cifar100 | 1 | 0.3 | dp_avg_eps8_K20 | 44 | 0.1559 | 0.8620 | 0.8620 | 0.8673 | 0.0600 | -0.7719 | 0/1 | n/a | 1.6114 | success |
+| vit_b32_cifar100 | 1 | 0.3 | labelled_probe_warmup | 42 | 0.4533 | 0.8644 | 0.8644 | 0.8692 | 0.3924 | -0.4691 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | labelled_probe_warmup | 43 | 0.5029 | 0.8661 | 0.8661 | 0.8683 | 0.4211 | -0.4268 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | labelled_probe_warmup | 44 | 0.4808 | 0.8620 | 0.8620 | 0.8673 | 0.4062 | -0.4347 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | no_phase0 | 42 | 0.0396 | 0.8644 | 0.8644 | 0.8692 | 0.0121 | -0.8877 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | no_phase0 | 43 | 0.0340 | 0.8661 | 0.8661 | 0.8683 | 0.0110 | -0.8967 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | no_phase0 | 44 | 0.0469 | 0.8620 | 0.8620 | 0.8673 | 0.0072 | -0.8756 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | raw_union_K20 | 42 | 0.7932 | 0.8644 | 0.8644 | 0.8692 | 0.7866 | -0.1312 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | raw_union_K20 | 43 | 0.7891 | 0.8661 | 0.8661 | 0.8683 | 0.7842 | -0.1311 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | raw_union_K20 | 44 | 0.7912 | 0.8620 | 0.8620 | 0.8673 | 0.7840 | -0.1227 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | warmup_only_labelled | 42 | 0.3924 | 0.8644 | 0.8644 | 0.8692 | 0.3924 | -0.5336 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | warmup_only_labelled | 43 | 0.4211 | 0.8661 | 0.8661 | 0.8683 | 0.4211 | -0.5084 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 0.3 | warmup_only_labelled | 44 | 0.4062 | 0.8620 | 0.8620 | 0.8673 | 0.4062 | -0.5176 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | dp_avg_eps2_K20 | 42 | 0.1006 | 0.8692 | 0.8692 | 0.8692 | 0.0323 | -0.8308 | 0/1 | n/a | 6.4499 | success |
+| vit_b32_cifar100 | 1 | 1.0 | dp_avg_eps2_K20 | 43 | 0.0813 | 0.8651 | 0.8651 | 0.8683 | 0.0242 | -0.8474 | 0/1 | n/a | 6.4427 | success |
+| vit_b32_cifar100 | 1 | 1.0 | dp_avg_eps2_K20 | 44 | 0.0985 | 0.8667 | 0.8667 | 0.8673 | 0.0300 | -0.8300 | 0/1 | n/a | 6.4456 | success |
+| vit_b32_cifar100 | 1 | 1.0 | dp_avg_eps8_K20 | 42 | 0.1463 | 0.8692 | 0.8692 | 0.8692 | 0.0551 | -0.7851 | 0/1 | n/a | 1.6125 | success |
+| vit_b32_cifar100 | 1 | 1.0 | dp_avg_eps8_K20 | 43 | 0.1273 | 0.8651 | 0.8651 | 0.8683 | 0.0437 | -0.7983 | 0/1 | n/a | 1.6107 | success |
+| vit_b32_cifar100 | 1 | 1.0 | dp_avg_eps8_K20 | 44 | 0.1510 | 0.8667 | 0.8667 | 0.8673 | 0.0605 | -0.7756 | 0/1 | n/a | 1.6114 | success |
+| vit_b32_cifar100 | 1 | 1.0 | labelled_probe_warmup | 42 | 0.4554 | 0.8692 | 0.8692 | 0.8692 | 0.3924 | -0.4707 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | labelled_probe_warmup | 43 | 0.5022 | 0.8651 | 0.8651 | 0.8683 | 0.4211 | -0.4274 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | labelled_probe_warmup | 44 | 0.4845 | 0.8667 | 0.8667 | 0.8673 | 0.4062 | -0.4359 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | no_phase0 | 42 | 0.0395 | 0.8692 | 0.8692 | 0.8692 | 0.0121 | -0.8911 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | no_phase0 | 43 | 0.0329 | 0.8651 | 0.8651 | 0.8683 | 0.0110 | -0.8969 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | no_phase0 | 44 | 0.0453 | 0.8667 | 0.8667 | 0.8673 | 0.0072 | -0.8809 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | raw_union_K20 | 42 | 0.7930 | 0.8692 | 0.8692 | 0.8692 | 0.7856 | -0.1329 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | raw_union_K20 | 43 | 0.7932 | 0.8651 | 0.8651 | 0.8683 | 0.7885 | -0.1300 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | raw_union_K20 | 44 | 0.7915 | 0.8667 | 0.8667 | 0.8673 | 0.7877 | -0.1259 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | warmup_only_labelled | 42 | 0.3924 | 0.8692 | 0.8692 | 0.8692 | 0.3924 | -0.5361 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | warmup_only_labelled | 43 | 0.4211 | 0.8651 | 0.8651 | 0.8683 | 0.4211 | -0.5072 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 1 | 1.0 | warmup_only_labelled | 44 | 0.4062 | 0.8667 | 0.8667 | 0.8673 | 0.4062 | -0.5203 | 0/1 | n/a | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | dp_avg_eps2_K20 | 42 | 0.0856 | 0.2177 | 0.2517 | 0.8692 | 0.0366 | -0.8907 | 0/5 | 0.0790 | 6.4499 | success |
+| vit_b32_cifar100 | 5 | 0.01 | dp_avg_eps2_K20 | 43 | 0.0684 | 0.1956 | 0.2348 | 0.8683 | 0.0244 | -0.9029 | 0/5 | 0.0668 | 6.4427 | success |
+| vit_b32_cifar100 | 5 | 0.01 | dp_avg_eps2_K20 | 44 | 0.0869 | 0.2183 | 0.2659 | 0.8673 | 0.0376 | -0.8968 | 0/5 | 0.0801 | 6.4456 | success |
+| vit_b32_cifar100 | 5 | 0.01 | dp_avg_eps8_K20 | 42 | 0.1222 | 0.2177 | 0.2517 | 0.8692 | 0.0531 | -0.8529 | 0/5 | 0.1171 | 1.6125 | success |
+| vit_b32_cifar100 | 5 | 0.01 | dp_avg_eps8_K20 | 43 | 0.1046 | 0.1956 | 0.2348 | 0.8683 | 0.0415 | -0.8644 | 0/5 | 0.1055 | 1.6107 | success |
+| vit_b32_cifar100 | 5 | 0.01 | dp_avg_eps8_K20 | 44 | 0.1300 | 0.2183 | 0.2659 | 0.8673 | 0.0575 | -0.8529 | 0/5 | 0.1285 | 1.6114 | success |
+| vit_b32_cifar100 | 5 | 0.01 | labelled_probe_warmup | 42 | 0.4333 | 0.2177 | 0.2517 | 0.8692 | 0.3924 | -0.5316 | 0/5 | 0.4267 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | labelled_probe_warmup | 43 | 0.4781 | 0.1956 | 0.2348 | 0.8683 | 0.4211 | -0.5012 | 0/5 | 0.4825 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | labelled_probe_warmup | 44 | 0.4654 | 0.2183 | 0.2659 | 0.8673 | 0.4062 | -0.5078 | 0/5 | 0.4628 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | no_phase0 | 42 | 0.0315 | 0.2177 | 0.2517 | 0.8692 | 0.0121 | -0.9463 | 0/5 | 0.0290 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | no_phase0 | 43 | 0.0265 | 0.1956 | 0.2348 | 0.8683 | 0.0110 | -0.9476 | 0/5 | 0.0271 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | no_phase0 | 44 | 0.0338 | 0.2183 | 0.2659 | 0.8673 | 0.0072 | -0.9461 | 0/5 | 0.0314 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | raw_union_K20 | 42 | 0.7980 | 0.2177 | 0.2517 | 0.8692 | 0.7924 | -0.1679 | 0/5 | 0.7949 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | raw_union_K20 | 43 | 0.7883 | 0.1956 | 0.2348 | 0.8683 | 0.7834 | -0.1712 | 0/5 | 0.7875 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | raw_union_K20 | 44 | 0.7950 | 0.2183 | 0.2659 | 0.8673 | 0.7890 | -0.1713 | 0/5 | 0.7920 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | warmup_only_labelled | 42 | 0.3924 | 0.2177 | 0.2517 | 0.8692 | 0.3924 | -0.5761 | 0/5 | 0.3879 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | warmup_only_labelled | 43 | 0.4211 | 0.1956 | 0.2348 | 0.8683 | 0.4211 | -0.5573 | 0/5 | 0.4260 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.01 | warmup_only_labelled | 44 | 0.4062 | 0.2183 | 0.2659 | 0.8673 | 0.4062 | -0.5675 | 0/5 | 0.4044 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | dp_avg_eps2_K20 | 42 | 0.0995 | 0.2850 | 0.3578 | 0.8692 | 0.0391 | -0.8764 | 0/5 | 0.0842 | 6.4499 | success |
+| vit_b32_cifar100 | 5 | 0.05 | dp_avg_eps2_K20 | 43 | 0.0804 | 0.2863 | 0.3340 | 0.8683 | 0.0300 | -0.8851 | 0/5 | 0.0775 | 6.4427 | success |
+| vit_b32_cifar100 | 5 | 0.05 | dp_avg_eps2_K20 | 44 | 0.1018 | 0.2902 | 0.3375 | 0.8673 | 0.0382 | -0.8746 | 0/5 | 0.0926 | 6.4456 | success |
+| vit_b32_cifar100 | 5 | 0.05 | dp_avg_eps8_K20 | 42 | 0.1288 | 0.2850 | 0.3578 | 0.8692 | 0.0570 | -0.8435 | 0/5 | 0.1204 | 1.6125 | success |
+| vit_b32_cifar100 | 5 | 0.05 | dp_avg_eps8_K20 | 43 | 0.1064 | 0.2863 | 0.3340 | 0.8683 | 0.0438 | -0.8572 | 0/5 | 0.1058 | 1.6107 | success |
+| vit_b32_cifar100 | 5 | 0.05 | dp_avg_eps8_K20 | 44 | 0.1323 | 0.2902 | 0.3375 | 0.8673 | 0.0597 | -0.8414 | 0/5 | 0.1255 | 1.6114 | success |
+| vit_b32_cifar100 | 5 | 0.05 | labelled_probe_warmup | 42 | 0.4358 | 0.2850 | 0.3578 | 0.8692 | 0.3924 | -0.5288 | 0/5 | 0.4499 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | labelled_probe_warmup | 43 | 0.4811 | 0.2863 | 0.3340 | 0.8683 | 0.4211 | -0.4981 | 0/5 | 0.4845 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | labelled_probe_warmup | 44 | 0.4676 | 0.2902 | 0.3375 | 0.8673 | 0.4062 | -0.4993 | 0/5 | 0.4508 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | no_phase0 | 42 | 0.0337 | 0.2850 | 0.3578 | 0.8692 | 0.0121 | -0.9396 | 0/5 | 0.0286 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | no_phase0 | 43 | 0.0267 | 0.2863 | 0.3340 | 0.8683 | 0.0110 | -0.9457 | 0/5 | 0.0296 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | no_phase0 | 44 | 0.0333 | 0.2902 | 0.3375 | 0.8673 | 0.0072 | -0.9406 | 0/5 | 0.0278 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | raw_union_K20 | 42 | 0.8002 | 0.2850 | 0.3578 | 0.8692 | 0.7939 | -0.1591 | 0/5 | 0.7900 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | raw_union_K20 | 43 | 0.8056 | 0.2863 | 0.3340 | 0.8683 | 0.7961 | -0.1544 | 0/5 | 0.8021 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | raw_union_K20 | 44 | 0.8018 | 0.2902 | 0.3375 | 0.8673 | 0.7976 | -0.1572 | 0/5 | 0.7942 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | warmup_only_labelled | 42 | 0.3924 | 0.2850 | 0.3578 | 0.8692 | 0.3924 | -0.5743 | 0/5 | 0.4151 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | warmup_only_labelled | 43 | 0.4211 | 0.2863 | 0.3340 | 0.8683 | 0.4211 | -0.5574 | 0/5 | 0.4268 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.05 | warmup_only_labelled | 44 | 0.4062 | 0.2902 | 0.3375 | 0.8673 | 0.4062 | -0.5626 | 0/5 | 0.3950 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | dp_avg_eps2_K20 | 42 | 0.1090 | 0.4141 | 0.4594 | 0.8692 | 0.0421 | -0.8648 | 0/5 | 0.1020 | 6.4499 | success |
+| vit_b32_cifar100 | 5 | 0.1 | dp_avg_eps2_K20 | 43 | 0.0850 | 0.3775 | 0.4852 | 0.8683 | 0.0315 | -0.8824 | 0/5 | 0.0702 | 6.4427 | success |
+| vit_b32_cifar100 | 5 | 0.1 | dp_avg_eps2_K20 | 44 | 0.1135 | 0.3806 | 0.4504 | 0.8673 | 0.0497 | -0.8612 | 0/5 | 0.1250 | 6.4456 | success |
+| vit_b32_cifar100 | 5 | 0.1 | dp_avg_eps8_K20 | 42 | 0.1336 | 0.4141 | 0.4594 | 0.8692 | 0.0574 | -0.8384 | 0/5 | 0.1330 | 1.6125 | success |
+| vit_b32_cifar100 | 5 | 0.1 | dp_avg_eps8_K20 | 43 | 0.1050 | 0.3775 | 0.4852 | 0.8683 | 0.0419 | -0.8594 | 0/5 | 0.0882 | 1.6107 | success |
+| vit_b32_cifar100 | 5 | 0.1 | dp_avg_eps8_K20 | 44 | 0.1411 | 0.3806 | 0.4504 | 0.8673 | 0.0638 | -0.8379 | 0/5 | 0.1603 | 1.6114 | success |
+| vit_b32_cifar100 | 5 | 0.1 | labelled_probe_warmup | 42 | 0.4405 | 0.4141 | 0.4594 | 0.8692 | 0.3924 | -0.5329 | 0/5 | 0.3864 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | labelled_probe_warmup | 43 | 0.4865 | 0.3775 | 0.4852 | 0.8683 | 0.4211 | -0.4896 | 0/5 | 0.4659 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | labelled_probe_warmup | 44 | 0.4698 | 0.3806 | 0.4504 | 0.8673 | 0.4062 | -0.4985 | 0/5 | 0.4826 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | no_phase0 | 42 | 0.0349 | 0.4141 | 0.4594 | 0.8692 | 0.0121 | -0.9388 | 0/5 | 0.0283 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | no_phase0 | 43 | 0.0271 | 0.3775 | 0.4852 | 0.8683 | 0.0110 | -0.9428 | 0/5 | 0.0249 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | no_phase0 | 44 | 0.0355 | 0.3806 | 0.4504 | 0.8673 | 0.0072 | -0.9381 | 0/5 | 0.0363 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | raw_union_K20 | 42 | 0.8203 | 0.4141 | 0.4594 | 0.8692 | 0.8153 | -0.1398 | 0/5 | 0.7993 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | raw_union_K20 | 43 | 0.8040 | 0.3775 | 0.4852 | 0.8683 | 0.7962 | -0.1488 | 0/5 | 0.7951 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | raw_union_K20 | 44 | 0.8115 | 0.3806 | 0.4504 | 0.8673 | 0.8048 | -0.1462 | 0/5 | 0.8171 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | warmup_only_labelled | 42 | 0.3924 | 0.4141 | 0.4594 | 0.8692 | 0.3924 | -0.5843 | 0/5 | 0.3199 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | warmup_only_labelled | 43 | 0.4211 | 0.3775 | 0.4852 | 0.8683 | 0.4211 | -0.5517 | 0/5 | 0.3848 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.1 | warmup_only_labelled | 44 | 0.4062 | 0.3806 | 0.4504 | 0.8673 | 0.4062 | -0.5660 | 0/5 | 0.4247 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | dp_avg_eps2_K20 | 42 | 0.1191 | 0.5658 | 0.5969 | 0.8692 | 0.0476 | -0.8385 | 0/5 | 0.1068 | 6.4499 | success |
+| vit_b32_cifar100 | 5 | 0.3 | dp_avg_eps2_K20 | 43 | 0.1049 | 0.5837 | 0.6306 | 0.8683 | 0.0371 | -0.8566 | 0/5 | 0.0779 | 6.4427 | success |
+| vit_b32_cifar100 | 5 | 0.3 | dp_avg_eps2_K20 | 44 | 0.1240 | 0.5729 | 0.5956 | 0.8673 | 0.0445 | -0.8424 | 0/5 | 0.1056 | 6.4456 | success |
+| vit_b32_cifar100 | 5 | 0.3 | dp_avg_eps8_K20 | 42 | 0.1375 | 0.5658 | 0.5969 | 0.8692 | 0.0584 | -0.8227 | 0/5 | 0.1362 | 1.6125 | success |
+| vit_b32_cifar100 | 5 | 0.3 | dp_avg_eps8_K20 | 43 | 0.1177 | 0.5837 | 0.6306 | 0.8683 | 0.0435 | -0.8397 | 0/5 | 0.0991 | 1.6107 | success |
+| vit_b32_cifar100 | 5 | 0.3 | dp_avg_eps8_K20 | 44 | 0.1469 | 0.5729 | 0.5956 | 0.8673 | 0.0596 | -0.8227 | 0/5 | 0.1392 | 1.6114 | success |
+| vit_b32_cifar100 | 5 | 0.3 | labelled_probe_warmup | 42 | 0.4461 | 0.5658 | 0.5969 | 0.8692 | 0.3924 | -0.5133 | 0/5 | 0.4297 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | labelled_probe_warmup | 43 | 0.4916 | 0.5837 | 0.6306 | 0.8683 | 0.4211 | -0.4696 | 0/5 | 0.4927 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | labelled_probe_warmup | 44 | 0.4781 | 0.5729 | 0.5956 | 0.8673 | 0.4062 | -0.4868 | 0/5 | 0.4787 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | no_phase0 | 42 | 0.0350 | 0.5658 | 0.5969 | 0.8692 | 0.0121 | -0.9263 | 0/5 | 0.0352 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | no_phase0 | 43 | 0.0316 | 0.5837 | 0.6306 | 0.8683 | 0.0110 | -0.9354 | 0/5 | 0.0205 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | no_phase0 | 44 | 0.0370 | 0.5729 | 0.5956 | 0.8673 | 0.0072 | -0.9285 | 0/5 | 0.0314 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | raw_union_K20 | 42 | 0.8328 | 0.5658 | 0.5969 | 0.8692 | 0.8263 | -0.1089 | 0/5 | 0.8430 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | raw_union_K20 | 43 | 0.8284 | 0.5837 | 0.6306 | 0.8683 | 0.8234 | -0.1129 | 0/5 | 0.8244 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | raw_union_K20 | 44 | 0.8332 | 0.5729 | 0.5956 | 0.8673 | 0.8300 | -0.1140 | 0/5 | 0.8328 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | warmup_only_labelled | 42 | 0.3924 | 0.5658 | 0.5969 | 0.8692 | 0.3924 | -0.5699 | 0/5 | 0.3713 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | warmup_only_labelled | 43 | 0.4211 | 0.5837 | 0.6306 | 0.8683 | 0.4211 | -0.5407 | 0/5 | 0.4107 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 0.3 | warmup_only_labelled | 44 | 0.4062 | 0.5729 | 0.5956 | 0.8673 | 0.4062 | -0.5620 | 0/5 | 0.4304 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | dp_avg_eps2_K20 | 42 | 0.1244 | 0.7579 | 0.7764 | 0.8692 | 0.0465 | -0.8253 | 0/5 | 0.1300 | 6.4499 | success |
+| vit_b32_cifar100 | 5 | 1.0 | dp_avg_eps2_K20 | 43 | 0.1086 | 0.7650 | 0.7815 | 0.8683 | 0.0402 | -0.8352 | 0/5 | 0.1300 | 6.4427 | success |
+| vit_b32_cifar100 | 5 | 1.0 | dp_avg_eps2_K20 | 44 | 0.1394 | 0.7532 | 0.7670 | 0.8673 | 0.0521 | -0.8164 | 0/5 | 0.1200 | 6.4456 | success |
+| vit_b32_cifar100 | 5 | 1.0 | dp_avg_eps8_K20 | 42 | 0.1394 | 0.7579 | 0.7764 | 0.8692 | 0.0586 | -0.8080 | 0/5 | 0.1450 | 1.6125 | success |
+| vit_b32_cifar100 | 5 | 1.0 | dp_avg_eps8_K20 | 43 | 0.1220 | 0.7650 | 0.7815 | 0.8683 | 0.0454 | -0.8227 | 0/5 | 0.2150 | 1.6107 | success |
+| vit_b32_cifar100 | 5 | 1.0 | dp_avg_eps8_K20 | 44 | 0.1536 | 0.7532 | 0.7670 | 0.8673 | 0.0627 | -0.8046 | 0/5 | 0.1000 | 1.6114 | success |
+| vit_b32_cifar100 | 5 | 1.0 | labelled_probe_warmup | 42 | 0.4499 | 0.7579 | 0.7764 | 0.8692 | 0.3924 | -0.4952 | 0/5 | 0.0800 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | labelled_probe_warmup | 43 | 0.4985 | 0.7650 | 0.7815 | 0.8683 | 0.4211 | -0.4538 | 0/5 | 0.7350 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | labelled_probe_warmup | 44 | 0.4788 | 0.7532 | 0.7670 | 0.8673 | 0.4062 | -0.4714 | 0/5 | 0.6900 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | no_phase0 | 42 | 0.0352 | 0.7579 | 0.7764 | 0.8692 | 0.0121 | -0.9153 | 0/5 | 0.0150 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | no_phase0 | 43 | 0.0310 | 0.7650 | 0.7815 | 0.8683 | 0.0110 | -0.9235 | 0/5 | 0.0300 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | no_phase0 | 44 | 0.0395 | 0.7532 | 0.7670 | 0.8673 | 0.0072 | -0.9142 | 0/5 | 0.0100 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | raw_union_K20 | 42 | 0.8410 | 0.7579 | 0.7764 | 0.8692 | 0.8382 | -0.0847 | 0/5 | 0.7100 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | raw_union_K20 | 43 | 0.8443 | 0.7650 | 0.7815 | 0.8683 | 0.8410 | -0.0871 | 0/5 | 0.9000 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | raw_union_K20 | 44 | 0.8387 | 0.7532 | 0.7670 | 0.8673 | 0.8352 | -0.0911 | 0/5 | 0.8250 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | warmup_only_labelled | 42 | 0.3924 | 0.7579 | 0.7764 | 0.8692 | 0.3924 | -0.5568 | 0/5 | 0.0000 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | warmup_only_labelled | 43 | 0.4211 | 0.7650 | 0.7815 | 0.8683 | 0.4211 | -0.5305 | 0/5 | 0.5750 | 0.0000 | success |
+| vit_b32_cifar100 | 5 | 1.0 | warmup_only_labelled | 44 | 0.4062 | 0.7532 | 0.7670 | 0.8673 | 0.4062 | -0.5499 | 0/5 | 0.5900 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | dp_avg_eps2_K20 | 42 | 0.0720 | 0.1292 | 0.1629 | 0.8692 | 0.0354 | -0.9105 | 0/10 | 0.0700 | 6.4499 | success |
+| vit_b32_cifar100 | 10 | 0.01 | dp_avg_eps2_K20 | 43 | 0.0588 | 0.1211 | 0.1498 | 0.8683 | 0.0297 | -0.9255 | 0/10 | 0.0580 | 6.4427 | success |
+| vit_b32_cifar100 | 10 | 0.01 | dp_avg_eps2_K20 | 44 | 0.0783 | 0.1234 | 0.1484 | 0.8673 | 0.0365 | -0.9110 | 0/10 | 0.0760 | 6.4456 | success |
+| vit_b32_cifar100 | 10 | 0.01 | dp_avg_eps8_K20 | 42 | 0.1077 | 0.1292 | 0.1629 | 0.8692 | 0.0609 | -0.8778 | 0/10 | 0.1056 | 1.6125 | success |
+| vit_b32_cifar100 | 10 | 0.01 | dp_avg_eps8_K20 | 43 | 0.0843 | 0.1211 | 0.1498 | 0.8683 | 0.0465 | -0.8979 | 0/10 | 0.0832 | 1.6107 | success |
+| vit_b32_cifar100 | 10 | 0.01 | dp_avg_eps8_K20 | 44 | 0.1129 | 0.1234 | 0.1484 | 0.8673 | 0.0649 | -0.8788 | 0/10 | 0.1123 | 1.6114 | success |
+| vit_b32_cifar100 | 10 | 0.01 | labelled_probe_warmup | 42 | 0.4236 | 0.1292 | 0.1629 | 0.8692 | 0.3924 | -0.5429 | 0/10 | 0.4172 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | labelled_probe_warmup | 43 | 0.4635 | 0.1211 | 0.1498 | 0.8683 | 0.4211 | -0.5205 | 0/10 | 0.4631 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | labelled_probe_warmup | 44 | 0.4423 | 0.1234 | 0.1484 | 0.8673 | 0.4062 | -0.5378 | 0/10 | 0.4340 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | no_phase0 | 42 | 0.0239 | 0.1292 | 0.1629 | 0.8692 | 0.0121 | -0.9604 | 0/10 | 0.0239 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | no_phase0 | 43 | 0.0215 | 0.1211 | 0.1498 | 0.8683 | 0.0110 | -0.9660 | 0/10 | 0.0217 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | no_phase0 | 44 | 0.0221 | 0.1234 | 0.1484 | 0.8673 | 0.0072 | -0.9656 | 0/10 | 0.0223 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | raw_union_K20 | 42 | 0.7935 | 0.1292 | 0.1629 | 0.8692 | 0.7869 | -0.1791 | 0/10 | 0.7910 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | raw_union_K20 | 43 | 0.7976 | 0.1211 | 0.1498 | 0.8683 | 0.7924 | -0.1829 | 0/10 | 0.7952 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | raw_union_K20 | 44 | 0.7889 | 0.1234 | 0.1484 | 0.8673 | 0.7837 | -0.1831 | 0/10 | 0.7857 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | warmup_only_labelled | 42 | 0.3924 | 0.1292 | 0.1629 | 0.8692 | 0.3924 | -0.5711 | 0/10 | 0.3872 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | warmup_only_labelled | 43 | 0.4211 | 0.1211 | 0.1498 | 0.8683 | 0.4211 | -0.5599 | 0/10 | 0.4211 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.01 | warmup_only_labelled | 44 | 0.4062 | 0.1234 | 0.1484 | 0.8673 | 0.4062 | -0.5805 | 0/10 | 0.3994 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | dp_avg_eps2_K20 | 42 | 0.0934 | 0.2243 | 0.2955 | 0.8692 | 0.0369 | -0.8879 | 0/10 | 0.0878 | 6.4499 | success |
+| vit_b32_cifar100 | 10 | 0.05 | dp_avg_eps2_K20 | 43 | 0.0870 | 0.2262 | 0.2702 | 0.8683 | 0.0356 | -0.8945 | 0/10 | 0.0817 | 6.4427 | success |
+| vit_b32_cifar100 | 10 | 0.05 | dp_avg_eps2_K20 | 44 | 0.1086 | 0.2283 | 0.3162 | 0.8673 | 0.0500 | -0.8698 | 0/10 | 0.1115 | 6.4456 | success |
+| vit_b32_cifar100 | 10 | 0.05 | dp_avg_eps8_K20 | 42 | 0.1149 | 0.2243 | 0.2955 | 0.8692 | 0.0550 | -0.8662 | 0/10 | 0.1099 | 1.6125 | success |
+| vit_b32_cifar100 | 10 | 0.05 | dp_avg_eps8_K20 | 43 | 0.1017 | 0.2262 | 0.2702 | 0.8683 | 0.0443 | -0.8795 | 0/10 | 0.0978 | 1.6107 | success |
+| vit_b32_cifar100 | 10 | 0.05 | dp_avg_eps8_K20 | 44 | 0.1261 | 0.2283 | 0.3162 | 0.8673 | 0.0626 | -0.8541 | 0/10 | 0.1290 | 1.6114 | success |
+| vit_b32_cifar100 | 10 | 0.05 | labelled_probe_warmup | 42 | 0.4332 | 0.2243 | 0.2955 | 0.8692 | 0.3924 | -0.5294 | 0/10 | 0.4364 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | labelled_probe_warmup | 43 | 0.4732 | 0.2262 | 0.2702 | 0.8683 | 0.4211 | -0.4900 | 0/10 | 0.4868 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | labelled_probe_warmup | 44 | 0.4541 | 0.2283 | 0.3162 | 0.8673 | 0.4062 | -0.5128 | 0/10 | 0.4531 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | no_phase0 | 42 | 0.0284 | 0.2243 | 0.2955 | 0.8692 | 0.0121 | -0.9525 | 0/10 | 0.0291 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | no_phase0 | 43 | 0.0246 | 0.2262 | 0.2702 | 0.8683 | 0.0110 | -0.9555 | 0/10 | 0.0234 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | no_phase0 | 44 | 0.0285 | 0.2283 | 0.3162 | 0.8673 | 0.0072 | -0.9501 | 0/10 | 0.0300 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | raw_union_K20 | 42 | 0.8104 | 0.2243 | 0.2955 | 0.8692 | 0.8044 | -0.1431 | 0/10 | 0.8053 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | raw_union_K20 | 43 | 0.8072 | 0.2262 | 0.2702 | 0.8683 | 0.8016 | -0.1471 | 0/10 | 0.8015 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | raw_union_K20 | 44 | 0.8143 | 0.2283 | 0.3162 | 0.8673 | 0.8106 | -0.1453 | 0/10 | 0.8129 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | warmup_only_labelled | 42 | 0.3924 | 0.2243 | 0.2955 | 0.8692 | 0.3924 | -0.5679 | 0/10 | 0.4035 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | warmup_only_labelled | 43 | 0.4211 | 0.2262 | 0.2702 | 0.8683 | 0.4211 | -0.5422 | 0/10 | 0.4357 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.05 | warmup_only_labelled | 44 | 0.4062 | 0.2283 | 0.3162 | 0.8673 | 0.4062 | -0.5624 | 0/10 | 0.4117 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | dp_avg_eps2_K20 | 42 | 0.1037 | 0.3173 | 0.3918 | 0.8692 | 0.0505 | -0.8733 | 0/10 | 0.0997 | 6.4499 | success |
+| vit_b32_cifar100 | 10 | 0.1 | dp_avg_eps2_K20 | 43 | 0.0891 | 0.2990 | 0.3456 | 0.8683 | 0.0366 | -0.8830 | 0/10 | 0.1124 | 6.4427 | success |
+| vit_b32_cifar100 | 10 | 0.1 | dp_avg_eps2_K20 | 44 | 0.1165 | 0.3236 | 0.4083 | 0.8673 | 0.0486 | -0.8592 | 0/10 | 0.1047 | 6.4456 | success |
+| vit_b32_cifar100 | 10 | 0.1 | dp_avg_eps8_K20 | 42 | 0.1169 | 0.3173 | 0.3918 | 0.8692 | 0.0561 | -0.8626 | 0/10 | 0.1154 | 1.6125 | success |
+| vit_b32_cifar100 | 10 | 0.1 | dp_avg_eps8_K20 | 43 | 0.1024 | 0.2990 | 0.3456 | 0.8683 | 0.0439 | -0.8718 | 0/10 | 0.1358 | 1.6107 | success |
+| vit_b32_cifar100 | 10 | 0.1 | dp_avg_eps8_K20 | 44 | 0.1340 | 0.3236 | 0.4083 | 0.8673 | 0.0635 | -0.8430 | 0/10 | 0.1222 | 1.6114 | success |
+| vit_b32_cifar100 | 10 | 0.1 | labelled_probe_warmup | 42 | 0.4338 | 0.3173 | 0.3918 | 0.8692 | 0.3924 | -0.5453 | 0/10 | 0.3817 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | labelled_probe_warmup | 43 | 0.4768 | 0.2990 | 0.3456 | 0.8683 | 0.4211 | -0.5073 | 0/10 | 0.4782 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | labelled_probe_warmup | 44 | 0.4600 | 0.3236 | 0.4083 | 0.8673 | 0.4062 | -0.5025 | 0/10 | 0.4202 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | no_phase0 | 42 | 0.0265 | 0.3173 | 0.3918 | 0.8692 | 0.0121 | -0.9500 | 0/10 | 0.0248 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | no_phase0 | 43 | 0.0264 | 0.2990 | 0.3456 | 0.8683 | 0.0110 | -0.9516 | 0/10 | 0.0440 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | no_phase0 | 44 | 0.0323 | 0.3236 | 0.4083 | 0.8673 | 0.0072 | -0.9390 | 0/10 | 0.0271 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | raw_union_K20 | 42 | 0.8231 | 0.3173 | 0.3918 | 0.8692 | 0.8189 | -0.1359 | 0/10 | 0.8296 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | raw_union_K20 | 43 | 0.8246 | 0.2990 | 0.3456 | 0.8683 | 0.8221 | -0.1322 | 0/10 | 0.8167 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | raw_union_K20 | 44 | 0.8316 | 0.3236 | 0.4083 | 0.8673 | 0.8294 | -0.1199 | 0/10 | 0.8219 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | warmup_only_labelled | 42 | 0.3924 | 0.3173 | 0.3918 | 0.8692 | 0.3924 | -0.5881 | 0/10 | 0.3476 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | warmup_only_labelled | 43 | 0.4211 | 0.2990 | 0.3456 | 0.8683 | 0.4211 | -0.5658 | 0/10 | 0.4308 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.1 | warmup_only_labelled | 44 | 0.4062 | 0.3236 | 0.4083 | 0.8673 | 0.4062 | -0.5612 | 0/10 | 0.3713 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | dp_avg_eps2_K20 | 42 | 0.1255 | 0.5070 | 0.5640 | 0.8692 | 0.0537 | -0.8363 | 0/10 | 0.1018 | 6.4499 | success |
+| vit_b32_cifar100 | 10 | 0.3 | dp_avg_eps2_K20 | 43 | 0.1120 | 0.4954 | 0.5474 | 0.8683 | 0.0444 | -0.8506 | 0/10 | 0.0873 | 6.4427 | success |
+| vit_b32_cifar100 | 10 | 0.3 | dp_avg_eps2_K20 | 44 | 0.1310 | 0.4917 | 0.5481 | 0.8673 | 0.0565 | -0.8386 | 0/10 | 0.1293 | 6.4456 | success |
+| vit_b32_cifar100 | 10 | 0.3 | dp_avg_eps8_K20 | 42 | 0.1354 | 0.5070 | 0.5640 | 0.8692 | 0.0563 | -0.8277 | 0/10 | 0.1107 | 1.6125 | success |
+| vit_b32_cifar100 | 10 | 0.3 | dp_avg_eps8_K20 | 43 | 0.1155 | 0.4954 | 0.5474 | 0.8683 | 0.0447 | -0.8452 | 0/10 | 0.0918 | 1.6107 | success |
+| vit_b32_cifar100 | 10 | 0.3 | dp_avg_eps8_K20 | 44 | 0.1434 | 0.4917 | 0.5481 | 0.8673 | 0.0635 | -0.8296 | 0/10 | 0.1441 | 1.6114 | success |
+| vit_b32_cifar100 | 10 | 0.3 | labelled_probe_warmup | 42 | 0.4415 | 0.5070 | 0.5640 | 0.8692 | 0.3924 | -0.5183 | 0/10 | 0.4182 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | labelled_probe_warmup | 43 | 0.4884 | 0.4954 | 0.5474 | 0.8683 | 0.4211 | -0.4746 | 0/10 | 0.4586 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | labelled_probe_warmup | 44 | 0.4715 | 0.4917 | 0.5481 | 0.8673 | 0.4062 | -0.4923 | 0/10 | 0.4887 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | no_phase0 | 42 | 0.0335 | 0.5070 | 0.5640 | 0.8692 | 0.0121 | -0.9320 | 0/10 | 0.0237 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | no_phase0 | 43 | 0.0315 | 0.4954 | 0.5474 | 0.8683 | 0.0110 | -0.9369 | 0/10 | 0.0239 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | no_phase0 | 44 | 0.0352 | 0.4917 | 0.5481 | 0.8673 | 0.0072 | -0.9322 | 0/10 | 0.0357 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | raw_union_K20 | 42 | 0.8427 | 0.5070 | 0.5640 | 0.8692 | 0.8400 | -0.0901 | 0/10 | 0.8334 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | raw_union_K20 | 43 | 0.8457 | 0.4954 | 0.5474 | 0.8683 | 0.8439 | -0.0904 | 0/10 | 0.8430 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | raw_union_K20 | 44 | 0.8402 | 0.4917 | 0.5481 | 0.8673 | 0.8358 | -0.0950 | 0/10 | 0.8250 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | warmup_only_labelled | 42 | 0.3924 | 0.5070 | 0.5640 | 0.8692 | 0.3924 | -0.5705 | 0/10 | 0.3722 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | warmup_only_labelled | 43 | 0.4211 | 0.4954 | 0.5474 | 0.8683 | 0.4211 | -0.5418 | 0/10 | 0.3963 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 0.3 | warmup_only_labelled | 44 | 0.4062 | 0.4917 | 0.5481 | 0.8673 | 0.4062 | -0.5603 | 0/10 | 0.4296 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | dp_avg_eps2_K20 | 42 | 0.1349 | 0.7064 | 0.7586 | 0.8692 | 0.0514 | -0.8186 | 0/10 | 0.1300 | 6.4499 | success |
+| vit_b32_cifar100 | 10 | 1.0 | dp_avg_eps2_K20 | 43 | 0.1188 | 0.7021 | 0.7556 | 0.8683 | 0.0419 | -0.8390 | 0/10 | 0.1200 | 6.4427 | success |
+| vit_b32_cifar100 | 10 | 1.0 | dp_avg_eps2_K20 | 44 | 0.1487 | 0.6989 | 0.7359 | 0.8673 | 0.0601 | -0.8161 | 0/10 | 0.1281 | 6.4456 | success |
+| vit_b32_cifar100 | 10 | 1.0 | dp_avg_eps8_K20 | 42 | 0.1401 | 0.7064 | 0.7586 | 0.8692 | 0.0572 | -0.8139 | 0/10 | 0.1414 | 1.6125 | success |
+| vit_b32_cifar100 | 10 | 1.0 | dp_avg_eps8_K20 | 43 | 0.1216 | 0.7021 | 0.7556 | 0.8683 | 0.0445 | -0.8320 | 0/10 | 0.1200 | 1.6107 | success |
+| vit_b32_cifar100 | 10 | 1.0 | dp_avg_eps8_K20 | 44 | 0.1538 | 0.6989 | 0.7359 | 0.8673 | 0.0648 | -0.8098 | 0/10 | 0.1344 | 1.6114 | success |
+| vit_b32_cifar100 | 10 | 1.0 | labelled_probe_warmup | 42 | 0.4486 | 0.7064 | 0.7586 | 0.8692 | 0.3924 | -0.5049 | 0/10 | 0.4458 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | labelled_probe_warmup | 43 | 0.4967 | 0.7021 | 0.7556 | 0.8683 | 0.4211 | -0.4633 | 0/10 | 0.4825 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | labelled_probe_warmup | 44 | 0.4789 | 0.6989 | 0.7359 | 0.8673 | 0.4062 | -0.4737 | 0/10 | 0.4075 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | no_phase0 | 42 | 0.0358 | 0.7064 | 0.7586 | 0.8692 | 0.0121 | -0.9228 | 0/10 | 0.0278 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | no_phase0 | 43 | 0.0320 | 0.7021 | 0.7556 | 0.8683 | 0.0110 | -0.9303 | 0/10 | 0.0300 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | no_phase0 | 44 | 0.0389 | 0.6989 | 0.7359 | 0.8673 | 0.0072 | -0.9198 | 0/10 | 0.0588 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | raw_union_K20 | 42 | 0.8547 | 0.7064 | 0.7586 | 0.8692 | 0.8524 | -0.0658 | 0/10 | 0.8389 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | raw_union_K20 | 43 | 0.8529 | 0.7021 | 0.7556 | 0.8683 | 0.8495 | -0.0669 | 0/10 | 0.8375 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | raw_union_K20 | 44 | 0.8510 | 0.6989 | 0.7359 | 0.8673 | 0.8461 | -0.0670 | 0/10 | 0.7937 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | warmup_only_labelled | 42 | 0.3924 | 0.7064 | 0.7586 | 0.8692 | 0.3924 | -0.5642 | 0/10 | 0.4122 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | warmup_only_labelled | 43 | 0.4211 | 0.7021 | 0.7556 | 0.8683 | 0.4211 | -0.5384 | 0/10 | 0.4225 | 0.0000 | success |
+| vit_b32_cifar100 | 10 | 1.0 | warmup_only_labelled | 44 | 0.4062 | 0.6989 | 0.7359 | 0.8673 | 0.4062 | -0.5522 | 0/10 | 0.3069 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | dp_avg_eps2_K20 | 42 | 0.0665 | 0.0833 | 0.1407 | 0.8692 | 0.0385 | -0.9157 | 0/20 | 0.0640 | 6.4499 | success |
+| vit_b32_cifar100 | 20 | 0.01 | dp_avg_eps2_K20 | 43 | 0.0527 | 0.0816 | 0.1250 | 0.8683 | 0.0315 | -0.9358 | 0/20 | 0.0518 | 6.4427 | success |
+| vit_b32_cifar100 | 20 | 0.01 | dp_avg_eps2_K20 | 44 | 0.0650 | 0.0787 | 0.1162 | 0.8673 | 0.0396 | -0.9210 | 0/20 | 0.0633 | 6.4456 | success |
+| vit_b32_cifar100 | 20 | 0.01 | dp_avg_eps8_K20 | 42 | 0.0911 | 0.0833 | 0.1407 | 0.8692 | 0.0575 | -0.8920 | 0/20 | 0.0894 | 1.6125 | success |
+| vit_b32_cifar100 | 20 | 0.01 | dp_avg_eps8_K20 | 43 | 0.0714 | 0.0816 | 0.1250 | 0.8683 | 0.0458 | -0.9153 | 0/20 | 0.0706 | 1.6107 | success |
+| vit_b32_cifar100 | 20 | 0.01 | dp_avg_eps8_K20 | 44 | 0.0985 | 0.0787 | 0.1162 | 0.8673 | 0.0648 | -0.8944 | 0/20 | 0.0973 | 1.6114 | success |
+| vit_b32_cifar100 | 20 | 0.01 | labelled_probe_warmup | 42 | 0.4139 | 0.0833 | 0.1407 | 0.8692 | 0.3924 | -0.5718 | 0/20 | 0.4171 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | labelled_probe_warmup | 43 | 0.4515 | 0.0816 | 0.1250 | 0.8683 | 0.4211 | -0.5402 | 0/20 | 0.4498 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | labelled_probe_warmup | 44 | 0.4361 | 0.0787 | 0.1162 | 0.8673 | 0.4062 | -0.5593 | 0/20 | 0.4382 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | no_phase0 | 42 | 0.0197 | 0.0833 | 0.1407 | 0.8692 | 0.0121 | -0.9651 | 0/20 | 0.0195 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | no_phase0 | 43 | 0.0184 | 0.0816 | 0.1250 | 0.8683 | 0.0110 | -0.9709 | 0/20 | 0.0183 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | no_phase0 | 44 | 0.0166 | 0.0787 | 0.1162 | 0.8673 | 0.0072 | -0.9702 | 0/20 | 0.0165 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | raw_union_K20 | 42 | 0.8005 | 0.0833 | 0.1407 | 0.8692 | 0.7959 | -0.1702 | 0/20 | 0.7990 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | raw_union_K20 | 43 | 0.8018 | 0.0816 | 0.1250 | 0.8683 | 0.7972 | -0.1698 | 0/20 | 0.8001 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | raw_union_K20 | 44 | 0.8032 | 0.0787 | 0.1162 | 0.8673 | 0.7991 | -0.1744 | 0/20 | 0.8014 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | warmup_only_labelled | 42 | 0.3924 | 0.0833 | 0.1407 | 0.8692 | 0.3924 | -0.5957 | 0/20 | 0.3955 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | warmup_only_labelled | 43 | 0.4211 | 0.0816 | 0.1250 | 0.8683 | 0.4211 | -0.5718 | 0/20 | 0.4197 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.01 | warmup_only_labelled | 44 | 0.4062 | 0.0787 | 0.1162 | 0.8673 | 0.4062 | -0.5890 | 0/20 | 0.4090 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | dp_avg_eps2_K20 | 42 | 0.0890 | 0.1869 | 0.2945 | 0.8692 | 0.0429 | -0.8896 | 0/20 | 0.0869 | 6.4499 | success |
+| vit_b32_cifar100 | 20 | 0.05 | dp_avg_eps2_K20 | 43 | 0.0812 | 0.1774 | 0.2208 | 0.8683 | 0.0425 | -0.8945 | 0/20 | 0.0783 | 6.4427 | success |
+| vit_b32_cifar100 | 20 | 0.05 | dp_avg_eps2_K20 | 44 | 0.1007 | 0.1828 | 0.2465 | 0.8673 | 0.0553 | -0.8776 | 0/20 | 0.0968 | 6.4456 | success |
+| vit_b32_cifar100 | 20 | 0.05 | dp_avg_eps8_K20 | 42 | 0.1032 | 0.1869 | 0.2945 | 0.8692 | 0.0586 | -0.8746 | 0/20 | 0.1007 | 1.6125 | success |
+| vit_b32_cifar100 | 20 | 0.05 | dp_avg_eps8_K20 | 43 | 0.0871 | 0.1774 | 0.2208 | 0.8683 | 0.0446 | -0.8891 | 0/20 | 0.0846 | 1.6107 | success |
+| vit_b32_cifar100 | 20 | 0.05 | dp_avg_eps8_K20 | 44 | 0.1123 | 0.1828 | 0.2465 | 0.8673 | 0.0629 | -0.8685 | 0/20 | 0.1107 | 1.6114 | success |
+| vit_b32_cifar100 | 20 | 0.05 | labelled_probe_warmup | 42 | 0.4262 | 0.1869 | 0.2945 | 0.8692 | 0.3924 | -0.5560 | 0/20 | 0.4337 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | labelled_probe_warmup | 43 | 0.4658 | 0.1774 | 0.2208 | 0.8683 | 0.4211 | -0.5108 | 0/20 | 0.4632 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | labelled_probe_warmup | 44 | 0.4465 | 0.1828 | 0.2465 | 0.8673 | 0.4062 | -0.5371 | 0/20 | 0.4417 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | no_phase0 | 42 | 0.0243 | 0.1869 | 0.2945 | 0.8692 | 0.0121 | -0.9516 | 0/20 | 0.0243 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | no_phase0 | 43 | 0.0219 | 0.1774 | 0.2208 | 0.8683 | 0.0110 | -0.9566 | 0/20 | 0.0208 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | no_phase0 | 44 | 0.0233 | 0.1828 | 0.2465 | 0.8673 | 0.0072 | -0.9539 | 0/20 | 0.0231 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | raw_union_K20 | 42 | 0.8330 | 0.1869 | 0.2945 | 0.8692 | 0.8307 | -0.1158 | 0/20 | 0.8355 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | raw_union_K20 | 43 | 0.8257 | 0.1774 | 0.2208 | 0.8683 | 0.8222 | -0.1233 | 0/20 | 0.8211 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | raw_union_K20 | 44 | 0.8249 | 0.1828 | 0.2465 | 0.8673 | 0.8198 | -0.1334 | 0/20 | 0.8211 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | warmup_only_labelled | 42 | 0.3924 | 0.1869 | 0.2945 | 0.8692 | 0.3924 | -0.5920 | 0/20 | 0.4022 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | warmup_only_labelled | 43 | 0.4211 | 0.1774 | 0.2208 | 0.8683 | 0.4211 | -0.5538 | 0/20 | 0.4197 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.05 | warmup_only_labelled | 44 | 0.4062 | 0.1828 | 0.2465 | 0.8673 | 0.4062 | -0.5791 | 0/20 | 0.4021 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | dp_avg_eps2_K20 | 42 | 0.1099 | 0.2749 | 0.3397 | 0.8692 | 0.0513 | -0.8560 | 0/20 | 0.0984 | 6.4499 | success |
+| vit_b32_cifar100 | 20 | 0.1 | dp_avg_eps2_K20 | 43 | 0.0921 | 0.2531 | 0.3139 | 0.8683 | 0.0462 | -0.8763 | 0/20 | 0.0933 | 6.4427 | success |
+| vit_b32_cifar100 | 20 | 0.1 | dp_avg_eps2_K20 | 44 | 0.1146 | 0.2531 | 0.3090 | 0.8673 | 0.0592 | -0.8591 | 0/20 | 0.1246 | 6.4456 | success |
+| vit_b32_cifar100 | 20 | 0.1 | dp_avg_eps8_K20 | 42 | 0.1164 | 0.2749 | 0.3397 | 0.8692 | 0.0574 | -0.8492 | 0/20 | 0.1064 | 1.6125 | success |
+| vit_b32_cifar100 | 20 | 0.1 | dp_avg_eps8_K20 | 43 | 0.0967 | 0.2531 | 0.3139 | 0.8683 | 0.0454 | -0.8705 | 0/20 | 0.0980 | 1.6107 | success |
+| vit_b32_cifar100 | 20 | 0.1 | dp_avg_eps8_K20 | 44 | 0.1224 | 0.2531 | 0.3090 | 0.8673 | 0.0642 | -0.8528 | 0/20 | 0.1323 | 1.6114 | success |
+| vit_b32_cifar100 | 20 | 0.1 | labelled_probe_warmup | 42 | 0.4300 | 0.2749 | 0.3397 | 0.8692 | 0.3924 | -0.5253 | 0/20 | 0.4094 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | labelled_probe_warmup | 43 | 0.4729 | 0.2531 | 0.3139 | 0.8683 | 0.4211 | -0.4963 | 0/20 | 0.4659 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | labelled_probe_warmup | 44 | 0.4526 | 0.2531 | 0.3090 | 0.8673 | 0.4062 | -0.5178 | 0/20 | 0.4465 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | no_phase0 | 42 | 0.0286 | 0.2749 | 0.3397 | 0.8692 | 0.0121 | -0.9389 | 0/20 | 0.0254 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | no_phase0 | 43 | 0.0238 | 0.2531 | 0.3139 | 0.8683 | 0.0110 | -0.9491 | 0/20 | 0.0226 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | no_phase0 | 44 | 0.0267 | 0.2531 | 0.3090 | 0.8673 | 0.0072 | -0.9447 | 0/20 | 0.0327 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | raw_union_K20 | 42 | 0.8427 | 0.2749 | 0.3397 | 0.8692 | 0.8378 | -0.1005 | 0/20 | 0.8253 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | raw_union_K20 | 43 | 0.8373 | 0.2531 | 0.3139 | 0.8683 | 0.8331 | -0.1010 | 0/20 | 0.8306 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | raw_union_K20 | 44 | 0.8419 | 0.2531 | 0.3090 | 0.8673 | 0.8402 | -0.1006 | 0/20 | 0.8450 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | warmup_only_labelled | 42 | 0.3924 | 0.2749 | 0.3397 | 0.8692 | 0.3924 | -0.5648 | 0/20 | 0.3730 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | warmup_only_labelled | 43 | 0.4211 | 0.2531 | 0.3139 | 0.8683 | 0.4211 | -0.5476 | 0/20 | 0.4179 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.1 | warmup_only_labelled | 44 | 0.4062 | 0.2531 | 0.3090 | 0.8673 | 0.4062 | -0.5685 | 0/20 | 0.3924 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | dp_avg_eps2_K20 | 42 | 0.1254 | 0.4483 | 0.5087 | 0.8692 | 0.0538 | -0.8276 | 0/20 | 0.1147 | 6.4499 | success |
+| vit_b32_cifar100 | 20 | 0.3 | dp_avg_eps2_K20 | 43 | 0.1049 | 0.4441 | 0.5281 | 0.8683 | 0.0427 | -0.8494 | 0/20 | 0.0935 | 6.4427 | success |
+| vit_b32_cifar100 | 20 | 0.3 | dp_avg_eps2_K20 | 44 | 0.1361 | 0.4403 | 0.5065 | 0.8673 | 0.0568 | -0.8219 | 0/20 | 0.1231 | 6.4456 | success |
+| vit_b32_cifar100 | 20 | 0.3 | dp_avg_eps8_K20 | 42 | 0.1287 | 0.4483 | 0.5087 | 0.8692 | 0.0557 | -0.8241 | 0/20 | 0.1172 | 1.6125 | success |
+| vit_b32_cifar100 | 20 | 0.3 | dp_avg_eps8_K20 | 43 | 0.1098 | 0.4441 | 0.5281 | 0.8683 | 0.0442 | -0.8456 | 0/20 | 0.0981 | 1.6107 | success |
+| vit_b32_cifar100 | 20 | 0.3 | dp_avg_eps8_K20 | 44 | 0.1407 | 0.4403 | 0.5065 | 0.8673 | 0.0614 | -0.8177 | 0/20 | 0.1255 | 1.6114 | success |
+| vit_b32_cifar100 | 20 | 0.3 | labelled_probe_warmup | 42 | 0.4413 | 0.4483 | 0.5087 | 0.8692 | 0.3924 | -0.5097 | 0/20 | 0.4328 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | labelled_probe_warmup | 43 | 0.4849 | 0.4441 | 0.5281 | 0.8683 | 0.4211 | -0.4787 | 0/20 | 0.4910 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | labelled_probe_warmup | 44 | 0.4686 | 0.4403 | 0.5065 | 0.8673 | 0.4062 | -0.4878 | 0/20 | 0.4587 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | no_phase0 | 42 | 0.0319 | 0.4483 | 0.5087 | 0.8692 | 0.0121 | -0.9242 | 0/20 | 0.0281 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | no_phase0 | 43 | 0.0295 | 0.4441 | 0.5281 | 0.8683 | 0.0110 | -0.9331 | 0/20 | 0.0251 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | no_phase0 | 44 | 0.0348 | 0.4403 | 0.5065 | 0.8673 | 0.0072 | -0.9218 | 0/20 | 0.0287 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | raw_union_K20 | 42 | 0.8557 | 0.4483 | 0.5087 | 0.8692 | 0.8514 | -0.0591 | 0/20 | 0.8478 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | raw_union_K20 | 43 | 0.8539 | 0.4441 | 0.5281 | 0.8683 | 0.8500 | -0.0627 | 0/20 | 0.8591 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | raw_union_K20 | 44 | 0.8511 | 0.4403 | 0.5065 | 0.8673 | 0.8483 | -0.0613 | 0/20 | 0.8424 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | warmup_only_labelled | 42 | 0.3924 | 0.4483 | 0.5087 | 0.8692 | 0.3924 | -0.5634 | 0/20 | 0.3865 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | warmup_only_labelled | 43 | 0.4211 | 0.4441 | 0.5281 | 0.8683 | 0.4211 | -0.5427 | 0/20 | 0.4217 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 0.3 | warmup_only_labelled | 44 | 0.4062 | 0.4403 | 0.5065 | 0.8673 | 0.4062 | -0.5551 | 0/20 | 0.3957 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | dp_avg_eps2_K20 | 42 | 0.1331 | 0.6264 | 0.6728 | 0.8692 | 0.0547 | -0.8158 | 0/20 | 0.1457 | 6.4499 | success |
+| vit_b32_cifar100 | 20 | 1.0 | dp_avg_eps2_K20 | 43 | 0.1149 | 0.6286 | 0.6616 | 0.8683 | 0.0424 | -0.8309 | 0/20 | 0.1238 | 6.4427 | success |
+| vit_b32_cifar100 | 20 | 1.0 | dp_avg_eps2_K20 | 44 | 0.1508 | 0.6310 | 0.6876 | 0.8673 | 0.0648 | -0.8032 | 0/20 | 0.2041 | 6.4456 | success |
+| vit_b32_cifar100 | 20 | 1.0 | dp_avg_eps8_K20 | 42 | 0.1348 | 0.6264 | 0.6728 | 0.8692 | 0.0566 | -0.8129 | 0/20 | 0.1540 | 1.6125 | success |
+| vit_b32_cifar100 | 20 | 1.0 | dp_avg_eps8_K20 | 43 | 0.1179 | 0.6286 | 0.6616 | 0.8683 | 0.0442 | -0.8270 | 0/20 | 0.1281 | 1.6107 | success |
+| vit_b32_cifar100 | 20 | 1.0 | dp_avg_eps8_K20 | 44 | 0.1523 | 0.6310 | 0.6876 | 0.8673 | 0.0642 | -0.8047 | 0/20 | 0.2035 | 1.6114 | success |
+| vit_b32_cifar100 | 20 | 1.0 | labelled_probe_warmup | 42 | 0.4484 | 0.6264 | 0.6728 | 0.8692 | 0.3924 | -0.4981 | 0/20 | 0.5063 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | labelled_probe_warmup | 43 | 0.4967 | 0.6286 | 0.6616 | 0.8683 | 0.4211 | -0.4571 | 0/20 | 0.4678 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | labelled_probe_warmup | 44 | 0.4785 | 0.6310 | 0.6876 | 0.8673 | 0.4062 | -0.4696 | 0/20 | 0.5145 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | no_phase0 | 42 | 0.0351 | 0.6264 | 0.6728 | 0.8692 | 0.0121 | -0.9183 | 0/20 | 0.0380 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | no_phase0 | 43 | 0.0314 | 0.6286 | 0.6616 | 0.8683 | 0.0110 | -0.9226 | 0/20 | 0.0438 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | no_phase0 | 44 | 0.0372 | 0.6310 | 0.6876 | 0.8673 | 0.0072 | -0.9144 | 0/20 | 0.0495 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | raw_union_K20 | 42 | 0.8582 | 0.6264 | 0.6728 | 0.8692 | 0.8557 | -0.0372 | 0/20 | 0.8556 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | raw_union_K20 | 43 | 0.8627 | 0.6286 | 0.6616 | 0.8683 | 0.8610 | -0.0348 | 0/20 | 0.8531 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | raw_union_K20 | 44 | 0.8613 | 0.6310 | 0.6876 | 0.8673 | 0.8587 | -0.0338 | 0/20 | 0.8687 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | warmup_only_labelled | 42 | 0.3924 | 0.6264 | 0.6728 | 0.8692 | 0.3924 | -0.5574 | 0/20 | 0.4355 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | warmup_only_labelled | 43 | 0.4211 | 0.6286 | 0.6616 | 0.8683 | 0.4211 | -0.5318 | 0/20 | 0.3779 | 0.0000 | success |
+| vit_b32_cifar100 | 20 | 1.0 | warmup_only_labelled | 44 | 0.4062 | 0.6310 | 0.6876 | 0.8673 | 0.4062 | -0.5474 | 0/20 | 0.3880 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | dp_avg_eps2_K20 | 42 | 0.0668 | 0.0485 | 0.1127 | 0.8692 | 0.0460 | -0.9022 | 0/50 | 0.0657 | 6.4499 | success |
+| vit_b32_cifar100 | 50 | 0.01 | dp_avg_eps2_K20 | 43 | 0.0555 | 0.0469 | 0.1023 | 0.8683 | 0.0369 | -0.9183 | 0/50 | 0.0552 | 6.4427 | success |
+| vit_b32_cifar100 | 50 | 0.01 | dp_avg_eps2_K20 | 44 | 0.0705 | 0.0498 | 0.1107 | 0.8673 | 0.0501 | -0.8949 | 0/50 | 0.0699 | 6.4456 | success |
+| vit_b32_cifar100 | 50 | 0.01 | dp_avg_eps8_K20 | 42 | 0.0783 | 0.0485 | 0.1127 | 0.8692 | 0.0569 | -0.8853 | 0/50 | 0.0775 | 1.6125 | success |
+| vit_b32_cifar100 | 50 | 0.01 | dp_avg_eps8_K20 | 43 | 0.0633 | 0.0469 | 0.1023 | 0.8683 | 0.0445 | -0.9079 | 0/50 | 0.0632 | 1.6107 | success |
+| vit_b32_cifar100 | 50 | 0.01 | dp_avg_eps8_K20 | 44 | 0.0845 | 0.0498 | 0.1107 | 0.8673 | 0.0613 | -0.8825 | 0/50 | 0.0842 | 1.6114 | success |
+| vit_b32_cifar100 | 50 | 0.01 | labelled_probe_warmup | 42 | 0.4077 | 0.0485 | 0.1127 | 0.8692 | 0.3924 | -0.5702 | 0/50 | 0.4069 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | labelled_probe_warmup | 43 | 0.4446 | 0.0469 | 0.1023 | 0.8683 | 0.4211 | -0.5192 | 0/50 | 0.4447 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | labelled_probe_warmup | 44 | 0.4298 | 0.0498 | 0.1107 | 0.8673 | 0.4062 | -0.5269 | 0/50 | 0.4297 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | no_phase0 | 42 | 0.0169 | 0.0485 | 0.1127 | 0.8692 | 0.0121 | -0.9554 | 0/50 | 0.0167 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | no_phase0 | 43 | 0.0167 | 0.0469 | 0.1023 | 0.8683 | 0.0110 | -0.9560 | 0/50 | 0.0162 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | no_phase0 | 44 | 0.0144 | 0.0498 | 0.1107 | 0.8673 | 0.0072 | -0.9569 | 0/50 | 0.0144 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | raw_union_K20 | 42 | 0.8097 | 0.0485 | 0.1127 | 0.8692 | 0.8078 | -0.1358 | 3/50 | 0.8079 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | raw_union_K20 | 43 | 0.8144 | 0.0469 | 0.1023 | 0.8683 | 0.8113 | -0.1351 | 2/50 | 0.8138 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | raw_union_K20 | 44 | 0.8147 | 0.0498 | 0.1107 | 0.8673 | 0.8109 | -0.1265 | 2/50 | 0.8127 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | warmup_only_labelled | 42 | 0.3924 | 0.0485 | 0.1127 | 0.8692 | 0.3924 | -0.5875 | 0/50 | 0.3917 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | warmup_only_labelled | 43 | 0.4211 | 0.0469 | 0.1023 | 0.8683 | 0.4211 | -0.5402 | 0/50 | 0.4212 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.01 | warmup_only_labelled | 44 | 0.4062 | 0.0498 | 0.1107 | 0.8673 | 0.4062 | -0.5504 | 0/50 | 0.4064 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | dp_avg_eps2_K20 | 42 | 0.0954 | 0.1277 | 0.2057 | 0.8692 | 0.0565 | -0.8436 | 0/50 | 0.0941 | 6.4499 | success |
+| vit_b32_cifar100 | 50 | 0.05 | dp_avg_eps2_K20 | 43 | 0.0799 | 0.1302 | 0.2195 | 0.8683 | 0.0420 | -0.8606 | 0/50 | 0.0793 | 6.4427 | success |
+| vit_b32_cifar100 | 50 | 0.05 | dp_avg_eps2_K20 | 44 | 0.1101 | 0.1324 | 0.2203 | 0.8673 | 0.0638 | -0.8341 | 0/50 | 0.1075 | 6.4456 | success |
+| vit_b32_cifar100 | 50 | 0.05 | dp_avg_eps8_K20 | 42 | 0.1002 | 0.1277 | 0.2057 | 0.8692 | 0.0577 | -0.8390 | 0/50 | 0.0988 | 1.6125 | success |
+| vit_b32_cifar100 | 50 | 0.05 | dp_avg_eps8_K20 | 43 | 0.0801 | 0.1302 | 0.2195 | 0.8683 | 0.0452 | -0.8573 | 0/50 | 0.0796 | 1.6107 | success |
+| vit_b32_cifar100 | 50 | 0.05 | dp_avg_eps8_K20 | 44 | 0.1113 | 0.1324 | 0.2203 | 0.8673 | 0.0641 | -0.8330 | 0/50 | 0.1090 | 1.6114 | success |
+| vit_b32_cifar100 | 50 | 0.05 | labelled_probe_warmup | 42 | 0.4201 | 0.1277 | 0.2057 | 0.8692 | 0.3924 | -0.5039 | 0/50 | 0.4193 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | labelled_probe_warmup | 43 | 0.4603 | 0.1302 | 0.2195 | 0.8683 | 0.4211 | -0.4856 | 0/50 | 0.4568 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | labelled_probe_warmup | 44 | 0.4406 | 0.1324 | 0.2203 | 0.8673 | 0.4062 | -0.4989 | 0/50 | 0.4320 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | no_phase0 | 42 | 0.0223 | 0.1277 | 0.2057 | 0.8692 | 0.0121 | -0.9190 | 0/50 | 0.0228 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | no_phase0 | 43 | 0.0197 | 0.1302 | 0.2195 | 0.8683 | 0.0110 | -0.9240 | 0/50 | 0.0196 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | no_phase0 | 44 | 0.0228 | 0.1324 | 0.2203 | 0.8673 | 0.0072 | -0.9209 | 0/50 | 0.0225 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | raw_union_K20 | 42 | 0.8406 | 0.1277 | 0.2057 | 0.8692 | 0.8377 | -0.0578 | 6/50 | 0.8382 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | raw_union_K20 | 43 | 0.8385 | 0.1302 | 0.2195 | 0.8683 | 0.8371 | -0.0590 | 4/50 | 0.8381 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | raw_union_K20 | 44 | 0.8471 | 0.1324 | 0.2203 | 0.8673 | 0.8455 | -0.0537 | 7/50 | 0.8464 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | warmup_only_labelled | 42 | 0.3924 | 0.1277 | 0.2057 | 0.8692 | 0.3924 | -0.5337 | 0/50 | 0.3925 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | warmup_only_labelled | 43 | 0.4211 | 0.1302 | 0.2195 | 0.8683 | 0.4211 | -0.5252 | 0/50 | 0.4184 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.05 | warmup_only_labelled | 44 | 0.4062 | 0.1324 | 0.2203 | 0.8673 | 0.4062 | -0.5381 | 0/50 | 0.3979 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | dp_avg_eps2_K20 | 42 | 0.1038 | 0.1978 | 0.2834 | 0.8692 | 0.0545 | -0.8215 | 0/50 | 0.1004 | 6.4499 | success |
+| vit_b32_cifar100 | 50 | 0.1 | dp_avg_eps2_K20 | 43 | 0.0862 | 0.1927 | 0.2825 | 0.8683 | 0.0423 | -0.8385 | 0/50 | 0.0850 | 6.4427 | success |
+| vit_b32_cifar100 | 50 | 0.1 | dp_avg_eps2_K20 | 44 | 0.1203 | 0.1936 | 0.2772 | 0.8673 | 0.0658 | -0.8139 | 0/50 | 0.1205 | 6.4456 | success |
+| vit_b32_cifar100 | 50 | 0.1 | dp_avg_eps8_K20 | 42 | 0.1067 | 0.1978 | 0.2834 | 0.8692 | 0.0559 | -0.8188 | 0/50 | 0.1033 | 1.6125 | success |
+| vit_b32_cifar100 | 50 | 0.1 | dp_avg_eps8_K20 | 43 | 0.0891 | 0.1927 | 0.2825 | 0.8683 | 0.0438 | -0.8357 | 0/50 | 0.0884 | 1.6107 | success |
+| vit_b32_cifar100 | 50 | 0.1 | dp_avg_eps8_K20 | 44 | 0.1191 | 0.1936 | 0.2772 | 0.8673 | 0.0648 | -0.8133 | 0/50 | 0.1192 | 1.6114 | success |
+| vit_b32_cifar100 | 50 | 0.1 | labelled_probe_warmup | 42 | 0.4293 | 0.1978 | 0.2834 | 0.8692 | 0.3924 | -0.4988 | 0/50 | 0.4289 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | labelled_probe_warmup | 43 | 0.4685 | 0.1927 | 0.2825 | 0.8683 | 0.4211 | -0.4628 | 0/50 | 0.4576 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | labelled_probe_warmup | 44 | 0.4523 | 0.1936 | 0.2772 | 0.8673 | 0.4062 | -0.4738 | 0/50 | 0.4579 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | no_phase0 | 42 | 0.0246 | 0.1978 | 0.2834 | 0.8692 | 0.0121 | -0.9033 | 0/50 | 0.0248 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | no_phase0 | 43 | 0.0219 | 0.1927 | 0.2825 | 0.8683 | 0.0110 | -0.9084 | 0/50 | 0.0210 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | no_phase0 | 44 | 0.0256 | 0.1936 | 0.2772 | 0.8673 | 0.0072 | -0.9047 | 0/50 | 0.0260 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | raw_union_K20 | 42 | 0.8513 | 0.1978 | 0.2834 | 0.8692 | 0.8495 | -0.0285 | 10/50 | 0.8516 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | raw_union_K20 | 43 | 0.8500 | 0.1927 | 0.2825 | 0.8683 | 0.8479 | -0.0291 | 8/50 | 0.8500 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | raw_union_K20 | 44 | 0.8553 | 0.1936 | 0.2772 | 0.8673 | 0.8528 | -0.0276 | 11/50 | 0.8562 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | warmup_only_labelled | 42 | 0.3924 | 0.1978 | 0.2834 | 0.8692 | 0.3924 | -0.5385 | 0/50 | 0.3953 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | warmup_only_labelled | 43 | 0.4211 | 0.1927 | 0.2825 | 0.8683 | 0.4211 | -0.5100 | 0/50 | 0.4086 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.1 | warmup_only_labelled | 44 | 0.4062 | 0.1936 | 0.2772 | 0.8673 | 0.4062 | -0.5226 | 0/50 | 0.4125 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | dp_avg_eps2_K20 | 42 | 0.1232 | 0.3313 | 0.4259 | 0.8692 | 0.0545 | -0.7842 | 0/50 | 0.1200 | 6.4499 | success |
+| vit_b32_cifar100 | 50 | 0.3 | dp_avg_eps2_K20 | 43 | 0.1003 | 0.3221 | 0.4184 | 0.8683 | 0.0435 | -0.7960 | 0/50 | 0.0999 | 6.4427 | success |
+| vit_b32_cifar100 | 50 | 0.3 | dp_avg_eps2_K20 | 44 | 0.1337 | 0.3295 | 0.4268 | 0.8673 | 0.0632 | -0.7790 | 0/50 | 0.1380 | 6.4456 | success |
+| vit_b32_cifar100 | 50 | 0.3 | dp_avg_eps8_K20 | 42 | 0.1248 | 0.3313 | 0.4259 | 0.8692 | 0.0557 | -0.7831 | 0/50 | 0.1218 | 1.6125 | success |
+| vit_b32_cifar100 | 50 | 0.3 | dp_avg_eps8_K20 | 43 | 0.1003 | 0.3221 | 0.4184 | 0.8683 | 0.0442 | -0.7954 | 0/50 | 0.0997 | 1.6107 | success |
+| vit_b32_cifar100 | 50 | 0.3 | dp_avg_eps8_K20 | 44 | 0.1342 | 0.3295 | 0.4268 | 0.8673 | 0.0638 | -0.7790 | 0/50 | 0.1384 | 1.6114 | success |
+| vit_b32_cifar100 | 50 | 0.3 | labelled_probe_warmup | 42 | 0.4398 | 0.3313 | 0.4259 | 0.8692 | 0.3924 | -0.4649 | 0/50 | 0.4462 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | labelled_probe_warmup | 43 | 0.4793 | 0.3221 | 0.4184 | 0.8683 | 0.4211 | -0.4229 | 0/50 | 0.4679 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | labelled_probe_warmup | 44 | 0.4669 | 0.3295 | 0.4268 | 0.8673 | 0.4062 | -0.4404 | 0/50 | 0.4618 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | no_phase0 | 42 | 0.0307 | 0.3313 | 0.4259 | 0.8692 | 0.0121 | -0.8802 | 0/50 | 0.0304 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | no_phase0 | 43 | 0.0254 | 0.3221 | 0.4184 | 0.8683 | 0.0110 | -0.8792 | 0/50 | 0.0262 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | no_phase0 | 44 | 0.0309 | 0.3295 | 0.4268 | 0.8673 | 0.0072 | -0.8787 | 0/50 | 0.0329 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | raw_union_K20 | 42 | 0.8643 | 0.3313 | 0.4259 | 0.8692 | 0.8610 | 0.0119 | 32/50 | 0.8636 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | raw_union_K20 | 43 | 0.8660 | 0.3221 | 0.4184 | 0.8683 | 0.8649 | 0.0223 | 34/50 | 0.8640 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | raw_union_K20 | 44 | 0.8621 | 0.3295 | 0.4268 | 0.8673 | 0.8590 | 0.0173 | 38/50 | 0.8655 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | warmup_only_labelled | 42 | 0.3924 | 0.3313 | 0.4259 | 0.8692 | 0.3924 | -0.5154 | 0/50 | 0.4003 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | warmup_only_labelled | 43 | 0.4211 | 0.3221 | 0.4184 | 0.8683 | 0.4211 | -0.4819 | 0/50 | 0.4092 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 0.3 | warmup_only_labelled | 44 | 0.4062 | 0.3295 | 0.4268 | 0.8673 | 0.4062 | -0.5045 | 0/50 | 0.4026 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | dp_avg_eps2_K20 | 42 | 0.1300 | 0.4738 | 0.5461 | 0.8692 | 0.0542 | -0.7652 | 0/50 | 0.1213 | 6.4499 | success |
+| vit_b32_cifar100 | 50 | 1.0 | dp_avg_eps2_K20 | 43 | 0.1097 | 0.4842 | 0.5509 | 0.8683 | 0.0440 | -0.7822 | 0/50 | 0.1192 | 6.4427 | success |
+| vit_b32_cifar100 | 50 | 1.0 | dp_avg_eps2_K20 | 44 | 0.1403 | 0.4809 | 0.5763 | 0.8673 | 0.0614 | -0.7623 | 0/50 | 0.1550 | 6.4456 | success |
+| vit_b32_cifar100 | 50 | 1.0 | dp_avg_eps8_K20 | 42 | 0.1302 | 0.4738 | 0.5461 | 0.8692 | 0.0559 | -0.7632 | 0/50 | 0.1216 | 1.6125 | success |
+| vit_b32_cifar100 | 50 | 1.0 | dp_avg_eps8_K20 | 43 | 0.1121 | 0.4842 | 0.5509 | 0.8683 | 0.0451 | -0.7806 | 0/50 | 0.1220 | 1.6107 | success |
+| vit_b32_cifar100 | 50 | 1.0 | dp_avg_eps8_K20 | 44 | 0.1417 | 0.4809 | 0.5763 | 0.8673 | 0.0630 | -0.7607 | 0/50 | 0.1573 | 1.6114 | success |
+| vit_b32_cifar100 | 50 | 1.0 | labelled_probe_warmup | 42 | 0.4461 | 0.4738 | 0.5461 | 0.8692 | 0.3924 | -0.4442 | 0/50 | 0.4189 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | labelled_probe_warmup | 43 | 0.4910 | 0.4842 | 0.5509 | 0.8683 | 0.4211 | -0.4083 | 0/50 | 0.4999 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | labelled_probe_warmup | 44 | 0.4755 | 0.4809 | 0.5763 | 0.8673 | 0.4062 | -0.4204 | 0/50 | 0.4962 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | no_phase0 | 42 | 0.0317 | 0.4738 | 0.5461 | 0.8692 | 0.0121 | -0.8643 | 0/50 | 0.0262 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | no_phase0 | 43 | 0.0283 | 0.4842 | 0.5509 | 0.8683 | 0.0110 | -0.8719 | 0/50 | 0.0327 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | no_phase0 | 44 | 0.0346 | 0.4809 | 0.5763 | 0.8673 | 0.0072 | -0.8636 | 0/50 | 0.0409 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | raw_union_K20 | 42 | 0.8705 | 0.4738 | 0.5461 | 0.8692 | 0.8665 | 0.0461 | 50/50 | 0.8742 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | raw_union_K20 | 43 | 0.8676 | 0.4842 | 0.5509 | 0.8683 | 0.8661 | 0.0463 | 50/50 | 0.8659 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | raw_union_K20 | 44 | 0.8693 | 0.4809 | 0.5763 | 0.8673 | 0.8665 | 0.0457 | 50/50 | 0.8733 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | warmup_only_labelled | 42 | 0.3924 | 0.4738 | 0.5461 | 0.8692 | 0.3924 | -0.5008 | 0/50 | 0.3661 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | warmup_only_labelled | 43 | 0.4211 | 0.4842 | 0.5509 | 0.8683 | 0.4211 | -0.4776 | 0/50 | 0.4306 | 0.0000 | success |
+| vit_b32_cifar100 | 50 | 1.0 | warmup_only_labelled | 44 | 0.4062 | 0.4809 | 0.5763 | 0.8673 | 0.4062 | -0.4934 | 0/50 | 0.4322 | 0.0000 | success |
 
-# Then submit the full grid for the headline cell (ViT/CIFAR-100):
-sbatch --array=0-7 --export=ALL,HEIFD_BACKBONE=vit_b32_cifar100,NUM_CHUNKS=8 \
-       jobs/heifd_012_harder_vision_headline.sh
-
-# Optionally extend to ResNet/CIFAR-100 + Tiny-ImageNet backbones:
-sbatch --array=0-7 --export=ALL,HEIFD_BACKBONE=resnet18_cifar100,NUM_CHUNKS=8 \
-       jobs/heifd_012_harder_vision_headline.sh
-sbatch --array=0-7 --export=ALL,HEIFD_BACKBONE=vit_b32_tiny_imagenet,NUM_CHUNKS=8 \
-       jobs/heifd_012_harder_vision_headline.sh
-sbatch --array=0-7 --export=ALL,HEIFD_BACKBONE=resnet18_tiny_imagenet,NUM_CHUNKS=8 \
-       jobs/heifd_012_harder_vision_headline.sh
-```
-
-## Acceptance (issue 012)
-
-- Each (backbone, dataset) cell hits the defensibility criteria from the
-  Phase II PRD section: `raw_union > no_phase0`, `raw_union ≥ θ₀` in *most*
-  regimes, `raw_union → oracle` as α → 1.0, `M4 > 0` at low α.
-- The full grid lands resumably within the 3h-per-chunk wall-clock budget
-  (otherwise we tune `NUM_CHUNKS`).
-
-The auto-writer will fill the results table below as the per-cell JSONs land.
+Raw per-cell JSONs live here as `cell_<backbone>_N<n>_a<α>_<method>_s<seed>_K<k>_<hash>.json`.
+Per-client per-class counts at `partition_diagnostic.jsonl`. Slurm stdout/stderr at `runs/`. Long-form rows at `results.csv`.

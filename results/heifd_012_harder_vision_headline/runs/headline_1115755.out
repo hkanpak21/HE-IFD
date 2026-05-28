@@ -729,3 +729,7 @@
 [sweep] start vit_b32_cifar100 N=50 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
 [sweep] ok   warmup_only_labelled acc=0.3924 mean_teacher=0.0485 wall=3.1s err=None
 [sweep] start vit_b32_cifar100 N=50 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4211 mean_teacher=0.0469 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.4062 mean_teacher=0.0498 wall=3.1s err=None
+[sweep] start vit_b32_cifar100 N=50 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
