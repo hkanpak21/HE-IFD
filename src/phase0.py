@@ -399,6 +399,7 @@ def build_probe_synthetic_with_logits(
     K_per_class: int,
     num_classes: int,
     seed: int = 0,
+    teacher_client_X_list: Optional[List] = None,
 ) -> Tuple:
     """Compose ``build_probe_synthetic`` with ``build_logit_prototypes``.
 
@@ -420,11 +421,32 @@ def build_probe_synthetic_with_logits(
     No softmax temperature is applied — the soft-labels are already
     softmax(teacher_i(x)) at τ=1, which is the natural smoothing for KL
     targets in this setting.
+
+    Shape contract (issue 016b fix). The two sub-builders consume DIFFERENT
+    shapes for image data:
+      * ``build_probe_synthetic`` works in FLAT feature space ((n_i, C*H*W))
+        because the per-feature (μ_ic, σ²_ic) statistics are defined per-flat-
+        dimension — it is fed ``client_X_list``.
+      * ``build_logit_prototypes`` runs the per-client tensors THROUGH the
+        teachers (``teacher(X_i)``), which were trained on the NATIVE shape
+        (for conv backbones that is (C, H, W)) — feeding it flattened tensors
+        raises ``RuntimeError: Expected 3D/4D input to conv2d``. It is fed
+        ``teacher_client_X_list`` when supplied, else falls back to
+        ``client_X_list``.
+    For pretrained-feature backbones the native shape IS flat, so the two
+    lists are identical and ``teacher_client_X_list`` defaults harmlessly to
+    ``client_X_list`` (no-op). See ``protocol.run_cell``'s synthetic_logit
+    branch, which passes flattened samples for the synthetic path and native-
+    shape samples for the teacher path.
     """
+    teacher_X_list = (
+        teacher_client_X_list if teacher_client_X_list is not None
+        else client_X_list
+    )
     probe_X, probe_y, info_syn = build_probe_synthetic(
         client_X_list, client_y_list, K_per_class, num_classes, seed=seed)
     soft_labels, info_log = build_logit_prototypes(
-        teachers, client_X_list, client_y_list, num_classes)
+        teachers, teacher_X_list, client_y_list, num_classes)
     info = {**info_syn, **info_log}
     return probe_X, probe_y, soft_labels, info
 

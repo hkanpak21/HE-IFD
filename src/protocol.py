@@ -729,15 +729,25 @@ def run_cell(
             # trained on the native shape.
             probe_seed = seed * 100003
             flat_image = is_image
+            # Synthetic-sample generation (Gaussian-around-mean) is defined in
+            # FLAT feature space, so it consumes the flattened per-client
+            # tensors — same bridge as the ``synthetic`` path. But the logit
+            # prototypes run the per-client tensors THROUGH the teachers, which
+            # were trained on the NATIVE shape; feeding them flat tensors was
+            # the conv2d-shape bug (issue 016b). So we hand the synthetic path
+            # the flattened list and the teacher path the native-shape list.
+            # For non-image (pretrained-feature) backbones native IS flat, so
+            # both lists are identical and this split is a no-op.
             probe_clients = _flatten_clients(client_X_list) if flat_image else client_X_list
             align_X, align_y, soft_labels, info = (
                 p0.build_probe_synthetic_with_logits(
-                    client_X_list=probe_clients,
+                    client_X_list=probe_clients,           # flat: synthetic-sample path
                     client_y_list=client_y_list,
-                    teachers=teachers,           # native-shape teachers
+                    teachers=teachers,                     # native-shape teachers
                     K_per_class=kwargs.get("K_per_class"),
                     num_classes=nc,
                     seed=probe_seed,
+                    teacher_client_X_list=client_X_list,   # native: logit-prototype path
                 )
             )
             if flat_image:
