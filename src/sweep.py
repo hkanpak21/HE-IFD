@@ -37,10 +37,29 @@ from .report import write_report
 # ---------------------------------------------------------------------------
 # Descriptor / filename helpers (deterministic -> resumable)
 # ---------------------------------------------------------------------------
+# Historical defaults (frozen): the values used by every cell written before the
+# tau/LR sweep extension landed. Including tau/LR in the descriptor ONLY when
+# they differ from these legacy defaults preserves backwards-compatibility with
+# existing cell_*.json filenames (so existing case dirs still resume correctly).
+_LEGACY_TAU = 4.0
+_LEGACY_STUDENT_LR = 0.01
+
+
 def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
-                    seed: int, K: int) -> Dict:
-    return {"backbone": backbone, "N": N, "alpha": alpha,
-            "method": method, "seed": seed, "K": K}
+                    seed: int, K: int,
+                    tau: float = _LEGACY_TAU,
+                    student_lr: float = _LEGACY_STUDENT_LR) -> Dict:
+    """Deterministic cell descriptor. ``tau`` / ``student_lr`` are appended ONLY
+    when they differ from the historical defaults so existing per-cell filenames
+    (which hashed only over {backbone,N,alpha,method,seed,K}) keep their hashes
+    and remain resumable across the CLI extension."""
+    desc: Dict = {"backbone": backbone, "N": N, "alpha": alpha,
+                  "method": method, "seed": seed, "K": K}
+    if tau != _LEGACY_TAU:
+        desc["tau"] = tau
+    if student_lr != _LEGACY_STUDENT_LR:
+        desc["student_lr"] = student_lr
+    return desc
 
 
 def descriptor_hash(desc: Dict) -> str:
@@ -49,8 +68,15 @@ def descriptor_hash(desc: Dict) -> str:
 
 
 def cell_filename(desc: Dict) -> str:
+    # Filename stem reflects only the dimensions the descriptor records, so
+    # legacy (tau=4.0, lr=0.01) cells keep their original stems and the new
+    # non-default tau/LR cells get distinct, self-describing stems.
     stem = (f"cell_{desc['backbone']}_N{desc['N']}_a{desc['alpha']}"
             f"_{desc['method']}_s{desc['seed']}_K{desc['K']}")
+    if "tau" in desc:
+        stem += f"_t{desc['tau']}"
+    if "student_lr" in desc:
+        stem += f"_lr{desc['student_lr']}"
     return f"{stem}_{descriptor_hash(desc)}.json"
 
 
@@ -113,9 +139,20 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seeds", type=str, default="42",
                    help="Seeds, e.g. 42,43,44.")
     p.add_argument("--K", type=int, default=300,
-                   help="Bounded distillation trajectory length (swept axis).")
-    p.add_argument("--tau", type=float, default=4.0)
-    p.add_argument("--student-lr", type=float, default=0.01)
+                   help="Bounded distillation trajectory length (single value).")
+    p.add_argument("--Ks", type=str, default=None,
+                   help="Optional comma list of K values to sweep, e.g. 30,100,300,1000. "
+                        "When set, overrides --K and adds K as a grid axis.")
+    p.add_argument("--tau", type=float, default=4.0,
+                   help="KD softmax temperature (single value).")
+    p.add_argument("--taus", type=str, default=None,
+                   help="Optional comma list of τ values to sweep, e.g. 1,4. When set, "
+                        "overrides --tau and adds τ as a grid axis.")
+    p.add_argument("--student-lr", type=float, default=0.01,
+                   help="Student SGD learning rate (single value).")
+    p.add_argument("--student-lrs", type=str, default=None,
+                   help="Optional comma list of student LRs to sweep, e.g. 0.001,0.01. "
+                        "When set, overrides --student-lr and adds LR as a grid axis.")
     p.add_argument("--probe-size", type=int, default=None,
                    help="Labelled-probe size P (default: backbone-specific).")
     p.add_argument("--case", type=str, default="v1_he-ifd_mlp_mnist_verify",
@@ -136,14 +173,30 @@ def parse_args() -> argparse.Namespace:
 
 
 def build_grid(args) -> List[Dict]:
-    """Deterministically-ordered list of cell descriptors (the sweep order)."""
+    """Deterministically-ordered list of cell descriptors (the sweep order).
+
+    The default sweep is the historical 6-axis grid (backbone × N × α × method ×
+    seed × K with a single K). When ``--Ks`` / ``--taus`` / ``--student-lrs`` are
+    provided, those become additional grid axes (single-value flags ``--K`` /
+    ``--tau`` / ``--student-lr`` are ignored for that axis). Non-default
+    (tau, student_lr) values flow into the descriptor so cell filenames stay
+    distinct — see ``cell_descriptor`` for the backwards-compat rule.
+    """
+    Ks = parse_int_list(args.Ks) if args.Ks else [args.K]
+    taus = parse_float_list(args.taus) if args.taus else [args.tau]
+    lrs = parse_float_list(args.student_lrs) if args.student_lrs else [args.student_lr]
     grid: List[Dict] = []
     for backbone in parse_str_list(args.backbones):
         for N in parse_int_list(args.Ns):
             for alpha in parse_float_list(args.alphas):
                 for method in parse_str_list(args.methods):
                     for seed in parse_int_list(args.seeds):
-                        grid.append(cell_descriptor(backbone, N, alpha, method, seed, args.K))
+                        for K in Ks:
+                            for tau in taus:
+                                for student_lr in lrs:
+                                    grid.append(cell_descriptor(
+                                        backbone, N, alpha, method, seed, K,
+                                        tau=tau, student_lr=student_lr))
     return grid
 
 
@@ -187,12 +240,18 @@ def main() -> None:
                 print(f"[sweep] skip  {out_path.name} (success exists)", flush=True)
                 continue
             print(f"[sweep] retry {out_path.name} (prior status != success)", flush=True)
+        # Per-cell tau/LR come from the descriptor when the multi-flag sweep is
+        # in use; otherwise fall back to the single-value CLI flags (the legacy
+        # contract — every cell shares one tau / LR).
+        cell_tau = desc.get("tau", args.tau)
+        cell_lr = desc.get("student_lr", args.student_lr)
         print(f"[sweep] start {desc['backbone']} N={desc['N']} a={desc['alpha']} "
-              f"{desc['method']} s={desc['seed']} K={desc['K']}", flush=True)
+              f"{desc['method']} s={desc['seed']} K={desc['K']} "
+              f"tau={cell_tau} lr={cell_lr}", flush=True)
         res = run_cell(
             backbone=desc["backbone"], N=desc["N"], alpha=desc["alpha"],
-            seed=desc["seed"], method=desc["method"], K=desc["K"], tau=args.tau,
-            student_lr=args.student_lr, probe_size=args.probe_size,
+            seed=desc["seed"], method=desc["method"], K=desc["K"], tau=cell_tau,
+            student_lr=cell_lr, probe_size=args.probe_size,
             data_root=args.data_root, cache_root=args.cache_root,
             job_id=job_id, node=node,
         )
