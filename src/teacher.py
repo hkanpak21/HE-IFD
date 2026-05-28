@@ -30,6 +30,7 @@ def train_supervised_model(
     init_params: Optional[Dict] = None,
     loss_fn=None,
     lr_schedule: Optional[str] = None,
+    soft_targets=None,
 ):
     """Generic supervised SGD trainer. ``make_model_fn()`` returns a fresh model.
 
@@ -50,6 +51,22 @@ def train_supervised_model(
         the new code path when the caller explicitly passes ``"cosine"``;
         unknown strings raise ``ValueError`` so a typo doesn't silently
         downgrade to constant LR.
+
+    Optional ``soft_targets`` (issue 016+, opt-in):
+      * ``None`` (default) — CE loss on the one-hot label ``y``, byte-identical
+        to every pre-issue-016+ caller (teacher / oracle / Phase-0 warmup).
+      * ``torch.FloatTensor[num_classes, num_classes]`` — a per-class soft-
+        label table (rows live on the simplex). Loss becomes the per-sample KL
+        distillation against the soft-target row indexed by that sample's
+        class id ``y[j]``:
+              L(x_j) = KL( softmax(model(x_j))  ||  soft_targets[y[j]] )
+        with ``F.kl_div(log_softmax(model(x)), soft_targets[y], reduction='batchmean')``
+        — the standard KL distillation formulation, batch-meaned. No
+        temperature scaling: ``soft_targets`` is expected to already be a
+        softmax distribution (e.g. the output of ``build_logit_prototypes`` —
+        per-class teacher softmax at τ=1). ``loss_fn`` is ignored when
+        ``soft_targets`` is provided (the two are mutually exclusive: the soft-
+        target path defines its own loss).
     """
     import torch
     import torch.nn.functional as F
@@ -59,10 +76,15 @@ def train_supervised_model(
     model = make_model_fn()
     if init_params is not None:
         model.load_state_dict(init_params)
+    use_soft = soft_targets is not None
     if loss_fn is None:
         loss_fn = F.cross_entropy
     X = X.to(device)
     y = y.to(device)
+    if use_soft:
+        # Move the soft-target table to the same device once; rows are then
+        # indexed per minibatch by the (CPU-int-)label tensor on-device.
+        soft_targets_dev = soft_targets.to(device)
     n = X.shape[0]
     if n == 0:
         return model
@@ -84,7 +106,19 @@ def train_supervised_model(
         for i in range(0, n, bs):
             idx = perm[i:i + bs]
             opt.zero_grad()
-            loss = loss_fn(model(X[idx]), y[idx])
+            logits = model(X[idx])
+            if use_soft:
+                # KL distillation against the per-class soft-target. Index the
+                # per-class table by the integer class ids to obtain a
+                # (B, num_classes) target distribution batch.
+                target = soft_targets_dev[y[idx]]
+                loss = F.kl_div(
+                    F.log_softmax(logits, dim=1),
+                    target,
+                    reduction="batchmean",
+                )
+            else:
+                loss = loss_fn(logits, y[idx])
             loss.backward()
             opt.step()
         if scheduler is not None:

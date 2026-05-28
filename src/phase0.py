@@ -16,7 +16,7 @@ two deep-module entry points used by ``protocol.run_cell``:
         sigma       = 0                                                   (eps==inf)
   * ``warmup_init(...)`` — supervised SGD on a probe to produce θ₀.
 
-Strategies (notebook method panel):
+Strategies (notebook method panel + issue-016+ extensions):
   ``none``        : no Phase 0 — θ₀ is the fresh random init (no probe built).
   ``warmup_only`` : warm on the labelled probe, but DO NOT distil afterwards.
                     This is the probe-only baseline (handled in ``protocol``,
@@ -27,6 +27,21 @@ Strategies (notebook method panel):
                     (no DP — the no-privacy alignment ceiling).
   ``dp_avg``      : θ₀ warmed on per-class client averages released under the
                     averaging-variant Gaussian mechanism (the private path).
+  ``synthetic``   : per-(client, class) Gaussian-around-mean sampling — same
+                    byte budget as raw_union_K, but each released sample comes
+                    from N(μ_ic, diag(σ²_ic)) rather than a real shard sample.
+                    Captures the client's view of class VARIANCE without
+                    transmitting raw records. DP-protectable on μ via the
+                    same averaging-variant accounting (``synthetic_dp``).
+  ``synthetic_logit``
+                  : ``synthetic`` payload, composed with per-class teacher-
+                    logit prototypes. Server unions / averages the per-class
+                    softmax vectors across clients; the warmup uses these as
+                    KL soft-targets in place of (or alongside) the one-hot
+                    label. Signal modality orthogonal to feature-space
+                    prototypes: it carries the teachers' cross-class
+                    confusion structure (inter-class similarity), which
+                    pure feature prototypes do not.
 """
 from __future__ import annotations
 
@@ -176,6 +191,245 @@ def build_probe_dp_averaged(
 
 
 # ----------------------------------------------------------------------------
+# Issue 016+: synthetic-sample alignment + per-class logit prototypes
+# ----------------------------------------------------------------------------
+def build_probe_synthetic(
+    client_X_list: List,
+    client_y_list: List,
+    K_per_class: int,
+    num_classes: int,
+    seed: int = 0,
+    dp_clip: Optional[float] = None,
+    dp_eps: float = float("inf"),
+    dp_delta: float = DP_DELTA,
+) -> Tuple:
+    """Synthetic-sample alignment (issue 016+ MVP — Gaussian around per-class mean).
+
+    For each (client i, class c) with at least one local sample of class c:
+      μ_ic = mean over the client's class-c samples (feature-space).
+      σ²_ic = per-feature variance over the same samples (ddof=0); zero-floored
+              to a small ε so the multivariate Gaussian is non-degenerate when
+              n_ic == 1.
+      Generate ``K_per_class`` synthetic samples by ``μ_ic + N(0, diag(σ²_ic))``.
+
+    Releases the same number of records as ``raw_union_K`` (same byte budget),
+    but no raw shard sample crosses the P2P boundary — only second-moment-
+    derived synthetic data. Returns ``(probe_X, probe_y, info)`` matching the
+    raw_union signature. ``info`` carries ``probe_size``, ``sigma`` (the DP-on-
+    μ noise scale when DP is engaged; 0.0 otherwise) and ``n_pairs_used``
+    (number of contributing (client, class) pairs — fewer than N·C at low α).
+
+    DP variant (issue 016+ MVP): when ``dp_eps < inf`` and ``dp_clip is not None``
+    the released μ_ic is the Gaussian-mechanism release of the L2-clipped mean
+    (averaging-variant accounting, identical to ``build_probe_dp_averaged``).
+    σ²_ic is released without noise here — a documented MVP caveat. A fully-DP
+    variant (which would noise σ²_ic via the same accounting, with sensitivity
+    = clip²/K_per_class) is parked as future work; it adds a second mechanism
+    composition without changing the (μ_ic, σ²_ic) → N(...) sampling path.
+
+    Inputs are expected to be FLAT (n_i, feature_dim) tensors — see the
+    flatten/reshape bridge in ``protocol.run_cell`` for the conv-net path
+    (synthetic samples for from-scratch CNN-5/CIFAR-10 live in raw-pixel space
+    3·32·32 = 3072-d; for pretrained backbones they live in the cached feature
+    space, e.g. 512-d ResNet-18 features).
+    """
+    import numpy as np
+    import torch
+
+    rng = np.random.default_rng(seed)
+    do_dp = (dp_eps != float("inf")) and (dp_clip is not None)
+    sigma_dp = 0.0
+    if do_dp:
+        sigma_dp = dp_sigma(dp_clip, K_per_class, dp_eps, dp_delta)
+
+    probe_X_list, probe_y_list = [], []
+    n_pairs_used = 0
+    feature_dim = client_X_list[0].cpu().reshape(client_X_list[0].shape[0], -1).shape[1]
+    eps_var = 1e-8  # variance floor (so n_ic==1 still draws a valid sample)
+
+    for i in range(len(client_X_list)):
+        X_i = client_X_list[i].cpu()
+        y_i = client_y_list[i].cpu().numpy()
+        # Flatten defensively — the caller is expected to pre-flatten image
+        # data, but doing it here as well keeps the contract robust.
+        X_i_flat = X_i.reshape(X_i.shape[0], -1)
+        for c in range(num_classes):
+            mask = (y_i == c)
+            n_ic = int(mask.sum())
+            if n_ic == 0:
+                continue
+            X_c = X_i_flat[mask].numpy().astype(np.float64)
+            mu = X_c.mean(axis=0)                     # (feature_dim,)
+            # Per-feature variance (ddof=0). For n_ic == 1 this is zero, so the
+            # floor below kicks in and the synthetic draws are tight clones of μ.
+            var = X_c.var(axis=0, ddof=0)
+            var = np.maximum(var, eps_var)
+
+            if do_dp:
+                # L2-clip μ to the public clip bound, then add Gaussian noise
+                # with the averaging-variant σ. Symmetric to
+                # ``build_probe_dp_averaged``'s μ release.
+                mu_norm = float(np.linalg.norm(mu))
+                if mu_norm > dp_clip:
+                    mu = mu * (dp_clip / max(mu_norm, 1e-6))
+                mu = mu + rng.normal(0.0, sigma_dp, mu.shape)
+
+            std = np.sqrt(var)
+            # Sample K_per_class synthetic feature vectors from N(μ, diag(σ²))
+            samples = mu[None, :] + rng.normal(
+                0.0, 1.0, size=(K_per_class, feature_dim)) * std[None, :]
+            probe_X_list.append(torch.from_numpy(samples.astype(np.float32)))
+            probe_y_list.append(torch.full((K_per_class,), c, dtype=torch.long))
+            n_pairs_used += 1
+
+    if n_pairs_used == 0:
+        # Pathological — every client lacks every class. Return an empty probe
+        # so the caller can detect and fall back to no_phase0 if it chooses.
+        return (
+            torch.zeros(0, feature_dim, dtype=torch.float32),
+            torch.zeros(0, dtype=torch.long),
+            {"probe_size": 0, "sigma": float(sigma_dp), "n_pairs_used": 0},
+        )
+
+    probe_X = torch.cat(probe_X_list, dim=0)
+    probe_y = torch.cat(probe_y_list, dim=0)
+    return probe_X, probe_y, {
+        "probe_size": int(probe_X.shape[0]),
+        "sigma": float(sigma_dp),
+        "n_pairs_used": int(n_pairs_used),
+    }
+
+
+def build_logit_prototypes(
+    teachers,
+    client_X_list: List,
+    client_y_list: List,
+    num_classes: int,
+) -> Tuple:
+    """Per-class teacher-logit prototypes (issue 016+ novel mechanism).
+
+    For each class c, average across **every** (client i, sample x) pair where
+    ``label(x) == c`` of ``softmax(teacher_i(x))``:
+
+        soft_labels[c]  =  mean_{(i, x) : y(x) == c}  softmax(teacher_i(x))     (1)
+
+    The result is a ``(num_classes, num_classes)`` tensor: one num_classes-dim
+    soft-label vector per class. This is the **cross-client teacher consensus
+    on what class c looks like in label space** — a signal modality ORTHOGONAL
+    to feature-space prototypes (μ_ic, σ²_ic). Feature prototypes carry the
+    client's view of the input distribution; logit prototypes carry the
+    teachers' view of the OUTPUT distribution (inter-class confusion
+    structure: how similar class c is to every other class through the
+    teacher's eyes).
+
+    Coverage handling: a class c with **zero** contributing (client, sample)
+    pairs gets the uniform fallback 1/C — equivalent to a maximally-uncertain
+    teacher response, which is a sensible neutral target for the soft-label
+    warmup. ``info['n_classes_covered']`` records how many of the C classes
+    had real teacher coverage.
+
+    DP extensibility (not implemented here — for paper completeness): per-class
+    logit means are second-stage releases whose L2-sensitivity is bounded by
+    sqrt(2) / n_class_samples (two simplex points are at most sqrt(2) apart),
+    so the same averaging-variant Gaussian mechanism applies with sensitivity
+    = sqrt(2) / K_per_class once the per-class contribution is computed on a
+    fixed sample budget K_per_class per (client, class). Out of scope for this
+    Round-3 MVP — we ship the cleartext mechanism first to measure whether
+    the modality even moves the metrics on the failing CNN-5/CIFAR-10 cell.
+
+    Returns
+    -------
+    soft_labels : torch.FloatTensor[num_classes, num_classes]
+        Indexed by class id; rows are softmax-normalised by construction (each
+        row is an average of softmax outputs, so it stays on the simplex).
+    info : dict
+        {``n_classes_covered``: int, ``coverage_per_class``: list[int]}.
+    """
+    import numpy as np
+    import torch
+    import torch.nn.functional as F
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    accum = torch.zeros(num_classes, num_classes)
+    count = torch.zeros(num_classes)
+
+    for i, teacher in enumerate(teachers):
+        X_i = client_X_list[i]
+        y_i = client_y_list[i].cpu().numpy()
+        if X_i.shape[0] == 0:
+            continue
+        teacher.eval()
+        X_i_dev = X_i.to(device)
+        with torch.no_grad():
+            logits = teacher(X_i_dev)
+            probs = F.softmax(logits, dim=1).cpu()
+        for c in range(num_classes):
+            mask = (y_i == c)
+            n_ic = int(mask.sum())
+            if n_ic == 0:
+                continue
+            # Accumulate per-class softmax sum + per-class count; the final
+            # mean is then sum / count. Doing it this way (rather than client-
+            # level means followed by a server-side mean-of-means) gives
+            # equal weight to every (client, sample) pair — the natural
+            # population-mean estimator across the federation.
+            accum[c] += probs[mask].sum(dim=0)
+            count[c] += n_ic
+
+    soft_labels = torch.full((num_classes, num_classes), 1.0 / num_classes)
+    n_covered = 0
+    coverage = []
+    for c in range(num_classes):
+        if count[c] > 0:
+            soft_labels[c] = accum[c] / count[c]
+            n_covered += 1
+            coverage.append(int(count[c].item()))
+        else:
+            coverage.append(0)
+    return soft_labels, {
+        "n_classes_covered": int(n_covered),
+        "coverage_per_class": coverage,
+    }
+
+
+def build_probe_synthetic_with_logits(
+    client_X_list: List,
+    client_y_list: List,
+    teachers,
+    K_per_class: int,
+    num_classes: int,
+    seed: int = 0,
+) -> Tuple:
+    """Compose ``build_probe_synthetic`` with ``build_logit_prototypes``.
+
+    Returns (probe_X, probe_y, soft_labels_per_class, info) where:
+      probe_X / probe_y         : synthetic feature samples + their class ids
+                                  (same as ``build_probe_synthetic``).
+      soft_labels_per_class[c]  : per-class teacher-logit consensus, indexed
+                                  by class id (same as
+                                  ``build_logit_prototypes``).
+      info                      : merged probe-side and logit-side info dicts.
+
+    The caller materialises per-sample soft targets by indexing
+    ``soft_labels_per_class[probe_y[j]]`` for each sample j, then passes
+    those into ``train_supervised_model(..., soft_targets=...)`` for a KL-
+    distillation warmup. Mechanism:
+
+        L_warmup(x_j) = KL( softmax(model(x_j))  ||  soft_labels[y_j] )
+
+    No softmax temperature is applied — the soft-labels are already
+    softmax(teacher_i(x)) at τ=1, which is the natural smoothing for KL
+    targets in this setting.
+    """
+    probe_X, probe_y, info_syn = build_probe_synthetic(
+        client_X_list, client_y_list, K_per_class, num_classes, seed=seed)
+    soft_labels, info_log = build_logit_prototypes(
+        teachers, client_X_list, client_y_list, num_classes)
+    info = {**info_syn, **info_log}
+    return probe_X, probe_y, soft_labels, info
+
+
+# ----------------------------------------------------------------------------
 # Deep-module entry points used by protocol.run_cell
 # ----------------------------------------------------------------------------
 def build_probe(
@@ -213,6 +467,19 @@ def build_probe(
         return build_probe_dp_averaged(
             client_X_list, client_y_list, K_per_class, num_classes,
             clip=clip, eps_per_client=eps, delta=delta, seed=seed)
+    if strategy == "synthetic":
+        # Issue 016+ MVP: per-(client, class) Gaussian-around-mean sampling.
+        # No DP (eps==inf, no clip). The DP path is the ``synthetic_dp``
+        # strategy below — kept distinct so the cleartext mechanism stays a
+        # pure-shape change from raw_union with no DP-accounting plumbing.
+        return build_probe_synthetic(
+            client_X_list, client_y_list, K_per_class, num_classes, seed=seed)
+    if strategy == "synthetic_dp":
+        if clip is None:
+            raise ValueError("strategy 'synthetic_dp' requires a clip bound")
+        return build_probe_synthetic(
+            client_X_list, client_y_list, K_per_class, num_classes, seed=seed,
+            dp_clip=clip, dp_eps=eps, dp_delta=delta)
     raise ValueError(f"build_probe: no probe for strategy {strategy!r}")
 
 
@@ -228,6 +495,7 @@ def warmup_init(
     bs: int,
     seed: int = 12345,
     lr_schedule: Optional[str] = None,
+    soft_targets=None,
 ) -> Dict:
     """Produce θ₀ by warming ``base_init`` on the probe via supervised SGD.
 
@@ -238,6 +506,14 @@ def warmup_init(
     ``lr_schedule`` is opt-in (forwarded to ``train_supervised_model``);
     ``None`` keeps the legacy constant-LR warmup byte-identical for every
     backbone that does not set ``BackboneSpec.teacher_lr_schedule``.
+
+    ``soft_targets`` (issue 016+, opt-in): when ``None`` (the default for every
+    pre-issue-016+ caller) the warmup is byte-identical to the legacy cross-
+    entropy path. When supplied as a ``(num_classes, num_classes)`` tensor of
+    per-class teacher-logit prototypes (output of
+    ``build_logit_prototypes``), warmup uses KL distillation against the soft-
+    target row indexed by each sample's class id rather than the one-hot
+    label. Forwarded into ``train_supervised_model``.
     """
     from .teacher import train_supervised_model
     from .backbones import get_params
@@ -246,5 +522,6 @@ def warmup_init(
         make_model_fn, probe_X, probe_y,
         epochs=epochs, lr=lr, momentum=momentum, bs=bs,
         seed=seed, init_params=base_init, lr_schedule=lr_schedule,
+        soft_targets=soft_targets,
     )
     return get_params(warmed)
