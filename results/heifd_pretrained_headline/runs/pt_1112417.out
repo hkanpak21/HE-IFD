@@ -47,3 +47,239 @@
 [sweep] start gpt2_agnews N=5 a=0.05 warmup_only_labelled s=43 K=300
 [sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.3404 wall=8.9s err=None
 [sweep] start gpt2_agnews N=5 a=0.05 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.3376 wall=11.5s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3509 mean_teacher=0.3304 wall=14.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3671 mean_teacher=0.3404 wall=16.1s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3408 mean_teacher=0.3376 wall=14.7s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.3987 mean_teacher=0.3304 wall=14.5s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.3637 mean_teacher=0.3404 wall=15.7s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.3103 mean_teacher=0.3376 wall=15.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3147 mean_teacher=0.3304 wall=14.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3742 mean_teacher=0.3404 wall=14.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3205 mean_teacher=0.3376 wall=15.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3084 mean_teacher=0.3304 wall=14.5s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3851 mean_teacher=0.3404 wall=13.3s err=None
+[sweep] start gpt2_agnews N=5 a=0.05 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3683 mean_teacher=0.3376 wall=15.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.4380 mean_teacher=0.3302 wall=14.7s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.5009 mean_teacher=0.3925 wall=14.4s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.3278 mean_teacher=0.3610 wall=14.5s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.2716 mean_teacher=0.3302 wall=11.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.3925 wall=12.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.3610 wall=11.8s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3659 mean_teacher=0.3302 wall=14.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3938 mean_teacher=0.3925 wall=15.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3217 mean_teacher=0.3610 wall=14.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.2768 mean_teacher=0.3302 wall=14.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.3826 mean_teacher=0.3925 wall=15.2s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.3222 mean_teacher=0.3610 wall=14.8s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3772 mean_teacher=0.3302 wall=14.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3950 mean_teacher=0.3925 wall=15.3s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3637 mean_teacher=0.3610 wall=15.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3283 mean_teacher=0.3302 wall=15.4s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3920 mean_teacher=0.3925 wall=13.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.1 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3625 mean_teacher=0.3610 wall=13.4s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3742 mean_teacher=0.3937 wall=15.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.4858 mean_teacher=0.4930 wall=15.2s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.3011 mean_teacher=0.4058 wall=15.1s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.2716 mean_teacher=0.3937 wall=11.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.4930 wall=11.5s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.4058 wall=11.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3888 mean_teacher=0.3937 wall=15.4s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4780 mean_teacher=0.4930 wall=15.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4076 mean_teacher=0.4058 wall=15.6s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.3722 mean_teacher=0.3937 wall=15.7s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.4411 mean_teacher=0.4930 wall=16.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.2964 mean_teacher=0.4058 wall=16.3s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3137 mean_teacher=0.3937 wall=16.3s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4008 mean_teacher=0.4930 wall=15.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3963 mean_teacher=0.4058 wall=16.0s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3754 mean_teacher=0.3937 wall=15.9s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4509 mean_teacher=0.4930 wall=16.1s err=None
+[sweep] start gpt2_agnews N=5 a=0.3 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3992 mean_teacher=0.4058 wall=8.1s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3783 mean_teacher=0.5551 wall=9.7s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.3978 mean_teacher=0.5506 wall=14.7s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.4270 mean_teacher=0.4522 wall=14.8s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.2716 mean_teacher=0.5551 wall=11.5s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.5506 wall=11.5s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.4522 wall=11.2s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3746 mean_teacher=0.5551 wall=15.2s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.4296 mean_teacher=0.5506 wall=15.4s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3905 mean_teacher=0.4522 wall=15.5s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.4066 mean_teacher=0.5551 wall=15.3s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.4133 mean_teacher=0.5506 wall=15.5s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.3976 mean_teacher=0.4522 wall=16.1s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3483 mean_teacher=0.5551 wall=12.6s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3921 mean_teacher=0.5506 wall=15.3s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4853 mean_teacher=0.4522 wall=14.8s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3561 mean_teacher=0.5551 wall=15.0s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.4016 mean_teacher=0.5506 wall=14.9s err=None
+[sweep] start gpt2_agnews N=5 a=1.0 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3905 mean_teacher=0.4522 wall=14.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3436 mean_teacher=0.2678 wall=15.0s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.2595 mean_teacher=0.2493 wall=16.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.2586 mean_teacher=0.2494 wall=16.1s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.2716 mean_teacher=0.2678 wall=11.4s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.2493 wall=11.5s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.2494 wall=11.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.2820 mean_teacher=0.2678 wall=15.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.2637 mean_teacher=0.2493 wall=17.3s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.2505 mean_teacher=0.2494 wall=17.2s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.2714 mean_teacher=0.2678 wall=15.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.2512 mean_teacher=0.2493 wall=17.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.2628 mean_teacher=0.2494 wall=16.5s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3483 mean_teacher=0.2678 wall=13.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.2574 mean_teacher=0.2493 wall=17.1s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.2579 mean_teacher=0.2494 wall=16.5s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3108 mean_teacher=0.2678 wall=14.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.2614 mean_teacher=0.2493 wall=17.0s err=None
+[sweep] start gpt2_agnews N=10 a=0.01 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.2509 mean_teacher=0.2494 wall=16.5s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3054 mean_teacher=0.2754 wall=17.2s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.3043 mean_teacher=0.2721 wall=17.6s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.2825 mean_teacher=0.2754 wall=17.2s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.2716 mean_teacher=0.2754 wall=11.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.2721 wall=12.0s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.2754 wall=11.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3717 mean_teacher=0.2754 wall=18.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.2964 mean_teacher=0.2721 wall=18.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3088 mean_teacher=0.2754 wall=17.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.3384 mean_teacher=0.2754 wall=18.2s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.3267 mean_teacher=0.2721 wall=17.1s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.3343 mean_teacher=0.2754 wall=9.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.2618 mean_teacher=0.2754 wall=17.4s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3096 mean_teacher=0.2721 wall=17.0s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3192 mean_teacher=0.2754 wall=16.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.2771 mean_teacher=0.2754 wall=18.0s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.2991 mean_teacher=0.2721 wall=17.6s err=None
+[sweep] start gpt2_agnews N=10 a=0.05 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.3545 mean_teacher=0.2754 wall=17.6s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3064 mean_teacher=0.2757 wall=17.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.4151 mean_teacher=0.3458 wall=17.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.2725 mean_teacher=0.2747 wall=17.9s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.2716 mean_teacher=0.2757 wall=10.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.2520 mean_teacher=0.3458 wall=10.1s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.2489 mean_teacher=0.2747 wall=11.7s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.2800 mean_teacher=0.2757 wall=18.4s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.3545 mean_teacher=0.3458 wall=18.8s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.2667 mean_teacher=0.2747 wall=18.3s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.3161 mean_teacher=0.2757 wall=18.3s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.3999 mean_teacher=0.3458 wall=18.0s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.3349 mean_teacher=0.2747 wall=18.4s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.2818 mean_teacher=0.2757 wall=18.4s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.3059 mean_teacher=0.3458 wall=19.3s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.2630 mean_teacher=0.2747 wall=19.3s err=None
+[sweep] start gpt2_agnews N=10 a=0.1 dp_avg_eps8_K20 s=42 K=300
