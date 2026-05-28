@@ -1,0 +1,65 @@
+[pt] job 1112415 backbone=vit_b32_cifar10 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=360 cells; chunk 0/1 -> 360 cells; case=heifd_pretrained_headline
+[sweep] start vit_b32_cifar10 N=5 a=0.01 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.3494 mean_teacher=0.2352 wall=209.0s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.6004 mean_teacher=0.3126 wall=8.7s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.3903 mean_teacher=0.2957 wall=8.6s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.8913 mean_teacher=0.2352 wall=5.1s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.8739 mean_teacher=0.3126 wall=5.2s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.8735 mean_teacher=0.2957 wall=3.3s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6798 mean_teacher=0.2352 wall=4.6s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8634 mean_teacher=0.3126 wall=4.5s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.6132 mean_teacher=0.2957 wall=6.6s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.8566 mean_teacher=0.2352 wall=7.7s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.9381 mean_teacher=0.3126 wall=7.9s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.8895 mean_teacher=0.2957 wall=8.3s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4676 mean_teacher=0.2352 wall=7.5s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 dp_avg_eps2_K20 s=43 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.7127 mean_teacher=0.3126 wall=7.5s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 dp_avg_eps2_K20 s=44 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.4715 mean_teacher=0.2957 wall=7.6s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 dp_avg_eps8_K20 s=42 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.6053 mean_teacher=0.2352 wall=7.6s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 dp_avg_eps8_K20 s=43 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.7987 mean_teacher=0.3126 wall=7.7s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.01 dp_avg_eps8_K20 s=44 K=300
+[sweep] ok   dp_avg_eps8_K20 acc=0.5309 mean_teacher=0.2957 wall=7.8s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 no_phase0 s=42 K=300
+[sweep] ok   no_phase0 acc=0.5766 mean_teacher=0.4651 wall=7.8s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 no_phase0 s=43 K=300
+[sweep] ok   no_phase0 acc=0.7017 mean_teacher=0.3788 wall=7.8s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 no_phase0 s=44 K=300
+[sweep] ok   no_phase0 acc=0.6037 mean_teacher=0.4244 wall=7.9s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 warmup_only_labelled s=42 K=300
+[sweep] ok   warmup_only_labelled acc=0.8913 mean_teacher=0.4651 wall=4.7s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 warmup_only_labelled s=43 K=300
+[sweep] ok   warmup_only_labelled acc=0.8739 mean_teacher=0.3788 wall=4.6s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 warmup_only_labelled s=44 K=300
+[sweep] ok   warmup_only_labelled acc=0.8735 mean_teacher=0.4244 wall=4.8s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 labelled_probe_warmup s=42 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7439 mean_teacher=0.4651 wall=8.9s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 labelled_probe_warmup s=43 K=300
+[sweep] ok   labelled_probe_warmup acc=0.8528 mean_teacher=0.3788 wall=8.8s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 labelled_probe_warmup s=44 K=300
+[sweep] ok   labelled_probe_warmup acc=0.7086 mean_teacher=0.4244 wall=8.3s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 raw_union_K20 s=42 K=300
+[sweep] ok   raw_union_K20 acc=0.8522 mean_teacher=0.4651 wall=8.4s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 raw_union_K20 s=43 K=300
+[sweep] ok   raw_union_K20 acc=0.9352 mean_teacher=0.3788 wall=8.2s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 raw_union_K20 s=44 K=300
+[sweep] ok   raw_union_K20 acc=0.8974 mean_teacher=0.4244 wall=8.1s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 dp_avg_eps2_K20 s=42 K=300
+[sweep] ok   dp_avg_eps2_K20 acc=0.6691 mean_teacher=0.4651 wall=8.2s err=None
+[sweep] start vit_b32_cifar10 N=5 a=0.05 dp_avg_eps2_K20 s=43 K=300
