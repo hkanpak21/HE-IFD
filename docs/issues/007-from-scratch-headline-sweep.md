@@ -1,5 +1,15 @@
 # 007 — From-scratch headline sweep  [AFK]
 
+> **STATUS: ⚠️ PARTIAL** (2026-05-28) — MNIST/MLP DONE; FMNIST+CIFAR-10 backbones merged but full grid not yet queued.
+>
+> **Part 1 — MNIST/MLP from-scratch full grid:** job array 1112402 (8 chunks). **360/360 cells, all status=success.** Headline raw_union @ α=0.05 N=50 = 0.919; near-oracle at IID. θ₀-standalone closely matches final at α=0.05 — the θ₀≥final phenomenon is pretrained-only, not from-scratch.
+> **Part 2 — FMNIST + CIFAR-10 from-scratch backbones extension:** new backbones `lenet_fmnist` (LeNet-5) + `cnn5_cifar10` (CNN-5) + raw image loaders + `BACKBONES` entries + dp_avg pixel-space bridge in `protocol.py` (`7bf4407`, `915a072`). Verify job 1113571 ran:
+>   - **LeNet/FMNIST sanity gate PASSES**: raw_union 0.67/α=0.05, 0.81/IID vs oracle 0.89.
+>   - **CNN-5/CIFAR-10 has a 27pp IID gap to oracle** (raw_union IID 0.48 vs oracle 0.75) — under-trained at 10 teacher epochs.
+> **Continuation:**
+>   - LeNet/FMNIST full grid (360 cells): can queue independently *now* if desired (sbatch a wrapper analogous to `heifd_headline_fromscratch.sh` with `--backbones lenet_fmnist`).
+>   - CNN-5/CIFAR-10 full grid: blocked on issue **011** (trainable layer scope) and/or **010** (KD hyperparams) settling the regime. After fix → re-verify → queue full grid.
+
 **Milestone:** M1 · **Blocked by:** 001, 004, 005 · **Blocks:** 009
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md), [`CLAUDE.md`](../../CLAUDE.md), `comparators/REPORTED_RESULTS.md` (the DP-one-shot peers we will sit beside).

@@ -1,5 +1,10 @@
 # 004 — Seed-keyed teacher cache + experiment fusion  [AFK]
 
+> **STATUS: ⏸️ DEFERRED** (2026-05-28) — low value vs QOS-serial GPU bottleneck.
+>
+> The teacher cache would save minutes per cell at most; the dominant wall-clock cost is the QOS limit serializing GPU jobs to ~1 concurrent. Not worth the protocol disruption right now.
+> **Continuation:** re-evaluate if (a) QOS concurrency increases, or (b) we run many more sweeps that would reuse the same teachers. Not blocking the paper.
+
 **Milestone:** M1 · **Blocked by:** 001 · **Blocks:** 007, 008
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md), [`CLAUDE.md`](../../CLAUDE.md).

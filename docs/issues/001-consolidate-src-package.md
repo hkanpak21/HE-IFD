@@ -1,5 +1,9 @@
 # 001 — Consolidate notebook → flat `src/` package  [AFK]
 
+> **STATUS: ✅ DONE** (2026-05-28) — base consolidation + 3 hotfixes.
+>
+> Flat 10-module `src/` package merged from the notebook (`1eb9c38`); `src/v1` + `src/v2` archived. Three runtime bugs surfaced by the VALAR verify cell and patched: `load_mnist_tensors` module ref (`7e64225`), sweep skipping FAILED cells on resume (`df71076`), `data.py` torch under `TYPE_CHECKING` only (`efea247`). VALAR verify green: raw_union @ α=0.05 / mlp_mnist = 0.90 (matches colab). Foundation for everything downstream — no continuation needed.
+
 **Milestone:** Foundation + headline (M1) · **Blocked by:** none · **Blocks:** all other M1 issues
 
 **Required reading (you are context-zero):**

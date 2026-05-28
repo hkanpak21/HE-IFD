@@ -1,5 +1,11 @@
 # 009 — M1 review gate  [HITL]
 
+> **STATUS: ✅ COMPLETED** (2026-05-28) — review held, transition decided.
+>
+> All M1 headline grids landed (from-scratch MNIST/MLP 360 + 4 pretrained backbones × 360 = **1800 cells, 0 failures**). Summary delivered to user 2026-05-28. User chose to **debug the θ₀ ≥ final phenomenon before locking the paper framing** rather than write up M1 as-is.
+> **Outcome:** 4 new debugging investigation issues opened — **010** (KD hyperparams), **011** (trainable layer scope), **012** (harder vision dataset for ViT), **013** (KD dynamics diagnostic). M2 issues (Real-FHE Lattigo + MIA suite) deferred until after the debugging round.
+> **Methodology framing locked at this review:** *"Given a set of clients with a shared-basin initial model, produce a combined model by distillation, with HE guarantees on the updates and the data."* Trainable-layer-scope adjustments (head-only ↔ LoRA-on-last-blocks) are acceptable as long as the server aggregation stays linear (FHE-compatible).
+
 **Milestone:** M1 · **Blocked by:** 006, 007, 008 · **Blocks:** all of M2/M3
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md), [`CLAUDE.md`](../../CLAUDE.md).

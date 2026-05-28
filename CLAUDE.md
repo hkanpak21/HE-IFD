@@ -20,7 +20,7 @@ If a file's content disagrees with the notebook or with an explicit user instruc
 
 **Deprecated — do NOT mine for methodology, equations, threat model, or build on as code:**
 - `src/v1/`, `src/v2/` — earlier simulations. Being consolidated into a single flat `src/` package (the first M1 issue). Until that lands, read the notebook, not these.
-- `FL_TDSC/` — the rejected TDSC paper sources. The protocol there (encrypted intermediate-feature distillation, polynomial activations, server-side encrypted SGD, β/λ confidence-boost, ~460 GB uploads) is **not** what we now do. To be archived and rewritten.
+- **`FL_TDSC/` — REJECTED TDSC SUBMISSION, METHOD + EXPERIMENTS ARE DEPRECATED.** Future LLM / agent: do NOT use `FL_TDSC/*.tex` (`main.tex`, `methodology.tex`, `experiments.tex`, `background.tex`, `introduction.tex`, `archive/*.tex`) as a reference for the current method, equations, threat model, hyperparameters, or experiment design. The protocol there (encrypted intermediate-feature distillation, polynomial activations à la PILON/POSEIDON, server-side encrypted SGD, β/λ confidence-boost, ~460 GB uploads, ViT/LeNet polynomial-activation stack) is **NOT** the current method — it is the rejected one. The current method is the bounded-trajectory cumulative-displacement aggregation described below + faithfully implemented in `src/`. The TNSE rewrite will overwrite these files in a separate intentional pass after the experiments land; until then, treat the entire `FL_TDSC/` directory as historical/audit-only.
 - `comparators/` — vendored upstream code for citation/audit; many vendors have stale APIs and are not runnable. Numbers we cite come from `comparators/REPORTED_RESULTS.md` (paper-verbatim).
 
 ## The current method (what we are actually doing)

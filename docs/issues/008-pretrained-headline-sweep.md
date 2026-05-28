@@ -1,5 +1,15 @@
 # 008 — Pretrained headline sweep  [AFK]
 
+> **STATUS: ✅ DONE** (2026-05-28) — full pretrained grid; caveats under investigation.
+>
+> Four per-backbone jobs (1112414–1112417), non-array (avoids feature-extraction race). **1440/1440 cells, all status=success.** Login-node prefetch (`jobs/prefetch_login.py`) populated HF + torchvision caches before submission; compute nodes loaded offline (`HF_HUB_OFFLINE=1`).
+> **Headline raw_union accs (mean over 3 seeds, N=10) — α=0.05 / IID:**
+> resnet18 0.48 / 0.83 · vit_b32 **0.93 / 0.97** · distilbert 0.44 / 0.86 · gpt2 0.40 / 0.48.
+> **Caveats under investigation (NEW issues 010–013):**
+>   - *θ₀ ≥ final at low α for strong pretrained backbones* (especially resnet18: θ₀=0.74 vs final=0.48 at α=0.05) → issues **010** (KD hyperparams), **011** (trainable layer scope), **013** (KD dynamics diagnostic).
+>   - *ViT saturation on CIFAR-10* (0.97 IID = no headroom) → issue **012** (harder dataset: CIFAR-100 / Tiny-ImageNet).
+>   - *GPT-2 weakness across α* → deferred to future work per issue **002**.
+
 **Milestone:** M1 · **Blocked by:** 001, 002, 004, 005 · **Blocks:** 009
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md), [`CLAUDE.md`](../../CLAUDE.md) (networking note is critical here).

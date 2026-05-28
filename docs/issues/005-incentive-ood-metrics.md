@@ -1,5 +1,9 @@
 # 005 — Incentive (M3) + OOD (M4) + θ₀ + no-align metrics  [AFK]
 
+> **STATUS: ✅ DONE** (2026-05-28) — all four metrics inline in every sweep.
+>
+> M3 (per-client teacher-vs-aggregate gap), M4 (OOD-class accuracy at low α), standalone θ₀ accuracy, no-alignment baseline — all wired into `evaluate.py` + `protocol.run_cell` + `report.py` (`d630db7`). All M1 sweeps emitted these metrics inline, no extra training. **M3 < 0 ∧ M4 ≫ 0 dual incentive story confirmed across every backbone**. The `theta0_acc` field surfaced the **"alignment does most of the work, distillation tops it off"** finding (θ₀ ≥ final for strong pretrained backbones at low α) now being investigated by issues 010–013.
+
 **Milestone:** M1 · **Blocked by:** 001 · **Blocks:** 007, 008
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md) (user stories 11, 23–26), [`CLAUDE.md`](../../CLAUDE.md).

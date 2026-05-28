@@ -146,3 +146,78 @@ Prior art: none in-repo for the simulation; the `results/<case>/` JSON schema an
 - **Venue:** IEEE TNSE (was TDSC SI). Shared reviewer pool — treat every TDSC concern as live.
 - **Naming/archive convention:** no `v1`/`v2`/`Mode-A` proliferation. When the submission's milestones are met or deferred, the current state is archived and the next state (e.g., the privacy follow-up paper: synthetic Phase 0 + DP-synthetic + MIA depth + malicious-client robustness) is switched on.
 - **Honest caveat to preserve in the paper:** cryptographic privacy protects the server-side *computation*; DP protects the released *output*. They are complementary, which is precisely why Phase 0 prototypes are DP-protected and the released student's residual leakage is measured by MIA. The comparison to DP one-shot FL is on the utility axis (lossless vs lossy privacy), stated with this caveat explicit.
+
+---
+
+## Phase II — M1.5 + Extensions (appended 2026-05-28, post M1 review gate)
+
+### Position assessment at the M1 review
+
+M1 produced **1800 cells, 0 failures**, but defensibility across settings is uneven:
+- ✅ **Strong**: from-scratch MNIST/MLP — clean wins across every baseline; scales smoothly with N.
+- ⚠️ **Saturated**: ViT-B/32 / CIFAR-10 (0.97 IID = no headroom; alignment-vs-distill contribution can't be measured).
+- ❌ **Bad at low α**: ResNet-18 / CIFAR-10 — raw_union 0.48 vs θ₀ 0.74 (distillation *degrades* the warmed init by 26pp).
+- ⚠️ **Middling**: DistilBERT / AG-News — edges θ₀/no_phase0 by ~3pp at α=0.05; near-oracle at IID.
+- ⏸️ **Deferred**: GPT-2 — residual weakness deferred to future work per issue 002.
+
+**This is not yet a publishable position for the pretrained-backbone deployment story.** It is publishable for the from-scratch MLP/MNIST story. M1.5 fixes the pretrained regime + completes the from-scratch matrix before any paper writing begins.
+
+### Methodology framing locked at this review
+
+> *"Given a set of clients with a shared-basin initial model, produce a combined model by distillation, with HE guarantees on the updates and the data."*
+
+Trainable-layer-scope adjustments (head-only ↔ LoRA-on-last-blocks ↔ last-N-blocks fine-tuning) are acceptable **as long as the server aggregation stays linear** (PT×CT + CT+CT only). More trainable params → more ciphertexts per client; multiplicative depth stays ≈1.
+
+### N grid
+
+Phase II grids use **N ∈ {1, 5, 10, 20, 50}**. N=1 = degenerate single-client baseline (raw_union should ≈ θ₀); useful as a sanity floor.
+
+### Phase α — debug what's broken (highest priority)
+
+- **Issue 010** — KD hyperparams on resnet18/α=0.05 (K, τ, λ, LR) + the 003 pytest re-run.
+- **Issue 011** — Trainable-layer scope (head ↔ LoRA ↔ last-N blocks). The methodology lever. Also fixes CNN-5/CIFAR-10 under-training.
+- **Issue 012** — Harder vision dataset (CIFAR-100 / Tiny-ImageNet) for ViT — addresses CIFAR-10 saturation.
+- **Issue 013** — KD dynamics diagnostic — empirical-evidence anchor for the basin-cancellation hypothesis.
+
+### Phase β — complete the from-scratch matrix
+
+- **Issue 014** — LeNet/FMNIST full grid + N=1 extension on all from-scratch + CNN-5/CIFAR-10 full grid (after 011).
+- **Issue 015** — DP-ε frontier sweep (ε ∈ {0.5, 2, 8, 32, ∞} + Kpc ∈ {1, 5, 20}) across the 3 from-scratch datasets.
+
+### Phase γ — alignment-strategy expansion
+
+- **Issue 016** — Synthetic-sample alignment (per-client small generator → synthetic samples instead of mean prototypes).
+- **Issue 017** — No-probe DP-common-basin (fully-DP, no labelled public data — warmup on the noisy prototype set itself).
+
+### Phase δ — scale to bigger models (only after α/β/γ stabilize)
+
+- **Issue 018** — Bigger pretrained backbones (ViT-L, BERT-large, GPT-2-medium) with **mandatory sanity-check gating** + HITL touchpoint before protocol application.
+
+### Phase ε — M2 (Real-FHE + MIA, deferred until α + β land)
+
+Original M2 plan (Lattigo + MIA suite — see existing User Stories 29–34) — to be **re-grilled** once Phase α + β results are in, because the methodology may shift (e.g. LoRA-on-last-blocks would change the ciphertext budget to validate).
+
+### Fallback path if Phase α fails to fix ResNet-18
+
+If issues 010 + 011 *both* fail to close the θ₀→final gap on ResNet-18 at α=0.05:
+- (a) **Do NOT** drop ResNet-18 from the headline set as a first move.
+- (b) **Do NOT** reframe the paper away from bounded-trajectory aggregation (rejected by the user at the M1 review).
+- (c) **DO** spawn a third-round debugging issue informed by issue 013's diagnostic findings.
+
+### Updated AFK/HITL split
+
+All Phase II issues are **AFK** by default with **HITL review touchpoints** at:
+- 011 (methodology-shaping — user reviews trainable-scope comparison before locking the new default).
+- 018 (sanity-check stage results need user review before authorising big-backbone protocol runs).
+
+Paper writing remains HITL with the user; everything else AFK. **Paper writing does NOT begin until all of Phase α + β land** — locked at the M1 review.
+
+### Defensibility criteria (the bar we hold the protocol to)
+
+For each (backbone, dataset) cell in the final headline set:
+- `raw_union > no_phase0` (alignment helps).
+- `raw_union ≥ θ₀` in *most* regimes (distillation does not actively hurt the aligned init).
+- `raw_union → oracle` as α → 1.0 (recovers centralised training at IID).
+- `M4 > 0` at low α (federation provides OOD value to clients).
+
+Any setting that fails *raw_union ≥ θ₀* at α=0.05 must be fixed by Phase α, or that setting drops from the headline (per the fallback path).

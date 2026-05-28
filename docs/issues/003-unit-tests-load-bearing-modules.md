@@ -1,5 +1,10 @@
 # 003 — Unit tests for load-bearing modules  [AFK]
 
+> **STATUS: ⚠️ PARTIAL** (2026-05-28) — code merged; runtime verification pending.
+>
+> Behavior-level unit tests written for `aggregate` (FHE invariant + telescoping + basin), `phase0` (DP σ formula), `backbones` (GPT-2 regression), `data` (partition reproducibility) — `c1409f0` → merged `6f81645`. The test sbatch job (1112418) **FAILED** with `No module named pytest`: pytest is not installed in the `he_ofl` conda env.
+> **Continuation (small):** on the VALAR login node, `pip install --quiet pytest` into `he_ofl`, then re-submit `jobs/heifd_tests.sh`. ~5 minute task. Folded into issue **010** (housekeeping bundle) or run standalone.
+
 **Milestone:** M1 · **Blocked by:** 001 (002 for the backbones test) · **Blocks:** 006
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md) (Testing Decisions), [`CLAUDE.md`](../../CLAUDE.md).

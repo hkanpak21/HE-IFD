@@ -1,5 +1,11 @@
 # 006 — Aggregation-coherence ablation  [AFK]
 
+> **STATUS: 📦 CODE MERGED, JOB HELD** (2026-05-28).
+>
+> New module `src/ablation.py` (4 regimes: heifd / converged-shared-init / converged-diff-init / unbounded-distill-shared) + per-client ‖Δᵢ‖ displacement tracking + `jobs/heifd_coherence_ablation.sh` — reuses existing aggregate/distill/teacher primitives without modifying them (`808b087`).
+> **Why held:** sbatch runs on `mlp_mnist` + `cnn5_cifar10`; cnn5 has a 27pp IID gap to oracle (under-trained at 10 teacher epochs), so a CIFAR-10 ablation run now would produce misleading numbers.
+> **Continuation:** queue `sbatch jobs/heifd_coherence_ablation.sh` after issue **011** (trainable-layer scope, which will fix the cnn5 regime) lands.
+
 **Milestone:** M1 · **Blocked by:** 001, 003 · **Blocks:** 009
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md) (user story 17, the "basin coherence" argument), [`CLAUDE.md`](../../CLAUDE.md) ("The current method").

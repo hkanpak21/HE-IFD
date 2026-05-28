@@ -1,5 +1,10 @@
 # 002 — Fix GPT-2 feature extraction + regression test  [AFK]
 
+> **STATUS: ✅ DONE** (2026-05-28) — fix landed; further GPT-2 work DEFERRED.
+>
+> Left-pad + last-token pooling for GPT-2 in `extract_text_features` (`68a8dbd` → merged `da4bdf0`). DistilBERT path unchanged. Fix moved GPT-2 from 0.25 (chance, broken) to ≈0.41–0.59 across α — above chance, but still well below DistilBERT's 0.88 IID.
+> **Continuation:** GPT-2 improvement (production feature standardization, alternative pooling) is **DEFERRED to future work** by user decision 2026-05-28. The 002 fix itself is complete; the residual GPT-2 weakness is acknowledged as a backbone-level finding, not a protocol bug.
+
 **Milestone:** M1 · **Blocked by:** 001 · **Blocks:** 003 (backbones test), 008 (pretrained sweep)
 
 **Required reading:** [`docs/prd/...`](../prd/he-ifd-tnse-resubmission.md), [`CLAUDE.md`](../../CLAUDE.md), and the notebook's `extract_text_features` (the buggy function).
