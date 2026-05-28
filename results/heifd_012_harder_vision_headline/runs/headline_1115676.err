@@ -1,0 +1,1 @@
+/var/spool/slurm/job1115676/slurm_script: line 62: HEIFD_BACKBONE: set HEIFD_BACKBONE=<vit_b32_cifar100|resnet18_cifar100|vit_b32_tiny_imagenet|resnet18_tiny_imagenet>

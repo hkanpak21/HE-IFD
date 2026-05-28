@@ -1,0 +1,78 @@
+{
+  "backbone": "lenet_fmnist",
+  "dataset": "FashionMNIST",
+  "N": 1,
+  "alpha": 0.01,
+  "seed": 43,
+  "K": 300,
+  "tau": 4.0,
+  "method": "dp_avg_eps8_K20",
+  "phase0_kind": "dp_avg",
+  "probe_size_actual": 10,
+  "sigma": 1.1271583534196334,
+  "acc": 0.7088,
+  "mean_teacher": 0.8889,
+  "best_teacher": 0.8889,
+  "oracle": 0.8937,
+  "per_teacher_acc": [
+    0.8889
+  ],
+  "theta0_acc": 0.1001,
+  "m3_student_acc_on_Di": [
+    0.7136393989983305
+  ],
+  "m3_teacher_acc_on_Di": [
+    0.9040233722871452
+  ],
+  "m3_gap": [
+    -0.19038397328881473
+  ],
+  "m3_mean_gap": -0.19038397328881473,
+  "m3_clients_helped": 0,
+  "m3_clients_evaluated": 1,
+  "m4_ood_acc": [
+    null
+  ],
+  "m4_mean": null,
+  "m4_clients_evaluated": 0,
+  "per_client_total": [
+    59900
+  ],
+  "per_client_per_class": [
+    [
+      5989,
+      5986,
+      5993,
+      5988,
+      5993,
+      5985,
+      5992,
+      5992,
+      5988,
+      5994
+    ]
+  ],
+  "sample_weights": [
+    1.0
+  ],
+  "wall_clock_sec": 21.389530181884766,
+  "phase_teacher_sec": 20.12413763999939,
+  "phase_phase0_sec": 0.0761098861694336,
+  "phase_distill_sec": 0.7022788524627686,
+  "phase_aggregate_sec": 0.0003063678741455078,
+  "phase_eval_sec": 0.29758620262145996,
+  "job_id": "1115679",
+  "node": "ai08",
+  "status": "success",
+  "error": null,
+  "notes": "HE-IFD plaintext simulation: sample-weighted linear aggregate \u03b8\u2080+\u03a3 w_i\u00b7\u0394_i of bounded K-step cumulative displacements; server op is PT\u00d7CT + CT+CT only (FHE-compatible).",
+  "diagnostics": null,
+  "_descriptor": {
+    "backbone": "lenet_fmnist",
+    "N": 1,
+    "alpha": 0.01,
+    "method": "dp_avg_eps8_K20",
+    "seed": 43,
+    "K": 300
+  }
+}

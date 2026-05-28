@@ -1,0 +1,154 @@
+{
+  "backbone": "lenet_fmnist",
+  "dataset": "FashionMNIST",
+  "N": 5,
+  "alpha": 0.1,
+  "seed": 44,
+  "K": 300,
+  "tau": 4.0,
+  "method": "warmup_only_labelled",
+  "phase0_kind": "warmup_only",
+  "probe_size_actual": 100,
+  "sigma": 0.0,
+  "acc": 0.1837,
+  "mean_teacher": 0.45424,
+  "best_teacher": 0.5225,
+  "oracle": 0.8777,
+  "per_teacher_acc": [
+    0.4913,
+    0.374,
+    0.4478,
+    0.4356,
+    0.5225
+  ],
+  "theta0_acc": 0.1837,
+  "m3_student_acc_on_Di": [
+    0.09606367898811471,
+    0.0911873840445269,
+    0.36762419736397434,
+    0.02556818181818182,
+    0.2529956013954194
+  ],
+  "m3_teacher_acc_on_Di": [
+    0.9870243157779959,
+    0.97708719851577,
+    0.9307874281851977,
+    0.9714237967914439,
+    0.9808888214773245
+  ],
+  "m3_gap": [
+    -0.8909606367898811,
+    -0.8858998144712431,
+    -0.5631632308212233,
+    -0.9458556149732621,
+    -0.727893220081905
+  ],
+  "m3_mean_gap": -0.8027545034275029,
+  "m3_clients_helped": 0,
+  "m3_clients_evaluated": 5,
+  "m4_ood_acc": [
+    0.0,
+    0.25883333333333336,
+    0.216,
+    0.25266666666666665,
+    null
+  ],
+  "m4_mean": 0.181875,
+  "m4_clients_evaluated": 4,
+  "per_client_total": [
+    9171,
+    10780,
+    14795,
+    11968,
+    13186
+  ],
+  "per_client_per_class": [
+    [
+      0,
+      1574,
+      4717,
+      0,
+      51,
+      1105,
+      0,
+      4,
+      1211,
+      509
+    ],
+    [
+      3533,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1347,
+      421,
+      5479
+    ],
+    [
+      2170,
+      2,
+      1271,
+      2344,
+      5587,
+      0,
+      0,
+      3421,
+      0,
+      0
+    ],
+    [
+      1,
+      4382,
+      0,
+      140,
+      315,
+      0,
+      5887,
+      1219,
+      24,
+      0
+    ],
+    [
+      289,
+      33,
+      1,
+      3508,
+      35,
+      4883,
+      105,
+      1,
+      4330,
+      1
+    ]
+  ],
+  "sample_weights": [
+    0.1531051752921536,
+    0.17996661101836395,
+    0.2469949916527546,
+    0.19979966611018363,
+    0.22013355592654424
+  ],
+  "wall_clock_sec": 20.83352518081665,
+  "phase_teacher_sec": 20.26910090446472,
+  "phase_phase0_sec": 0.02346968650817871,
+  "phase_distill_sec": 0.0,
+  "phase_aggregate_sec": 0.0,
+  "phase_eval_sec": 0.36252617835998535,
+  "job_id": "1115842",
+  "node": "ai08",
+  "status": "success",
+  "error": null,
+  "notes": "HE-IFD plaintext simulation: sample-weighted linear aggregate \u03b8\u2080+\u03a3 w_i\u00b7\u0394_i of bounded K-step cumulative displacements; server op is PT\u00d7CT + CT+CT only (FHE-compatible).",
+  "diagnostics": null,
+  "_descriptor": {
+    "backbone": "lenet_fmnist",
+    "N": 5,
+    "alpha": 0.1,
+    "method": "warmup_only_labelled",
+    "seed": 44,
+    "K": 300
+  }
+}

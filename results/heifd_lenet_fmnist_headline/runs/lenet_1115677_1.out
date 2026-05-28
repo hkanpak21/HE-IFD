@@ -1,0 +1,117 @@
+[014 lenet] job 1115677 task 1/8 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=450 cells; chunk 1/8 -> 57 cells; case=heifd_lenet_fmnist_headline
+[sweep] start lenet_fmnist N=1 a=0.01 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.7153 mean_teacher=0.8869 wall=28.6s err=None
+[sweep] start lenet_fmnist N=1 a=0.01 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7229 mean_teacher=0.8809 wall=21.3s err=None
+[sweep] start lenet_fmnist N=1 a=0.01 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6826 mean_teacher=0.8624 wall=21.2s err=None
+[sweep] start lenet_fmnist N=1 a=0.05 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.7412 mean_teacher=0.8787 wall=21.3s err=None
+[sweep] start lenet_fmnist N=1 a=0.05 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6900 mean_teacher=0.8750 wall=21.3s err=None
+[sweep] start lenet_fmnist N=1 a=0.1 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.8768 wall=20.5s err=None
+[sweep] start lenet_fmnist N=1 a=0.1 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6819 mean_teacher=0.8714 wall=21.2s err=None
+[sweep] start lenet_fmnist N=1 a=0.3 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.8720 wall=20.5s err=None
+[sweep] start lenet_fmnist N=1 a=0.3 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7299 mean_teacher=0.8790 wall=21.3s err=None
+[sweep] start lenet_fmnist N=1 a=1.0 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.7054 mean_teacher=0.8825 wall=21.3s err=None
+[sweep] start lenet_fmnist N=1 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7087 mean_teacher=0.8764 wall=21.3s err=None
+[sweep] start lenet_fmnist N=1 a=1.0 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6921 mean_teacher=0.8773 wall=21.1s err=None
+[sweep] start lenet_fmnist N=5 a=0.01 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.2909 mean_teacher=0.2345 wall=24.1s err=None
+[sweep] start lenet_fmnist N=5 a=0.01 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.1000 mean_teacher=0.1880 wall=24.3s err=None
+[sweep] start lenet_fmnist N=5 a=0.05 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.4595 wall=20.9s err=None
+[sweep] start lenet_fmnist N=5 a=0.05 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.4124 mean_teacher=0.4013 wall=24.3s err=None
+[sweep] start lenet_fmnist N=5 a=0.1 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.4927 wall=20.5s err=None
+[sweep] start lenet_fmnist N=5 a=0.1 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5300 mean_teacher=0.4529 wall=24.0s err=None
+[sweep] start lenet_fmnist N=5 a=0.3 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.4548 mean_teacher=0.6137 wall=24.0s err=None
+[sweep] start lenet_fmnist N=5 a=0.3 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.6837 mean_teacher=0.6473 wall=24.3s err=None
+[sweep] start lenet_fmnist N=5 a=0.3 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5247 mean_teacher=0.6522 wall=24.3s err=None
+[sweep] start lenet_fmnist N=5 a=1.0 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.6799 mean_teacher=0.7779 wall=24.3s err=None
+[sweep] start lenet_fmnist N=5 a=1.0 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6609 mean_teacher=0.7993 wall=24.3s err=None
+[sweep] start lenet_fmnist N=10 a=0.01 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.1467 wall=21.1s err=None
+[sweep] start lenet_fmnist N=10 a=0.01 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.1000 mean_teacher=0.1308 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.2962 wall=21.0s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5422 mean_teacher=0.2868 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.1 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.2986 mean_teacher=0.3308 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.1 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.6997 mean_teacher=0.3470 wall=28.0s err=None
+[sweep] start lenet_fmnist N=10 a=0.1 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.3119 mean_teacher=0.3569 wall=28.0s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.6042 mean_teacher=0.5078 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5677 mean_teacher=0.6019 wall=28.0s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.7654 wall=21.2s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6238 mean_teacher=0.7589 wall=27.9s err=None
+[sweep] start lenet_fmnist N=20 a=0.01 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.1220 wall=21.5s err=None
+[sweep] start lenet_fmnist N=20 a=0.01 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5099 mean_teacher=0.1535 wall=33.2s err=None
+[sweep] start lenet_fmnist N=20 a=0.05 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.1967 mean_teacher=0.1770 wall=35.0s err=None
+[sweep] start lenet_fmnist N=20 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7234 mean_teacher=0.2420 wall=35.1s err=None
+[sweep] start lenet_fmnist N=20 a=0.05 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.4016 mean_teacher=0.2474 wall=35.2s err=None
+[sweep] start lenet_fmnist N=20 a=0.1 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.4987 mean_teacher=0.2766 wall=35.1s err=None
+[sweep] start lenet_fmnist N=20 a=0.1 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.4207 mean_teacher=0.3376 wall=35.1s err=None
+[sweep] start lenet_fmnist N=20 a=0.3 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.5221 wall=21.6s err=None
+[sweep] start lenet_fmnist N=20 a=0.3 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5299 mean_teacher=0.5110 wall=35.2s err=None
+[sweep] start lenet_fmnist N=20 a=1.0 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.6769 wall=21.5s err=None
+[sweep] start lenet_fmnist N=20 a=1.0 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8302 mean_teacher=0.6967 wall=35.5s err=None
+[sweep] start lenet_fmnist N=50 a=0.01 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.1005 mean_teacher=0.1126 wall=44.0s err=None
+[sweep] start lenet_fmnist N=50 a=0.01 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.1000 mean_teacher=0.1142 wall=46.9s err=None
+[sweep] start lenet_fmnist N=50 a=0.01 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   dp_avg_eps8_K20 acc=n/a mean_teacher=0.1141 wall=21.4s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start lenet_fmnist N=50 a=0.05 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.2064 mean_teacher=0.1808 wall=55.0s err=None
+[sweep] start lenet_fmnist N=50 a=0.05 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.3022 mean_teacher=0.1677 wall=56.5s err=None
+[sweep] start lenet_fmnist N=50 a=0.1 warmup_only_labelled s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1837 mean_teacher=0.2448 wall=22.6s err=None
+[sweep] start lenet_fmnist N=50 a=0.1 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.4326 mean_teacher=0.2390 wall=56.2s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 warmup_only_labelled s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.1000 mean_teacher=0.4088 wall=22.3s err=None
+[sweep] start lenet_fmnist N=50 a=0.3 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8320 mean_teacher=0.4193 wall=57.0s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 no_phase0 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   no_phase0 acc=0.5932 mean_teacher=0.5815 wall=56.1s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8376 mean_teacher=0.5696 wall=57.2s err=None
+[sweep] start lenet_fmnist N=50 a=1.0 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5894 mean_teacher=0.5755 wall=56.4s err=None
+[sweep] done. ran=56 skipped=0 failed=1. report at /scratch/hkanpak21/HE_IFD/results/heifd_lenet_fmnist_headline/README.md
