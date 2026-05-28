@@ -1,0 +1,7 @@
+[013] job 1115488 on ai08.kuvalar.ku.edu.tr
+[013] running 2 diagnostic cells -> /scratch/hkanpak21/HE_IFD/results/heifd_013_kd_diagnostic
+[013] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=20 diagnose=True
+[013] ok   acc=0.5998 theta0_acc=0.7176 wall=10.6s err=None
+[013] start mlp_mnist N=10 a=0.05 raw_union_K20 s=42 K=20 diagnose=True
+[013] ok   acc=0.8646 theta0_acc=0.8240 wall=15.0s err=None
+[013] done.

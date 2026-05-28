@@ -1,0 +1,27 @@
+[kdhp] job 1115489 task 0/4 on ai08.kuvalar.ku.edu.tr
+[sweep] grid=48 cells; chunk 0/4 -> 12 cells; case=heifd_010_kd_hparams_resnet18
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=30 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7495 mean_teacher=0.2297 wall=10.0s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7486 mean_teacher=0.2297 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=300 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7388 mean_teacher=0.2297 wall=5.3s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=42 K=1000 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7255 mean_teacher=0.2297 wall=11.7s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=30 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7626 mean_teacher=0.2879 wall=2.8s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7630 mean_teacher=0.2879 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=300 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7588 mean_teacher=0.2879 wall=5.2s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=43 K=1000 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7538 mean_teacher=0.2879 wall=11.7s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=30 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7716 mean_teacher=0.2493 wall=2.8s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7734 mean_teacher=0.2493 wall=3.4s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=300 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7697 mean_teacher=0.2493 wall=5.2s err=None
+[sweep] start resnet18_cifar10 N=10 a=0.05 raw_union_K20 s=44 K=1000 tau=1.0 lr=0.001
+[sweep] ok   raw_union_K20 acc=0.7639 mean_teacher=0.2493 wall=11.6s err=None
+[sweep] done. ran=12 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_010_kd_hparams_resnet18/README.md

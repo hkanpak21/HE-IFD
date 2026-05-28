@@ -1,0 +1,70 @@
+[tests] job 1115487 on ai07.kuvalar.ku.edu.tr
+============================= test session starts ==============================
+platform linux -- Python 3.9.25, pytest-8.4.2, pluggy-1.6.0 -- /home/hkanpak21/.conda/envs/he_ofl/bin/python
+cachedir: .pytest_cache
+rootdir: /scratch/hkanpak21/HE_IFD
+plugins: anyio-4.12.1
+collecting ... collected 34 items
+
+tests/test_aggregate.py::test_sample_weights_are_normalised_sample_shares PASSED [  2%]
+tests/test_aggregate.py::test_sample_weights_unequal_then_proportional PASSED [  5%]
+tests/test_aggregate.py::test_sample_weights_not_uniform_when_sizes_differ PASSED [  8%]
+tests/test_aggregate.py::test_sample_weights_degenerate_all_zero_falls_back_to_uniform PASSED [ 11%]
+tests/test_aggregate.py::test_aggregate_equals_sample_weighted_average_of_finals PASSED [ 14%]
+tests/test_aggregate.py::test_aggregate_identity_when_all_deltas_zero_returns_theta0 PASSED [ 17%]
+tests/test_aggregate.py::test_aggregate_does_not_mutate_inputs PASSED    [ 20%]
+tests/test_aggregate.py::test_telescoping_cumulative_equals_per_step PASSED [ 23%]
+tests/test_aggregate.py::test_telescoping_holds_for_uneven_but_padded_trajectories PASSED [ 26%]
+tests/test_aggregate.py::test_aggregate_is_additive_in_the_deltas PASSED [ 29%]
+tests/test_aggregate.py::test_aggregate_is_scalar_homogeneous_in_the_deltas PASSED [ 32%]
+tests/test_aggregate.py::test_basin_coherent_bounded_deltas_stay_near_shared_init PASSED [ 35%]
+tests/test_aggregate.py::test_basin_divergent_different_inits_does_not_cohere PASSED [ 38%]
+tests/test_aggregate.py::test_basin_coherent_vs_divergent_contrast PASSED [ 41%]
+tests/test_backbones.py::test_gpt2_iid_accuracy_above_chance FAILED      [ 44%]
+tests/test_backbones.py::test_distilbert_iid_accuracy_unaffected FAILED  [ 47%]
+tests/test_data.py::test_dirichlet_partition_is_seed_reproducible PASSED [ 50%]
+tests/test_data.py::test_dirichlet_partition_differs_across_seeds PASSED [ 52%]
+tests/test_data.py::test_dirichlet_partition_is_a_disjoint_cover_of_all_indices PASSED [ 55%]
+tests/test_data.py::test_dirichlet_partition_class_indices_are_consistent_with_labels PASSED [ 58%]
+tests/test_data.py::test_dirichlet_low_alpha_is_more_skewed_than_high_alpha PASSED [ 61%]
+tests/test_data.py::test_reserve_probe_and_pool_are_disjoint_and_exhaustive PASSED [ 64%]
+tests/test_data.py::test_reserve_probe_is_seed_reproducible PASSED       [ 67%]
+tests/test_data.py::test_public_probe_disjoint_from_every_client_training_set PASSED [ 70%]
+tests/test_phase0.py::test_dp_sigma_matches_exact_gaussian_mechanism_formula PASSED [ 73%]
+tests/test_phase0.py::test_dp_sigma_eps_infinite_is_zero_noise PASSED    [ 76%]
+tests/test_phase0.py::test_dp_sigma_sensitivity_scales_as_clip_over_kpc PASSED [ 79%]
+tests/test_phase0.py::test_dp_sigma_inverse_in_epsilon PASSED            [ 82%]
+tests/test_phase0.py::test_dp_sigma_delta_enters_through_log_term PASSED [ 85%]
+tests/test_phase0.py::test_raw_union_skips_absent_classes_and_caps_per_client_per_class PASSED [ 88%]
+tests/test_phase0.py::test_raw_union_class_with_no_contributor_is_absent PASSED [ 91%]
+tests/test_phase0.py::test_dp_averaged_one_prototype_per_class_with_contributor PASSED [ 94%]
+tests/test_phase0.py::test_dp_averaged_drops_classes_with_no_contributor PASSED [ 97%]
+tests/test_phase0.py::test_dp_averaged_sigma_recorded_matches_dp_sigma PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_gpt2_iid_accuracy_above_chance ______________________
+tests/test_backbones.py:161: in test_gpt2_iid_accuracy_above_chance
+    assert acc >= _ACC_FLOOR, (
+E   AssertionError: GPT-2 IID accuracy 0.6733 is below the 0.80 floor (chance=0.25); the left-pad + last-token pooling fix has regressed back toward the mean-pool bug.
+E   assert 0.6733333333333333 >= 0.8
+---------------------------- Captured stderr setup -----------------------------
+Using the latest cached version of the dataset since ag_news couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'default' at /home/hkanpak21/.cache/huggingface/datasets/ag_news/default/0.0.0/eb185aade064a813bc0b7f42de02595523103ca4 (last modified on Wed May 27 23:14:17 2026).
+------------------------------ Captured log setup ------------------------------
+WARNING  datasets.load:load.py:820 Using the latest cached version of the dataset since ag_news couldn't be found on the Hugging Face Hub (offline mode is enabled).
+WARNING  datasets.packaged_modules.cache.cache:cache.py:95 Found the latest cached dataset configuration 'default' at /home/hkanpak21/.cache/huggingface/datasets/ag_news/default/0.0.0/eb185aade064a813bc0b7f42de02595523103ca4 (last modified on Wed May 27 23:14:17 2026).
+___________________ test_distilbert_iid_accuracy_unaffected ____________________
+tests/test_backbones.py:178: in test_distilbert_iid_accuracy_unaffected
+    assert acc >= _ACC_FLOOR, (
+E   AssertionError: DistilBERT IID accuracy 0.7683 is below the 0.80 floor; the bidirectional mean-pool path should be unaffected by issue 002.
+E   assert 0.7683333333333333 >= 0.8
+---------------------------- Captured stderr setup -----------------------------
+Using the latest cached version of the dataset since ag_news couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'default' at /home/hkanpak21/.cache/huggingface/datasets/ag_news/default/0.0.0/eb185aade064a813bc0b7f42de02595523103ca4 (last modified on Wed May 27 23:14:17 2026).
+------------------------------ Captured log setup ------------------------------
+WARNING  datasets.load:load.py:820 Using the latest cached version of the dataset since ag_news couldn't be found on the Hugging Face Hub (offline mode is enabled).
+WARNING  datasets.packaged_modules.cache.cache:cache.py:95 Found the latest cached dataset configuration 'default' at /home/hkanpak21/.cache/huggingface/datasets/ag_news/default/0.0.0/eb185aade064a813bc0b7f42de02595523103ca4 (last modified on Wed May 27 23:14:17 2026).
+=========================== short test summary info ============================
+FAILED tests/test_backbones.py::test_gpt2_iid_accuracy_above_chance - Asserti...
+FAILED tests/test_backbones.py::test_distilbert_iid_accuracy_unaffected - Ass...
+======================== 2 failed, 32 passed in 50.59s =========================
