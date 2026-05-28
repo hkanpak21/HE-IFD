@@ -43,22 +43,30 @@ from .report import write_report
 # existing cell_*.json filenames (so existing case dirs still resume correctly).
 _LEGACY_TAU = 4.0
 _LEGACY_STUDENT_LR = 0.01
+# Trainable-scope (issue 011) — ``head_only`` is the pre-issue-011 default for
+# every backbone, so omitting it from the descriptor keeps existing per-cell
+# JSON hashes/filenames identical (resumable across the issue 011 extension).
+_LEGACY_TRAINABLE_SCOPE = "head_only"
 
 
 def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
                     seed: int, K: int,
                     tau: float = _LEGACY_TAU,
-                    student_lr: float = _LEGACY_STUDENT_LR) -> Dict:
-    """Deterministic cell descriptor. ``tau`` / ``student_lr`` are appended ONLY
-    when they differ from the historical defaults so existing per-cell filenames
-    (which hashed only over {backbone,N,alpha,method,seed,K}) keep their hashes
-    and remain resumable across the CLI extension."""
+                    student_lr: float = _LEGACY_STUDENT_LR,
+                    trainable_scope: str = _LEGACY_TRAINABLE_SCOPE) -> Dict:
+    """Deterministic cell descriptor. ``tau`` / ``student_lr`` /
+    ``trainable_scope`` are appended ONLY when they differ from the historical
+    defaults so existing per-cell filenames (which hashed only over
+    {backbone,N,alpha,method,seed,K}) keep their hashes and remain resumable
+    across the issue 010 (tau/LR) and issue 011 (scope) extensions."""
     desc: Dict = {"backbone": backbone, "N": N, "alpha": alpha,
                   "method": method, "seed": seed, "K": K}
     if tau != _LEGACY_TAU:
         desc["tau"] = tau
     if student_lr != _LEGACY_STUDENT_LR:
         desc["student_lr"] = student_lr
+    if trainable_scope != _LEGACY_TRAINABLE_SCOPE:
+        desc["trainable_scope"] = trainable_scope
     return desc
 
 
@@ -69,14 +77,17 @@ def descriptor_hash(desc: Dict) -> str:
 
 def cell_filename(desc: Dict) -> str:
     # Filename stem reflects only the dimensions the descriptor records, so
-    # legacy (tau=4.0, lr=0.01) cells keep their original stems and the new
-    # non-default tau/LR cells get distinct, self-describing stems.
+    # legacy (tau=4.0, lr=0.01, scope=head_only) cells keep their original
+    # stems and the new non-default tau/LR/scope cells get distinct,
+    # self-describing stems.
     stem = (f"cell_{desc['backbone']}_N{desc['N']}_a{desc['alpha']}"
             f"_{desc['method']}_s{desc['seed']}_K{desc['K']}")
     if "tau" in desc:
         stem += f"_t{desc['tau']}"
     if "student_lr" in desc:
         stem += f"_lr{desc['student_lr']}"
+    if "trainable_scope" in desc:
+        stem += f"_sc{desc['trainable_scope']}"
     return f"{stem}_{descriptor_hash(desc)}.json"
 
 
@@ -153,6 +164,19 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--student-lrs", type=str, default=None,
                    help="Optional comma list of student LRs to sweep, e.g. 0.001,0.01. "
                         "When set, overrides --student-lr and adds LR as a grid axis.")
+    p.add_argument("--scope", type=str, default="head_only",
+                   help="Trainable-layer scope (single value) per issue 011: "
+                        "'head_only' (default; legacy linear head), 'lora_<rank>' "
+                        "(rank-r LoRA on the head, e.g. lora_8), 'last_block' / "
+                        "'last_n_blocks_<n>' (MLP-on-cached-features). Only the "
+                        "'head' backbones (resnet18 / vit_b32 / distilbert / "
+                        "gpt2) accept non-default scopes; from-scratch backbones "
+                        "raise NotImplementedError for non-'head_only'.")
+    p.add_argument("--scopes", type=str, default=None,
+                   help="Optional comma list of scope tokens to sweep, e.g. "
+                        "head_only,lora_8,last_block. When set, overrides "
+                        "--scope and adds scope as a grid axis (the issue 011 "
+                        "focused comparison).")
     p.add_argument("--probe-size", type=int, default=None,
                    help="Labelled-probe size P (default: backbone-specific).")
     p.add_argument("--case", type=str, default="v1_he-ifd_mlp_mnist_verify",
@@ -176,15 +200,17 @@ def build_grid(args) -> List[Dict]:
     """Deterministically-ordered list of cell descriptors (the sweep order).
 
     The default sweep is the historical 6-axis grid (backbone × N × α × method ×
-    seed × K with a single K). When ``--Ks`` / ``--taus`` / ``--student-lrs`` are
-    provided, those become additional grid axes (single-value flags ``--K`` /
-    ``--tau`` / ``--student-lr`` are ignored for that axis). Non-default
-    (tau, student_lr) values flow into the descriptor so cell filenames stay
-    distinct — see ``cell_descriptor`` for the backwards-compat rule.
+    seed × K with a single K). When ``--Ks`` / ``--taus`` / ``--student-lrs`` /
+    ``--scopes`` are provided, those become additional grid axes (single-value
+    flags ``--K`` / ``--tau`` / ``--student-lr`` / ``--scope`` are ignored for
+    that axis). Non-default (tau, student_lr, trainable_scope) values flow into
+    the descriptor so cell filenames stay distinct — see ``cell_descriptor``
+    for the backwards-compat rule.
     """
     Ks = parse_int_list(args.Ks) if args.Ks else [args.K]
     taus = parse_float_list(args.taus) if args.taus else [args.tau]
     lrs = parse_float_list(args.student_lrs) if args.student_lrs else [args.student_lr]
+    scopes = parse_str_list(args.scopes) if args.scopes else [args.scope]
     grid: List[Dict] = []
     for backbone in parse_str_list(args.backbones):
         for N in parse_int_list(args.Ns):
@@ -194,9 +220,11 @@ def build_grid(args) -> List[Dict]:
                         for K in Ks:
                             for tau in taus:
                                 for student_lr in lrs:
-                                    grid.append(cell_descriptor(
-                                        backbone, N, alpha, method, seed, K,
-                                        tau=tau, student_lr=student_lr))
+                                    for scope in scopes:
+                                        grid.append(cell_descriptor(
+                                            backbone, N, alpha, method, seed, K,
+                                            tau=tau, student_lr=student_lr,
+                                            trainable_scope=scope))
     return grid
 
 
@@ -240,20 +268,22 @@ def main() -> None:
                 print(f"[sweep] skip  {out_path.name} (success exists)", flush=True)
                 continue
             print(f"[sweep] retry {out_path.name} (prior status != success)", flush=True)
-        # Per-cell tau/LR come from the descriptor when the multi-flag sweep is
-        # in use; otherwise fall back to the single-value CLI flags (the legacy
-        # contract — every cell shares one tau / LR).
+        # Per-cell tau/LR/scope come from the descriptor when the multi-flag
+        # sweep is in use; otherwise fall back to the single-value CLI flags
+        # (the legacy contract — every cell shares one tau / LR / scope).
         cell_tau = desc.get("tau", args.tau)
         cell_lr = desc.get("student_lr", args.student_lr)
+        cell_scope = desc.get("trainable_scope", args.scope)
         print(f"[sweep] start {desc['backbone']} N={desc['N']} a={desc['alpha']} "
               f"{desc['method']} s={desc['seed']} K={desc['K']} "
-              f"tau={cell_tau} lr={cell_lr}", flush=True)
+              f"tau={cell_tau} lr={cell_lr} scope={cell_scope}", flush=True)
         res = run_cell(
             backbone=desc["backbone"], N=desc["N"], alpha=desc["alpha"],
             seed=desc["seed"], method=desc["method"], K=desc["K"], tau=cell_tau,
             student_lr=cell_lr, probe_size=args.probe_size,
             data_root=args.data_root, cache_root=args.cache_root,
             job_id=job_id, node=node,
+            trainable_scope=cell_scope,
         )
         write_cell_json(results_dir, res, desc)
         tag = "ok" if res.status == "success" else "FAIL"

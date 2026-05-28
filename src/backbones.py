@@ -217,6 +217,200 @@ def make_head(in_dim: int, num_classes: int) -> Callable:
 
 
 # ----------------------------------------------------------------------------
+# Trainable-scope variants of the head (issue 011)
+# ----------------------------------------------------------------------------
+# Issue 011 introduces a ``trainable_scope`` knob on the protocol. For
+# pretrained "head" backbones the features are pre-cached (notebook Section B.1
+# / C.1), so the only model the protocol ever instantiates is the head on top
+# of those features — the entire frozen backbone is amortised away. The
+# scope-versus-architecture choices below realise the spirit of the issue
+# ("LoRA on the last 1-2 blocks + head" / "full FT of last 1-2 blocks + head")
+# *in the cached-feature space*, which is the natural place to expand head
+# capacity without re-architecting the pipeline. The issue's own implementation
+# pointer endorses this minimal interpretation: "Linear-only LoRA in the head
+# is the simplest and still tests the hypothesis."
+#
+# Critical FHE invariant: every trainable tensor (base Linear weights + bias,
+# LoRA A/B matrices, MLP hidden-layer weights) ends up in ``state_dict`` and
+# therefore in the cumulative displacement ``Δᵢ`` the server aggregates. Since
+# ``aggregate`` operates element-wise (PT-scalar × CT  and  CT + CT) on every
+# tensor in the dict, the linearity invariant is preserved regardless of which
+# scope is selected. The unit test in ``tests/test_aggregate.py`` exercises a
+# 10× larger parameter dict to make this explicit.
+
+
+def _build_lora_head_class():
+    """Linear head + parallel rank-r LoRA residual update (hand-rolled).
+
+    Forward:  y = W·x + b + (α/r) · B·A·x
+        - (W, b) is the BASE linear head (same as ``ClassifierHead``);
+        - A is r×in_dim, B is num_classes×r; both initialised so the LoRA branch
+          starts at zero (A=Kaiming-uniform, B=zero) — equivalent to a pure
+          linear head at step 0.
+        - α/r is the standard LoRA scaling. All five tensors (fc.weight,
+          fc.bias, lora_A.weight, lora_B.weight, and the scaling buffer for
+          checkpoint friendliness) live in state_dict and so flow through
+          aggregate exactly as for ``ClassifierHead`` — element-wise PT × CT
+          and CT + CT only, no new non-linear ops.
+
+    Capacity: ~ r·(in_dim + num_classes) extra trainable scalars on top of the
+    base in_dim·num_classes head. For resnet18/CIFAR-10 (in_dim=512, nc=10) at
+    r=8 that is ~4176 extra params vs the base 5130, so trainable scope expands
+    roughly 1.8× — still tiny in absolute terms but enough to test the "adapter
+    suffices" hypothesis from issue 011.
+    """
+    import math
+
+    import torch
+    import torch.nn as nn
+
+    class LoRAHead(nn.Module):
+        def __init__(self, in_dim: int, num_classes: int, rank: int,
+                     alpha: float):
+            super().__init__()
+            self.in_dim = in_dim
+            self.num_classes = num_classes
+            self.rank = int(rank)
+            # ``alpha / rank`` is the conventional LoRA scaling; stored as a
+            # plain Python float (NOT a Parameter) so it never enters state_dict
+            # and never has to be aggregated — it is a *constant* shared by all
+            # clients (protocol-wide hyperparam, not per-client tensor).
+            self.scaling = float(alpha) / max(1, int(rank))
+
+            self.fc = nn.Linear(in_dim, num_classes)
+            # LoRA matrices: A: (rank, in_dim), B: (num_classes, rank).
+            # Bias-less so trainable params are exactly A.weight + B.weight.
+            self.lora_A = nn.Linear(in_dim, self.rank, bias=False)
+            self.lora_B = nn.Linear(self.rank, num_classes, bias=False)
+            # LoRA-standard initialisation: A ~ Kaiming-uniform, B = 0, so the
+            # residual update starts at zero and the model is a pure linear
+            # head at iteration 0 (matches ``ClassifierHead`` initial output).
+            nn.init.kaiming_uniform_(self.lora_A.weight, a=math.sqrt(5))
+            nn.init.zeros_(self.lora_B.weight)
+
+        def forward(self, x):
+            return self.fc(x) + self.scaling * self.lora_B(self.lora_A(x))
+
+    return LoRAHead
+
+
+def make_lora_head(in_dim: int, num_classes: int, rank: int = 8,
+                   alpha: float = 8.0) -> Callable:
+    """Zero-arg factory for ``LoRAHead`` sized (in_dim -> num_classes) on DEVICE.
+
+    Default ``rank=8``, ``alpha=8`` matches issue 011's ``lora_8`` scope. The
+    factory contract matches ``make_head`` so ``_load_features`` can swap one
+    for the other transparently — ``protocol.run_cell`` never sees the
+    difference, and aggregation continues to operate element-wise over the
+    expanded state_dict (FHE-linearity invariant preserved by construction).
+    """
+    LoRAHead = _build_lora_head_class()
+    dev = _device()
+
+    def _factory():
+        return LoRAHead(in_dim, num_classes, rank, alpha).to(dev)
+
+    return _factory
+
+
+def _build_mlp_head_class():
+    """Two-layer MLP head: (in_dim -> hidden -> num_classes), ReLU between.
+
+    The "last_block" scope from issue 011: more trainable capacity than the
+    pure linear head, full FT (no rank constraint), still strictly local to
+    the cached-feature space. Three trainable tensors (fc1.weight, fc1.bias,
+    fc2.weight, fc2.bias) all sit in state_dict and aggregate element-wise.
+    """
+    import torch.nn as nn
+
+    class MLPHead(nn.Module):
+        def __init__(self, in_dim: int, num_classes: int, hidden_dim: int):
+            super().__init__()
+            self.fc1 = nn.Linear(in_dim, hidden_dim)
+            self.act = nn.ReLU()
+            self.fc2 = nn.Linear(hidden_dim, num_classes)
+
+        def forward(self, x):
+            return self.fc2(self.act(self.fc1(x)))
+
+    return MLPHead
+
+
+def make_mlp_head(in_dim: int, num_classes: int,
+                  hidden_dim: int = 128) -> Callable:
+    """Zero-arg factory for a 2-layer MLP head on DEVICE.
+
+    Default ``hidden_dim=128`` realises the "last_block + head" scope at
+    moderate capacity (~ in_dim·128 + 128·nc parameters; for resnet18 ≈ 66k,
+    an order of magnitude beyond the linear head). Factory contract matches
+    ``make_head`` so the protocol-side dispatch in ``_load_features`` only
+    has to choose which factory builder to call.
+    """
+    MLPHead = _build_mlp_head_class()
+    dev = _device()
+
+    def _factory():
+        return MLPHead(in_dim, num_classes, hidden_dim).to(dev)
+
+    return _factory
+
+
+def parse_scope(scope: str) -> Dict:
+    """Parse a ``trainable_scope`` token into a structured config.
+
+    Tokens (issue 011):
+      * ``head_only``               -> {"kind": "head_only"}
+      * ``lora_<rank>``             -> {"kind": "lora",  "rank": <int>,
+                                         "alpha": <float, default = rank>}
+      * ``last_block`` /
+        ``last_n_blocks_<n>``       -> {"kind": "last_block",
+                                         "hidden_dim": 128, "n_blocks": n|1}
+
+    The "n_blocks" knob is recorded but not currently consumed by the
+    head-on-cached-features pathway (the cached-feature MLPHead has a single
+    hidden layer regardless of n; the field is preserved so the deferred
+    ``last_n_blocks_2`` variant for the un-cached-backbone path can land later
+    without changing this function's signature).
+    """
+    if scope == "head_only":
+        return {"kind": "head_only"}
+    if scope.startswith("lora_"):
+        rest = scope[len("lora_"):]
+        rank = int(rest)
+        # LoRA standard: alpha defaults to rank so scaling = alpha/rank = 1.
+        return {"kind": "lora", "rank": rank, "alpha": float(rank)}
+    if scope == "last_block":
+        return {"kind": "last_block", "hidden_dim": 128, "n_blocks": 1}
+    if scope.startswith("last_n_blocks_"):
+        n = int(scope[len("last_n_blocks_"):])
+        return {"kind": "last_block", "hidden_dim": 128, "n_blocks": n}
+    raise ValueError(
+        f"unknown trainable_scope {scope!r}; expected "
+        f"'head_only' | 'lora_<rank>' | 'last_block' | 'last_n_blocks_<n>'"
+    )
+
+
+def make_head_for_scope(in_dim: int, num_classes: int, scope: str) -> Callable:
+    """Dispatch (in_dim, num_classes, scope) -> the zero-arg factory.
+
+    Same contract as ``make_head`` (returns a parameter-free factory) so
+    ``protocol._load_features`` can call this in place of ``make_head``
+    whenever a non-default scope is requested. ``head_only`` returns the
+    legacy ``make_head`` factory verbatim — byte-identical to pre-issue-011
+    behaviour, so existing per-cell JSONs reproduce exactly.
+    """
+    cfg = parse_scope(scope)
+    if cfg["kind"] == "head_only":
+        return make_head(in_dim, num_classes)
+    if cfg["kind"] == "lora":
+        return make_lora_head(in_dim, num_classes,
+                              rank=cfg["rank"], alpha=cfg["alpha"])
+    if cfg["kind"] == "last_block":
+        return make_mlp_head(in_dim, num_classes, hidden_dim=cfg["hidden_dim"])
+    raise ValueError(scope)
+
+
+# ----------------------------------------------------------------------------
 # Vision feature extractors (notebook Section B.1)
 # ----------------------------------------------------------------------------
 def build_resnet18_extractor():

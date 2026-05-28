@@ -49,6 +49,13 @@ class BackboneSpec:
     warmup_epochs: int
     bs: int
     feature_loader: str       # which backbones.* loader to call ("mnist"/cifar/text)
+    # Default trainable-layer scope for this backbone (issue 011). Per-cell
+    # overrides flow through ``run_cell(..., trainable_scope=...)`` via the
+    # sweep CLI's ``--scopes`` flag; the BackboneSpec default applies when no
+    # override is given so every pre-issue-011 entrypoint stays byte-identical.
+    # Valid tokens: ``"head_only"`` (default), ``"lora_<rank>"``,
+    # ``"last_block"``, ``"last_n_blocks_<n>"``. See ``backbones.parse_scope``.
+    trainable_scope: str = "head_only"
 
 
 # Notebook Section 0.2 constants
@@ -73,14 +80,20 @@ BACKBONES: Dict[str, BackboneSpec] = {
         labelled_probe_default=100, teacher_epochs=5, teacher_lr=0.05,
         oracle_epochs=10, warmup_epochs=_WARMUP_EPOCHS, bs=64, feature_loader="fmnist",
     ),
-    # From-scratch CIFAR-10 CNN-5 (issue 007): CIFAR-10 is harder, so give the
-    # teacher/oracle a few more epochs (teacher 10 / oracle 20) and the slightly
-    # smaller LR conv nets prefer (0.01), batch 64 — Co-Boosting/FedLPA "CNN-5 for
-    # CIFAR-10" peer setup. Conv net on RAW 3x32x32 images (NOT pretrained feats).
+    # From-scratch CIFAR-10 CNN-5 (issue 007 + issue 011 Part 3): CIFAR-10 is
+    # harder, and the original (teacher_epochs=10 / oracle_epochs=20 /
+    # teacher_lr=0.01 / warmup_epochs=5) hit a 27pp IID gap to oracle in
+    # issue 007's verify run — raw_union IID 0.48 vs oracle 0.75 — i.e. the
+    # teacher (and the warmup) were under-trained. Issue 011 Part 3 bumps to
+    # teacher_epochs=30 / oracle_epochs=50 / teacher_lr=0.005 / warmup_epochs=10
+    # so the teacher reaches a representative accuracy and the probe warmup has
+    # enough budget to land θ₀ inside the loss basin (Co-Boosting/FedLPA "CNN-5
+    # for CIFAR-10" peer setup). Conv net on RAW 3x32x32 images (NOT pretrained
+    # feats). Sanity gate: CIFAR-10 IID raw_union ≥ 0.60 at α=1.0 after refit.
     "cnn5_cifar10": BackboneSpec(
         label="cnn5_cifar10", kind="scratch", num_classes=10,
-        labelled_probe_default=100, teacher_epochs=10, teacher_lr=0.01,
-        oracle_epochs=20, warmup_epochs=_WARMUP_EPOCHS, bs=64, feature_loader="cifar10_raw",
+        labelled_probe_default=100, teacher_epochs=30, teacher_lr=0.005,
+        oracle_epochs=50, warmup_epochs=10, bs=64, feature_loader="cifar10_raw",
     ),
     # Pretrained vision heads (Section B): head training is faster/smaller-LR.
     "resnet18_cifar10": BackboneSpec(
@@ -218,24 +231,56 @@ def _extract_eps(s: str) -> float:
 # ---------------------------------------------------------------------------
 # Feature loading per backbone
 # ---------------------------------------------------------------------------
-def _load_features(spec: BackboneSpec, data_root: str, cache_root: str):
+def _load_features(
+    spec: BackboneSpec,
+    data_root: str,
+    cache_root: str,
+    trainable_scope: str = "head_only",
+):
     """Return (X_train, y_train, X_test, y_test, in_dim_or_None, make_model_fn_factory).
 
     For "scratch" backbones in_dim is None and make_model_fn is parameter-free.
     For "head" backbones in_dim is the feature dim and make_model_fn is built
     from (in_dim, num_classes).
+
+    ``trainable_scope`` (issue 011) selects the head architecture for "head"
+    backbones: ``head_only`` (default) keeps the legacy single-Linear path
+    byte-identical to pre-issue-011 cells; ``lora_<rank>`` and
+    ``last_block`` / ``last_n_blocks_<n>`` dispatch to the expanded-capacity
+    factories in ``backbones`` (LoRA-on-head, MLP-on-cached-features). For
+    "scratch" backbones a non-default scope raises ``NotImplementedError`` —
+    issue 011's focused comparison and acceptance criteria target the
+    pretrained-head backbones (resnet18, vit_b32, distilbert) only.
     """
     from . import backbones as bk
     from . import data as dt
 
     if spec.feature_loader == "mnist":
+        if trainable_scope != "head_only":
+            raise NotImplementedError(
+                f"trainable_scope={trainable_scope!r} is only defined for "
+                "head-on-cached-features backbones (issue 011); the "
+                "from-scratch MLP path supports 'head_only' only."
+            )
         Xtr, ytr, Xte, yte = dt.load_mnist_tensors(data_root, cache_root)
         return Xtr, ytr, Xte, yte, None, bk.make_mnist_mlp
     if spec.feature_loader == "fmnist":
+        if trainable_scope != "head_only":
+            raise NotImplementedError(
+                f"trainable_scope={trainable_scope!r} is only defined for "
+                "head-on-cached-features backbones (issue 011); the "
+                "from-scratch LeNet-5 path supports 'head_only' only."
+            )
         # From-scratch LeNet-5 on raw 1x28x28 FashionMNIST images.
         Xtr, ytr, Xte, yte = dt.load_fmnist_tensors(data_root, cache_root)
         return Xtr, ytr, Xte, yte, None, bk.make_fmnist_lenet5
     if spec.feature_loader == "cifar10_raw":
+        if trainable_scope != "head_only":
+            raise NotImplementedError(
+                f"trainable_scope={trainable_scope!r} is only defined for "
+                "head-on-cached-features backbones (issue 011); the "
+                "from-scratch CNN-5 path supports 'head_only' only."
+            )
         # From-scratch CNN-5 on RAW 3x32x32 CIFAR-10 images (pixel space — NOT the
         # pretrained-feature "cifar10:<backbone>" path below).
         Xtr, ytr, Xte, yte = dt.load_cifar10_raw_tensors(data_root, cache_root)
@@ -243,11 +288,17 @@ def _load_features(spec: BackboneSpec, data_root: str, cache_root: str):
     if spec.feature_loader.startswith("cifar10:"):
         name = spec.feature_loader.split(":", 1)[1]
         Xtr, ytr, Xte, yte, in_dim = bk.extract_cifar10_features(name, data_root, cache_root)
-        return Xtr, ytr, Xte, yte, in_dim, bk.make_head
+        # Scope-aware head dispatch. ``head_only`` returns the legacy
+        # ``make_head`` factory so existing cell hashes/results are unchanged.
+        def _head_factory(in_dim_, num_classes_):
+            return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
+        return Xtr, ytr, Xte, yte, in_dim, _head_factory
     if spec.feature_loader.startswith("text:"):
         name = spec.feature_loader.split(":", 1)[1]
         Xtr, ytr, Xte, yte, in_dim = bk.extract_text_features(name, "ag_news", data_root, cache_root)
-        return Xtr, ytr, Xte, yte, in_dim, bk.make_head
+        def _head_factory(in_dim_, num_classes_):
+            return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
+        return Xtr, ytr, Xte, yte, in_dim, _head_factory
     raise ValueError(spec.feature_loader)
 
 
@@ -270,6 +321,7 @@ def run_cell(
     job_id: Optional[str] = None,
     node: Optional[str] = None,
     diagnose: bool = False,
+    trainable_scope: Optional[str] = None,
 ) -> CellResult:
     """Run one protocol cell end-to-end and return a CellResult.
 
@@ -286,6 +338,15 @@ def run_cell(
     profile / pairwise cosine / per-class θ₀-vs-final acc) are computed once
     and stuffed into ``res.diagnostics``. The flag is opt-in and reserved for
     diagnostic cells; sweeps that omit it see zero behaviour change.
+
+    ``trainable_scope`` (default ``None`` -> use the backbone's BackboneSpec
+    default, which is ``"head_only"`` everywhere) is the issue-011 lever. When
+    set to ``"lora_<rank>"`` / ``"last_block"`` / ``"last_n_blocks_<n>"`` the
+    head factory dispatches to the expanded-capacity variants in
+    ``backbones`` (LoRA-on-head residual, MLP-on-cached-features). The
+    aggregate remains element-wise linear regardless — every trainable tensor
+    flows through the same FHE-compatible PT×CT + CT+CT combine — see
+    ``aggregate.aggregate`` and ``tests/test_aggregate.py`` for the invariant.
     """
     import numpy as np
     import torch
@@ -299,6 +360,13 @@ def run_cell(
     from .teacher import train_supervised_model
 
     spec = BACKBONES[backbone]
+    # Resolve the effective trainable-layer scope (issue 011). ``None`` falls
+    # back to the BackboneSpec default, which is ``"head_only"`` for every
+    # registered backbone today — so cells written before issue 011 reproduce
+    # exactly under the same descriptor/hash.
+    effective_scope = (
+        trainable_scope if trainable_scope is not None else spec.trainable_scope
+    )
     phase0_kind, kwargs = parse_method(method)
     probe_size = spec.labelled_probe_default if probe_size is None else probe_size
     momentum = _TEACHER_MOMENTUM
@@ -327,7 +395,14 @@ def run_cell(
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
         # --- data: load features, reserve labelled probe, partition the pool ---
-        Xtr, ytr, Xte, yte, in_dim, model_fn_src = _load_features(spec, data_root, cache_root)
+        # Scope plumbed through so "head" backbones can swap make_head ->
+        # make_lora_head / make_mlp_head per issue 011 without touching the
+        # feature-cache logic. From-scratch backbones ignore the scope (they
+        # accept only "head_only"; non-trivial scopes raise NotImplementedError
+        # one level down).
+        Xtr, ytr, Xte, yte, in_dim, model_fn_src = _load_features(
+            spec, data_root, cache_root, trainable_scope=effective_scope,
+        )
         Xte_dev = Xte.to(device)
         yte_dev = yte.to(device)
 
