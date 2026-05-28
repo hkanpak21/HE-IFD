@@ -227,12 +227,17 @@ def warmup_init(
     momentum: float,
     bs: int,
     seed: int = 12345,
+    lr_schedule: Optional[str] = None,
 ) -> Dict:
     """Produce θ₀ by warming ``base_init`` on the probe via supervised SGD.
 
     Returns the warmed parameter dict (the shared, aligned init every client
     distils from). Fixed warmup seed 12345 matches the notebook. Imported here
     rather than at module top to avoid a torch dependency for static checks.
+
+    ``lr_schedule`` is opt-in (forwarded to ``train_supervised_model``);
+    ``None`` keeps the legacy constant-LR warmup byte-identical for every
+    backbone that does not set ``BackboneSpec.teacher_lr_schedule``.
     """
     from .teacher import train_supervised_model
     from .backbones import get_params
@@ -240,6 +245,6 @@ def warmup_init(
     warmed = train_supervised_model(
         make_model_fn, probe_X, probe_y,
         epochs=epochs, lr=lr, momentum=momentum, bs=bs,
-        seed=seed, init_params=base_init,
+        seed=seed, init_params=base_init, lr_schedule=lr_schedule,
     )
     return get_params(warmed)
