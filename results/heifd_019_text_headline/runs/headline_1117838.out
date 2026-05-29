@@ -1,0 +1,723 @@
+[019-headline] job 1117838 backbone=roberta_base_agnews on ai05.kuvalar.ku.edu.tr
+[sweep] grid=360 cells; chunk 0/1 -> 360 cells; case=heifd_019_text_headline
+[sweep] start roberta_base_agnews N=5 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7542 mean_teacher=0.5358 wall=20.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7463 mean_teacher=0.4294 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6797 mean_teacher=0.4459 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.5358 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.4294 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.4459 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8296 mean_teacher=0.5358 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8241 mean_teacher=0.4294 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8220 mean_teacher=0.4459 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8486 mean_teacher=0.5358 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8333 mean_teacher=0.4294 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8126 mean_teacher=0.4459 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7076 mean_teacher=0.5358 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6782 mean_teacher=0.4294 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6450 mean_teacher=0.4459 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8092 mean_teacher=0.5358 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7980 mean_teacher=0.4294 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7664 mean_teacher=0.4459 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7167 mean_teacher=0.5026 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7678 mean_teacher=0.6080 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6888 mean_teacher=0.5430 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.5026 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.6080 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.5430 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8238 mean_teacher=0.5026 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8279 mean_teacher=0.6080 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8220 mean_teacher=0.5430 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8483 mean_teacher=0.5026 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8592 mean_teacher=0.6080 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8407 mean_teacher=0.5430 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6667 mean_teacher=0.5026 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7132 mean_teacher=0.6080 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6155 mean_teacher=0.5430 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7975 mean_teacher=0.5026 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8043 mean_teacher=0.6080 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7699 mean_teacher=0.5430 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7229 mean_teacher=0.5969 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7761 mean_teacher=0.6517 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6975 mean_teacher=0.6161 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.5969 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.6517 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.6161 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8253 mean_teacher=0.5969 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8279 mean_teacher=0.6517 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8211 mean_teacher=0.6161 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8618 mean_teacher=0.5969 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8597 mean_teacher=0.6517 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8629 mean_teacher=0.6161 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6901 mean_teacher=0.5969 wall=7.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7530 mean_teacher=0.6517 wall=7.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7420 mean_teacher=0.6161 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7986 mean_teacher=0.5969 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8230 mean_teacher=0.6517 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8096 mean_teacher=0.6161 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7395 mean_teacher=0.7344 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7754 mean_teacher=0.7813 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7237 mean_teacher=0.7303 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.7344 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.7813 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.7303 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8247 mean_teacher=0.7344 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8279 mean_teacher=0.7813 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8228 mean_teacher=0.7303 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8571 mean_teacher=0.7344 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8682 mean_teacher=0.7813 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8579 mean_teacher=0.7303 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7367 mean_teacher=0.7344 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7608 mean_teacher=0.7813 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7158 mean_teacher=0.7303 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8142 mean_teacher=0.7344 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8313 mean_teacher=0.7813 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7987 mean_teacher=0.7303 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7570 mean_teacher=0.8918 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7842 mean_teacher=0.8561 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7395 mean_teacher=0.8560 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.8918 wall=5.8s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.8561 wall=5.8s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.8560 wall=5.8s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8276 mean_teacher=0.8918 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8286 mean_teacher=0.8561 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8239 mean_teacher=0.8560 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8612 mean_teacher=0.8918 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8722 mean_teacher=0.8561 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8675 mean_teacher=0.8560 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7739 mean_teacher=0.8918 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7766 mean_teacher=0.8561 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7592 mean_teacher=0.8560 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8245 mean_teacher=0.8918 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8318 mean_teacher=0.8561 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=5 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8139 mean_teacher=0.8560 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7080 mean_teacher=0.3435 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7133 mean_teacher=0.3841 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6447 mean_teacher=0.3695 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.3435 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.3841 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.3695 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8243 mean_teacher=0.3435 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8228 mean_teacher=0.3841 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8172 mean_teacher=0.3695 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8200 mean_teacher=0.3435 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8195 mean_teacher=0.3841 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8309 mean_teacher=0.3695 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5982 mean_teacher=0.3435 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6907 mean_teacher=0.3841 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6138 mean_teacher=0.3695 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7400 mean_teacher=0.3435 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7991 mean_teacher=0.3841 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7541 mean_teacher=0.3695 wall=6.6s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7041 mean_teacher=0.4542 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7424 mean_teacher=0.4564 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6845 mean_teacher=0.4579 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.4542 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.4564 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.4579 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8237 mean_teacher=0.4542 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8239 mean_teacher=0.4564 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8212 mean_teacher=0.4579 wall=6.7s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8555 mean_teacher=0.4542 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8480 mean_teacher=0.4564 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8341 mean_teacher=0.4579 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6893 mean_teacher=0.4542 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6700 mean_teacher=0.4564 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7038 mean_teacher=0.4579 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7996 mean_teacher=0.4542 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8083 mean_teacher=0.4564 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7850 mean_teacher=0.4579 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6832 mean_teacher=0.5367 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7521 mean_teacher=0.6407 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6549 mean_teacher=0.5343 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.5367 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.6407 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.5343 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8221 mean_teacher=0.5367 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8251 mean_teacher=0.6407 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8183 mean_teacher=0.5343 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8696 mean_teacher=0.5367 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8692 mean_teacher=0.6407 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8518 mean_teacher=0.5343 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7413 mean_teacher=0.5367 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7437 mean_teacher=0.6407 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7129 mean_teacher=0.5343 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8120 mean_teacher=0.5367 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8263 mean_teacher=0.6407 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7909 mean_teacher=0.5343 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7224 mean_teacher=0.7461 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7692 mean_teacher=0.7475 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7095 mean_teacher=0.7476 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.7461 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.7475 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.7476 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8241 mean_teacher=0.7461 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8275 mean_teacher=0.7475 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8214 mean_teacher=0.7476 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8826 mean_teacher=0.7461 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8764 mean_teacher=0.7475 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8813 mean_teacher=0.7476 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7811 mean_teacher=0.7461 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7786 mean_teacher=0.7475 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7522 mean_teacher=0.7476 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8292 mean_teacher=0.7461 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8299 mean_teacher=0.7475 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8104 mean_teacher=0.7476 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7583 mean_teacher=0.8684 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7886 mean_teacher=0.8622 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7480 mean_teacher=0.8616 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.8684 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.8622 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.8616 wall=5.9s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8279 mean_teacher=0.8684 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8287 mean_teacher=0.8622 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8243 mean_teacher=0.8616 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8739 mean_teacher=0.8684 wall=7.1s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8838 mean_teacher=0.8622 wall=7.1s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8758 mean_teacher=0.8616 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7799 mean_teacher=0.8684 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8020 mean_teacher=0.8622 wall=7.1s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7857 mean_teacher=0.8616 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8266 mean_teacher=0.8684 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8383 mean_teacher=0.8622 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8262 mean_teacher=0.8616 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6518 mean_teacher=0.3376 wall=7.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7400 mean_teacher=0.3198 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6450 mean_teacher=0.3439 wall=7.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.3376 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.3198 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.3439 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8205 mean_teacher=0.3376 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8250 mean_teacher=0.3198 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8174 mean_teacher=0.3439 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8439 mean_teacher=0.3376 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8332 mean_teacher=0.3198 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8655 mean_teacher=0.3439 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6403 mean_teacher=0.3376 wall=7.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7080 mean_teacher=0.3198 wall=6.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6511 mean_teacher=0.3439 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7659 mean_teacher=0.3376 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8064 mean_teacher=0.3198 wall=6.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7551 mean_teacher=0.3439 wall=7.3s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6943 mean_teacher=0.4796 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7701 mean_teacher=0.5005 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6654 mean_teacher=0.4755 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.4796 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.5005 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.4755 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8225 mean_teacher=0.4796 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8279 mean_teacher=0.5005 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8182 mean_teacher=0.4755 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8714 mean_teacher=0.4796 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8822 mean_teacher=0.5005 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8713 mean_teacher=0.4755 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7450 mean_teacher=0.4796 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7712 mean_teacher=0.5005 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7372 mean_teacher=0.4755 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8117 mean_teacher=0.4796 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8267 mean_teacher=0.5005 wall=7.8s err=None
+[sweep] start roberta_base_agnews N=20 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8107 mean_teacher=0.4755 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7232 mean_teacher=0.6135 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7334 mean_teacher=0.5261 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7120 mean_teacher=0.6026 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.6135 wall=6.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.5261 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.6026 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8250 mean_teacher=0.6135 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8246 mean_teacher=0.5261 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8220 mean_teacher=0.6026 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8747 mean_teacher=0.6135 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8807 mean_teacher=0.5261 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8674 mean_teacher=0.6026 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7708 mean_teacher=0.6135 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7874 mean_teacher=0.5261 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7601 mean_teacher=0.6026 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8239 mean_teacher=0.6135 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8312 mean_teacher=0.5261 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8076 mean_teacher=0.6026 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7359 mean_teacher=0.7283 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7729 mean_teacher=0.7595 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7379 mean_teacher=0.8053 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.7283 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.7595 wall=6.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.8053 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8253 mean_teacher=0.7283 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8276 mean_teacher=0.7595 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8233 mean_teacher=0.8053 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8882 mean_teacher=0.7283 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8837 mean_teacher=0.7595 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8880 mean_teacher=0.8053 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7843 mean_teacher=0.7283 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7962 mean_teacher=0.7595 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7895 mean_teacher=0.8053 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8295 mean_teacher=0.7283 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8346 mean_teacher=0.7595 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8222 mean_teacher=0.8053 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7497 mean_teacher=0.8589 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7855 mean_teacher=0.8404 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7462 mean_teacher=0.8452 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.8589 wall=6.0s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.8404 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.8452 wall=6.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8258 mean_teacher=0.8589 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8286 mean_teacher=0.8404 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8239 mean_teacher=0.8452 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8804 mean_teacher=0.8589 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8888 mean_teacher=0.8404 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8876 mean_teacher=0.8452 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7901 mean_teacher=0.8589 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8050 mean_teacher=0.8404 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7868 mean_teacher=0.8452 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8272 mean_teacher=0.8589 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8380 mean_teacher=0.8404 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=20 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8299 mean_teacher=0.8452 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6537 mean_teacher=0.3330 wall=8.6s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7326 mean_teacher=0.3148 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6699 mean_teacher=0.3179 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.3330 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.3148 wall=6.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.3179 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8205 mean_teacher=0.3330 wall=8.6s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8236 mean_teacher=0.3148 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8175 mean_teacher=0.3179 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8705 mean_teacher=0.3330 wall=8.7s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8593 mean_teacher=0.3148 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8659 mean_teacher=0.3179 wall=8.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7514 mean_teacher=0.3330 wall=8.7s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7539 mean_teacher=0.3148 wall=8.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6917 mean_teacher=0.3179 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8175 mean_teacher=0.3330 wall=8.6s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8157 mean_teacher=0.3148 wall=7.9s err=None
+[sweep] start roberta_base_agnews N=50 a=0.01 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7862 mean_teacher=0.3179 wall=8.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6753 mean_teacher=0.4561 wall=10.8s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7417 mean_teacher=0.4661 wall=10.4s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6645 mean_teacher=0.4460 wall=10.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.4561 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.4661 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.4460 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8220 mean_teacher=0.4561 wall=10.8s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8253 mean_teacher=0.4661 wall=10.5s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8183 mean_teacher=0.4460 wall=10.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8855 mean_teacher=0.4561 wall=10.8s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8786 mean_teacher=0.4661 wall=10.5s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8818 mean_teacher=0.4460 wall=10.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7846 mean_teacher=0.4561 wall=10.7s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7905 mean_teacher=0.4661 wall=10.4s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7599 mean_teacher=0.4460 wall=10.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8325 mean_teacher=0.4561 wall=10.8s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8337 mean_teacher=0.4661 wall=10.4s err=None
+[sweep] start roberta_base_agnews N=50 a=0.05 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8134 mean_teacher=0.4460 wall=10.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6896 mean_teacher=0.5315 wall=10.9s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7425 mean_teacher=0.5819 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6726 mean_teacher=0.5733 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.5315 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.5819 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.5733 wall=6.5s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8230 mean_teacher=0.5315 wall=11.0s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8249 mean_teacher=0.5819 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8183 mean_teacher=0.5733 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8911 mean_teacher=0.5315 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8887 mean_teacher=0.5819 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8867 mean_teacher=0.5733 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7707 mean_teacher=0.5315 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8095 mean_teacher=0.5819 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7650 mean_teacher=0.5733 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8243 mean_teacher=0.5315 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8384 mean_teacher=0.5819 wall=11.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.1 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8150 mean_teacher=0.5733 wall=11.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7207 mean_teacher=0.7003 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7675 mean_teacher=0.7417 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7292 mean_teacher=0.7491 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.7003 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.7417 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.7491 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8243 mean_teacher=0.7003 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8268 mean_teacher=0.7417 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8216 mean_teacher=0.7491 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8911 mean_teacher=0.7003 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8883 mean_teacher=0.7417 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8987 mean_teacher=0.7491 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8041 mean_teacher=0.7003 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8161 mean_teacher=0.7417 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7993 mean_teacher=0.7491 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8324 mean_teacher=0.7003 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8420 mean_teacher=0.7417 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=0.3 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8266 mean_teacher=0.7491 wall=11.3s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7520 mean_teacher=0.8482 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 no_phase0 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7855 mean_teacher=0.8403 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 no_phase0 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7421 mean_teacher=0.8402 wall=11.0s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 warmup_only_labelled s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7918 mean_teacher=0.8482 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 warmup_only_labelled s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7932 mean_teacher=0.8403 wall=6.4s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 warmup_only_labelled s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   warmup_only_labelled acc=0.7811 mean_teacher=0.8402 wall=6.3s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 labelled_probe_warmup s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8263 mean_teacher=0.8482 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 labelled_probe_warmup s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8284 mean_teacher=0.8403 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 labelled_probe_warmup s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   labelled_probe_warmup acc=0.8233 mean_teacher=0.8402 wall=11.0s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8978 mean_teacher=0.8482 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 raw_union_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8980 mean_teacher=0.8403 wall=11.0s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 raw_union_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8976 mean_teacher=0.8402 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 dp_avg_eps2_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8180 mean_teacher=0.8482 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 dp_avg_eps2_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8201 mean_teacher=0.8403 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 dp_avg_eps2_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8082 mean_teacher=0.8402 wall=11.2s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 dp_avg_eps8_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8367 mean_teacher=0.8482 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 dp_avg_eps8_K20 s=43 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8413 mean_teacher=0.8403 wall=11.1s err=None
+[sweep] start roberta_base_agnews N=50 a=1.0 dp_avg_eps8_K20 s=44 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.8289 mean_teacher=0.8402 wall=11.2s err=None
+[sweep] done. ran=360 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_019_text_headline/README.md
