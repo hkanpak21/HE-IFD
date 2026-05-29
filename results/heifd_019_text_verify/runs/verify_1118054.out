@@ -1,0 +1,20 @@
+[019-verify] job 1118054 on ai05.kuvalar.ku.edu.tr
+[019-verify] DBpedia-14 included (HEIFD_019_INCLUDE_DBPEDIA=1)
+[sweep] grid=16 cells; chunk 0/1 -> 16 cells; case=heifd_019_text_verify
+[sweep] skip  cell_roberta_base_agnews_N10_a0.05_no_phase0_s42_K100_t1.0_lr0.001_adcc7e8e67e3.json (success exists)
+[sweep] skip  cell_roberta_base_agnews_N10_a0.05_raw_union_K20_s42_K100_t1.0_lr0.001_13fa4a2b3eaa.json (success exists)
+[sweep] skip  cell_roberta_base_agnews_N10_a1.0_no_phase0_s42_K100_t1.0_lr0.001_18f072432875.json (success exists)
+[sweep] skip  cell_roberta_base_agnews_N10_a1.0_raw_union_K20_s42_K100_t1.0_lr0.001_b211f2a9ca28.json (success exists)
+[sweep] skip  cell_mpnet_st_agnews_N10_a0.05_no_phase0_s42_K100_t1.0_lr0.001_272f2f7ff70a.json (success exists)
+[sweep] skip  cell_mpnet_st_agnews_N10_a0.05_raw_union_K20_s42_K100_t1.0_lr0.001_de5d36e0ea1c.json (success exists)
+[sweep] skip  cell_mpnet_st_agnews_N10_a1.0_no_phase0_s42_K100_t1.0_lr0.001_cfcaa37102f1.json (success exists)
+[sweep] skip  cell_mpnet_st_agnews_N10_a1.0_raw_union_K20_s42_K100_t1.0_lr0.001_c2f93f4bec37.json (success exists)
+[sweep] start roberta_base_dbpedia N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.4700 mean_teacher=0.4105 wall=3711.6s err=None
+[sweep] start roberta_base_dbpedia N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9588 mean_teacher=0.4105 wall=31.7s err=None
+[sweep] start roberta_base_dbpedia N=10 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6205 mean_teacher=0.9692 wall=31.6s err=None
+[sweep] start roberta_base_dbpedia N=10 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9695 mean_teacher=0.9692 wall=31.8s err=None
+[sweep] start mpnet_st_dbpedia N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
