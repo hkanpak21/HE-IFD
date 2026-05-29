@@ -301,3 +301,110 @@ def test_reshape_probe_to_image_handles_empty_probe():
     # explicit sample_shape reshape (no -1) is well-defined for P==0
     img = probe_flat.reshape(probe_flat.shape[0], *sample_shape)
     assert img.shape == (0, *sample_shape)
+
+
+# ---------------------------------------------------------------------------
+# Issue 017: no-probe builders at extreme heterogeneity (the 30 failing
+# mlp_mnist cells)
+# ---------------------------------------------------------------------------
+#
+# The no-probe builders turn the per-(client, class) prototypes INTO the
+# supervised warmup set. They flatten each per-client tensor internally
+# (the per-feature μ statistics are defined per flat dim). The original
+# implementation derived the flat dim and flattened each client via
+# ``client_X.reshape(client_X.shape[0], -1)``. On mlp_mnist (already-flat data)
+# the conv image-bridge in ``protocol.run_cell`` does NOT fire (is_image is
+# False), so the builders receive the raw client list and do the reshape
+# themselves — and at α∈{0.01,0.05} with N≥5 the Dirichlet partition can hand a
+# client (including client 0, used to derive feature_dim) ZERO samples, so
+# ``reshape(0, -1)`` raised the ambiguous-(-1) error. The fix reads the trailing
+# dim directly and flattens with an explicit ``flat_dim``; absent classes are
+# already skipped (mirroring ``build_probe_raw_union``). These tests pin both
+# the empty-client robustness and the absent-class omission for BOTH no-probe
+# builders.
+def test_noprobe_raw_union_handles_empty_client_and_drops_absent_class():
+    """build_noprobe_raw_union must not break when a client (here client 0,
+    which the old code used to derive feature_dim) has ZERO samples, and a
+    class with no federation-wide contributor must be omitted from the
+    prototype set."""
+    torch = pytest.importorskip("torch")
+    from src.phase0 import build_noprobe_raw_union
+
+    D = 28 * 28  # mlp_mnist flat dim (already-flat data)
+    # client 0 EMPTY (0 samples) — the α=0.01 reality, and the tensor the old
+    # feature_dim line reshaped with -1.
+    X0 = torch.zeros(0, D)
+    y0 = torch.zeros(0, dtype=torch.long)
+    # client 1 holds classes {0, 1}; class 2 has no contributor anywhere.
+    X1 = torch.randn(5, D)
+    y1 = torch.tensor([0, 0, 1, 1, 1])
+
+    pX, pY, info = build_noprobe_raw_union(
+        [X0, X1], [y0, y1], K_per_class=20, num_classes=3, seed=0
+    )
+
+    # one prototype per contributing (client, class) pair: client1 classes {0,1}
+    assert pX.shape == (2, D)
+    assert pY.tolist() == [0, 1]
+    assert 2 not in set(int(c) for c in pY.tolist())
+    assert info["probe_size"] == 2
+    assert info["n_pairs_used"] == 2
+    assert info["sigma"] == 0.0
+
+
+def test_noprobe_dp_averaged_handles_empty_client_and_drops_absent_class():
+    """build_noprobe_dp_averaged must survive a ZERO-sample client and omit a
+    class with no contributor — the same corner as the raw-union builder, on
+    the DP path the failing noprobe_dp_avg_eps{2,8}_K20 cells exercise."""
+    torch = pytest.importorskip("torch")
+    from src.phase0 import build_noprobe_dp_averaged
+
+    D = 28 * 28
+    X0 = torch.zeros(0, D)             # empty client 0
+    y0 = torch.zeros(0, dtype=torch.long)
+    X1 = torch.randn(4, D)
+    y1 = torch.tensor([0, 0, 1, 1])   # classes {0,1}; class 2 absent
+
+    pX, pY, info = build_noprobe_dp_averaged(
+        [X0, X1], [y0, y1],
+        K_per_class=20, num_classes=3,
+        clip=1e9, eps_per_client=2.0, seed=0,
+    )
+
+    assert pX.shape == (2, D)
+    assert pY.tolist() == [0, 1]
+    assert 2 not in set(int(c) for c in pY.tolist())
+    assert info["probe_size"] == 2
+    assert info["n_pairs_used"] == 2
+    assert info["sigma"] > 0.0  # finite eps -> noise recorded
+
+
+def test_noprobe_builders_empty_client_is_not_client_zero():
+    """Also cover the case where the EMPTY client is in the middle of the list
+    (the in-loop ``reshape(n_i, -1)`` line, distinct from the feature_dim line)
+    — both no-probe builders must flatten it to (0, D) without raising."""
+    torch = pytest.importorskip("torch")
+    from src.phase0 import build_noprobe_raw_union, build_noprobe_dp_averaged
+
+    D = 28 * 28
+    X0 = torch.randn(3, D)
+    y0 = torch.tensor([0, 0, 1])
+    X1 = torch.zeros(0, D)            # empty client in position 1
+    y1 = torch.zeros(0, dtype=torch.long)
+    X2 = torch.randn(2, D)
+    y2 = torch.tensor([1, 2])
+
+    pXr, pYr, _ = build_noprobe_raw_union(
+        [X0, X1, X2], [y0, y1, y2], K_per_class=10, num_classes=3, seed=0
+    )
+    # contributing pairs: client0 {0,1}, client2 {1,2} -> 4 prototypes
+    assert pXr.shape == (4, D)
+    assert sorted(int(c) for c in pYr.tolist()) == [0, 1, 1, 2]
+
+    pXd, pYd, _ = build_noprobe_dp_averaged(
+        [X0, X1, X2], [y0, y1, y2],
+        K_per_class=10, num_classes=3,
+        clip=1e9, eps_per_client=float("inf"), seed=0,
+    )
+    assert pXd.shape == (4, D)
+    assert sorted(int(c) for c in pYd.tolist()) == [0, 1, 1, 2]
