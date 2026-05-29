@@ -1,0 +1,78 @@
+{
+  "backbone": "mlp_mnist",
+  "dataset": "MNIST",
+  "N": 1,
+  "alpha": 0.01,
+  "seed": 42,
+  "K": 300,
+  "tau": 4.0,
+  "method": "no_phase0",
+  "phase0_kind": "none",
+  "probe_size_actual": 0,
+  "sigma": 0.0,
+  "acc": 0.8932,
+  "mean_teacher": 0.9711,
+  "best_teacher": 0.9711,
+  "oracle": 0.9735,
+  "per_teacher_acc": [
+    0.9711
+  ],
+  "theta0_acc": 0.0887,
+  "m3_student_acc_on_Di": [
+    0.8881969949916527
+  ],
+  "m3_teacher_acc_on_Di": [
+    0.9830217028380634
+  ],
+  "m3_gap": [
+    -0.09482470784641073
+  ],
+  "m3_mean_gap": -0.09482470784641073,
+  "m3_clients_helped": 0,
+  "m3_clients_evaluated": 1,
+  "m4_ood_acc": [
+    null
+  ],
+  "m4_mean": null,
+  "m4_clients_evaluated": 0,
+  "per_client_total": [
+    59900
+  ],
+  "per_client_per_class": [
+    [
+      5914,
+      6728,
+      5944,
+      6122,
+      5834,
+      5412,
+      5910,
+      6259,
+      5838,
+      5939
+    ]
+  ],
+  "sample_weights": [
+    1.0
+  ],
+  "wall_clock_sec": 21.004315853118896,
+  "phase_teacher_sec": 13.321156978607178,
+  "phase_phase0_sec": 0.010300397872924805,
+  "phase_distill_sec": 0.5367515087127686,
+  "phase_aggregate_sec": 0.0005331039428710938,
+  "phase_eval_sec": 0.16092801094055176,
+  "job_id": "1116968",
+  "node": "ai05",
+  "status": "success",
+  "error": null,
+  "notes": "HE-IFD plaintext simulation: sample-weighted linear aggregate \u03b8\u2080+\u03a3 w_i\u00b7\u0394_i of bounded K-step cumulative displacements; server op is PT\u00d7CT + CT+CT only (FHE-compatible).",
+  "diagnostics": null,
+  "_descriptor": {
+    "backbone": "mlp_mnist",
+    "N": 1,
+    "alpha": 0.01,
+    "method": "no_phase0",
+    "seed": 42,
+    "K": 300
+  }
+}

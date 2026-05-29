@@ -93,3 +93,5 @@
 [sweep] start mlp_mnist N=50 a=1.0 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
 [sweep] ok   noprobe_raw_union_K20 acc=0.8870 mean_teacher=0.7642 wall=34.7s err=None
 [sweep] start mlp_mnist N=50 a=1.0 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9542 mean_teacher=0.7627 wall=35.1s err=None
+[sweep] done. ran=43 skipped=0 failed=4. report at /scratch/hkanpak21/HE_IFD/results/heifd_017_noprobe_mlp/README.md

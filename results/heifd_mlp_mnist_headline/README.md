@@ -5,7 +5,7 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 ## Sweep configuration
 
 - Backbones: `mlp_mnist`
-- N values: `5,10,20,50`
+- N values: `1`
 - Dirichlet α: `0.01,0.05,0.1,0.3,1.0`
 - Methods: `no_phase0,warmup_only_labelled,labelled_probe_warmup,raw_union_K20,dp_avg_eps2_K20,dp_avg_eps8_K20`
 - Seeds: `42,43,44`
@@ -18,6 +18,52 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 
 | backbone | N | α | method | seed | acc | mean_teacher | best_teacher | oracle | θ₀_acc | M3_mean_gap | M3_helped | M4_ood_acc | σ | status |
 |---|---|---|--------|------|-----|--------------|--------------|--------|--------|-------------|-----------|------------|---|--------|
+| mlp_mnist | 1 | 0.01 | dp_avg_eps8_K20 | 43 | 0.9010 | 0.9737 | 0.9737 | 0.9747 | 0.3160 | -0.0911 | 0/1 | n/a | 1.0541 | success |
+| mlp_mnist | 1 | 0.01 | dp_avg_eps8_K20 | 44 | 0.8887 | 0.9635 | 0.9635 | 0.9776 | 0.2815 | -0.0920 | 0/1 | n/a | 1.0522 | success |
+| mlp_mnist | 1 | 0.01 | labelled_probe_warmup | 44 | 0.8782 | 0.9635 | 0.9635 | 0.9776 | 0.2927 | -0.1050 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | no_phase0 | 42 | 0.8932 | 0.9711 | 0.9711 | 0.9735 | 0.0887 | -0.0948 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | no_phase0 | 43 | 0.8957 | 0.9737 | 0.9737 | 0.9747 | 0.0891 | -0.0962 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | no_phase0 | 44 | 0.8908 | 0.9635 | 0.9635 | 0.9776 | 0.1006 | -0.0917 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | raw_union_K20 | 42 | 0.9050 | 0.9711 | 0.9711 | 0.9735 | 0.5747 | -0.0824 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | raw_union_K20 | 43 | 0.9059 | 0.9737 | 0.9737 | 0.9747 | 0.5795 | -0.0857 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | raw_union_K20 | 44 | 0.8990 | 0.9635 | 0.9635 | 0.9776 | 0.5904 | -0.0809 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.01 | warmup_only_labelled | 42 | 0.4358 | 0.9711 | 0.9711 | 0.9735 | 0.4358 | -0.5572 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.05 | dp_avg_eps2_K20 | 44 | 0.8926 | 0.9635 | 0.9635 | 0.9776 | 0.1543 | -0.0903 | 0/1 | n/a | 4.2089 | success |
+| mlp_mnist | 1 | 0.05 | dp_avg_eps8_K20 | 42 | 0.8954 | 0.9711 | 0.9711 | 0.9735 | 0.2967 | -0.0900 | 0/1 | n/a | 1.0577 | success |
+| mlp_mnist | 1 | 0.05 | dp_avg_eps8_K20 | 43 | 0.9010 | 0.9737 | 0.9737 | 0.9747 | 0.3160 | -0.0911 | 0/1 | n/a | 1.0541 | success |
+| mlp_mnist | 1 | 0.05 | dp_avg_eps8_K20 | 44 | 0.8887 | 0.9635 | 0.9635 | 0.9776 | 0.2815 | -0.0920 | 0/1 | n/a | 1.0522 | success |
+| mlp_mnist | 1 | 0.05 | labelled_probe_warmup | 42 | 0.8924 | 0.9711 | 0.9711 | 0.9735 | 0.4358 | -0.0934 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.05 | labelled_probe_warmup | 43 | 0.9005 | 0.9737 | 0.9737 | 0.9747 | 0.5519 | -0.0905 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.05 | labelled_probe_warmup | 44 | 0.8782 | 0.9635 | 0.9635 | 0.9776 | 0.2927 | -0.1050 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.05 | no_phase0 | 42 | 0.8932 | 0.9711 | 0.9711 | 0.9735 | 0.0887 | -0.0948 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.05 | no_phase0 | 43 | 0.8957 | 0.9737 | 0.9737 | 0.9747 | 0.0891 | -0.0962 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.05 | raw_union_K20 | 42 | 0.9050 | 0.9711 | 0.9711 | 0.9735 | 0.5747 | -0.0824 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.1 | dp_avg_eps2_K20 | 42 | 0.9041 | 0.9702 | 0.9702 | 0.9735 | 0.1764 | -0.0830 | 0/1 | n/a | 4.2309 | success |
+| mlp_mnist | 1 | 0.1 | dp_avg_eps2_K20 | 43 | 0.8917 | 0.9709 | 0.9709 | 0.9747 | 0.2873 | -0.0942 | 0/1 | n/a | 4.2164 | success |
+| mlp_mnist | 1 | 0.1 | dp_avg_eps2_K20 | 44 | 0.8959 | 0.9744 | 0.9744 | 0.9776 | 0.1359 | -0.0968 | 0/1 | n/a | 4.2089 | success |
+| mlp_mnist | 1 | 0.1 | dp_avg_eps8_K20 | 42 | 0.9036 | 0.9702 | 0.9702 | 0.9735 | 0.2642 | -0.0836 | 0/1 | n/a | 1.0577 | success |
+| mlp_mnist | 1 | 0.1 | labelled_probe_warmup | 42 | 0.9020 | 0.9702 | 0.9702 | 0.9735 | 0.4358 | -0.0832 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.1 | labelled_probe_warmup | 43 | 0.8872 | 0.9709 | 0.9709 | 0.9747 | 0.5519 | -0.0991 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.1 | warmup_only_labelled | 43 | 0.5519 | 0.9709 | 0.9709 | 0.9747 | 0.5519 | -0.4444 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.1 | warmup_only_labelled | 44 | 0.2927 | 0.9744 | 0.9744 | 0.9776 | 0.2927 | -0.6957 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.3 | dp_avg_eps2_K20 | 42 | 0.9064 | 0.9696 | 0.9696 | 0.9735 | 0.1766 | -0.0778 | 0/1 | n/a | 4.2309 | success |
+| mlp_mnist | 1 | 0.3 | dp_avg_eps2_K20 | 43 | 0.9011 | 0.9694 | 0.9694 | 0.9747 | 0.2915 | -0.0881 | 0/1 | n/a | 4.2164 | success |
+| mlp_mnist | 1 | 0.3 | no_phase0 | 44 | 0.8904 | 0.9744 | 0.9744 | 0.9776 | 0.1006 | -0.0998 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.3 | raw_union_K20 | 43 | 0.9017 | 0.9694 | 0.9694 | 0.9747 | 0.6336 | -0.0852 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.3 | raw_union_K20 | 44 | 0.9084 | 0.9744 | 0.9744 | 0.9776 | 0.6749 | -0.0827 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.3 | warmup_only_labelled | 42 | 0.4358 | 0.9696 | 0.9696 | 0.9735 | 0.4358 | -0.5555 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.3 | warmup_only_labelled | 43 | 0.5519 | 0.9694 | 0.9694 | 0.9747 | 0.5519 | -0.4434 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 0.3 | warmup_only_labelled | 44 | 0.2927 | 0.9744 | 0.9744 | 0.9776 | 0.2927 | -0.6957 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | dp_avg_eps8_K20 | 43 | 0.8919 | 0.9654 | 0.9654 | 0.9747 | 0.3046 | -0.0906 | 0/1 | n/a | 1.0541 | success |
+| mlp_mnist | 1 | 1.0 | dp_avg_eps8_K20 | 44 | 0.8992 | 0.9726 | 0.9726 | 0.9776 | 0.2956 | -0.0948 | 0/1 | n/a | 1.0522 | success |
+| mlp_mnist | 1 | 1.0 | labelled_probe_warmup | 44 | 0.8962 | 0.9726 | 0.9726 | 0.9776 | 0.2927 | -0.0917 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | no_phase0 | 42 | 0.8888 | 0.9717 | 0.9717 | 0.9735 | 0.0887 | -0.1000 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | no_phase0 | 43 | 0.8800 | 0.9654 | 0.9654 | 0.9747 | 0.0891 | -0.1020 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | no_phase0 | 44 | 0.8988 | 0.9726 | 0.9726 | 0.9776 | 0.1006 | -0.0906 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | raw_union_K20 | 42 | 0.9074 | 0.9717 | 0.9717 | 0.9735 | 0.6913 | -0.0785 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | raw_union_K20 | 43 | 0.9057 | 0.9654 | 0.9654 | 0.9747 | 0.5547 | -0.0775 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | raw_union_K20 | 44 | 0.9109 | 0.9726 | 0.9726 | 0.9776 | 0.6535 | -0.0808 | 0/1 | n/a | 0.0000 | success |
+| mlp_mnist | 1 | 1.0 | warmup_only_labelled | 42 | 0.4358 | 0.9717 | 0.9717 | 0.9735 | 0.4358 | -0.5599 | 0/1 | n/a | 0.0000 | success |
 | mlp_mnist | 5 | 0.01 | dp_avg_eps2_K20 | 42 | 0.4447 | 0.2389 | 0.4043 | 0.9735 | 0.2192 | -0.6753 | 0/5 | 0.3973 | 4.2309 | success |
 | mlp_mnist | 5 | 0.01 | dp_avg_eps2_K20 | 43 | 0.5740 | 0.2173 | 0.6002 | 0.9747 | 0.2432 | -0.8106 | 0/5 | 0.5305 | 4.2164 | success |
 | mlp_mnist | 5 | 0.01 | dp_avg_eps2_K20 | 44 | 0.5822 | 0.2182 | 0.3985 | 0.9776 | 0.1652 | -0.6302 | 0/4 | 0.5716 | 4.2089 | success |
