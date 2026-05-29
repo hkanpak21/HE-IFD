@@ -116,6 +116,13 @@ def parse_args() -> argparse.Namespace:
                         "GPT-2-medium ~1.5GB via HF). Idempotent (each loader "
                         "is a cache no-op if the weights are already present). "
                         "Off by default so the normal prefetch is unchanged.")
+    p.add_argument("--include-text019", action="store_true",
+                   help="Also fetch the issue-019 strong frozen text backbones "
+                        "(roberta-base ~0.5GB, sentence-transformers/"
+                        "all-mpnet-base-v2 ~0.4GB via plain HF AutoModel — NO "
+                        "sentence-transformers package needed) plus the "
+                        "DBpedia-14 HF dataset (~70MB). Idempotent. Off by "
+                        "default so the normal prefetch is unchanged.")
     return p.parse_args()
 
 
@@ -140,6 +147,30 @@ def _prefetch_big_backbones() -> None:
     import src.backbones as bk
     bk.build_vit_l_extractor()
     print("[prefetch] vit_l ok", flush=True)
+
+
+def _prefetch_text019() -> None:
+    """Download the issue-019 strong frozen text backbones + DBpedia-14 dataset
+    into the HF caches (no compute, login-node only).
+
+    Idempotent: each ``from_pretrained`` / ``load_dataset`` is a cache hit once
+    present. Both models load via plain ``transformers`` AutoModel/AutoTokenizer
+    — the ``sentence-transformers`` package is NOT required (the masked mean-pool
+    in ``src.backbones.extract_text_features`` reproduces all-mpnet-base-v2's
+    embedding). Pulls:
+      * roberta-base                               (HF, ~0.5GB)
+      * sentence-transformers/all-mpnet-base-v2    (HF, ~0.4GB)
+      * dbpedia_14                                 (HF dataset, ~70MB)
+    """
+    from transformers import AutoModel, AutoTokenizer
+    for mid in ("roberta-base", "sentence-transformers/all-mpnet-base-v2"):
+        AutoTokenizer.from_pretrained(mid)
+        AutoModel.from_pretrained(mid)
+        print(f"[prefetch] hf {mid} ok", flush=True)
+
+    from datasets import load_dataset
+    load_dataset("dbpedia_14")
+    print("[prefetch] dbpedia_14 ok", flush=True)
 
 
 def main() -> None:
@@ -173,6 +204,11 @@ def main() -> None:
     # Optional, issue-018 big-backbone extension (ViT-L, BERT-large, GPT-2-medium).
     if args.include_big_backbones:
         _prefetch_big_backbones()
+
+    # Optional, issue-019 strong-text-backbone extension (roberta-base,
+    # all-mpnet-base-v2, DBpedia-14).
+    if args.include_text019:
+        _prefetch_text019()
 
     print("[prefetch] PREFETCH DONE", flush=True)
 
