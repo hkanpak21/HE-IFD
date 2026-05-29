@@ -1,0 +1,3 @@
+[fs] job 1115678 task 7/8 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=90 cells; chunk 7/8 -> 11 cells; case=heifd_mlp_mnist_headline
+[sweep] start mlp_mnist N=1 a=0.01 labelled_probe_warmup s=43 K=300 tau=4.0 lr=0.01 scope=head_only

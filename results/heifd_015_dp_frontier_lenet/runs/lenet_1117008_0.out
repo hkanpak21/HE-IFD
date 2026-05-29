@@ -1,0 +1,45 @@
+[015 lenet] job 1117008 task 0/4 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=81 cells; chunk 0/4 -> 21 cells; case=heifd_015_dp_frontier_lenet
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_eps0.5_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.3596 mean_teacher=0.2966 wall=35.0s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.2371 mean_teacher=0.2542 wall=27.6s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.3251 mean_teacher=0.2819 wall=27.8s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_epsinf_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.4427 mean_teacher=0.2946 wall=27.8s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_eps2_K1 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.1000 mean_teacher=0.2543 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_eps2_K5 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K5 acc=0.2888 mean_teacher=0.2546 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.05 dp_avg_eps8_K5 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K5 acc=0.4282 mean_teacher=0.2945 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps0.5_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.6094 mean_teacher=0.5141 wall=27.9s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.3849 mean_teacher=0.5647 wall=27.8s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps32_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.5829 mean_teacher=0.6067 wall=27.6s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_epsinf_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.5766 mean_teacher=0.5099 wall=27.6s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps2_K1 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.2751 mean_teacher=0.5616 wall=27.6s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps8_K1 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K1 acc=0.5848 mean_teacher=0.6031 wall=27.7s err=None
+[sweep] start lenet_fmnist N=10 a=0.3 dp_avg_eps8_K5 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K5 acc=0.5874 mean_teacher=0.5119 wall=27.7s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps0.5_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.6260 mean_teacher=0.7631 wall=27.8s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6740 mean_teacher=0.7708 wall=27.7s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps32_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.6348 mean_teacher=0.7599 wall=27.7s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_epsinf_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.6302 mean_teacher=0.7640 wall=27.6s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps2_K5 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K5 acc=0.6858 mean_teacher=0.7704 wall=27.7s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps8_K1 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K1 acc=0.6276 mean_teacher=0.7617 wall=27.7s err=None
+[sweep] start lenet_fmnist N=10 a=1.0 dp_avg_eps8_K5 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K5 acc=0.6466 mean_teacher=0.7686 wall=27.7s err=None
+[sweep] done. ran=21 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_015_dp_frontier_lenet/README.md

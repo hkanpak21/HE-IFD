@@ -1,0 +1,58 @@
+[017 noprobe] job 1117015 task 4/8 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=375 cells; chunk 4/8 -> 47 cells; case=heifd_017_noprobe_mlp
+[sweep] skip  cell_mlp_mnist_N1_a0.01_noprobe_dp_avg_eps8_K20_s43_K300_b60ddebc4aa5.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a0.01_raw_union_K20_s42_K300_18dc730ceb14.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a0.05_noprobe_dp_avg_eps8_K20_s44_K300_96f9c1b21240.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a0.05_raw_union_K20_s43_K300_afd4c671e34d.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a0.1_noprobe_raw_union_K20_s42_K300_6268e7fb4a22.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a0.1_raw_union_K20_s44_K300_8594b1661177.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a0.3_noprobe_raw_union_K20_s43_K300_e58939f09f18.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a1.0_noprobe_dp_avg_eps2_K20_s42_K300_3a07eb028d47.json (success exists)
+[sweep] skip  cell_mlp_mnist_N1_a1.0_noprobe_raw_union_K20_s44_K300_ed3878d6cc28.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.01_noprobe_dp_avg_eps2_K20_s43_K300_adb4d2f8f9cc.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.01_dp_avg_eps2_K20_s42_K300_eed12dbe3695.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.05_noprobe_dp_avg_eps2_K20_s44_K300_a132f80e3876.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.05_dp_avg_eps2_K20_s43_K300_b3e97a2be101.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.1_noprobe_dp_avg_eps8_K20_s42_K300_68dfa0447a51.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.1_dp_avg_eps2_K20_s44_K300_6ab2e7459b39.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.3_noprobe_dp_avg_eps8_K20_s43_K300_6737a20387b8.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a0.3_raw_union_K20_s42_K300_81ffb9ccf534.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a1.0_noprobe_dp_avg_eps8_K20_s44_K300_6baa5d6bc10f.json (success exists)
+[sweep] skip  cell_mlp_mnist_N5_a1.0_raw_union_K20_s43_K300_ff628f5c613e.json (success exists)
+[sweep] retry cell_mlp_mnist_N10_a0.01_noprobe_raw_union_K20_s42_K300_53ba05f925c5.json (prior status != success)
+[sweep] start mlp_mnist N=10 a=0.01 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.3673 mean_teacher=0.1824 wall=24.2s err=None
+[sweep] skip  cell_mlp_mnist_N10_a0.01_raw_union_K20_s44_K300_e8a8b977e762.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a0.05_noprobe_raw_union_K20_s43_K300_3044e8684269.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a0.1_noprobe_dp_avg_eps2_K20_s42_K300_ca4746a390a9.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a0.1_noprobe_raw_union_K20_s44_K300_95886a770408.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a0.3_noprobe_dp_avg_eps2_K20_s43_K300_569ccc0003f9.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a0.3_dp_avg_eps2_K20_s42_K300_208335039971.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a1.0_noprobe_dp_avg_eps2_K20_s44_K300_f4c07b8631fd.json (success exists)
+[sweep] skip  cell_mlp_mnist_N10_a1.0_dp_avg_eps2_K20_s43_K300_e91e7d229bed.json (success exists)
+[sweep] retry cell_mlp_mnist_N20_a0.01_noprobe_dp_avg_eps8_K20_s42_K300_4319686726e4.json (prior status != success)
+[sweep] start mlp_mnist N=20 a=0.01 noprobe_dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.3929 mean_teacher=0.1529 wall=21.2s err=None
+[sweep] skip  cell_mlp_mnist_N20_a0.01_dp_avg_eps2_K20_s44_K300_9a6858e62f0c.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a0.05_noprobe_dp_avg_eps8_K20_s43_K300_9b751300e38a.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a0.05_raw_union_K20_s42_K300_820dd6e89cfb.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a0.1_noprobe_dp_avg_eps8_K20_s44_K300_3abb6c8fbfaf.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a0.1_raw_union_K20_s43_K300_02d6455cdb51.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a0.3_noprobe_raw_union_K20_s42_K300_42bca60ce415.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a0.3_raw_union_K20_s44_K300_809822815bf5.json (success exists)
+[sweep] skip  cell_mlp_mnist_N20_a1.0_noprobe_raw_union_K20_s43_K300_cb7eb11a3b20.json (success exists)
+[sweep] retry cell_mlp_mnist_N50_a0.01_noprobe_dp_avg_eps2_K20_s42_K300_18b3db384e48.json (prior status != success)
+[sweep] start mlp_mnist N=50 a=0.01 noprobe_dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.3064 mean_teacher=0.1094 wall=29.2s err=None
+[sweep] retry cell_mlp_mnist_N50_a0.01_noprobe_raw_union_K20_s44_K300_59e0cf887525.json (prior status != success)
+[sweep] start mlp_mnist N=50 a=0.01 noprobe_raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.1754 mean_teacher=0.1177 wall=27.4s err=None
+[sweep] skip  cell_mlp_mnist_N50_a0.05_noprobe_dp_avg_eps2_K20_s43_K300_b3a90af864a4.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a0.05_dp_avg_eps2_K20_s42_K300_e46199ce0804.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a0.1_noprobe_dp_avg_eps2_K20_s44_K300_2c4596d14adf.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a0.1_dp_avg_eps2_K20_s43_K300_2dfb0d811e51.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a0.3_noprobe_dp_avg_eps8_K20_s42_K300_f5fa75e479c1.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a0.3_dp_avg_eps2_K20_s44_K300_85c851de274b.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a1.0_noprobe_dp_avg_eps8_K20_s43_K300_5ca755776263.json (success exists)
+[sweep] skip  cell_mlp_mnist_N50_a1.0_raw_union_K20_s42_K300_1dc8dc7e4d70.json (success exists)
+[sweep] done. ran=4 skipped=43 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_017_noprobe_mlp/README.md

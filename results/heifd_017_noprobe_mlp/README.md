@@ -1,35 +1,5 @@
 # heifd_017_noprobe_mlp
 
-## VERDICT (345/375 cells; 30 extreme-corner fails pending a fix-agent) — THE THESIS, CONFIRMED ACROSS THE FULL α GRID
-
-The no-probe / DP regimes have WEAK θ₀ (low-leak alignment) and the HE-secure distillation carries the model up with LARGE lift; the with-probe raw_union has strong θ₀ and thin lift. The secure distillation is the engine precisely where alignment is minimal — exactly the locked thesis.
-
-**Distillation lift (acc−θ₀), mean over N+seeds:**
-
-| α | noprobe_dp_avg_eps2 | noprobe_dp_avg_eps8 | noprobe_raw_union | dp_avg_eps2 (w/probe) | raw_union (w/probe) |
-|---|---:|---:|---:|---:|---:|
-| 0.01 | +0.422 | +0.368 | +0.275 | +0.275 | +0.084 |
-| 0.05 | +0.332 | +0.246 | +0.181 | +0.290 | +0.083 |
-| 0.1 | +0.343 | +0.258 | +0.201 | +0.366 | +0.058 |
-| 0.3 | +0.409 | +0.266 | +0.221 | +0.485 | +0.066 |
-| 1.0 | +0.474 | +0.349 | +0.298 | +0.602 | +0.076 |
-
-- **Weak-θ₀ regimes (no-probe, DP-noised) → large lift (+0.18 to +0.60).** Strong-θ₀ regime (with-probe raw_union) → thin lift (+0.06 to +0.08). The distillation does the heavy lifting exactly when the alignment is low-leak. This is the cleanest, most direct evidence for the method's value proposition.
-- The global model beats mean_teacher in the weak regimes (e.g. α=1.0 noprobe_dp_avg_eps2: acc 0.886 vs mean_t 0.875; α=0.01: 0.611 vs 0.530).
-
-**Cost-of-no-probe (with-probe − no-probe acc, dp_avg_eps2) — NEGATIVE everywhere (no-probe is BETTER):**
-
-| α | 0.01 | 0.05 | 0.1 | 0.3 | 1.0 |
-|---|---:|---:|---:|---:|---:|
-| gap | −0.112 | −0.060 | −0.050 | −0.033 | −0.014 |
-
-Removing the labelled public probe does **not** hurt — the no-probe variant is actually higher-accuracy for dp_avg_eps2 at every α (it keeps every per-(client,class) prototype as warmup data, vs the with-probe dp_avg which server-averages to one prototype/class). So the fully-DP, no-public-data deployment is not just viable, it is competitive — and the distillation's relative contribution is larger there. **Strong result for the low-leak deployment story.**
-
-### Known issue (30/375 fails, does not affect the verdict)
-30 cells at α∈{0.01,0.05}, N∈{5,10,20,50}, all 3 no-probe methods fail with `RuntimeError: cannot reshape tensor of 0 elements into [0,-1]` — the no-probe warmup-set construction hits an empty-tensor reshape at extreme heterogeneity (a class with zero federation-wide contributors → empty prototype set). Same bug *class* as the earlier dp_avg flatten-bridge fix, but in the no-probe path (distinct reshape). A fix-agent is dispatched; the 30 cells will re-run. They are all extreme-heterogeneity corners that would only add more weak-θ₀ data points to an already-decisive picture.
-
-
-
 HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
 ## Sweep configuration
@@ -128,13 +98,13 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 | mlp_mnist | 5 | 0.01 | dp_avg_eps2_K20 | 44 | 0.5822 | 0.2182 | 0.3985 | 0.9776 | 0.1652 | -0.6302 | 0/4 | 0.5716 | 4.2089 | success |
 | mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | 0.3651 | 0.2389 | 0.4043 | 0.9735 | 0.2282 | -0.6947 | 0/5 | 0.2834 | 4.2309 | success |
 | mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps2_K20 | 43 | 0.5695 | 0.2173 | 0.6002 | 0.9747 | 0.1403 | -0.8116 | 0/5 | 0.5255 | 4.2164 | success |
-| mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | n/a | 0.2182 | 0.3985 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | 0.5524 | 0.2182 | 0.3985 | 0.9776 | 0.2004 | -0.6474 | 0/4 | 0.5413 | 4.2089 | success |
 | mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | 0.2698 | 0.2389 | 0.4043 | 0.9735 | 0.2133 | -0.7812 | 0/5 | 0.1914 | 1.0577 | success |
 | mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps8_K20 | 43 | 0.5672 | 0.2173 | 0.6002 | 0.9747 | 0.1604 | -0.8124 | 0/5 | 0.5233 | 1.0541 | success |
-| mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | n/a | 0.2182 | 0.3985 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 5 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | 0.5329 | 0.2182 | 0.3985 | 0.9776 | 0.1882 | -0.6633 | 0/4 | 0.5217 | 1.0522 | success |
 | mlp_mnist | 5 | 0.01 | noprobe_raw_union_K20 | 42 | 0.2897 | 0.2389 | 0.4043 | 0.9735 | 0.2271 | -0.7707 | 0/5 | 0.2124 | 0.0000 | success |
 | mlp_mnist | 5 | 0.01 | noprobe_raw_union_K20 | 43 | 0.5699 | 0.2173 | 0.6002 | 0.9747 | 0.2217 | -0.8109 | 0/5 | 0.5260 | 0.0000 | success |
-| mlp_mnist | 5 | 0.01 | noprobe_raw_union_K20 | 44 | n/a | 0.2182 | 0.3985 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 5 | 0.01 | noprobe_raw_union_K20 | 44 | 0.4947 | 0.2182 | 0.3985 | 0.9776 | 0.2013 | -0.6910 | 0/4 | 0.4835 | 0.0000 | success |
 | mlp_mnist | 5 | 0.01 | raw_union_K20 | 42 | 0.7062 | 0.2389 | 0.4043 | 0.9735 | 0.6525 | -0.3314 | 0/5 | 0.6347 | 0.0000 | success |
 | mlp_mnist | 5 | 0.01 | raw_union_K20 | 43 | 0.6359 | 0.2173 | 0.6002 | 0.9747 | 0.7887 | -0.6595 | 0/5 | 0.5951 | 0.0000 | success |
 | mlp_mnist | 5 | 0.01 | raw_union_K20 | 44 | 0.7495 | 0.2182 | 0.3985 | 0.9776 | 0.6192 | -0.3799 | 0/4 | 0.7412 | 0.0000 | success |
@@ -201,13 +171,13 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 | mlp_mnist | 10 | 0.01 | dp_avg_eps2_K20 | 42 | 0.4075 | 0.1824 | 0.4034 | 0.9735 | 0.2095 | -0.6417 | 0/8 | 0.3707 | 4.2309 | success |
 | mlp_mnist | 10 | 0.01 | dp_avg_eps2_K20 | 43 | 0.3196 | 0.1835 | 0.2904 | 0.9747 | 0.1677 | -0.6782 | 0/10 | 0.3001 | 4.2164 | success |
 | mlp_mnist | 10 | 0.01 | dp_avg_eps2_K20 | 44 | 0.3554 | 0.1597 | 0.2014 | 0.9776 | 0.2757 | -0.7612 | 0/10 | 0.3707 | 4.2089 | success |
-| mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | n/a | 0.1824 | 0.4034 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | 0.3902 | 0.1824 | 0.4034 | 0.9735 | 0.1219 | -0.6218 | 0/8 | 0.3405 | 4.2309 | success |
 | mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps2_K20 | 43 | 0.3585 | 0.1835 | 0.2904 | 0.9747 | 0.1500 | -0.6190 | 0/10 | 0.3026 | 4.2164 | success |
 | mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | 0.2898 | 0.1597 | 0.2014 | 0.9776 | 0.1892 | -0.7747 | 0/10 | 0.2764 | 4.2089 | success |
-| mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | n/a | 0.1824 | 0.4034 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | 0.3764 | 0.1824 | 0.4034 | 0.9735 | 0.2599 | -0.6373 | 0/8 | 0.3285 | 1.0577 | success |
 | mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps8_K20 | 43 | 0.3317 | 0.1835 | 0.2904 | 0.9747 | 0.1344 | -0.6468 | 0/10 | 0.2799 | 1.0541 | success |
 | mlp_mnist | 10 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | 0.4427 | 0.1597 | 0.2014 | 0.9776 | 0.3149 | -0.5932 | 0/10 | 0.4264 | 1.0522 | success |
-| mlp_mnist | 10 | 0.01 | noprobe_raw_union_K20 | 42 | n/a | 0.1824 | 0.4034 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 10 | 0.01 | noprobe_raw_union_K20 | 42 | 0.3673 | 0.1824 | 0.4034 | 0.9735 | 0.3224 | -0.6632 | 0/8 | 0.3228 | 0.0000 | success |
 | mlp_mnist | 10 | 0.01 | noprobe_raw_union_K20 | 43 | 0.3196 | 0.1835 | 0.2904 | 0.9747 | 0.1864 | -0.6665 | 0/10 | 0.2790 | 0.0000 | success |
 | mlp_mnist | 10 | 0.01 | noprobe_raw_union_K20 | 44 | 0.3731 | 0.1597 | 0.2014 | 0.9776 | 0.4399 | -0.6779 | 0/10 | 0.3562 | 0.0000 | success |
 | mlp_mnist | 10 | 0.01 | raw_union_K20 | 42 | 0.7905 | 0.1824 | 0.4034 | 0.9735 | 0.7807 | -0.2530 | 0/8 | 0.7806 | 0.0000 | success |
@@ -276,28 +246,28 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 | mlp_mnist | 20 | 0.01 | dp_avg_eps2_K20 | 42 | 0.4065 | 0.1529 | 0.3057 | 0.9735 | 0.2832 | -0.6132 | 0/18 | 0.3999 | 4.2309 | success |
 | mlp_mnist | 20 | 0.01 | dp_avg_eps2_K20 | 43 | 0.4459 | 0.1329 | 0.3037 | 0.9747 | 0.2308 | -0.4687 | 0/16 | 0.4329 | 4.2164 | success |
 | mlp_mnist | 20 | 0.01 | dp_avg_eps2_K20 | 44 | 0.4455 | 0.1353 | 0.2083 | 0.9776 | 0.1799 | -0.5405 | 0/17 | 0.4444 | 4.2089 | success |
-| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | n/a | 0.1529 | 0.3057 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps2_K20 | 43 | n/a | 0.1329 | 0.3037 | 0.9747 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | n/a | 0.1353 | 0.2083 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | n/a | 0.1529 | 0.3057 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps8_K20 | 43 | n/a | 0.1329 | 0.3037 | 0.9747 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | n/a | 0.1353 | 0.2083 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_raw_union_K20 | 42 | n/a | 0.1529 | 0.3057 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_raw_union_K20 | 43 | n/a | 0.1329 | 0.3037 | 0.9747 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 20 | 0.01 | noprobe_raw_union_K20 | 44 | n/a | 0.1353 | 0.2083 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | 0.3975 | 0.1529 | 0.3057 | 0.9735 | 0.1861 | -0.5490 | 0/18 | 0.3844 | 4.2309 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps2_K20 | 43 | 0.3002 | 0.1329 | 0.3037 | 0.9747 | 0.2717 | -0.5421 | 0/16 | 0.2849 | 4.2164 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | 0.3291 | 0.1353 | 0.2083 | 0.9776 | 0.1138 | -0.5986 | 0/17 | 0.3137 | 4.2089 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | 0.3929 | 0.1529 | 0.3057 | 0.9735 | 0.2417 | -0.5727 | 0/18 | 0.3783 | 1.0577 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps8_K20 | 43 | 0.4126 | 0.1329 | 0.3037 | 0.9747 | 0.3720 | -0.5065 | 0/16 | 0.3955 | 1.0541 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | 0.4657 | 0.1353 | 0.2083 | 0.9776 | 0.3521 | -0.4860 | 0/17 | 0.4518 | 1.0522 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_raw_union_K20 | 42 | 0.4097 | 0.1529 | 0.3057 | 0.9735 | 0.3333 | -0.5564 | 0/18 | 0.3969 | 0.0000 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_raw_union_K20 | 43 | 0.3028 | 0.1329 | 0.3037 | 0.9747 | 0.3779 | -0.6273 | 0/16 | 0.2905 | 0.0000 | success |
+| mlp_mnist | 20 | 0.01 | noprobe_raw_union_K20 | 44 | 0.4504 | 0.1353 | 0.2083 | 0.9776 | 0.4343 | -0.4720 | 0/17 | 0.4342 | 0.0000 | success |
 | mlp_mnist | 20 | 0.01 | raw_union_K20 | 42 | 0.8623 | 0.1529 | 0.3057 | 0.9735 | 0.8152 | -0.1043 | 2/18 | 0.8616 | 0.0000 | success |
 | mlp_mnist | 20 | 0.01 | raw_union_K20 | 43 | 0.7730 | 0.1329 | 0.3037 | 0.9747 | 0.7578 | -0.1712 | 1/16 | 0.7681 | 0.0000 | success |
 | mlp_mnist | 20 | 0.01 | raw_union_K20 | 44 | 0.8087 | 0.1353 | 0.2083 | 0.9776 | 0.7877 | -0.1865 | 0/17 | 0.8053 | 0.0000 | success |
 | mlp_mnist | 20 | 0.05 | dp_avg_eps2_K20 | 42 | 0.3106 | 0.2578 | 0.5272 | 0.9735 | 0.2581 | -0.7537 | 0/19 | 0.2833 | 4.2309 | success |
 | mlp_mnist | 20 | 0.05 | dp_avg_eps2_K20 | 43 | 0.5063 | 0.2643 | 0.4824 | 0.9747 | 0.2489 | -0.4675 | 0/20 | 0.4922 | 4.2164 | success |
 | mlp_mnist | 20 | 0.05 | dp_avg_eps2_K20 | 44 | 0.4958 | 0.2730 | 0.5003 | 0.9776 | 0.2841 | -0.4491 | 0/20 | 0.5072 | 4.2089 | success |
-| mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps2_K20 | 42 | n/a | 0.2578 | 0.5272 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps2_K20 | 42 | 0.4075 | 0.2578 | 0.5272 | 0.9735 | 0.4068 | -0.6559 | 0/19 | 0.3883 | 4.2309 | success |
 | mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps2_K20 | 43 | 0.6415 | 0.2643 | 0.4824 | 0.9747 | 0.3506 | -0.3189 | 1/20 | 0.6223 | 4.2164 | success |
 | mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps2_K20 | 44 | 0.5543 | 0.2730 | 0.5003 | 0.9776 | 0.3025 | -0.4026 | 0/20 | 0.5462 | 4.2089 | success |
-| mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps8_K20 | 42 | n/a | 0.2578 | 0.5272 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps8_K20 | 42 | 0.4141 | 0.2578 | 0.5272 | 0.9735 | 0.4636 | -0.6174 | 0/19 | 0.3808 | 1.0577 | success |
 | mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps8_K20 | 43 | 0.6324 | 0.2643 | 0.4824 | 0.9747 | 0.5135 | -0.3020 | 1/20 | 0.6034 | 1.0541 | success |
 | mlp_mnist | 20 | 0.05 | noprobe_dp_avg_eps8_K20 | 44 | 0.5769 | 0.2730 | 0.5003 | 0.9776 | 0.4413 | -0.3803 | 0/20 | 0.5655 | 1.0522 | success |
-| mlp_mnist | 20 | 0.05 | noprobe_raw_union_K20 | 42 | n/a | 0.2578 | 0.5272 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 20 | 0.05 | noprobe_raw_union_K20 | 42 | 0.4499 | 0.2578 | 0.5272 | 0.9735 | 0.4970 | -0.5872 | 0/19 | 0.4103 | 0.0000 | success |
 | mlp_mnist | 20 | 0.05 | noprobe_raw_union_K20 | 43 | 0.6525 | 0.2643 | 0.4824 | 0.9747 | 0.5790 | -0.2862 | 1/20 | 0.6229 | 0.0000 | success |
 | mlp_mnist | 20 | 0.05 | noprobe_raw_union_K20 | 44 | 0.5518 | 0.2730 | 0.5003 | 0.9776 | 0.4401 | -0.4038 | 0/20 | 0.5411 | 0.0000 | success |
 | mlp_mnist | 20 | 0.05 | raw_union_K20 | 42 | 0.8947 | 0.2578 | 0.5272 | 0.9735 | 0.8927 | -0.0748 | 2/19 | 0.8857 | 0.0000 | success |
@@ -351,15 +321,15 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 | mlp_mnist | 50 | 0.01 | dp_avg_eps2_K20 | 42 | 0.2212 | 0.1094 | 0.2011 | 0.9735 | 0.2002 | -0.7667 | 0/36 | 0.2259 | 4.2309 | success |
 | mlp_mnist | 50 | 0.01 | dp_avg_eps2_K20 | 43 | 0.2448 | 0.1321 | 0.2998 | 0.9747 | 0.2771 | -0.8105 | 0/34 | 0.2481 | 4.2164 | success |
 | mlp_mnist | 50 | 0.01 | dp_avg_eps2_K20 | 44 | 0.3441 | 0.1177 | 0.2874 | 0.9776 | 0.2958 | -0.5641 | 0/32 | 0.3357 | 4.2089 | success |
-| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | n/a | 0.1094 | 0.2011 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps2_K20 | 43 | n/a | 0.1321 | 0.2998 | 0.9747 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | n/a | 0.1177 | 0.2874 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | n/a | 0.1094 | 0.2011 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps8_K20 | 43 | n/a | 0.1321 | 0.2998 | 0.9747 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | n/a | 0.1177 | 0.2874 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_raw_union_K20 | 42 | n/a | 0.1094 | 0.2011 | 0.9735 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_raw_union_K20 | 43 | n/a | 0.1321 | 0.2998 | 0.9747 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
-| mlp_mnist | 50 | 0.01 | noprobe_raw_union_K20 | 44 | n/a | 0.1177 | 0.2874 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps2_K20 | 42 | 0.3064 | 0.1094 | 0.2011 | 0.9735 | 0.2688 | -0.6760 | 0/36 | 0.3014 | 4.2309 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps2_K20 | 43 | 0.3603 | 0.1321 | 0.2998 | 0.9747 | 0.1912 | -0.6197 | 0/34 | 0.3519 | 4.2164 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps2_K20 | 44 | 0.2312 | 0.1177 | 0.2874 | 0.9776 | 0.1595 | -0.5765 | 0/32 | 0.2192 | 4.2089 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps8_K20 | 42 | 0.4172 | 0.1094 | 0.2011 | 0.9735 | 0.3072 | -0.5426 | 0/36 | 0.4078 | 1.0577 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps8_K20 | 43 | 0.3615 | 0.1321 | 0.2998 | 0.9747 | 0.2489 | -0.5961 | 0/34 | 0.3524 | 1.0541 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_dp_avg_eps8_K20 | 44 | 0.1501 | 0.1177 | 0.2874 | 0.9776 | 0.1737 | -0.6706 | 0/32 | 0.1394 | 1.0522 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_raw_union_K20 | 42 | 0.4150 | 0.1094 | 0.2011 | 0.9735 | 0.2835 | -0.5581 | 0/36 | 0.4084 | 0.0000 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_raw_union_K20 | 43 | 0.4274 | 0.1321 | 0.2998 | 0.9747 | 0.3640 | -0.5407 | 0/34 | 0.4175 | 0.0000 | success |
+| mlp_mnist | 50 | 0.01 | noprobe_raw_union_K20 | 44 | 0.1754 | 0.1177 | 0.2874 | 0.9776 | 0.2240 | -0.6828 | 0/32 | 0.1653 | 0.0000 | success |
 | mlp_mnist | 50 | 0.01 | raw_union_K20 | 42 | 0.8826 | 0.1094 | 0.2011 | 0.9735 | 0.8472 | -0.0877 | 0/36 | 0.8823 | 0.0000 | success |
 | mlp_mnist | 50 | 0.01 | raw_union_K20 | 43 | 0.8863 | 0.1321 | 0.2998 | 0.9747 | 0.8628 | -0.0905 | 0/34 | 0.8850 | 0.0000 | success |
 | mlp_mnist | 50 | 0.01 | raw_union_K20 | 44 | 0.8379 | 0.1177 | 0.2874 | 0.9776 | 0.8304 | -0.0825 | 2/32 | 0.8357 | 0.0000 | success |
@@ -368,13 +338,13 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 | mlp_mnist | 50 | 0.05 | dp_avg_eps2_K20 | 44 | 0.3790 | 0.2005 | 0.5202 | 0.9776 | 0.3282 | -0.5638 | 2/49 | 0.3566 | 4.2089 | success |
 | mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps2_K20 | 42 | 0.6055 | 0.2029 | 0.4533 | 0.9735 | 0.5581 | -0.3492 | 2/50 | 0.5817 | 4.2309 | success |
 | mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps2_K20 | 43 | 0.6230 | 0.2106 | 0.5674 | 0.9747 | 0.5685 | -0.3553 | 4/50 | 0.5858 | 4.2164 | success |
-| mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps2_K20 | 44 | n/a | 0.2005 | 0.5202 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps2_K20 | 44 | 0.5894 | 0.2005 | 0.5202 | 0.9776 | 0.4806 | -0.3659 | 2/49 | 0.5662 | 4.2089 | success |
 | mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps8_K20 | 42 | 0.7222 | 0.2029 | 0.4533 | 0.9735 | 0.7077 | -0.2376 | 3/50 | 0.7065 | 1.0577 | success |
 | mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps8_K20 | 43 | 0.6830 | 0.2106 | 0.5674 | 0.9747 | 0.7525 | -0.2840 | 4/50 | 0.6521 | 1.0541 | success |
-| mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps8_K20 | 44 | n/a | 0.2005 | 0.5202 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 50 | 0.05 | noprobe_dp_avg_eps8_K20 | 44 | 0.6113 | 0.2005 | 0.5202 | 0.9776 | 0.6301 | -0.3431 | 2/49 | 0.5892 | 1.0522 | success |
 | mlp_mnist | 50 | 0.05 | noprobe_raw_union_K20 | 42 | 0.7353 | 0.2029 | 0.4533 | 0.9735 | 0.7343 | -0.2209 | 3/50 | 0.7206 | 0.0000 | success |
 | mlp_mnist | 50 | 0.05 | noprobe_raw_union_K20 | 43 | 0.6925 | 0.2106 | 0.5674 | 0.9747 | 0.7620 | -0.2729 | 5/50 | 0.6611 | 0.0000 | success |
-| mlp_mnist | 50 | 0.05 | noprobe_raw_union_K20 | 44 | n/a | 0.2005 | 0.5202 | 0.9776 | n/a | n/a | n/a | n/a | 0.0000 | FAIL |
+| mlp_mnist | 50 | 0.05 | noprobe_raw_union_K20 | 44 | 0.6094 | 0.2005 | 0.5202 | 0.9776 | 0.6314 | -0.3424 | 2/49 | 0.5875 | 0.0000 | success |
 | mlp_mnist | 50 | 0.05 | raw_union_K20 | 42 | 0.9280 | 0.2029 | 0.4533 | 0.9735 | 0.9112 | -0.0295 | 9/50 | 0.9268 | 0.0000 | success |
 | mlp_mnist | 50 | 0.05 | raw_union_K20 | 43 | 0.9164 | 0.2106 | 0.5674 | 0.9747 | 0.9142 | -0.0166 | 13/50 | 0.9116 | 0.0000 | success |
 | mlp_mnist | 50 | 0.05 | raw_union_K20 | 44 | 0.9123 | 0.2005 | 0.5202 | 0.9776 | 0.9136 | -0.0251 | 12/49 | 0.9092 | 0.0000 | success |
