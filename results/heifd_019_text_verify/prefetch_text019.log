@@ -1,0 +1,13 @@
+[prefetch] ag_news ok
+[prefetch] hf distilbert-base-uncased ok
+[prefetch] hf gpt2 ok
+[prefetch] resnet18 ok
+[prefetch] vit ok
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+[prefetch] hf roberta-base ok
+[prefetch] hf sentence-transformers/all-mpnet-base-v2 ok
+Generating train split:   0%|          | 0/560000 [00:00<?, ? examples/s]Generating train split:   8%|▊         | 44000/560000 [00:00<00:01, 306072.84 examples/s]Generating train split:  28%|██▊       | 156000/560000 [00:00<00:00, 707904.18 examples/s]Generating train split:  43%|████▎     | 240000/560000 [00:00<00:00, 756108.13 examples/s]Generating train split:  61%|██████    | 340000/560000 [00:00<00:00, 830958.03 examples/s]Generating train split:  85%|████████▌ | 478000/560000 [00:00<00:00, 1016944.13 examples/s]Generating train split: 100%|██████████| 560000/560000 [00:00<00:00, 866122.31 examples/s] 
+Generating test split:   0%|          | 0/70000 [00:00<?, ? examples/s]Generating test split: 100%|██████████| 70000/70000 [00:00<00:00, 904590.96 examples/s]
+[prefetch] dbpedia_14 ok
+[prefetch] PREFETCH DONE
