@@ -1,0 +1,125 @@
+\documentclass[journal]{IEEEtran}
+
+% --- packages ---
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\newtheorem{proposition}{Proposition}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+\usepackage{orcidlink}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+
+% --- SANZO palette (mirrors docs/paper/figures/make_figures.py and FL_TDSC/figures/sanzo.md) ---
+\definecolor{paperblue}{HTML}{5B7FA6}     % SANZO primary blue (borders / primary)
+\definecolor{paperbluelt}{HTML}{C9D6E3}   % light blue fill
+\definecolor{paperneutral}{HTML}{5B7B6E}  % SANZO dark sage (neutral / reference)
+\definecolor{paperneutrallt}{HTML}{C7D0D6}% SANZO light blue-grey (server fill)
+\definecolor{paperamber}{HTML}{D4826A}    % SANZO terracotta (contrast accent)
+% blue ramp (light -> dark)
+\definecolor{blueA}{HTML}{D3DEEA}
+\definecolor{blueB}{HTML}{A9BDD3}
+\definecolor{blueC}{HTML}{7B9BBF}
+\definecolor{blueD}{HTML}{5B7FA6}
+% SANZO tan family (clients / teachers) + sage + blue-grey
+\definecolor{sanzotan}{HTML}{C6A87D}
+\definecolor{sanzotanlt}{HTML}{D4C5A9}
+\definecolor{sanzotangrey}{HTML}{B5A88B}
+\definecolor{sanzobluegrey}{HTML}{8B9EA8}
+\definecolor{sanzosage}{HTML}{7B9E87}
+
+% --- notation macros (single source of truth; mirrors docs/paper/notation-and-terms.md) ---
+\newcommand{\Nc}{N}                                  % number of clients
+\newcommand{\Dj}{\mathcal{D}_j}                      % client j local dataset
+\newcommand{\nj}{n_j}                                % |D_j|
+\newcommand{\Cc}{C}                                  % number of classes
+\newcommand{\featx}{\varphi}                         % frozen feature extractor
+\newcommand{\headp}{\psi}                            % trainable head params
+\newcommand{\head}{h_{\headp}}                       % trainable head
+\newcommand{\model}{f_{\theta}}                      % student model
+\newcommand{\thz}{\theta_0}                          % shared loss basin / init
+\newcommand{\teacher}{t_j}                           % client teacher
+\newcommand{\Ksteps}{K}                              % bounded trajectory length
+\newcommand{\temp}{\tau}                             % distillation temperature
+\newcommand{\disp}{\Delta_j}                         % displacement
+\newcommand{\wj}{w_j}                                % sample weight
+\newcommand{\thstar}{\theta^{\star}}                 % aggregated global model
+\newcommand{\Kpc}{K_{\mathrm{pc}}}                   % samples per class per client
+\newcommand{\KL}{\mathrm{KL}}
+
+\begin{document}
+
+\title{HE-IFD: Privacy-Preserving One-Shot Federated Distillation\\ in a Shared Loss Basin under Homomorphic Encryption}
+
+\author{
+Halil \.{I}brahim Kanpak\,\orcidlink{0009-0005-0284-5941},
+Sinem Sav\,\orcidlink{0000-0001-9096-8768},
+Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
+\thanks{Corresponding Author: Sinem Sav (sinem.sav@cs.bilkent.edu.tr)}%
+\thanks{Halil \.{I}brahim Kanpak is with the Department of Computer Engineering, Ko\c{c} University, İstanbul, Türkiye (e-mail: hkanpak21@ku.edu.tr).}%
+\thanks{Sinem Sav is with the Department of Computer Engineering, Bilkent University, Ankara, Türkiye (e-mail: sinem.sav@cs.bilkent.edu.tr).}%
+\thanks{Alptekin K\"up\c{c}\"u is with the Department of Computer Engineering, Ko\c{c} University, İstanbul, Türkiye (e-mail: akupcu@ku.edu.tr).}%
+\thanks{Manuscript received XX XX, XXXX; revised XX XX, XXXX.}%
+}
+
+\markboth{IEEE Transactions on Network Science and Engineering}%
+{Kanpak \MakeLowercase{\textit{et al.}}: Privacy-Preserving One-Shot Federated Distillation in a Shared Loss Basin}
+
+\maketitle
+
+\begin{abstract}
+Federated learning lets parties train a shared model without pooling their data, but its one-shot variant,
+which communicates in a single round, faces an unresolved privacy dilemma: sending a client's contribution
+in plaintext exposes it, while protecting it with differential privacy degrades the released model, and
+homomorphic encryption has so far been confined to multi-round encrypted training or to secure-aggregation
+primitives. We present HE-IFD, a one-shot federated distillation whose contributions are protected by
+lossless homomorphic encryption. Each client distils its local teacher into a small shared classifier head along a
+bounded trajectory, and the server combines the resulting parameter displacements with a single
+sample-weighted linear operation under multiparty CKKS, using only additions and multiplications by public
+scalars, at multiplicative depth one. The key to making a one-shot linear aggregation work under
+heterogeneous data is a shared loss basin: a common, possibly weak, initialization agreed from cheap
+per-class summaries, whose role is to align the clients' updates rather than to classify well. Across vision
+and language tasks, and from small networks to frozen pretrained backbones, the method produces a common
+model far stronger than any client's own and close to a centralized one, while giving each client coverage
+of classes it never observed locally. A real multiparty CKKS implementation matches the plaintext aggregate
+to a relative error near $10^{-9}$ at a few megabytes per round, and differentially private basin summaries
+incur negligible accuracy cost across the practical range of privacy budgets.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Federated learning, one-shot federated learning, knowledge distillation, homomorphic encryption,
+multiparty computation, differential privacy.
+\end{IEEEkeywords}
+
+\input{sections/intro}
+\input{sections/related}
+\input{sections/prelim}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/mia}
+\input{sections/conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{authors/hkanpak.jpg}}]
+{HALİL İBRAHİM KANPAK}~received his B.Sc. degree in Mathematics from Koç University. He is currently pursuing his Ph.D. at Koç University, where he is a member of the Cryptography, Cyber Security \& Privacy Research Group. His research interests include cryptography and related areas in Deep Learning.
+\end{IEEEbiography}
+
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{authors/sinem.jpg}}]
+{Asst. Prof. SİNEM SAV}~received her Ph.D. in Computer and Communication Sciences from École Polytechnique Fédérale de Lausanne (EPFL). She also holds M.Sc. and B.Sc. degrees in Computer Engineering from Bilkent University, where she currently serves as an Assistant Professor in the Computer Engineering department. Her research interests include privacy-preserving machine learning and applied cryptography.
+\end{IEEEbiography}
+
+\begin{IEEEbiography}
+[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{authors/alptekinkupcu3.jpg}}]
+{Prof. ALPTEKİN KÜPÇÜ}~received his Ph.D. degree from Brown University Computer Science Department in 2010. Since then, he has been working as a faculty member at Koç University, leading the Cryptography, Cyber Security \& Privacy Research Group that he founded. He is an ACM and IEEE Senior Member, and a co-founder of Xtinge Technology Inc.
+\end{IEEEbiography}
+
+\end{document}

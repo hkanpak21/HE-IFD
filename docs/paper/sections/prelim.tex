@@ -1,0 +1,98 @@
+\section{Preliminaries and Threat Model}
+\label{sec:prelim}
+
+\subsection{Notation}
+\label{sec:notation}
+
+\Cref{tab:notation} collects the symbols used throughout. We write client indices as $j \in
+\{1,\dots,\Nc\}$ and denote by $\sigma_{\temp}(\cdot)$ the softmax function at temperature $\temp$.
+
+\begin{table}[t]
+\centering
+\caption{Notation.}
+\label{tab:notation}
+\begin{tabular}{ll}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\Nc$ & number of participating clients \\
+$\Dj,\ \nj$ & client $j$'s local dataset and its size $\nj=|\Dj|$ \\
+$\Cc$ & number of classes \\
+$\alpha$ & Dirichlet concentration (label heterogeneity) \\
+$\featx$ & frozen feature extractor (never trained or encrypted) \\
+$\head$ & trainable classifier head, parameters $\headp$ \\
+$\model$ & student model $\head\circ\featx$, parameters $\theta$ \\
+$\thz$ & shared loss basin: common head initialization \\
+$\teacher$ & client $j$'s local teacher \\
+$\Ksteps,\ \temp$ & distillation steps and temperature \\
+$\disp$ & displacement $\theta_j^{(\Ksteps)}-\thz$ \\
+$\wj$ & sample weight $\nj/\sum_i n_i$ \\
+$\thstar$ & aggregated global model $\thz+\sum_j\wj\disp$ \\
+$(\varepsilon,\delta)$ & differential-privacy budget on Phase-0 summaries \\
+$\Kpc$ & samples per class per client averaged into a prototype \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Multiparty Homomorphic Encryption}
+\label{sec:mhe}
+
+We build on the CKKS scheme~\cite{cheon2017ckks}, a ring-learning-with-errors
+construction~\cite{lyubashevsky2010ideal} that performs approximate arithmetic on vectors of real numbers
+under encryption. CKKS packs many real slots into one ciphertext and supports two homomorphic operations of
+interest here: addition of two ciphertexts, and multiplication of a ciphertext by a plaintext. It is a
+levelled scheme, meaning each multiplication consumes one level of a finite budget; our protocol uses only
+additions and multiplications by public plaintext scalars, so it consumes a single level and never requires
+the expensive bootstrapping step~\cite{cheon2018bootstrapping} that refreshes a depleted budget.
+
+A single-key scheme would require one party to hold the secret key and therefore to be trusted with
+decryption. We instead use the multiparty variant of CKKS~\cite{mouchet2021multiparty}, in which the secret
+key is shared among the clients through a distributed key-generation protocol that produces a collective
+public key without ever materialising the secret in one place. Any party, including the server, may compute
+on ciphertexts under the collective public key, but decryption requires the cooperation of a threshold of
+clients, carried out as a collective key-switching protocol. No single party, and in particular not the
+server, can decrypt on its own. This is precisely the property our aggregation needs: the server performs
+the homomorphic computation on encrypted client contributions, yet only the clients, acting together, can
+reveal the result.
+
+\subsection{Differential Privacy of Averaged Summaries}
+\label{sec:dp}
+
+A randomised mechanism $M$ is $(\varepsilon,\delta)$-differentially private if for all adjacent inputs
+differing in one record and all measurable $S$, $\Pr[M(x)\in S]\le e^{\varepsilon}\Pr[M(x')\in S]+\delta$.
+The Gaussian mechanism achieves this for a vector-valued query by adding noise
+$\mathcal{N}(0,\sigma^2 I)$ with $\sigma \propto \Delta_2\sqrt{2\ln(1.25/\delta)}/\varepsilon$, where
+$\Delta_2$ is the $\ell_2$ sensitivity of the query, the largest change in its output from altering one
+record.
+
+The only data-derived quantities released before encryption in our protocol are per-class feature
+averages, and we use this structure to our advantage. If each released summary is the mean of $\Kpc$
+clipped per-example features, then changing one example changes the mean by at most $\mathrm{clip}/\Kpc$,
+so the sensitivity is $\Delta_2 = \mathrm{clip}/\Kpc$ and the required noise scales as
+$\sigma \propto \mathrm{clip}/(\Kpc\,\varepsilon)$. Averaging more samples per class lowers the sensitivity
+and hence the noise, so a client tightens its privacy budget by averaging over more of its data rather than
+by accepting a worse contribution. We refer to this as the averaging variant of the Gaussian mechanism and
+apply it to the Phase-0 prototypes in \cref{sec:basin,sec:privacy}.
+
+\subsection{Threat Model}
+\label{sec:threat}
+
+The participants are $\Nc$ clients and a single aggregation server. The server is honest-but-curious: it
+follows the protocol faithfully but may attempt to infer private information from anything it observes.
+During aggregation the server sees only ciphertexts under the collective key, and as established in
+\cref{sec:mhe} it cannot decrypt them; it is moreover excluded entirely from the shared-basin construction,
+which the clients carry out among themselves over secure, authenticated peer-to-peer channels. A minority
+of clients may likewise be honest-but-curious and may collude, but any coalition below the decryption
+threshold learns nothing about another client's displacement, since recovering a plaintext requires the
+cooperation of the threshold. This is a stronger position than secure-aggregation protocols, where the
+revealed sum has itself been shown to leak across rounds~\cite{so2023securing,kerkouche2023client}, because
+in our one-shot protocol the server never obtains a plaintext sum at all.
+
+Three properties follow. Raw data never leave their client. The model updates are protected by encryption
+alone and are therefore released to the aggregation without any accuracy-reducing perturbation. And the
+small per-class summaries used to form the shared basin, the only data-derived values exposed before
+encryption, are released under the differential-privacy mechanism of \cref{sec:dp}. What this model does
+not on its own quantify is how much an adversary can infer from the final global model, which every party
+receives in the clear after decryption; we measure that residual exposure directly with membership-inference
+attacks in \cref{sec:mia}. Robustness to actively malicious or Byzantine clients is outside our scope and we
+return to it only as a direction for future work.

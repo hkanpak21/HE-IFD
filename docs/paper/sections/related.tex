@@ -1,0 +1,96 @@
+\section{Related Work}
+\label{sec:related}
+
+The setting we study sits at the meeting point of three lines of work that have largely developed in
+isolation: how federated learning communicates, how it is made private, and how it has been compressed into
+a single round. Tracing how each arrived at its present state makes clear both what is established and where
+the gap we address lies.
+
+Federated learning began as an iterative procedure. In the original formulation a server repeatedly
+broadcasts a global model, clients improve it on their local data, and the server averages the returned
+updates~\cite{mcmahan2017communication}. This works well but inherits two persistent costs from its
+iterative nature. The first is communication: reaching a good model can take tens or hundreds of rounds,
+each moving a full model in both directions. The second is exposure: every round reveals a fresh update
+computed on private data, and a long sequence of such updates is a rich target for inference. Much of the
+subsequent literature can be read as attempts to control one of these two costs without worsening the
+other.
+
+The exposure problem has been met with two broad tools, distinguished by whether they alter the model that
+is ultimately released. Secure aggregation lets a server learn only the sum of the clients' updates and
+nothing about any individual one, using masking protocols that cancel in the aggregate~\cite
+{bonawitz2017practical}; it is lossless, in that the aggregate is exact, but it protects only the per-round
+sum and still operates within the iterative protocol. Differential privacy instead perturbs the updates
+themselves, most commonly through differentially private stochastic gradient descent~\cite{abadi2016deep};
+the guarantee is strong and composable, but because the noise enters the released model it trades privacy
+directly against accuracy. This lossless-versus-lossy distinction is the axis along which our own privacy
+design is best understood, and it recurs throughout what follows.
+
+Homomorphic encryption offers a third route, protecting the updates by computing on them while they remain
+encrypted. In its most ambitious form it has been used to train a neural network entirely under encryption
+across many parties. POSEIDON, for instance, runs encrypted stochastic gradient descent under multiparty
+CKKS, with the nonlinear activations replaced by polynomial approximations so that they can be evaluated
+homomorphically~\cite{sav2021poseidon}. The privacy is lossless and the result strong, but the approach
+remains fundamentally iterative and pays for the encrypted nonlinearities with a deep multiplicative
+circuit, repeated bootstrapping, and a wall-clock measured in hours. A lighter line keeps the encryption
+but narrows its job to aggregation alone: schemes that combine multi-key CKKS with masking reduce a round
+of secure summation to a single non-interactive client-to-server transmission~\cite{kemmaka2025hybagg}.
+These are efficient and genuinely cryptographic, but they encrypt the sum of model updates within an
+iterative training protocol rather than a one-shot contribution, and they perform aggregation rather than
+knowledge transfer. On the encryption axis these works are the closest to ours, and the contrast is
+precise: they are either multi-round or are secure-aggregation primitives, whereas we encrypt a single
+distillation displacement.
+
+Homomorphic encryption has also been applied to federated learning purely for aggregation, encrypting the
+per-round updates so the server can sum them without seeing any in the clear; BatchCrypt, FedML-HE, and
+FedSHE develop this for cross-silo training with various packing and quantization
+optimisations~\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe}. These remain multi-round and, like
+secure aggregation, protect the sum rather than transferring knowledge. A recurring obstacle across all
+encrypted-training work is the nonlinearity: activations must be replaced by polynomial approximations to be
+evaluated homomorphically, which deepens the multiplicative circuit and is delicate to train, as a line of
+work on polynomial activations and encryption-friendly networks documents~\cite{garimella2021sisyphus,baruch2022methodology,agamennone2025polynomial,alhossain2025training,ibarrondo2021fhebn}.
+Our design sidesteps this entirely: the only encrypted operation is linear, so no activation is ever
+evaluated under encryption and the circuit stays at depth one.
+
+The communication problem has driven the parallel development of one-shot federated learning, which
+collapses the entire exchange into a single upload and download~\cite{guha2019oneshot,wang2025towards}. The earliest approaches transferred
+knowledge rather than weights, having clients exchange predictions on a shared public set so that
+heterogeneous models could teach one another~\cite{li2019fedmd,itahara2021dsfl}; in practice these
+remained iterative, repeating the exchange to converge. Ensemble distillation made the distillation step
+explicit by training a server model against the clients' aggregated predictions, though in its standard
+configuration it too runs for many rounds~\cite{lin2020feddf}. The decisive step to a true single round
+came with data-free one-shot methods, which avoid any shared data by having the server distil the clients'
+models through a generator or through synthesised inputs, as in DENSE and its
+successors~\cite{zhang2022dense,dai2024coboosting}, and with fusion-based methods that stitch client models
+together with lightweight learned adapters~\cite{tang2024fusefl} or aggregate them through a layer-wise
+posterior~\cite{liu2024fedlpa,zhang2024fedsd2c}. These methods are the closest to ours on the one-shot and
+distillation axes, and they establish that a single round can produce a usable joint model. What they do
+not provide is any cryptographic protection: they operate in plaintext, so the contributions each client
+sends are exposed.
+
+Closing that last gap, a handful of works add privacy to one-shot federated learning, and they do so with
+differential privacy. FedAUXfdp distils through a pretrained feature extractor on auxiliary public data and
+releases the client contributions under a differentially private mechanism~\cite{hoech2022fedauxfdp};
+related approaches protect a diffusion-generated~\cite{feddiff2024} or a teacher-ensemble~\cite
+{li2021fedkt} surrogate, or add noise-free differential privacy to the distillation
+itself~\cite{sun2021fedmdnfdp}, under the same kind of guarantee. These are the natural quantitative peers
+for our method, since they share its one-shot, distillation-based structure, but their privacy is lossy in
+exactly the sense above: the noise needed for a meaningful budget is added to the artifact that is released,
+and accuracy falls as the budget tightens.
+
+The reason privacy is the binding concern here is that the artifacts federated protocols exchange leak.
+Sharing gradients or model updates permits reconstruction of training inputs~\cite{zhu2019deep,dimitrov2024spear,carletti2025sok}
+and supports membership and property inference~\cite{shokri2017membership,nasr2019comprehensive,yeom2018privacy,salem2019ml,carlini2022membership,kerkouche2023property},
+and even released confidences enable model inversion~\cite{fredrikson2015model,hitaj2017deep}. Federated
+distillation, which shares predictions or a public-data signal instead of gradients, was hoped to sidestep
+this, but a growing body of attacks shows it leaks as well: paired-logit inversion recovers images from
+shared logits~\cite{takahashi2023breaching}, and membership can be inferred from distillation outputs and
+from public-dataset usage~\cite{yang2023fdleaks,wang2024graddiff,jagielski2023students,gu2023ldia,shi2025unveiling}.
+This is why we protect the contributions cryptographically rather than by perturbation, and why we measure
+in \cref{sec:mia} what the released model still reveals.
+
+Seen together, the two strongest lines never meet. The cryptographic work that would protect contributions
+without loss is either multi-round encrypted training or a secure-aggregation primitive, and the one-shot
+distillation work that communicates in a single round is either plaintext or made private only by lossy
+perturbation. The method we present occupies the empty intersection: a one-shot federated distillation
+whose single encrypted operation is a linear aggregation under multiparty homomorphic encryption, giving
+the lossless privacy of the cryptographic line at the communication budget of the one-shot line.

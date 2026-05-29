@@ -1,0 +1,61 @@
+\section{Introduction}
+\label{sec:intro}
+
+Many organizations would benefit from training a shared model on their combined data but cannot pool it,
+whether for legal, competitive, or privacy reasons. Federated learning addresses this by exchanging model
+updates instead of data, but in its usual form it does so over many rounds of communication, and each round
+discloses a fresh update computed on private data. One-shot federated learning removes the first cost by
+collapsing the entire interaction into a single upload and download. It does not, by itself, remove the
+second. A client's single contribution still encodes its private data, and the field's answers to this have
+been unsatisfying at the extremes: sending the contribution in plaintext exposes it, while protecting it
+with differential privacy injects noise into the very artifact that is released and so trades away accuracy.
+Homomorphic encryption promises a way out by operating on contributions while they stay encrypted, but it
+has been applied to federated learning either as multi-round encrypted training, whose cost is measured in
+hours and gigabytes, or as a secure-aggregation primitive embedded in an iterative protocol. No existing
+method delivers a one-shot federated distillation whose contributions are protected by encryption without
+loss of accuracy.
+
+This paper presents \textbf{HE-IFD}, a method that does exactly this. Each client distils its own locally trained teacher into a small shared
+classifier head, and the server combines the clients' contributions with a single linear operation,
+$\thstar = \thz + \sum_j \wj \disp$, computed under multiparty CKKS using only homomorphic additions and
+multiplications by public scalars. Because the aggregation is linear, it maps onto the cheapest operations a
+homomorphic scheme provides: the encrypted computation has multiplicative depth one, needs no bootstrapping,
+and moves a few megabytes per round rather than hundreds of gigabytes. The privacy of the contributions is
+therefore cryptographic and lossless, and because the feature extractor is frozen and never enters the
+encrypted combination, the same protocol and the same cost carry from a small from-scratch network to a
+modern frozen pretrained backbone.
+
+The difficulty a one-shot linear aggregation must overcome is that independently trained models do not
+average well under heterogeneous data: starting from different initializations and fitting different local
+distributions, their updates point in conflicting directions and cancel when summed. We resolve this with
+what we call a shared loss basin. Before any local training, the clients agree on a common initialization
+for the head, built cheaply from per-class feature summaries exchanged over peer-to-peer channels. This
+initialization need not be an accurate classifier; its role is to place every client in a common region of
+the loss landscape so that their subsequent bounded updates are expressed in one frame and reinforce rather
+than cancel. A weak but shared starting point, we find, is worth far more than a strong but private one.
+
+We show across vision and language tasks, and from small networks to frozen vision transformers and
+sentence encoders, that the protocol produces a common model that is markedly stronger than any client's own
+and close to a centralized model trained on the pooled data, while every client gains the ability to
+classify categories it never observed locally. We confirm in a real multiparty CKKS implementation that the
+encrypted aggregation matches the plaintext result to a relative error near $10^{-9}$ at a cost of a few
+megabytes per round, and we trace the privacy--utility frontier of the basin summaries to show that
+their accuracy cost is negligible across the single-digit privacy budgets typical of differentially
+private learning.
+
+Our contributions are as follows.
+\begin{itemize}
+\item We introduce, to our knowledge, the first one-shot federated distillation whose contributions are
+  protected by lossless homomorphic encryption, with a single server operation of multiplicative depth one
+  under multiparty CKKS (\cref{sec:method}).
+\item We identify the shared loss basin as the mechanism that makes a one-shot linear aggregation succeed
+  under heterogeneity, and show that the basin's value lies in aligning client updates rather than in
+  classifying well, so that even a deliberately weak or privacy-protected basin suffices (\cref
+  {sec:necessity,sec:basin-contribution}).
+\item We give a privacy design that protects the model updates losslessly with cryptography and confines
+  differential privacy to small per-class summaries, and show empirically that the resulting
+  privacy--utility frontier is flat across practical privacy budgets (\cref{sec:privacy,sec:privacy-eval}).
+\item We demonstrate that the method yields a common, superior model across from-scratch and frozen
+  pretrained backbones in both modalities, and validate the encrypted aggregation in a real multiparty CKKS
+  implementation at a cost of a few megabytes per round (\cref{sec:superior,sec:fhe-cost}).
+\end{itemize}

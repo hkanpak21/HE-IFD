@@ -1,0 +1,14 @@
+\section{Residual Leakage of the Released Model}
+\label{sec:mia}
+
+% PLACEHOLDER — to be completed after the rest of the paper (membership-inference study).
+% Do not fabricate numbers here. The design below states what will be measured.
+
+The cryptographic and differential-privacy guarantees of \cref{sec:privacy} concern the contributions and
+the basin summaries, not the final global model, which every party obtains in the clear after decryption.
+A complete privacy account must therefore ask how much an adversary can infer about a client's data from
+that released model. We study this through membership-inference attacks~\cite{shokri2017membership,yeom2018privacy,salem2019ml,carlini2022membership},
+which test whether a given example was part of the training data, applied across the surfaces an adversary
+could realistically observe in our protocol, including the federated-distillation-specific
+surfaces~\cite{yang2023fdleaks,wang2024graddiff,gu2023ldia,jagielski2023students}. This section reports
+that study.

@@ -1,0 +1,313 @@
+\section{Experiments}
+\label{sec:experiments}
+
+Our evaluation answers, in order, what the method delivers, why each part of it is needed, what the shared
+basin contributes, and what privacy and communication cost the cryptographic protocol carries. Throughout,
+the question we are asking is not whether the global model attains the highest possible test accuracy, but
+whether the clients can jointly produce a single model that is stronger and more broadly capable than what
+any of them could obtain alone, and whether they can do so under one round of communication and lossless
+cryptographic privacy.
+
+\subsection{Setup}
+\label{sec:setup}
+
+We evaluate on two regimes that bracket realistic deployments. In the from-scratch regime the feature
+extractor is a small network trained as part of the protocol: a multilayer perceptron on MNIST and a
+LeNet-style convolutional network on Fashion-MNIST~\cite{xiao2017fashion}. In the pretrained regime the
+feature extractor is a fixed, publicly available backbone whose features are read off without fine-tuning:
+a ViT-B/32 vision transformer on CIFAR-100~\cite{krizhevsky2009learning}, and the RoBERTa-base and MPNet
+sentence encoders on AG-News. Data are partitioned
+across clients by a Dirichlet distribution over labels with concentration $\alpha$; we report the
+heterogeneous ($\alpha=0.05$), mild ($\alpha=0.3$), and near-homogeneous ($\alpha=1.0$) settings. Unless
+stated otherwise there are $\Nc=10$ clients, the shared basin is built from raw per-class prototypes, the
+local distillation runs for a small fixed number of steps $\Ksteps$ at temperature $\temp$, and every
+number is averaged over three seeds. \Cref{tab:setup} summarises the configuration.
+
+We report the test accuracy of the global model, the accuracy of the average and best local teacher as a
+reference for what a client obtains on its own, the accuracy of a centralized model trained on the pooled
+data as an upper bound, the accuracy of the shared basin $\thz$ on its own, and the coverage of
+locally-unseen classes, defined as a client's accuracy on the classes for which it held no local examples.
+
+\begin{table}[t]
+\centering
+\caption{Evaluation design. Each axis isolates one question rather than forming an exhaustive grid;
+results below vary one axis at a time around the default ($\Nc=10$, raw prototypes, three seeds).}
+\label{tab:setup}
+\footnotesize
+\begin{tabular}{p{0.30\linewidth}p{0.30\linewidth}p{0.30\linewidth}}
+\toprule
+Dimension & Setting & Question it probes \\
+\midrule
+From-scratch vision & MNIST (MLP), Fashion-MNIST (LeNet) & behaviour without a pretrained backbone \\
+Pretrained vision & ViT-B/32 on CIFAR-100 & scaling to a strong frozen backbone \\
+Pretrained language & RoBERTa, MPNet on AG-News & the method across modalities \\
+Clients $\Nc$ & $5,\ 10,\ 20,\ 50$ & scalability in participants \\
+Heterogeneity $\alpha$ & $0.05$ (severe) to $1.0$ (mild) & robustness to label skew \\
+Shared-basin source & probe, DP prototypes, synthetic, none & interchangeability and Phase-0 privacy \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.74\textwidth]{figures/fig_scaling.pdf}
+\caption{The protocol turns narrow local teachers into a single, broadly capable model. Under heterogeneous
+data ($\alpha=0.05$, $\Nc=10$), the global model (blue) reaches three to four times the accuracy of the
+average local teacher and comes within a few points of the centralized reference, on both vision
+(ViT-B/32, CIFAR-100) and language (RoBERTa, MPNet, AG-News). The frozen backbone never enters the
+encrypted aggregation, so the protocol and its cost are unchanged across these scales.}
+\label{fig:scaling}
+\end{figure*}
+
+\subsection{From Local Specialists to a Shared Global Model}
+\label{sec:superior}
+
+The central result is that the protocol turns a set of narrow local teachers into a single model that is
+strong across the whole label space. \Cref{fig:scaling} shows this under heterogeneous data
+($\alpha=0.05$) for the pretrained backbones. On each task the average local teacher is weak, because under
+this partition a client sees only a fraction of the classes and its teacher specialises accordingly: the
+mean teacher accuracy is $0.23$ on CIFAR-100 and below $0.46$ on AG-News. The global model produced by the
+protocol reaches $0.81$ on CIFAR-100 and $0.85$ on AG-News, between three and four times the average local
+teacher, and lands within a few points of the centralized reference that was allowed to pool all the data.
+A client that participates therefore walks away with a model far better than the one it could train alone,
+and close to what it would have obtained had all the data been centralised, while never having shared that
+data.
+
+This behaviour is not confined to one backbone scale. The same protocol, with the same bounded distillation
+and the same linear encrypted aggregation, holds from a small from-scratch MLP up to a frozen vision
+transformer and a sentence-transformer language encoder. Because the feature extractor is frozen and never
+enters the encrypted combination, moving to a larger backbone changes only the quality of the features the
+small head sees, not the protocol or its cost; the head, and hence the encrypted object, stays the same
+size. This is what lets the approach scale to modern pretrained models without scaling the cryptographic
+work, and it is the reason a single classifier head, rather than a fine-tuned backbone, is the right unit
+to encrypt.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/fig_necessity.pdf}
+\caption{Neither ingredient suffices alone ($\alpha=0.05$). On CIFAR-100, distillation without a shared
+basin stays at chance, because updates from different initializations do not combine; the shared basin
+makes the same linear combination work. On MNIST the no-basin variant recovers partially but still trails
+the full method. In both cases the full method is best and approaches the centralized reference (dashed).}
+\label{fig:necessity}
+\end{figure}
+
+\subsection{Necessity of the Shared Basin and Bounded Distillation}
+\label{sec:necessity}
+
+The protocol has two active parts, the shared basin and the bounded distillation, and
+\cref{fig:necessity} shows that removing either one breaks it. We compare four points under heterogeneous
+data: the random initialization, distillation with no shared basin, the shared basin on its own, and the
+full method. On the hard task, CIFAR-100, distillation without a shared basin stays at chance ($0.03$):
+when clients begin from different initializations their bounded updates point in unrelated directions, and
+the linear combination of them carries no usable signal. The shared basin removes this failure by placing
+all clients in a common frame, after which the same linear combination yields a strong model. On the easier
+MNIST task the no-basin variant does not collapse completely, because distillation on ten well-separated
+classes recovers some structure even from a random start, but it still trails the full method by a wide
+margin. Neither the basin alone nor distillation alone is sufficient; their combination is what produces
+the result in \cref{sec:superior}.
+
+\subsection{Distillation Lift as a Function of Basin Strength}
+\label{sec:basin-contribution}
+
+A natural question is how much of the final accuracy is already present in the shared basin $\thz$ before
+any distillation, and whether the distillation step is doing real work. \Cref{fig:continuum} answers this
+across the full range of basin strengths, which we vary by changing how the basin is built, from a basin
+formed with no labelled data at all, through differentially-private prototypes, to a rich public probe.
+Two facts stand out. Every point lies above the diagonal, so distillation never reduces accuracy below the
+basin it started from; and the vertical gap, the accuracy that distillation adds, is largest exactly where
+the basin is weakest, reaching more than $0.4$ when the basin alone is near chance and shrinking as the
+basin grows strong. Where a rich basin already classifies well, distillation adds little because there is
+little left to add, and the final model tracks the centralized reference; where the basin is deliberately
+weak, distillation supplies the bulk of the accuracy. The combined mechanism, not either part, is
+responsible for the outcome across the whole range, and the basin's value lies in aligning the clients
+rather than in classifying well on its own. This also shows that the basin source is a deployment choice
+rather than a fixed requirement: the protocol behaves consistently whether the basin comes from a public
+probe, from privacy-protected prototypes, or from no labelled data at all.
+
+\subsection{Scalability and the Effect of Trajectory Length}
+\label{sec:scaling-ablation}
+
+Two properties the protocol relies on hold up under direct test. \Cref{fig:nscaling} varies the number of
+clients from five to fifty on ViT-B/32 over CIFAR-100 and shows the global model's accuracy is essentially
+flat, and if anything improves slightly, as clients are added; more participants do not destabilise the
+single linear aggregation. \Cref{fig:ksweep} varies the length of the distillation trajectory on ResNet-18
+over CIFAR-10. With the temperature that keeps the teacher's confident predictions visible, accuracy is
+highest at a short trajectory and declines gently as the trajectory lengthens, confirming that the bounded
+$\Ksteps$ is doing real work: a longer trajectory lets each client drift away from the shared basin and the
+aggregate degrades toward it. The figure also shows that an over-smoothed teacher signal (a high
+temperature) erases the gain entirely and worsens with every additional step, which is why we keep both the
+step budget small and the temperature low.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_nscaling.pdf}
+\caption{The global model's accuracy is stable as the number of clients grows from $5$ to $50$
+(ViT-B/32, CIFAR-100), at every heterogeneity level.}
+\label{fig:nscaling}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_ksweep.pdf}
+\caption{The bounded trajectory matters. With a low temperature the global model stays just above the
+shared basin and declines gently as the trajectory lengthens (clients drift away from the basin); a high
+temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha=0.05$).}
+\label{fig:ksweep}
+\end{figure}
+
+\subsection{The Privacy--Utility Frontier of the Basin Prototypes}
+\label{sec:privacy-eval}
+
+Because the model updates are protected by encryption rather than by perturbation, the only place
+differential privacy enters is in releasing the per-class prototypes used to build the basin.
+\Cref{fig:dpfrontier} traces the accuracy of the global model as the privacy budget on those prototypes
+tightens, over the range $\varepsilon\in\{0.5,2,8,32\}$. At every heterogeneity level the frontier is flat
+across the practical privacy regime: accuracy is essentially unchanged from the non-private setting through
+the single-digit budgets commonly reported in differentially private learning, and begins to fall only
+under the most stringent setting, $\varepsilon=0.5$. The reason is the averaging structure of
+\cref{sec:dp}: a client lowers the sensitivity of its prototypes, and hence the noise it must add, by
+averaging over more of its own samples, so the privacy budget is bought with data rather than with
+accuracy. This is the concrete form of the paper's privacy claim, that lossless cryptography on the updates
+plus differential privacy confined to the summaries delivers a formal $(\varepsilon,\delta)$ guarantee
+without the utility tax that differentially private one-shot methods pay when they perturb the released
+model itself.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_continuum.pdf}
+\caption{Distillation never hurts and adds most where the basin is weak. Each point is a basin source at a
+given heterogeneity $\alpha$ (MNIST, $\Nc=10$); the horizontal axis is the accuracy of the shared basin
+$\thz$ on its own and the vertical axis the accuracy of the resulting global model. All points lie above
+the no-lift diagonal, and the gap is largest when the basin is weakest.}
+\label{fig:continuum}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_dpfrontier.pdf}
+\caption{The privacy--utility frontier on the basin prototypes is flat across the practical privacy regime.
+Tightening the differential-privacy budget on the per-class summaries through the single-digit $\varepsilon$
+typical of differentially private learning leaves the global model's accuracy essentially unchanged; it
+falls only under the most stringent budget, $\varepsilon=0.5$ (MNIST, $\Nc=10$).}
+\label{fig:dpfrontier}
+\end{figure}
+
+\subsection{Measured Cost of the Encrypted Aggregation}
+\label{sec:fhe-cost}
+
+The encrypted step is cheap by construction, and we confirm this in a real multiparty CKKS implementation
+of \cref{eq:aggregate} built on the Lattigo library~\cite{lattigo,mouchet2021multiparty}. \Cref{tab:fhe} reports the measured cost. Because a classifier head fits in a single
+ciphertext, each client uploads one ciphertext of about half a megabyte, so an entire round costs a few
+megabytes of communication regardless of the backbone behind the head. The homomorphic computation is a
+depth-one circuit of additions and plaintext multiplications, with no bootstrapping, and the decrypted
+result agrees with the plaintext aggregate to a relative error of about $10^{-9}$. This replaces the
+hundreds of gigabytes that an encrypted full-model protocol would move with a few megabytes, and it does so
+without the multi-round wall-clock of encrypted training.
+
+\begin{table}[t]
+\centering
+\caption{Measured cost of the encrypted aggregation (multiparty CKKS, ring degree $2^{14}$). A classifier
+head fits in one ciphertext, so cost is independent of the frozen backbone.}
+\label{tab:fhe}
+\begin{tabular}{lcc}
+\toprule
+ & $\Nc=5$ & $\Nc=10$ \\
+\midrule
+Ciphertexts per client & 1 & 1 \\
+Upload / download per round & 2.5 MiB & 5.0 MiB \\
+Multiplicative depth & 1 & 1 \\
+Correctness vs.\ plaintext (rel.\ $\ell_2$) & $\sim\!10^{-9}$ & $\sim\!10^{-9}$ \\
+Aggregation time (server) & $\sim\!3$ ms & $\sim\!4$ ms \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison with Prior Work}
+\label{sec:positioning}
+
+\Cref{tab:positioning} places the method among representative federated-learning approaches along the axes
+that matter here: whether the protocol is genuinely one-shot, what kind of privacy it provides on the
+contributions, how many communication rounds it needs, and its principal limitation relative to our goal.
+Existing one-shot distillation methods are either plaintext, and so offer no privacy on the contributions,
+or differentially private, and so pay a utility cost on the released model. The homomorphic-encryption
+methods in federated learning either run for many rounds, as in encrypted training, or are
+secure-aggregation primitives that sum model updates over an iterative protocol rather than distilling in a
+single shot. To our knowledge the combination we occupy, a one-shot federated distillation whose
+aggregation is protected by lossless homomorphic encryption, has not previously been demonstrated, and this
+holds whether the shared basin is built from a public probe or from no labelled data at all.
+
+\begin{table*}[t]
+\centering
+\caption{Comparison with representative federated-learning methods. Reported accuracies are taken
+verbatim from each source paper at \emph{its own} setup (dataset, model, $N$, heterogeneity), so the column
+is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are
+the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based,
+and protected by lossless encryption.}
+\label{tab:positioning}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccl}
+\toprule
+Method & One-shot & Privacy & Rounds & Reported acc.\ (own setup) & Principal limitation vs.\ our goal \\
+\midrule
+FedDF~\cite{lin2020feddf}        & no   & none        & $\sim$100 & rounds-to-target (CIFAR-10)        & many rounds; no privacy \\
+FuseFL~\cite{tang2024fusefl}        & no$^\dagger$ & none  & $K$ blocks & 84.3\% (CIFAR-10)                 & $K$ rounds; no privacy \\
+DENSE~\cite{zhang2022dense}         & yes  & none        & 1     & data-free (CIFAR-10)               & no privacy on contributions \\
+FedLPA~\cite{liu2024fedlpa}         & yes  & none        & 1     & 85.8\% (MNIST)                     & no privacy; needs Fisher info \\
+FedKT~\cite{li2021fedkt}            & yes  & DP-capable  & 1     & 90.5\% (MNIST)                     & lossy when private \\
+FedAUXfdp~\cite{hoech2022fedauxfdp} & yes  & DP (lossy)  & 1     & 75.2\% (CIFAR-10, $\varepsilon{=}0.5$) & accuracy falls with budget \\
+FedDiff~\cite{feddiff2024}  & yes  & DP (lossy)  & 1     & 27.8\% (CIFAR-10, $\varepsilon{=}10$)  & accuracy falls with budget \\
+POSEIDON~\cite{sav2021poseidon}     & no   & HE (lossless) & many & 89.9\% (MNIST, $\sim$1.4\,h)       & multi-round; encrypted training \\
+HE secure agg.~\cite{kemmaka2025hybagg} & no & HE      & per round & protocol only                  & aggregation, not distillation \\
+\textbf{HE-IFD (ours)} & \textbf{yes} & \textbf{HE (lossless)} & \textbf{1} & \textbf{84.9 / 81.1 / 84.6\%$^\ddagger$} & \textbf{---} \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table*}
+
+Two comparisons are especially informative. Against POSEIDON, the closest cryptographic peer, the accuracy
+is comparable on MNIST, but POSEIDON reaches it through multi-round encrypted training that the source paper
+reports at roughly $1.4$ hours of wall-clock, whereas our protocol completes in a single round whose server
+computation is milliseconds and whose communication is a few megabytes. Against the differentially private
+one-shot methods, the natural utility peers, the contrast is that their accuracy is bought at a privacy
+budget that perturbs the released model, while our encryption perturbs nothing. The communication advantage
+is large and structural: a full-model encrypted protocol of the kind the rejected literature assumed would
+move on the order of hundreds of gigabytes, whereas our single classifier-head ciphertext is a few
+megabytes per round (\cref{sec:fhe-cost}). The protocol is also embarrassingly parallel across clients and
+its aggregation is an associative reduction (\cref{sec:cost}), so wall-clock does not grow with the number
+of participants.
+
+\smallskip
+\noindent\footnotesize $^\dagger$FuseFL's communication equals one-shot but it runs in $K$ block-wise
+rounds. $^\ddagger$Our $\alpha{=}0.05$ global-model accuracy on MNIST, CIFAR-100, and AG-News
+respectively.\normalsize
+
+\subsection{The Incentive to Participate}
+\label{sec:incentive}
+
+It is worth being explicit about what a client gains. The global model does not, in general, beat a
+client's own teacher on the handful of classes that client holds in abundance; a specialist trained on a
+narrow distribution is hard to beat on that distribution, and our aim is not to. What the client gains is
+coverage of the classes it never saw locally. Under heterogeneous data the global model classifies the
+locally-unseen classes well above chance, whereas the client's own teacher cannot classify them at all,
+having never been trained on them. The value of participating is therefore the breadth that a single
+party cannot obtain on its own, delivered as a model every party can use, and obtained without exposing any
+party's data or update in the clear.
+
+\subsection{Scope and Limitations}
+\label{sec:scope}
+
+Two boundaries of the approach are worth stating plainly, as both follow from well-understood properties
+rather than from incidental shortcomings. First, the method aggregates displacements of a head on top of a
+frozen extractor, so it inherits the quality of that extractor's features: it works best when the frozen
+representation is already linearly informative for the task. Representations from models trained for
+next-token prediction are, by their nature, a weaker fit for discriminative classification than those from
+encoders trained bidirectionally, and we accordingly use bidirectional sentence encoders for the text tasks;
+the choice of a strong frozen extractor is part of the method, not a tuning detail. Second, the difficulty
+the shared basin addresses, conflicting client updates under heterogeneity, becomes more severe as the data
+grow more skewed; this is an inherent property of combining independently trained models in one shot, and
+the basin is our means of containing it rather than a claim that it disappears. The regime where the basin
+helps most is precisely the heterogeneous regime where it is most needed, and the experiments above are run
+in exactly that regime.

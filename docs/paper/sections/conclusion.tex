@@ -1,0 +1,17 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented HE-IFD, a one-shot federated distillation in which the server's only operation on client
+contributions is a linear aggregation computed under multiparty homomorphic encryption at multiplicative depth one. The
+construction gives the contributions cryptographic, lossless privacy at the communication budget of a single
+round, and because the feature extractor is frozen and stays outside the encrypted combination, the protocol
+and its cost are unchanged from small networks to frozen pretrained backbones. The element that makes a
+one-shot linear aggregation succeed under heterogeneity is the shared loss basin, a cheap and possibly weak
+common initialization whose purpose is to align the clients' updates rather than to classify well. Across
+vision and language tasks the method yields a common model far stronger than any client's own and close to a
+centralized one, a real multiparty CKKS implementation confirms the encrypted aggregation at a few megabytes
+per round, and the accuracy cost of differentially private basin summaries is negligible across the
+practical range of privacy budgets. Extending the approach
+to actively malicious participants, where verifiable homomorphic encryption~\cite{viand2023verifiable,atapoor2024vfhe}
+could certify that the server computed the aggregation honestly, and tightening the analysis of what the
+released model itself reveals, are natural directions for future work.
