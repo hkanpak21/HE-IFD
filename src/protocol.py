@@ -245,6 +245,55 @@ BACKBONES: Dict[str, BackboneSpec] = {
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
         feature_loader="text:gpt2_medium",
     ),
+    # ------------------------------------------------------------------------
+    # Strong frozen TEXT backbones (issue 019) — the text analogue of the
+    # issue-018/012 vision improvement. The backbone is FROZEN: it never enters
+    # the HE combine; only the linear head displacement Δᵢ is aligned/aggregated.
+    # So any strong frozen encoder is fair game. Both are *bidirectional*
+    # encoders → masked mean-pool over real tokens (right-pad), like
+    # distilbert_agnews — NOT the GPT-2 causal last-token path. AG-News head
+    # hyperparams mirror distilbert_agnews exactly (pretrained-head regime).
+    # RoBERTa-base on AG-News (4 classes). 125M params, 768-d. Expected frozen
+    # linear-probe ~0.92+ vs DistilBERT's 0.864 — lifting the heterogeneous
+    # α=0.05 regime (DistilBERT collapses to 0.437 there).
+    "roberta_base_agnews": BackboneSpec(
+        label="roberta_base_agnews", kind="head", num_classes=4,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:roberta_base",
+    ),
+    # all-mpnet-base-v2 on AG-News (4 classes). 768-d sentence-embedding model;
+    # mean-pool is its training-time pooling — the strongest frozen linear-probe
+    # candidate (expected ≥0.93). Loaded via plain transformers AutoModel (no
+    # sentence-transformers package dependency); the existing manual mean-pool
+    # reproduces its embedding.
+    "mpnet_st_agnews": BackboneSpec(
+        label="mpnet_st_agnews", kind="head", num_classes=4,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:mpnet_st",
+    ),
+    # ------------------------------------------------------------------------
+    # DBpedia-14 (issue 019 Part 2) — the text analogue of CIFAR-100. 14 topic
+    # classes give a meaningful α=0.05 heterogeneity + 13 OOD classes for m4
+    # (AG-News's 4 classes cap both). Same frozen backbones / head hyperparams
+    # as the AG-News entries; only num_classes (14) and the dataset segment of
+    # the feature_loader (``:dbpedia_14``) differ. Probe=300 mirrors the
+    # CIFAR-100 head entries (~3 labelled samples/class over 14 classes is
+    # ample; kept at the CIFAR-100 value for a fair "small labelled public"
+    # baseline on the richer label space).
+    "roberta_base_dbpedia": BackboneSpec(
+        label="roberta_base_dbpedia", kind="head", num_classes=14,
+        labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:roberta_base:dbpedia_14",
+    ),
+    "mpnet_st_dbpedia": BackboneSpec(
+        label="mpnet_st_dbpedia", kind="head", num_classes=14,
+        labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:mpnet_st:dbpedia_14",
+    ),
 }
 
 
@@ -474,8 +523,17 @@ def _load_features(
             return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
         return Xtr, ytr, Xte, yte, in_dim, _head_factory
     if spec.feature_loader.startswith("text:"):
-        name = spec.feature_loader.split(":", 1)[1]
-        Xtr, ytr, Xte, yte, in_dim = bk.extract_text_features(name, "ag_news", data_root, cache_root)
+        # ``text:<model>``            -> AG-News (legacy default), or
+        # ``text:<model>:<dataset>``  -> a specific HF text dataset (issue 019
+        #                                Part 2 uses ``dbpedia_14``). The bare
+        #                                two-token form is byte-identical to the
+        #                                pre-019 path (task_name="ag_news").
+        rest = spec.feature_loader.split(":", 1)[1]
+        if ":" in rest:
+            name, task_name = rest.split(":", 1)
+        else:
+            name, task_name = rest, "ag_news"
+        Xtr, ytr, Xte, yte, in_dim = bk.extract_text_features(name, task_name, data_root, cache_root)
         def _head_factory(in_dim_, num_classes_):
             return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
         return Xtr, ytr, Xte, yte, in_dim, _head_factory
@@ -556,14 +614,23 @@ def run_cell(
     # pretrained ones ("cifar10:<bb>"/"cifar100:<bb>"/"tiny_imagenet:<bb>"/
     # "text:<bb>") resolve correctly.
     _loader_prefix = spec.feature_loader.split(":")[0]
-    dataset = {
-        "mnist": "MNIST",
-        "fmnist": "FashionMNIST",
-        "cifar10_raw": "CIFAR10",
-        "cifar10": "CIFAR10",
-        "cifar100": "CIFAR100",
-        "tiny_imagenet": "TinyImageNet",
-    }.get(_loader_prefix, "CIFAR10" if "cifar" in spec.feature_loader else "AGNews")
+    # For text backbones the dataset is the optional 3rd ``text:<model>:<ds>``
+    # segment (issue 019 Part 2); bare ``text:<model>`` defaults to AG-News so
+    # every pre-019 text cell keeps the "AGNews" label byte-identical.
+    if _loader_prefix == "text":
+        _text_parts = spec.feature_loader.split(":")
+        _text_ds = _text_parts[2] if len(_text_parts) > 2 else "ag_news"
+        dataset = {"ag_news": "AGNews", "dbpedia_14": "DBpedia14"}.get(
+            _text_ds, _text_ds)
+    else:
+        dataset = {
+            "mnist": "MNIST",
+            "fmnist": "FashionMNIST",
+            "cifar10_raw": "CIFAR10",
+            "cifar10": "CIFAR10",
+            "cifar100": "CIFAR100",
+            "tiny_imagenet": "TinyImageNet",
+        }.get(_loader_prefix, "CIFAR10" if "cifar" in spec.feature_loader else "AGNews")
 
     res = CellResult(
         backbone=backbone, dataset=dataset, N=N, alpha=alpha, seed=seed,

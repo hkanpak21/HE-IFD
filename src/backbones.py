@@ -719,6 +719,14 @@ def extract_text_features(
       no protocol. The fix (this code) **left-pads** the tokenizer so the final
       sequence position is always a real token, then takes that last token's
       hidden state (``last_hidden_state[:, -1, :]``) as the sentence embedding.
+
+    ``task_name`` selects the HF dataset. AG-News (default) exposes its input
+    under a ``"text"`` column; DBpedia-14 (``dbpedia_14``, issue 019 Part 2,
+    14 topic classes) exposes ``"title"`` + ``"content"`` and ships only a
+    huge train/test split, so the text column and an optional test-subsample
+    cap are resolved per-dataset below. Every other dataset keeps the verbatim
+    AG-News path, so existing ``text:distilbert`` / ``text:gpt2_small`` etc.
+    cells reproduce byte-for-byte.
     """
     import torch
     from transformers import AutoModel, AutoTokenizer
@@ -737,6 +745,24 @@ def extract_text_features(
     elif backbone_name == "gpt2_small":
         model_id = "gpt2"
         causal = True
+    elif backbone_name == "roberta_base":
+        # RoBERTa-base (issue 019). A *bidirectional* encoder like DistilBERT,
+        # so it takes the SAME masked mean-pool over real tokens (right-pad)
+        # path — explicitly NOT the GPT-2 causal last-token path. 125M params,
+        # 768-d hidden size. Stronger frozen AG-News linear-probe (~0.92+) than
+        # the 66M DistilBERT, lifting the heterogeneous α=0.05 regime per 019.
+        model_id = "roberta-base"
+        causal = False
+    elif backbone_name == "mpnet_st":
+        # all-mpnet-base-v2 (issue 019). A sentence-transformers embedding model
+        # whose training-time pooling is a masked mean over the last hidden
+        # state — exactly the bidirectional mean-pool path below (right-pad), so
+        # NO sentence-transformers package is needed: the plain transformers
+        # AutoModel/AutoTokenizer + the existing manual mean-pool reproduce its
+        # embedding. 768-d, purpose-built for linearly-separable sentence
+        # embeddings → strongest frozen AG-News linear-probe candidate (≥0.93).
+        model_id = "sentence-transformers/all-mpnet-base-v2"
+        causal = False
     elif backbone_name == "bert_large":
         # BERT-large-uncased (issue 018 big-backbone). Like DistilBERT it is a
         # *bidirectional* encoder, so masked mean-pool over real tokens is the
@@ -768,10 +794,38 @@ def extract_text_features(
     in_dim = model.config.hidden_size if hasattr(model.config, "hidden_size") else 768
 
     ds = load_dataset(task_name)
-    train_texts = ds["train"]["text"]
-    train_labels = torch.tensor(ds["train"]["label"], dtype=torch.long)
-    test_texts = ds["test"]["text"]
-    test_labels = torch.tensor(ds["test"]["label"], dtype=torch.long)
+    if task_name == "dbpedia_14":
+        # DBpedia-14 (issue 019 Part 2). 14 topic classes; columns are
+        # ``title`` + ``content`` (no ``text`` column). Compose the input as
+        # "<title>. <content>" — the standard DBpedia text-classification
+        # input. The test split is 70k; subsample to 10k (seeded) for speed,
+        # matching the issue's "subsample test to ~10k" instruction. The train
+        # split (560k) is consumed in full — the protocol's probe/partition
+        # logic downstream selects from it. Labels are already 0..13.
+        def _dbpedia_text(split):
+            titles = split["title"]
+            contents = split["content"]
+            return [f"{t}. {c}" for t, c in zip(titles, contents)]
+
+        train_texts = _dbpedia_text(ds["train"])
+        train_labels = torch.tensor(ds["train"]["label"], dtype=torch.long)
+        test_split = ds["test"]
+        if len(test_split) > 10000:
+            import numpy as _np
+            rng = _np.random.RandomState(12345)
+            idx = rng.choice(len(test_split), size=10000, replace=False)
+            idx = sorted(int(i) for i in idx)
+            test_split = test_split.select(idx)
+        test_texts = _dbpedia_text(test_split)
+        test_labels = torch.tensor(test_split["label"], dtype=torch.long)
+    else:
+        # AG-News (default) and any other ``text``-column HF dataset — verbatim
+        # legacy path, so existing text:distilbert/gpt2_small/bert_large cells
+        # reproduce byte-for-byte.
+        train_texts = ds["train"]["text"]
+        train_labels = torch.tensor(ds["train"]["label"], dtype=torch.long)
+        test_texts = ds["test"]["text"]
+        test_labels = torch.tensor(ds["test"]["label"], dtype=torch.long)
 
     def extract(texts, bs=32, max_len=128):
         feats = []
