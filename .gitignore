@@ -56,6 +56,12 @@ data/mnist/
 # but heavy and not worth tracking.
 cache/
 
+# MIA suite (issue 021) per-model shadow checkpoints. Each is the IN-mask + φ /
+# loss / surrogate-φ vectors over the attack pool for one target/shadow model;
+# regenerable from the (seed-keyed) protocol run, heavy in aggregate. The scored
+# per-cell JSON + summary.json + README (the actual results) ARE tracked.
+results/heifd_021_mia/shadows/
+
 # Local-only Claude state
 .claude/
 git_token.txt
