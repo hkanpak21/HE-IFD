@@ -1,0 +1,9 @@
+[017 noprobe] job 1116712 task 5/8 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=375 cells; chunk 5/8 -> 47 cells; case=heifd_017_noprobe_mlp
+[sweep] start mlp_mnist N=1 a=0.01 noprobe_dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.8887 mean_teacher=0.9635 wall=20.9s err=None
+[sweep] start mlp_mnist N=1 a=0.01 raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9059 mean_teacher=0.9737 wall=13.8s err=None
+[sweep] start mlp_mnist N=1 a=0.05 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.8931 mean_teacher=0.9711 wall=13.8s err=None
+[sweep] start mlp_mnist N=1 a=0.05 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only

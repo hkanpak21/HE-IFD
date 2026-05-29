@@ -1,0 +1,154 @@
+{
+  "backbone": "mlp_mnist",
+  "dataset": "MNIST",
+  "N": 5,
+  "alpha": 0.05,
+  "seed": 42,
+  "K": 300,
+  "tau": 4.0,
+  "method": "dp_avg_eps2_K20",
+  "phase0_kind": "dp_avg",
+  "probe_size_actual": 10,
+  "sigma": 4.230935073091968,
+  "acc": 0.325,
+  "mean_teacher": 0.39032,
+  "best_teacher": 0.5091,
+  "oracle": 0.9735,
+  "per_teacher_acc": [
+    0.2261,
+    0.3766,
+    0.3802,
+    0.4596,
+    0.5091
+  ],
+  "theta0_acc": 0.2443,
+  "m3_student_acc_on_Di": [
+    0.11357571714476318,
+    0.6723932641605715,
+    0.016156035493052067,
+    0.38082427633702787,
+    0.35203520352035206
+  ],
+  "m3_teacher_acc_on_Di": [
+    0.9983322214809873,
+    0.9951522367749617,
+    0.9992466097438473,
+    0.9914989777251695,
+    0.995551729085952
+  ],
+  "m3_gap": [
+    -0.8847565043362241,
+    -0.3227589726143901,
+    -0.9830905742507952,
+    -0.6106747013881416,
+    -0.6435165255655999
+  ],
+  "m3_mean_gap": -0.6889594556310301,
+  "m3_clients_helped": 0,
+  "m3_clients_evaluated": 5,
+  "m4_ood_acc": [
+    0.3462603878116344,
+    0.11710193765796124,
+    0.17478278440088907,
+    0.28171414657901145,
+    null
+  ],
+  "m4_mean": 0.22996481411237402,
+  "m4_clients_evaluated": 4,
+  "per_client_total": [
+    5996,
+    11758,
+    11946,
+    9293,
+    20907
+  ],
+  "per_client_per_class": [
+    [
+      5852,
+      0,
+      0,
+      0,
+      10,
+      128,
+      0,
+      0,
+      0,
+      6
+    ],
+    [
+      0,
+      2868,
+      0,
+      6049,
+      0,
+      2800,
+      0,
+      41,
+      0,
+      0
+    ],
+    [
+      0,
+      81,
+      5943,
+      5,
+      5823,
+      94,
+      0,
+      0,
+      0,
+      0
+    ],
+    [
+      8,
+      0,
+      0,
+      53,
+      0,
+      2387,
+      0,
+      6213,
+      590,
+      42
+    ],
+    [
+      54,
+      3779,
+      1,
+      15,
+      1,
+      3,
+      5910,
+      5,
+      5248,
+      5891
+    ]
+  ],
+  "sample_weights": [
+    0.10010016694490818,
+    0.19629382303839732,
+    0.199432387312187,
+    0.15514190317195325,
+    0.34903171953255424
+  ],
+  "wall_clock_sec": 15.697870016098022,
+  "phase_teacher_sec": 13.176279783248901,
+  "phase_phase0_sec": 0.04065108299255371,
+  "phase_distill_sec": 2.1233038902282715,
+  "phase_aggregate_sec": 0.0005891323089599609,
+  "phase_eval_sec": 0.17586779594421387,
+  "job_id": "1116821",
+  "node": "ai05",
+  "status": "success",
+  "error": null,
+  "notes": "HE-IFD plaintext simulation: sample-weighted linear aggregate \u03b8\u2080+\u03a3 w_i\u00b7\u0394_i of bounded K-step cumulative displacements; server op is PT\u00d7CT + CT+CT only (FHE-compatible).",
+  "diagnostics": null,
+  "_descriptor": {
+    "backbone": "mlp_mnist",
+    "N": 5,
+    "alpha": 0.05,
+    "method": "dp_avg_eps2_K20",
+    "seed": 42,
+    "K": 300
+  }
+}
