@@ -37,3 +37,16 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 
 Raw per-cell JSONs live here as `cell_<backbone>_N<n>_a<α>_<method>_s<seed>_K<k>_<hash>.json`.
 Per-client per-class counts at `partition_diagnostic.jsonl`. Slurm stdout/stderr at `runs/`. Long-form rows at `results.csv`.
+
+## DBpedia-14 (richer 14-class text — the text analogue of CIFAR-100) — strongest client-benefit in the program
+
+Both strong frozen backbones, raw_union_K20, with zscore normalization:
+
+| backbone | α | acc | θ₀ | mean_t | oracle | m4_ood | acc/mean_t |
+|---|---|---:|---:|---:|---:|---:|---:|
+| roberta_base_dbpedia | 0.05 | 0.9588 | 0.9580 | 0.4105 | 0.9884 | **0.9540** | 2.3× |
+| mpnet_st_dbpedia | 0.05 | 0.9589 | 0.9576 | 0.3878 | 0.9884 | **0.9543** | 2.5× |
+| roberta_base_dbpedia | 1.0 | 0.9695 | — | 0.9692 | 0.9884 | → oracle | 1.0× |
+| mpnet_st_dbpedia | 1.0 | 0.9719 | — | 0.9687 | 0.9884 | → oracle | 1.0× |
+
+At α=0.05 the federated global model reaches **0.959 acc with m4_ood 0.954** — clients get 95% accuracy on the **13 classes they never saw locally**, vs their own teacher at ~0.40 (2.3–2.5× client benefit). raw_union (0.959) ≫ no_phase0 (0.470) → alignment contributes +0.49. The 14-class setting makes the OOD/participation story even more compelling than 4-class AG-News and is arguably the cleanest m4 in the whole program. Issue 019 is fully complete (AG-News headline grids + DBpedia-14 verify, both backbones).
