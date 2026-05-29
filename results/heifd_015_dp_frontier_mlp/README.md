@@ -1,5 +1,30 @@
 # heifd_015_dp_frontier_mlp
 
+## VERDICT (81 cells, mlp_mnist) — averaging-variant DP frontier FLATTENS from ε≈2; strong privacy is nearly free
+
+**ε sweep @ Kpc=20 (acc, mean over 3 seeds):**
+
+| α | ε=0.5 | ε=2 | ε=8 | ε=32 | ε=∞ |
+|---|---:|---:|---:|---:|---:|
+| 0.05 | 0.4917 | **0.5486** | 0.5484 | 0.5356 | 0.5346 |
+| 0.3 | 0.7776 | **0.7898** | 0.7715 | 0.7688 | 0.7619 |
+| 1.0 | 0.8653 | 0.8620 | 0.8605 | 0.8585 | 0.8642 |
+
+- **The frontier is flat from ε=2 onward** at every α: ε=2 ≈ ε=8 ≈ ε=32 ≈ ε=∞ within seed noise. Strong DP (ε=2) costs essentially nothing vs no-DP. Only ε=0.5 dips (~6pp at α=0.05). Notably ε=2 ≥ ε=∞ in several rows (the calibrated Gaussian noise acts as mild regularization). **This is the paper's averaging-variant DP claim, confirmed.**
+
+**Kpc sweep @ α=0.05 (acc):**
+
+| ε | Kpc=1 | Kpc=5 | Kpc=20 |
+|---|---:|---:|---:|
+| 2 | 0.0992 | 0.5094 | 0.5486 |
+| 8 | 0.5154 | 0.5451 | 0.5484 |
+
+- At tight ε=2, **Kpc≥5 is required** — Kpc=1 collapses to chance (sensitivity = clip/Kpc is largest at Kpc=1, so the noise destroys the prototype). More samples per class per client lowers sensitivity → less noise → tolerates tighter privacy. At looser ε=8 even Kpc=1 works. This is exactly the averaging-variant accounting (σ ∝ clip/(Kpc·ε)): you buy privacy budget by averaging more samples, not by accepting accuracy loss.
+
+→ lenet/cnn5 DP-frontier wrappers (heifd_015_dp_frontier_{lenet,cnn5}) extend this to harder backbones (orchestrator submits as the queue drains).
+
+
+
 HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
 ## Sweep configuration
