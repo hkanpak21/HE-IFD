@@ -1,6 +1,6 @@
 # 014 — Complete the 3-dataset from-scratch matrix (LeNet/FMNIST + N=1 + CNN-5/CIFAR-10)  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — partially blocked by 011 for the CNN-5 portion.
+> **STATUS: ✅ DONE** (2026-05-29) — LeNet/FMNIST full grid 450/450 (defensible: α=0.05 raw_union 0.55 > no_phase0 0.24, m4 0.47; α=1.0 0.79 → oracle 0.88). MLP/MNIST N=1 baseline added (degenerate floor). CNN-5/CIFAR-10 grid ran but the backbone is **outside the basin-coherence envelope at low α** (see 016b distill-debug + 016b verdict) — teacher-bound, not a 014 defect. phase0 flatten-bridge bug (extreme-α dp_avg) fixed mid-flight. Verdict: `results/heifd_lenet_fmnist_headline/README.md`.
 
 **Phase:** M1.5 / β (complete the from-scratch headline) · **Blocked by:** 011 for CNN-5 part · **Blocks:** 015 (DP-ε frontier on the full from-scratch matrix)
 

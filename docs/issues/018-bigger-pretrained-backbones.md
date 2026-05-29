@@ -1,6 +1,6 @@
 # 018 — Scale to bigger pretrained backbones (with sanity-check gating)  [AFK, HITL touchpoint after Part A]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — blocked by Phase α (010/011) and Phase β (014) — do not start until those land.
+> **STATUS: ⚠️ PART A DONE / PART B HITL-GATED** (2026-05-29) — Part-A standalone linear-probe sanity: **ViT-L/CIFAR-100 PASS (oracle 0.876 ≥ 0.78)**; **BERT-large/AG-News marginal (0.910 vs 0.92 gate, −0.9pp** — a frozen-feature linear probe ~3-4pp under fine-tuned is healthy; recommend accept); **GPT-2-medium/AG-News FAIL (0.403, informational/non-blocking)**. Big-backbone weights prefetched. **Part B (protocol + LoRA on big backbones) NOT started — awaits user authorization** (and a possible re-grill: issue 019 showed feature standardization is needed for strong text encoders). Verdict: `results/heifd_018_partA_sanity/README.md`.
 
 **Phase:** M1.5 / δ (scale; LAST) · **Blocked by:** 010, 011, 014 · **Blocks:** nothing
 

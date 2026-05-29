@@ -1,6 +1,6 @@
 # 019 — Stronger pretrained TEXT backbones (+ richer text dataset)  [AFK, autonomous]
 
-> **STATUS: 📥 OPEN** (2026-05-29) — created during AFK autonomous run to fix the weak text deployment story.
+> **STATUS: ✅ DONE** (AG-News; DBpedia-14 in flight; 2026-05-29) — **text is no longer the weak link**. Root cause of GPT-2/DistilBERT weakness diagnosed (GPT-2 is a poor frozen extractor, oracle 0.67; DistilBERT collapses at α=0.05). Swapped in strong frozen encoders **roberta-base + all-mpnet-base-v2** (transformers-only, no new deps). First verify exposed an α=0.05 warmup collapse (roberta θ₀=random 0.25) → fixed with **per-backbone z-score feature standardization** (gated; others byte-identical). Result: roberta/mpnet AG-News α=0.05 **acc 0.85, m4 0.85** — matches ViT/CIFAR-100, ~2× DistilBERT. Full headline grids 360/360 each (m4 0.81–0.87 across α, → oracle 0.91 at IID). DBpedia-14 (14-class, richer OOD) verify running. Verdict: `results/heifd_019_text_verify/README.md` + `heifd_019_text_headline/`.
 
 **Phase:** M1.5 / pretrained-backbone improvement · **Blocked by:** none · **Blocks:** the text half of the pretrained-deployment headline
 

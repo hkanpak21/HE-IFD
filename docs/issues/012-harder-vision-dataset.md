@@ -1,6 +1,6 @@
 # 012 — Harder vision dataset (CIFAR-100 / Tiny-ImageNet) for ViT  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — ready to claim.
+> **STATUS: ✅ DONE** (2026-05-29) — **client-benefit win**. ViT-B/32 / CIFAR-100 (full 450-cell grid): α=0.05 acc 0.81, θ₀ 0.81, **m4_ood 0.81**, oracle 0.87, global model **3.6× mean_teacher**; → oracle at IID. Confirms the 008 ViT/CIFAR-10 saturation hypothesis (CIFAR-10 had no headroom; CIFAR-100 unlocks the protocol). ResNet-18/CIFAR-100 also passes (m4 0.53). CIFAR-100 prefetched; Tiny-ImageNet plumbed but not run. Verdict: `results/heifd_012_harder_vision_headline/README.md` (+ `_verify`).
 
 **Phase:** M1.5 / α (address ViT saturation on CIFAR-10) · **Blocked by:** none · **Blocks:** nothing critical
 

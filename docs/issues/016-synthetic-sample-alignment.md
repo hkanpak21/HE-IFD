@@ -1,6 +1,6 @@
 # 016 — Synthetic-sample alignment strategy  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — ready to claim.
+> **STATUS: ✅ DONE** (2026-05-29) — synthetic-sample alignment **viable + DP-protectable**: on pretrained backbones (smooth feature space) synthetic ≈ raw_union (resnet18 α=0.05: synthetic 0.775 ≈ raw_union 0.764); on from-scratch pixel space it's weak (expected). Logit-prototype modality (novel) works but is marginal vs plain synthetic. Extended as **016+** (signal-amp diagnostic — K_pc-fattening rejected per thesis) and **016b** (distill-debug: CNN-5 from-scratch distillation is **outside the basin-coherence envelope at low α** — τ=1 helps vs τ=4 but doesn't flip the lift sign; marginal at IID). Verdicts: `results/heifd_016_signal_amp_cnn5/`, `heifd_016b_distill_debug_cnn5/`, `heifd_016b_synthetic_logit/README.md`.
 
 **Phase:** M1.5 / γ (alignment-strategy expansion) · **Blocked by:** none (independent of α/β; can run alongside) · **Blocks:** nothing
 

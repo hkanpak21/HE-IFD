@@ -1,6 +1,6 @@
 # 017 — No-probe DP-common-basin alignment  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — ready to claim.
+> **STATUS: ✅ DONE** (2026-05-29) — **THESIS WIN**. No-probe grid 375/375 (empty-client reshape bug fixed mid-flight). In the weak-θ₀ / low-leak regime the HE distillation carries the model with **large lift** (acc−θ₀ = +0.17 to +0.60 across α), vs thin +0.06–0.08 when a fat probe pre-strengthens θ₀. **Cost-of-no-probe is NEGATIVE** (no-probe ≥ with-probe for dp_avg_eps2: −0.11 at α=0.01 → −0.014 at α=1.0) ⇒ the fully-DP, no-public-data deployment is competitive. This is the cleanest evidence the secure distillation — not the alignment scaffold — is the engine. Verdict: `results/heifd_017_noprobe_mlp/README.md` (+ `_verify`).
 
 **Phase:** M1.5 / γ (alignment-strategy expansion) · **Blocked by:** none · **Blocks:** nothing
 

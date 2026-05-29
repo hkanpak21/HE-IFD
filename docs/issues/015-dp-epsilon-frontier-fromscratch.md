@@ -1,6 +1,6 @@
 # 015 — DP-ε frontier sweep on from-scratch  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — partially blocked by 014 for FMNIST + CIFAR-10 portions.
+> **STATUS: ✅ DONE** (mlp + lenet; 2026-05-29) — averaging-variant DP frontier **flattens from ε≈2** on both MLP/MNIST and LeNet/FMNIST (ε=2 ≈ ε=8 ≈ ε=32 ≈ ε=∞ within seed noise; only ε=0.5 dips). Kpc sweep confirms the accounting σ∝clip/(Kpc·ε): at ε=2, Kpc=1 collapses to chance, Kpc≥5 recovers. `parse_method` already handled the full panel (no src change). **CNN-5 frontier deferred** (CNN-5 outside the protocol envelope per 016b). Verdict: `results/heifd_015_dp_frontier_{mlp,lenet}/README.md`.
 
 **Phase:** M1.5 / β · **Blocked by:** 014 for FMNIST + CNN-5; standalone for MNIST/MLP · **Blocks:** nothing
 

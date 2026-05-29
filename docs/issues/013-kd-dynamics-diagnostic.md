@@ -1,6 +1,6 @@
 # 013 — KD dynamics diagnostic  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — ready to claim.
+> **STATUS: ✅ DONE** (2026-05-29) — **basin-cancellation supported**: ~60% of per-client Δᵢ pairs have negative cosine on BOTH the degrading (resnet18/CIFAR-10) and working (mlp/MNIST) cells; teachers are near-one-hot (entropy <0.1 nats). The asymmetry (mlp helps, resnet18 hurts) is driven by per-class teacher quality × θ₀ headroom, not by cancellation itself. Directed the τ=1 focus in 010 and the capacity framing in 011. `diagnose=True` is byte-identical-off. Verdict: `results/heifd_013_kd_diagnostic/README.md`.
 
 **Phase:** M1.5 / α (empirical-evidence anchor) · **Blocked by:** none · **Blocks:** nothing; informs interpretation of 010/011/012
 

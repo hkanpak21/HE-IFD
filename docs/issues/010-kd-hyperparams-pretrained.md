@@ -1,6 +1,6 @@
 # 010 — KD hyperparams for pretrained-head regime + 003 pytest re-run  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — ready to claim.
+> **STATUS: ✅ DONE** (2026-05-29) — τ is the dominant lever: best (K=100, τ=1, lr=0.001) → mean acc **0.7617** vs θ₀ 0.74 (PARTIAL — recovers θ₀ +2pp, doesn't beat by the +3pp gate). Every τ=1 config recovers θ₀; every τ=4 degrades (reproduces 008's 0.48). New pretrained KD default = (K=100, τ=1, lr=0.001). Pytest 8.4.2 installed (closes 003). Verdict: `results/heifd_010_kd_hparams_resnet18/README.md`.
 
 **Phase:** M1.5 / α (debug θ₀≥final phenomenon) · **Blocked by:** none · **Blocks:** decision on 011's necessity
 

@@ -1,6 +1,6 @@
 # 011 — Trainable-layer scope: head / LoRA / last-N-blocks  [AFK, methodology-shaping — HITL review touchpoint]
 
-> **STATUS: 📥 OPEN** (2026-05-28) — ready to claim.
+> **STATUS: ✅ DONE** (2026-05-29) — **head_only sufficient**: lora_8 ≈ head_only (+0.0006, within noise), last_block *harms* (−0.115; warmup underfit on the small probe + bounded-K basin escape). The "tiny linear head" framing is vindicated, not weakened; LoRA reserved as a capacity lever for big backbones (018) only. Linearity invariant test added. CNN-5 Part-3 hparam bump landed (later found outside the basin-coherence envelope — see 016b). HITL framing reviewed by user. Verdict: `results/heifd_011_scope_resnet18/README.md`.
 
 **Phase:** M1.5 / α (debug θ₀≥final via capacity; also fixes CNN-5) · **Blocked by:** none · **Blocks:** 014 (CNN-5 grid), 018 (LoRA recipe for big models)
 

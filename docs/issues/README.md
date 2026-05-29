@@ -2,7 +2,7 @@
 
 File-based issue tracker. Each issue is a self-contained brief for a **context-zero agent** (you have no conversation history — read the linked files). Plan: [`docs/prd/he-ifd-tnse-resubmission.md`](../prd/he-ifd-tnse-resubmission.md). Operations: [`../../CLAUDE.md`](../../CLAUDE.md). Authoritative implementation reference: `results/colab_results/results_notebook.ipynb`.
 
-Status snapshot as of **2026-05-28** — post M1 review gate, Phase II issues cut.
+Status snapshot as of **2026-05-29** — Phase II (M1.5) experimentally complete: Phase α/β/γ done, Phase δ Part-A done (Part-B HITL-gated), Phase ε (019 text-backbone fix) done. Remaining unbuilt: **M2 Real-FHE (Lattigo) + MIA suite** and the comparator table. Per-issue verdicts in the issue STATUS blocks + `results/<case>/README.md`.
 
 ## Methodology framing (locked at the M1 review)
 
@@ -34,34 +34,40 @@ For each (backbone, dataset) in the final headline set:
 | 008 | [Pretrained headline sweep](008-pretrained-headline-sweep.md) | AFK | ✅ DONE | 1440/1440 cells; θ₀≥final + ViT saturation + GPT-2 weakness flagged → Phase II |
 | 009 | [M1 review gate](009-m1-review-gate.md) | HITL | ✅ COMPLETED | User chose debugging round before paper framing |
 
-## Milestone 1.5 — Phase α: debug what's broken (highest priority)
+## Milestone 1.5 — Phase α: debug what's broken (highest priority)  — ✅ COMPLETE
 
-| # | Issue | Type | What it does | Blocked by |
-|---|---|---|---|---|
-| 010 | [KD hyperparams + pytest re-run](010-kd-hyperparams-pretrained.md) | AFK | K/τ/LR sweep on resnet18 α=0.05 + close issue 003 | — |
-| 011 | [Trainable-layer scope (head/LoRA/last-N)](011-trainable-layer-scope.md) | AFK + HITL review | The methodology lever; also fixes CNN-5 under-training | — |
-| 012 | [Harder vision dataset for ViT](012-harder-vision-dataset.md) | AFK | CIFAR-100 + Tiny-ImageNet — addresses CIFAR-10 saturation | — |
-| 013 | [KD dynamics diagnostic](013-kd-dynamics-diagnostic.md) | AFK | Teacher entropy + ‖Δᵢ‖ + cosine(Δᵢ,Δⱼ) — empirical-evidence anchor | — |
+| # | Issue | Type | Status (verdict in `results/<case>/README.md`) |
+|---|---|---|---|
+| 010 | [KD hyperparams + pytest re-run](010-kd-hyperparams-pretrained.md) | AFK | ✅ DONE — τ is the lever; (K=100,τ=1,lr=0.001)→0.76 vs θ₀ 0.74 (partial). New pretrained KD default. Pytest installed (closes 003). |
+| 011 | [Trainable-layer scope (head/LoRA/last-N)](011-trainable-layer-scope.md) | AFK + HITL | ✅ DONE — **head_only sufficient**; LoRA ≈ head, last_block harms. "Tiny head" framing vindicated. |
+| 012 | [Harder vision dataset for ViT](012-harder-vision-dataset.md) | AFK | ✅ DONE — **ViT/CIFAR-100 client-benefit win** (m4 0.81, 3.6× mean_teacher, →oracle at IID). |
+| 013 | [KD dynamics diagnostic](013-kd-dynamics-diagnostic.md) | AFK | ✅ DONE — basin-cancellation supported (~60% neg-cosine Δᵢ pairs). |
 
-## Milestone 1.5 — Phase β: complete the from-scratch matrix
+## Milestone 1.5 — Phase β: complete the from-scratch matrix  — ✅ COMPLETE
 
-| # | Issue | Type | What it does | Blocked by |
-|---|---|---|---|---|
-| 014 | [Complete 3-dataset from-scratch matrix](014-complete-fromscratch-matrix.md) | AFK | LeNet/FMNIST full grid + N=1 extension + CNN-5/CIFAR-10 full grid | 011 (for CNN-5 part) |
-| 015 | [DP-ε frontier on from-scratch](015-dp-epsilon-frontier-fromscratch.md) | AFK | ε ∈ {0.5, 32, ∞} + Kpc ∈ {1, 5} — the averaging-variant DP frontier figure | 014 (for FMNIST + CNN-5 parts; standalone for MNIST) |
+| # | Issue | Type | Status |
+|---|---|---|---|
+| 014 | [Complete 3-dataset from-scratch matrix](014-complete-fromscratch-matrix.md) | AFK | ✅ DONE — LeNet/FMNIST 450/450 solid + MLP/MNIST N=1; **CNN-5/CIFAR-10 outside the basin-coherence envelope** (see 016b). |
+| 015 | [DP-ε frontier on from-scratch](015-dp-epsilon-frontier-fromscratch.md) | AFK | ✅ DONE (mlp+lenet) — averaging-variant frontier **flattens from ε≈2**; Kpc≥5 at ε=2. cnn5 deferred (out of envelope). |
 
-## Milestone 1.5 — Phase γ: alignment-strategy expansion
+## Milestone 1.5 — Phase γ: alignment-strategy expansion  — ✅ COMPLETE
 
-| # | Issue | Type | What it does | Blocked by |
-|---|---|---|---|---|
-| 016 | [Synthetic-sample alignment](016-synthetic-sample-alignment.md) | AFK | Per-client small generator → synthetic samples instead of mean prototypes | — |
-| 017 | [No-probe DP-common-basin](017-noprobe-dp-common-basin.md) | AFK | Fully-DP, no labelled public data — warmup on the noisy prototype set itself | — |
+| # | Issue | Type | Status |
+|---|---|---|---|
+| 016 | [Synthetic-sample alignment](016-synthetic-sample-alignment.md) | AFK | ✅ DONE — synthetic viable + DP-protectable (≈raw_union on pretrained); logit marginal. Extended: 016+ (K_pc-fattening rejected), 016b (CNN-5 distill out of envelope). |
+| 017 | [No-probe DP-common-basin](017-noprobe-dp-common-basin.md) | AFK | ✅ DONE — **THESIS WIN** (375/375): large distillation lift (+0.17–0.60) in the low-leak/weak-θ₀ regime; cost-of-no-probe negative. |
 
 ## Milestone 1.5 — Phase δ: scale to bigger models (LAST in M1.5)
 
-| # | Issue | Type | What it does | Blocked by |
-|---|---|---|---|---|
-| 018 | [Bigger pretrained backbones](018-bigger-pretrained-backbones.md) | AFK + HITL review (Part A) | ViT-L / BERT-large / GPT-2-medium with mandatory sanity-check gating | 010, 011, 014 |
+| # | Issue | Type | Status |
+|---|---|---|---|
+| 018 | [Bigger pretrained backbones](018-bigger-pretrained-backbones.md) | AFK + HITL | ⚠️ **Part A done, Part B HITL-gated** — ViT-L/CIFAR-100 PASS (0.876); BERT-large marginal (0.910 vs 0.92); GPT-2-medium fail-informational (0.403). Part B awaits user authorization. |
+
+## Milestone 1.5 — Phase ε: pretrained-backbone improvement (AFK autonomous, 2026-05-29)
+
+| # | Issue | Type | Status |
+|---|---|---|---|
+| 019 | [Stronger frozen text backbones](019-stronger-text-backbones.md) | AFK | ✅ DONE (AG-News; DBpedia-14 running) — roberta-base + all-mpnet + **z-score feature normalization** fix the text weak link: α=0.05 acc 0.85 / m4 0.85, matching ViT/CIFAR-100 (~2× DistilBERT). |
 
 ## Milestone 2 — Rooting (DEFERRED until Phase α + β land — to be re-grilled)
 
