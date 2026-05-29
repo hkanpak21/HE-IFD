@@ -94,6 +94,23 @@ class BackboneSpec:
     # field will hit the scheduler path; every other backbone keeps the
     # SGD-with-constant-LR loop. See ``teacher.train_supervised_model``.
     teacher_lr_schedule: Optional[str] = None
+    # Per-backbone feature standardization applied to the cached features once at
+    # load (issue 019 warmup-collapse fix). Some strong frozen text encoders
+    # (RoBERTa-base, all-mpnet-base-v2) emit mean-pooled features whose raw
+    # magnitude/distribution the small-LR warmup head cannot fit at extreme
+    # heterogeneity (α=0.05), pinning θ₀ at chance even though the centralised
+    # linear-probe oracle is strong (~0.90). The standard linear-probing remedy
+    # is to standardize the frozen features before the head. Values:
+    #   * ``"none"``   (default) — NO normalization; byte-identical to the
+    #                  pre-019 path for every existing backbone (the gate is a
+    #                  pure no-op when "none", see ``_load_features``).
+    #   * ``"zscore"`` — per-feature (x − μ)/(σ + eps), with μ/σ fit on the TRAIN
+    #                  features ONLY (no test leakage) and applied to BOTH train
+    #                  and test. eps=1e-6.
+    #   * ``"l2"``     — per-sample L2 normalization x / (‖x‖₂ + eps).
+    # Applied once to the X tensors at load, so warmup, teachers, distillation,
+    # and oracle all see the SAME standardized features (consistent downstream).
+    normalize_features: str = "none"
 
 
 # Notebook Section 0.2 constants
@@ -260,7 +277,7 @@ BACKBONES: Dict[str, BackboneSpec] = {
         label="roberta_base_agnews", kind="head", num_classes=4,
         labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
-        feature_loader="text:roberta_base",
+        feature_loader="text:roberta_base", normalize_features="zscore",
     ),
     # all-mpnet-base-v2 on AG-News (4 classes). 768-d sentence-embedding model;
     # mean-pool is its training-time pooling — the strongest frozen linear-probe
@@ -271,7 +288,7 @@ BACKBONES: Dict[str, BackboneSpec] = {
         label="mpnet_st_agnews", kind="head", num_classes=4,
         labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
-        feature_loader="text:mpnet_st",
+        feature_loader="text:mpnet_st", normalize_features="zscore",
     ),
     # ------------------------------------------------------------------------
     # DBpedia-14 (issue 019 Part 2) — the text analogue of CIFAR-100. 14 topic
@@ -286,13 +303,13 @@ BACKBONES: Dict[str, BackboneSpec] = {
         label="roberta_base_dbpedia", kind="head", num_classes=14,
         labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
-        feature_loader="text:roberta_base:dbpedia_14",
+        feature_loader="text:roberta_base:dbpedia_14", normalize_features="zscore",
     ),
     "mpnet_st_dbpedia": BackboneSpec(
         label="mpnet_st_dbpedia", kind="head", num_classes=14,
         labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
-        feature_loader="text:mpnet_st:dbpedia_14",
+        feature_loader="text:mpnet_st:dbpedia_14", normalize_features="zscore",
     ),
 }
 
@@ -438,6 +455,51 @@ def _extract_eps(s: str) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Feature standardization (issue 019 warmup-collapse fix)
+# ---------------------------------------------------------------------------
+def _apply_feature_normalization(Xtr, Xte, mode: str):
+    """Standardize cached features per ``BackboneSpec.normalize_features``.
+
+    ``mode == "none"`` (the default for every pre-019 backbone) is a strict
+    no-op: ``Xtr``/``Xte`` are returned UNCHANGED, so the load path is
+    byte-identical to the legacy behaviour for resnet18 / vit_b32 / distilbert /
+    the from-scratch nets — they never reach this helper with anything but
+    "none".
+
+    ``mode == "zscore"`` fits per-feature mean/std on the TRAIN features ONLY
+    (``Xtr``) and applies (x − μ)/(σ + eps) to BOTH ``Xtr`` and ``Xte``. Fitting
+    on train alone means the test statistics never influence the transform — no
+    test→train leakage — while still giving every downstream consumer (warmup
+    head, teachers, distillation students, oracle) the SAME standardized inputs.
+
+    ``mode == "l2"`` divides each sample's feature vector by its own L2 norm
+    (+eps); this is purely per-sample so there is no fit step and no leakage by
+    construction.
+
+    eps = 1e-6 in both standardizing modes.
+    """
+    if mode == "none":
+        return Xtr, Xte
+    import torch
+
+    eps = 1e-6
+    if mode == "zscore":
+        # Fit per-feature statistics on TRAIN ONLY (dim 0), then apply to both.
+        mean = Xtr.mean(dim=0, keepdim=True)
+        std = Xtr.std(dim=0, unbiased=False, keepdim=True)
+        denom = std + eps
+        return (Xtr - mean) / denom, (Xte - mean) / denom
+    if mode == "l2":
+        # Per-sample L2 normalization (no fitted statistics).
+        ntr = Xtr.norm(dim=1, keepdim=True) + eps
+        nte = Xte.norm(dim=1, keepdim=True) + eps
+        return Xtr / ntr, Xte / nte
+    raise ValueError(
+        f"unknown normalize_features {mode!r}; expected 'none' | 'zscore' | 'l2'"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Feature loading per backbone
 # ---------------------------------------------------------------------------
 def _load_features(
@@ -534,6 +596,12 @@ def _load_features(
         else:
             name, task_name = rest, "ag_news"
         Xtr, ytr, Xte, yte, in_dim = bk.extract_text_features(name, task_name, data_root, cache_root)
+        # Per-backbone feature standardization (issue 019). No-op for
+        # ``normalize_features="none"`` (every pre-019 text backbone) so the
+        # cached-feature path stays byte-identical there; "zscore"/"l2" applied
+        # once here so ALL downstream consumers (warmup, teachers, distill,
+        # oracle) see the same standardized X. Fit-on-train avoids test leakage.
+        Xtr, Xte = _apply_feature_normalization(Xtr, Xte, spec.normalize_features)
         def _head_factory(in_dim_, num_classes_):
             return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
         return Xtr, ytr, Xte, yte, in_dim, _head_factory
