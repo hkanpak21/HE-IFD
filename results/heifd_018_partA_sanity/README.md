@@ -1,61 +1,24 @@
 # heifd_018_partA_sanity
 
-Issue 018 **Part A** — standalone centralised linear-probe sanity-check on the
-three big pretrained backbones (ViT-L/16 on CIFAR-100, BERT-large-uncased on
-AG-News, GPT-2-medium on AG-News), run **before** the protocol so we never
-apply the protocol to a backbone we cannot even linear-probe. This case holds
-ONLY Part A; **Part B (the protocol + LoRA on the big backbones) is HITL-gated**
-— the orchestrator routes the numbers below to the user, who must authorise the
-bigger compute before any Part-B wrapper is written or submitted.
+HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
-## What the metric is
+## Sweep configuration
 
-`jobs/heifd_018_partA_sanity.sh` runs one cheap cell per backbone (N=1, α=1.0,
-method=`no_phase0`, K=1). The headline number is the cell's **`oracle`** field:
-`protocol.run_cell` trains a centralised supervised head on the full training
-pool and evaluates it on held-out test — at N=1/α=1.0 that pool is the whole
-training set (minus the small labelled probe), so `oracle` is exactly the
-standalone centralised linear-probe / supervised-head IID accuracy. The gate
-reads `oracle`, not `acc` (the protocol output is irrelevant here).
-
-## Sanity gates
-
-| Backbone | Dataset | Gate (IID `oracle`) | Type |
-|---|---|---:|---|
-| `vit_l_cifar100` | CIFAR-100 | ≥ **0.78** | **BLOCKING** — fail ⇒ STOP, report, do not enter Part B |
-| `bert_large_agnews` | AG-News | ≥ **0.92** | **BLOCKING** — fail ⇒ STOP, report |
-| `gpt2_medium_agnews` | AG-News | ≥ **0.50** | **INFORMATIONAL** — GPT-2 family deferred (issue 002); failure is NOT a block |
-
-If `vit_l_cifar100` or `bert_large_agnews` misses its gate: clean abort, report
-which backbone + expected-vs-observed IID + what hparam tuning would be needed
-(per issue 018 acceptance). Do not proceed to Part B with a backbone we cannot
-linear-probe properly.
+- Backbones: `vit_l_cifar100`
+- N values: `1`
+- Dirichlet α: `1.0`
+- Methods: `no_phase0`
+- Seeds: `42`
+- K (bounded trajectory length): `1`
+- τ (distill temperature): `1.0`
+- Student LR: `0.001`
+- Labelled-probe size P: `None` (None = backbone default)
 
 ## Results
 
-_(Auto-populated by `src.report.write_report` once the job lands. Until then this
-section is a placeholder.)_
+| backbone | N | α | method | seed | acc | mean_teacher | best_teacher | oracle | θ₀_acc | M3_mean_gap | M3_helped | M4_ood_acc | σ | status |
+|---|---|---|--------|------|-----|--------------|--------------|--------|--------|-------------|-----------|------------|---|--------|
+| vit_l_cifar100 | 1 | 1.0 | no_phase0 | 42 | 0.0125 | 0.8782 | 0.8782 | 0.8762 | 0.0112 | -0.9331 | 0/1 | n/a | 0.0000 | success |
 
-| Backbone | IID (`oracle`) | Gate | PASS/FAIL |
-|---|---:|---:|---|
-| vit_l_cifar100 | — | 0.78 | — |
-| bert_large_agnews | — | 0.92 | — |
-| gpt2_medium_agnews | — | 0.50 (info) | — |
-
-## Run configuration
-
-- Backbones (one per job via `HEIFD_018_BACKBONE`): `vit_l_cifar100`,
-  `bert_large_agnews`, `gpt2_medium_agnews`.
-- N=1, α=1.0, method=`no_phase0`, seed=42, K=1, τ=1, lr=0.001, scope `head_only`.
-- Memory 64G, ≤3h, single T4. Big-model feature extraction (ViT-L/16 ~304M,
-  BERT-large ~335M over the full train+test sets) is the heavy part; per-backbone
-  isolation keeps each job under the 3h cap and avoids concurrent-extraction OOM.
-- Prefetch prerequisite (login node):
-  `python jobs/prefetch_login.py --include-cifar100 --include-big-backbones`.
-
-## Next — Part B (HITL-gated, NOT in this case)
-
-After the user reviews the gates above and authorises it: head-only sweep on
-(at least) ViT-L/CIFAR-100, then issue-011's LoRA recipe applied to ≥1 big
-backbone if head-only reproduces the θ₀≥final under-capacity pattern. No Part-B
-wrapper exists yet by design.
+Raw per-cell JSONs live here as `cell_<backbone>_N<n>_a<α>_<method>_s<seed>_K<k>_<hash>.json`.
+Per-client per-class counts at `partition_diagnostic.jsonl`. Slurm stdout/stderr at `runs/`. Long-form rows at `results.csv`.
