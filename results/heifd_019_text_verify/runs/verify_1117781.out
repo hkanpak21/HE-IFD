@@ -1,0 +1,19 @@
+[019-verify] job 1117781 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=8 cells; chunk 0/1 -> 8 cells; case=heifd_019_text_verify
+[sweep] start roberta_base_agnews N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7041 mean_teacher=0.4542 wall=20.5s err=None
+[sweep] start roberta_base_agnews N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8555 mean_teacher=0.4542 wall=7.0s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7583 mean_teacher=0.8684 wall=7.1s err=None
+[sweep] start roberta_base_agnews N=10 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8739 mean_teacher=0.8684 wall=7.1s err=None
+[sweep] start mpnet_st_agnews N=10 a=0.05 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.6820 mean_teacher=0.4379 wall=7.0s err=None
+[sweep] start mpnet_st_agnews N=10 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8497 mean_teacher=0.4379 wall=7.2s err=None
+[sweep] start mpnet_st_agnews N=10 a=1.0 no_phase0 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.7308 mean_teacher=0.8600 wall=7.0s err=None
+[sweep] start mpnet_st_agnews N=10 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8676 mean_teacher=0.8600 wall=7.1s err=None
+[sweep] done. ran=8 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_019_text_verify/README.md
