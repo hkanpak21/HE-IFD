@@ -1,0 +1,3 @@
+# Go build artifacts + regenerable PoC output (source + go.mod/go.sum are tracked)
+/fhe
+results.json
