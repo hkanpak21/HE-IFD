@@ -1,0 +1,91 @@
+[015 mlp] job 1116377 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=81 cells; chunk 0/1 -> 81 cells; case=heifd_015_dp_frontier_mlp
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps0.5_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.4967 mean_teacher=0.3337 wall=25.0s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps0.5_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.6291 mean_teacher=0.3327 wall=17.8s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps0.5_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.3493 mean_teacher=0.3385 wall=17.7s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5172 mean_teacher=0.3337 wall=17.8s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.6411 mean_teacher=0.3327 wall=17.7s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.4874 mean_teacher=0.3385 wall=17.9s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5093 mean_teacher=0.3337 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.6068 mean_teacher=0.3327 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.5291 mean_teacher=0.3385 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps32_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.5080 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps32_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.5842 mean_teacher=0.3327 wall=17.7s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps32_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.5146 mean_teacher=0.3385 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_epsinf_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.5151 mean_teacher=0.3337 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_epsinf_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.5733 mean_teacher=0.3327 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_epsinf_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.5155 mean_teacher=0.3385 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K1 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.1017 mean_teacher=0.3337 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K1 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.0980 mean_teacher=0.3327 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K1 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.0980 mean_teacher=0.3385 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K5 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K5 acc=0.4964 mean_teacher=0.3337 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K5 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K5 acc=0.5947 mean_teacher=0.3327 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K5 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K5 acc=0.4370 mean_teacher=0.3385 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K1 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K1 acc=0.5108 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K1 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K1 acc=0.5504 mean_teacher=0.3327 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K1 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K1 acc=0.4849 mean_teacher=0.3385 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K5 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K5 acc=0.5270 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K5 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K5 acc=0.6249 mean_teacher=0.3327 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps8_K5 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K5 acc=0.4834 mean_teacher=0.3385 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps0.5_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.7760 mean_teacher=0.6727 wall=17.4s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps0.5_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.7973 mean_teacher=0.7185 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps0.5_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps0.5_K20 acc=0.7594 mean_teacher=0.7126 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7991 mean_teacher=0.6727 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7883 mean_teacher=0.7185 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7820 mean_teacher=0.7126 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7827 mean_teacher=0.6727 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps8_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7600 mean_teacher=0.7185 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps8_K20 acc=0.7717 mean_teacher=0.7126 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps32_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.7852 mean_teacher=0.6727 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps32_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.7674 mean_teacher=0.7185 wall=17.7s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps32_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps32_K20 acc=0.7537 mean_teacher=0.7126 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_epsinf_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.7673 mean_teacher=0.6727 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_epsinf_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.7671 mean_teacher=0.7185 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_epsinf_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_epsinf_K20 acc=0.7512 mean_teacher=0.7126 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K1 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.1116 mean_teacher=0.6727 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K1 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K1 acc=0.1195 mean_teacher=0.7185 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K1 s=44 K=300 tau=4.0 lr=0.01 scope=head_only

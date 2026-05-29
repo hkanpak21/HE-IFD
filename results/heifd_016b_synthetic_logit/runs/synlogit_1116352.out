@@ -12,3 +12,20 @@
 [sweep] start cnn5_cifar10 N=16 a=1.0 synthetic_K100 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
 [sweep] ok   synthetic_K100 acc=0.3919 mean_teacher=0.4780 wall=302.2s err=None
 [sweep] start cnn5_cifar10 N=16 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.5024 mean_teacher=0.4790 wall=296.0s err=None
+[sweep] done. ran=6 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_016b_synthetic_logit/README.md
+[016b synlogit] arm B: resnet18_cifar10 (K=100, tau=1, lr=0.001)
+[sweep] grid=6 cells; chunk 0/1 -> 6 cells; case=heifd_016b_synthetic_logit
+[sweep] start resnet18_cifar10 N=16 a=0.05 synthetic_logit_K100 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   synthetic_logit_K100 acc=0.7695 mean_teacher=0.1658 wall=11.6s err=None
+[sweep] start resnet18_cifar10 N=16 a=0.05 synthetic_K100 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   synthetic_K100 acc=0.7748 mean_teacher=0.1658 wall=4.4s err=None
+[sweep] start resnet18_cifar10 N=16 a=0.05 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7642 mean_teacher=0.1658 wall=4.0s err=None
+[sweep] start resnet18_cifar10 N=16 a=1.0 synthetic_logit_K100 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   synthetic_logit_K100 acc=0.8019 mean_teacher=0.6934 wall=4.7s err=None
+[sweep] start resnet18_cifar10 N=16 a=1.0 synthetic_K100 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   synthetic_K100 acc=0.7933 mean_teacher=0.6934 wall=4.6s err=None
+[sweep] start resnet18_cifar10 N=16 a=1.0 raw_union_K20 s=42 K=100 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8340 mean_teacher=0.6934 wall=4.0s err=None
+[sweep] done. ran=6 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_016b_synthetic_logit/README.md

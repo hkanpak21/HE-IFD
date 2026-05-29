@@ -1,0 +1,23 @@
+[017 verify] job 1116375 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=10 cells; chunk 0/1 -> 10 cells; case=heifd_017_noprobe_verify
+[sweep] start mlp_mnist N=10 a=0.05 noprobe_dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.4539 mean_teacher=0.3337 wall=24.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 noprobe_dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.4548 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.4736 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5172 mean_teacher=0.3337 wall=17.7s err=None
+[sweep] start mlp_mnist N=10 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8610 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=1.0 noprobe_dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.8916 mean_teacher=0.8937 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=1.0 noprobe_dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.8897 mean_teacher=0.8937 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=1.0 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.8857 mean_teacher=0.8937 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=1.0 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8817 mean_teacher=0.8937 wall=17.7s err=None
+[sweep] start mlp_mnist N=10 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9360 mean_teacher=0.8937 wall=17.7s err=None
+[sweep] done. ran=10 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_017_noprobe_verify/README.md
