@@ -1,3 +1,5 @@
 [018-partA] job 1117277 backbone=gpt2_medium_agnews on ai05.kuvalar.ku.edu.tr
 [sweep] grid=1 cells; chunk 0/1 -> 1 cells; case=heifd_018_partA_sanity
 [sweep] start gpt2_medium_agnews N=1 a=1.0 no_phase0 s=42 K=1 tau=1.0 lr=0.001 scope=head_only
+[sweep] ok   no_phase0 acc=0.2504 mean_teacher=0.2675 wall=2613.9s err=None
+[sweep] done. ran=1 skipped=0 failed=0. report at /scratch/hkanpak21/HE_IFD/results/heifd_018_partA_sanity/README.md
