@@ -393,6 +393,28 @@ def parse_method(method: str) -> tuple:
         return "warmup_only", {}
     if method in ("labelled_probe_warmup", "labelled"):
         return "labelled", {}
+    # Issue 022 — DP-MERF synthetic-basin family (Harder et al. 2021). Checked
+    # BEFORE the dp_avg / raw_union / synthetic prefixes: ``merf_basin_…`` and
+    # ``dp_synth_all_…`` are distinct tokens (``dp_synth_all`` does NOT match the
+    # ``dp_avg`` prefix), but keeping them first makes the two new branches
+    # self-evidently separate.
+    #   * Mode B — ``merf_basin_eps{E}_K{K}``: DP-MERF on K_per_class samples
+    #     builds θ₀; the normal bounded distillation + HE aggregate runs on top
+    #     (phase0_kind ``merf``; see phase0.build_probe_merf).
+    #   * Mode A — ``dp_synth_all_eps{E}``: DP-MERF on ALL local data; the
+    #     student is trained one-shot directly on the synthetic set — no basin,
+    #     no distillation, no HE (phase0_kind ``dp_synth_all`` — a SEPARATE
+    #     short-circuit branch in run_cell, NOT a basin warmup).
+    if method.startswith("merf_basin"):
+        # merf_basin_eps2_K20 / merf_basin_eps8_K20 / merf_basin_epsinf_K20
+        k = _extract_int_after(method, "K", default=20)
+        eps = _extract_eps(method)
+        return "merf", {"K_per_class": k, "eps": eps}
+    if method.startswith("dp_synth_all"):
+        # dp_synth_all_eps2 / dp_synth_all_eps8 / dp_synth_all_epsinf.
+        # No K — Mode A uses ALL local data per class (full-data DP one-shot).
+        eps = _extract_eps(method)
+        return "dp_synth_all", {"eps": eps}
     # Issue 017 — no-probe alignment family. Checked BEFORE the bare
     # raw_union / dp_avg prefixes: the no-probe tokens start with ``noprobe_``
     # so they would never collide, but keeping them first makes the no-probe
@@ -883,6 +905,60 @@ def run_cell(
             res.status = "success"
             return res
 
+        elif phase0_kind == "dp_synth_all":
+            # Issue 022 — Mode A: DP-synthesize-EVERYTHING (the naive DP-one-shot
+            # baseline, cf. FedDiff). Each client fits DP-MERF to ALL of its
+            # local data; the union of synthetic sets carries the whole
+            # contribution and the student is trained ONE-SHOT directly on it.
+            # NO shared basin, NO bounded distillation, NO HE benefit — this is a
+            # SEPARATE short-circuit branch (like warmup_only), deliberately
+            # distinct from the basin+distill+aggregate path. Covering every
+            # sample at meaningful ε forces large DP noise, so accuracy is
+            # expected to drop and the released model stays MIA-vulnerable — the
+            # contrast against Mode B (merf_basin_*). The synthetic set lives in
+            # FLAT feature space (RFF map per flat dim); for conv backbones we
+            # flatten the per-client tensors going in and reshape the synthetic
+            # set back to images for the from-scratch trainer — reusing the SAME
+            # bridge as the synthetic path.
+            flat_image = is_image
+            synth_clients = (
+                _flatten_clients(client_X_list) if flat_image else client_X_list)
+            synth_X, synth_y, info = p0.build_dp_synth_all(
+                synth_clients, client_y_list, num_classes=nc,
+                seed=seed * 100003, eps=kwargs.get("eps"))
+            if flat_image:
+                synth_X = _reshape_probe_to_image(synth_X)
+            res.phase_phase0_sec = time.time() - t0
+            # Train the student one-shot directly on the synthetic union, from a
+            # fresh init, with the oracle's epoch/LR budget (the natural "train
+            # a classifier on the released synthetic data" recipe — more epochs
+            # than a 5-epoch warmup so the baseline gets a fair shot).
+            t0d = time.time()
+            student = train_supervised_model(
+                make_model_fn, synth_X, synth_y,
+                epochs=spec.oracle_epochs, lr=spec.teacher_lr,
+                momentum=momentum, bs=spec.bs, seed=seed * 100019,
+                init_params=init_params,
+                lr_schedule=spec.teacher_lr_schedule)
+            res.phase_distill_sec = time.time() - t0d
+            final_params = get_params(student)
+            t0e = time.time()
+            res.acc = float(eval_model(student))
+            # No basin here, so there is no separate θ₀: report the fresh-init
+            # accuracy as theta0_acc for column parity with the basin methods.
+            res.theta0_acc = theta0_test_acc(init_params)
+            populate_incentive_ood(student)
+            res.phase_eval_sec = time.time() - t0e
+            res.probe_size_actual = int(info["synth_size"])
+            res.sigma = float(info["sigma"])
+            res.notes += (
+                " | Mode-A DP-MERF synthesize-everything (no basin/distill/HE): "
+                f"{info.get('dp_note', '')}")
+            res.sample_weights = agg.sample_weights(sample_sizes)
+            res.wall_clock_sec = time.time() - t_start
+            res.status = "success"
+            return res
+
         elif phase0_kind == "labelled":
             theta0 = p0.warmup_init(
                 make_model_fn, probe_X, probe_y, init_params,
@@ -894,16 +970,23 @@ def run_cell(
             res.sigma = 0.0
             res.theta0_acc = theta0_test_acc(theta0)
 
-        elif phase0_kind in ("raw_union", "dp_avg", "synthetic", "synthetic_dp"):
+        elif phase0_kind in ("raw_union", "dp_avg", "synthetic", "synthetic_dp", "merf"):
             probe_seed = seed * 100003
             # raw_union selects raw samples (preserves the native image shape).
-            # dp_avg / synthetic / synthetic_dp work in flat feature space (the
-            # μ/σ² statistics are defined per-feature-dim), so for image data
-            # we flatten the per-client tensors going in and reshape the
-            # returned (P, C*H*W) probe back to (P, C, H, W) coming out —
+            # dp_avg / synthetic / synthetic_dp / merf work in flat feature space
+            # (the μ/σ² / RFF statistics are defined per-feature-dim), so for
+            # image data we flatten the per-client tensors going in and reshape
+            # the returned (P, C*H*W) probe back to (P, C, H, W) coming out —
             # keeping phase0.py and the conv warmup input shape-consistent
-            # without touching aggregation/distill.
-            flat_image = is_image and phase0_kind in ("dp_avg", "synthetic", "synthetic_dp")
+            # without touching aggregation/distill. ``merf`` (issue 022, Mode B)
+            # is a DP-MERF basin source: it is treated identically to
+            # ``synthetic`` from run_cell's perspective — build a flat probe,
+            # warm θ₀ on it, then run the SAME bounded distillation + HE
+            # aggregate below (the bulk is HE-protected). The DP noise on the
+            # released RFF mean embedding is calibrated inside build_probe_merf
+            # via the repo's dp_sigma, so no external ``clip`` is needed.
+            flat_image = is_image and phase0_kind in (
+                "dp_avg", "synthetic", "synthetic_dp", "merf")
             probe_clients = _flatten_clients(client_X_list) if flat_image else client_X_list
             align_X, align_y, info = p0.build_probe(
                 phase0_kind, client_X_list=probe_clients, client_y_list=client_y_list,
