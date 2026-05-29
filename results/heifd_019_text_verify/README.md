@@ -1,5 +1,22 @@
 # heifd_019_text_verify
 
+## VERDICT (verify) — strong backbones CONFIRMED (oracle 0.90), but α=0.05 warmup collapses → feature-normalization fix needed
+
+| backbone | α | acc | θ₀ | mean_t | oracle | m4 |
+|---|---|---:|---:|---:|---:|---:|
+| mpnet_st_agnews | 0.05 | 0.3888 | 0.3455 | 0.285 | **0.8976** | 0.327 |
+| mpnet_st_agnews | 1.0 | 0.8391 | 0.8387 | 0.670 | 0.8976 | — |
+| roberta_base_agnews | 0.05 | **0.2500** | **0.2500** | 0.274 | **0.9021** | 0.175 |
+| roberta_base_agnews | 1.0 | 0.7830 | 0.5813 | 0.652 | 0.9021 | — |
+| distilbert (M1 bar) | 0.05 | 0.437 | 0.410 | — | 0.904 | 0.363 |
+
+- **Backbone choice validated:** oracles 0.898 / 0.902 (≈ DistilBERT 0.904) — roberta/mpnet ARE strong frozen extractors. At α=1.0 the protocol works (mpnet 0.839 near-oracle; roberta +0.20 distillation lift).
+- **But α=0.05 underperforms DistilBERT:** roberta θ₀ = exactly 0.25 (random) — the warmup head learned NOTHING; mpnet θ₀ 0.35. A strong-oracle backbone whose *warmup* θ₀ is random ⇒ **feature-scale problem**: raw RoBERTa / mpnet mean-pooled features need standardization (z-score or L2-norm) for the small-LR warmup head to converge at extreme heterogeneity. DistilBERT happens to be adequately scaled; mpnet embeddings are normally used L2-normalized.
+
+**Next:** debug-agent adds per-backbone feature standardization (gated, so ViT/ResNet/DistilBERT stay byte-identical), then re-verify. Hypothesis: with normalization, roberta/mpnet α=0.05 should clear the DistilBERT bar (acc ≥ 0.44, ideally toward the ViT/CIFAR-100 level).
+
+---
+
 HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
 ## Sweep configuration
