@@ -1,0 +1,74 @@
+{
+  "backbone": "bert_large_agnews",
+  "dataset": "AGNews",
+  "N": 1,
+  "alpha": 1.0,
+  "seed": 42,
+  "K": 1,
+  "tau": 1.0,
+  "method": "no_phase0",
+  "phase0_kind": "none",
+  "probe_size_actual": 0,
+  "sigma": 0.0,
+  "acc": 0.3155263157894737,
+  "mean_teacher": 0.9086842105263158,
+  "best_teacher": 0.9086842105263158,
+  "oracle": 0.9098684210526315,
+  "per_teacher_acc": [
+    0.9086842105263158
+  ],
+  "theta0_acc": 0.3121052631578947,
+  "m3_student_acc_on_Di": [
+    0.32182652210175144
+  ],
+  "m3_teacher_acc_on_Di": [
+    0.9113844870725605
+  ],
+  "m3_gap": [
+    -0.589557964970809
+  ],
+  "m3_mean_gap": -0.589557964970809,
+  "m3_clients_helped": 0,
+  "m3_clients_evaluated": 1,
+  "m4_ood_acc": [
+    null
+  ],
+  "m4_mean": null,
+  "m4_clients_evaluated": 0,
+  "per_client_total": [
+    119900
+  ],
+  "per_client_per_class": [
+    [
+      29972,
+      29977,
+      29972,
+      29979
+    ]
+  ],
+  "sample_weights": [
+    1.0
+  ],
+  "wall_clock_sec": 2472.79483962059,
+  "phase_teacher_sec": 5.2463274002075195,
+  "phase_phase0_sec": 0.005102396011352539,
+  "phase_distill_sec": 0.12130498886108398,
+  "phase_aggregate_sec": 9.942054748535156e-05,
+  "phase_eval_sec": 0.3304123878479004,
+  "job_id": "1117213",
+  "node": "ai05",
+  "status": "success",
+  "error": null,
+  "notes": "HE-IFD plaintext simulation: sample-weighted linear aggregate \u03b8\u2080+\u03a3 w_i\u00b7\u0394_i of bounded K-step cumulative displacements; server op is PT\u00d7CT + CT+CT only (FHE-compatible).",
+  "diagnostics": null,
+  "_descriptor": {
+    "backbone": "bert_large_agnews",
+    "N": 1,
+    "alpha": 1.0,
+    "method": "no_phase0",
+    "seed": 42,
+    "K": 1,
+    "tau": 1.0,
+    "student_lr": 0.001
+  }
+}

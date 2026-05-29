@@ -4,7 +4,7 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 
 ## Sweep configuration
 
-- Backbones: `vit_l_cifar100`
+- Backbones: `bert_large_agnews`
 - N values: `1`
 - Dirichlet α: `1.0`
 - Methods: `no_phase0`
@@ -18,6 +18,7 @@ HE-IFD plaintext simulation of the one-shot federated distillation protocol: eac
 
 | backbone | N | α | method | seed | acc | mean_teacher | best_teacher | oracle | θ₀_acc | M3_mean_gap | M3_helped | M4_ood_acc | σ | status |
 |---|---|---|--------|------|-----|--------------|--------------|--------|--------|-------------|-----------|------------|---|--------|
+| bert_large_agnews | 1 | 1.0 | no_phase0 | 42 | 0.3155 | 0.9087 | 0.9087 | 0.9099 | 0.3121 | -0.5896 | 0/1 | n/a | 0.0000 | success |
 | vit_l_cifar100 | 1 | 1.0 | no_phase0 | 42 | 0.0125 | 0.8782 | 0.8782 | 0.8762 | 0.0112 | -0.9331 | 0/1 | n/a | 0.0000 | success |
 
 Raw per-cell JSONs live here as `cell_<backbone>_N<n>_a<α>_<method>_s<seed>_K<k>_<hash>.json`.
