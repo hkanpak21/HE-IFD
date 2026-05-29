@@ -209,6 +209,41 @@ def build_probe_dp_averaged(
 # one prototype per class. Here we keep every per-(client, class) prototype as a
 # distinct labelled sample so the warmup sees the cross-client spread (and so the
 # point count grows with N, matching the issue's "~num_classes × N" expectation).
+def _noprobe_flat_dim(client_X_list: List) -> int:
+    """Robust flat feature dim from a list of per-client tensors.
+
+    At extreme heterogeneity (α=0.01, many clients) the Dirichlet partition can
+    hand a client ZERO samples — its tensor is ``(0, ...)``. Deriving the flat
+    dim from ``client_X_list[0]`` via ``reshape(n_0, -1)`` then raises
+    "cannot reshape tensor of 0 elements into shape [0, -1] ... -1 is ambiguous"
+    when client 0 happens to be the empty one. We instead read the trailing
+    dimensions directly (``prod(shape[1:])``), which is well-defined regardless
+    of how many rows the tensor has, and prefer a client that actually carries
+    rows for clarity (any client works since the trailing shape is shared).
+    """
+    for X in client_X_list:
+        shp = tuple(X.shape[1:])
+        if X.shape[0] > 0:
+            d = 1
+            for s in shp:
+                d *= int(s)
+            return d
+    # All clients empty (pathological): the trailing shape is still defined.
+    shp = tuple(client_X_list[0].shape[1:])
+    d = 1
+    for s in shp:
+        d *= int(s)
+    return d
+
+
+def _noprobe_flatten_client(X, flat_dim: int):
+    """Flatten one per-client tensor to ``(n_i, flat_dim)`` with an EXPLICIT
+    trailing dim — never ``-1`` — so an empty ``(0, ...)`` client reshapes to
+    ``(0, flat_dim)`` instead of raising on the ambiguous inferred axis. For a
+    non-empty client this is identical to ``reshape(n_i, -1)``."""
+    return X.cpu().reshape(X.shape[0], flat_dim)
+
+
 def build_noprobe_raw_union(
     client_X_list: List,
     client_y_list: List,
@@ -233,11 +268,11 @@ def build_noprobe_raw_union(
     import torch
 
     rng = np.random.default_rng(seed)
-    feature_dim = client_X_list[0].cpu().reshape(client_X_list[0].shape[0], -1).shape[1]
+    feature_dim = _noprobe_flat_dim(client_X_list)
     proto_X_list, proto_y_list = [], []
     n_pairs = 0
     for i in range(len(client_X_list)):
-        X_i = client_X_list[i].cpu().reshape(client_X_list[i].shape[0], -1)
+        X_i = _noprobe_flatten_client(client_X_list[i], feature_dim)
         y_i = client_y_list[i].cpu().numpy()
         for c in range(num_classes):
             mask = (y_i == c)
@@ -297,12 +332,12 @@ def build_noprobe_dp_averaged(
 
     rng = np.random.default_rng(seed)
     sigma = dp_sigma(clip, K_per_class, eps_per_client, delta)
-    feature_dim = client_X_list[0].cpu().reshape(client_X_list[0].shape[0], -1).shape[1]
+    feature_dim = _noprobe_flat_dim(client_X_list)
 
     proto_X_list, proto_y_list = [], []
     n_pairs = 0
     for i in range(len(client_X_list)):
-        X_i = client_X_list[i].cpu().reshape(client_X_list[i].shape[0], -1)
+        X_i = _noprobe_flatten_client(client_X_list[i], feature_dim)
         y_i = client_y_list[i].cpu().numpy()
         for c in range(num_classes):
             mask = (y_i == c)
