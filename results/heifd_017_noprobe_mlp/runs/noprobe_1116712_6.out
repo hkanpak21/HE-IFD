@@ -1,0 +1,95 @@
+[017 noprobe] job 1116712 task 6/8 on ai05.kuvalar.ku.edu.tr
+[sweep] grid=375 cells; chunk 6/8 -> 47 cells; case=heifd_017_noprobe_mlp
+[sweep] start mlp_mnist N=1 a=0.01 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.8931 mean_teacher=0.9711 wall=20.6s err=None
+[sweep] start mlp_mnist N=1 a=0.01 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8990 mean_teacher=0.9635 wall=13.7s err=None
+[sweep] start mlp_mnist N=1 a=0.05 noprobe_raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.9016 mean_teacher=0.9737 wall=13.8s err=None
+[sweep] start mlp_mnist N=1 a=0.1 noprobe_dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.9041 mean_teacher=0.9702 wall=13.8s err=None
+[sweep] start mlp_mnist N=1 a=0.1 noprobe_raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.8939 mean_teacher=0.9744 wall=13.7s err=None
+[sweep] start mlp_mnist N=1 a=0.3 noprobe_dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.9011 mean_teacher=0.9694 wall=13.7s err=None
+[sweep] start mlp_mnist N=1 a=0.3 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.9064 mean_teacher=0.9696 wall=13.7s err=None
+[sweep] start mlp_mnist N=1 a=1.0 noprobe_dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.9001 mean_teacher=0.9726 wall=13.7s err=None
+[sweep] start mlp_mnist N=1 a=1.0 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8935 mean_teacher=0.9654 wall=13.8s err=None
+[sweep] start mlp_mnist N=5 a=0.01 noprobe_dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.2698 mean_teacher=0.2389 wall=15.5s err=None
+[sweep] start mlp_mnist N=5 a=0.01 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5822 mean_teacher=0.2182 wall=15.1s err=None
+[sweep] start mlp_mnist N=5 a=0.05 noprobe_dp_avg_eps8_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.5752 mean_teacher=0.2590 wall=15.4s err=None
+[sweep] start mlp_mnist N=5 a=0.05 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8299 mean_teacher=0.3903 wall=15.5s err=None
+[sweep] start mlp_mnist N=5 a=0.1 noprobe_dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.5137 mean_teacher=0.4397 wall=15.4s err=None
+[sweep] start mlp_mnist N=5 a=0.1 raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7446 mean_teacher=0.4995 wall=15.5s err=None
+[sweep] start mlp_mnist N=5 a=0.3 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.6766 mean_teacher=0.7179 wall=15.5s err=None
+[sweep] start mlp_mnist N=5 a=0.3 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8985 mean_teacher=0.7479 wall=15.7s err=None
+[sweep] start mlp_mnist N=5 a=1.0 noprobe_raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.8706 mean_teacher=0.8800 wall=15.6s err=None
+[sweep] start mlp_mnist N=10 a=0.01 noprobe_dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   noprobe_dp_avg_eps2_K20 acc=n/a mean_teacher=0.1824 wall=13.3s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start mlp_mnist N=10 a=0.01 noprobe_raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.3731 mean_teacher=0.1597 wall=17.8s err=None
+[sweep] start mlp_mnist N=10 a=0.05 noprobe_dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.5687 mean_teacher=0.3327 wall=17.8s err=None
+[sweep] start mlp_mnist N=10 a=0.05 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.5172 mean_teacher=0.3337 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.1 noprobe_dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.6082 mean_teacher=0.4191 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.1 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.4159 mean_teacher=0.3316 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=0.3 noprobe_dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.8141 mean_teacher=0.6727 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=0.3 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.7820 mean_teacher=0.7126 wall=17.5s err=None
+[sweep] start mlp_mnist N=10 a=1.0 noprobe_dp_avg_eps8_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.8862 mean_teacher=0.8886 wall=17.6s err=None
+[sweep] start mlp_mnist N=10 a=1.0 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9360 mean_teacher=0.8937 wall=17.6s err=None
+[sweep] start mlp_mnist N=20 a=0.01 noprobe_dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   noprobe_dp_avg_eps8_K20 acc=n/a mean_teacher=0.1353 wall=13.3s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start mlp_mnist N=20 a=0.01 raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.7730 mean_teacher=0.1329 wall=20.3s err=None
+[sweep] start mlp_mnist N=20 a=0.05 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   noprobe_raw_union_K20 acc=n/a mean_teacher=0.2578 wall=13.4s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start mlp_mnist N=20 a=0.05 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.8969 mean_teacher=0.2730 wall=22.0s err=None
+[sweep] start mlp_mnist N=20 a=0.1 noprobe_raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.6000 mean_teacher=0.3870 wall=22.0s err=None
+[sweep] start mlp_mnist N=20 a=0.3 noprobe_dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.8462 mean_teacher=0.6595 wall=22.0s err=None
+[sweep] start mlp_mnist N=20 a=0.3 noprobe_raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.7891 mean_teacher=0.6077 wall=22.0s err=None
+[sweep] start mlp_mnist N=20 a=1.0 noprobe_dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps2_K20 acc=0.8989 mean_teacher=0.8426 wall=21.8s err=None
+[sweep] start mlp_mnist N=20 a=1.0 dp_avg_eps2_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.8885 mean_teacher=0.8596 wall=21.9s err=None
+[sweep] start mlp_mnist N=50 a=0.01 noprobe_dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] FAIL   noprobe_dp_avg_eps2_K20 acc=n/a mean_teacher=0.1177 wall=13.6s err=RuntimeError: cannot reshape tensor of 0 elements into shape [0, -1] because the unspecified dimension size -1 can be any value and is ambiguous
+[sweep] start mlp_mnist N=50 a=0.01 dp_avg_eps2_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.2448 mean_teacher=0.1321 wall=28.0s err=None
+[sweep] start mlp_mnist N=50 a=0.05 noprobe_dp_avg_eps8_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.7222 mean_teacher=0.2029 wall=34.5s err=None
+[sweep] start mlp_mnist N=50 a=0.05 dp_avg_eps2_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   dp_avg_eps2_K20 acc=0.3790 mean_teacher=0.2005 wall=34.4s err=None
+[sweep] start mlp_mnist N=50 a=0.1 noprobe_dp_avg_eps8_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.8451 mean_teacher=0.3236 wall=34.8s err=None
+[sweep] start mlp_mnist N=50 a=0.1 raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9384 mean_teacher=0.3210 wall=35.0s err=None
+[sweep] start mlp_mnist N=50 a=0.3 noprobe_dp_avg_eps8_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_dp_avg_eps8_K20 acc=0.8647 mean_teacher=0.5418 wall=34.8s err=None
+[sweep] start mlp_mnist N=50 a=0.3 raw_union_K20 s=43 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   raw_union_K20 acc=0.9459 mean_teacher=0.5160 wall=34.9s err=None
+[sweep] start mlp_mnist N=50 a=1.0 noprobe_raw_union_K20 s=42 K=300 tau=4.0 lr=0.01 scope=head_only
+[sweep] ok   noprobe_raw_union_K20 acc=0.8870 mean_teacher=0.7642 wall=34.7s err=None
+[sweep] start mlp_mnist N=50 a=1.0 raw_union_K20 s=44 K=300 tau=4.0 lr=0.01 scope=head_only
