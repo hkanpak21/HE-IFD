@@ -67,3 +67,4 @@ FL_TDSC/archive/
 *.xlsx
 results/colab_results/bundle/figures/
 REJECTED_PAPER/*.pdf
+.gstack/
