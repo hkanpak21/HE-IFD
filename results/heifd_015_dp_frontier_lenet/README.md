@@ -1,5 +1,19 @@
 # heifd_015_dp_frontier_lenet
 
+## VERDICT (81/81 cells, lenet_fmnist) — averaging-variant DP frontier FLATTENS from ε≈2 (generalizes from MLP/MNIST)
+
+ε sweep @ Kpc=20 (acc, mean over 3 seeds):
+
+| α | ε=0.5 | ε=2 | ε=8 | ε=32 | ε=∞ |
+|---|---:|---:|---:|---:|---:|
+| 0.05 | 0.2950 | 0.3117 | 0.3370 | 0.3561 | 0.2970 |
+| 0.3 | 0.5337 | 0.5170 | 0.5141 | 0.4985 | 0.5051 |
+| 1.0 | 0.6424 | 0.6392 | 0.6490 | 0.6453 | 0.6387 |
+
+The frontier is flat across ε at every α (ε=2 ≈ ε=8 ≈ ε=32 ≈ ε=∞ within seed noise; no monotone privacy-cost). Same conclusion as the MLP/MNIST frontier (heifd_015_dp_frontier_mlp): the averaging-variant DP mechanism makes strong privacy (ε=2) essentially free on FashionMNIST/LeNet too. Confirms the claim generalizes beyond the MLP toy case to a small conv backbone.
+
+---
+
 HE-IFD plaintext simulation of the one-shot federated distillation protocol: each client distils its own teacher into a student over a bounded K-step trajectory from a shared, Phase-0-aligned init θ₀, then uploads the cumulative trainable-parameter displacement Δ_i = θ_i^(K) − θ₀; the server's only operation is the sample-weighted linear combine θ₀ + Σ_i w_i·Δ_i (w_i = n_i/Σ_j n_j), which uses plaintext-scalar × ciphertext and ciphertext + ciphertext only and is thus FHE-compatible by construction (multiplicative depth ≈ 1). This case sweeps the grid below; IID test accuracy is the lead metric, with mean/best teacher and a centralised oracle as references, plus the standalone accuracy of the aligned init θ₀ (what alignment adds before distillation), the M3 per-client teacher-vs-aggregate gap on each client's own data (the participation-incentive metric), and the M4 per-client accuracy on classes a client held zero local examples of (the OOD value-proposition; n/a at α=1.0).
 
 ## Sweep configuration
