@@ -56,7 +56,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import asdict, dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 
 # ---------------------------------------------------------------------------
@@ -385,6 +385,16 @@ class CellResult:
     # teacher entropy / per-step Δ norms / pairwise cosine / per-class θ₀-vs-
     # final accuracy. JSON-serialisable plain types only. See src.diagnostics.
     diagnostics: Optional[Dict] = None
+    # Task-arithmetic λ-scaling curve (issue 026). ``None`` (the default) means
+    # the cell was run WITHOUT the λ-sweep — the default for every sweep — and the
+    # field is simply absent from the JSON's information content (still serialised
+    # so the schema is stable, and ``asdict`` emits ``null``). When populated (only
+    # when ``run_cell(..., lambda_scales=[...])`` is given AND agg_method is the
+    # linear ``weight_avg``), it is the eval-only acc-vs-λ curve along the line
+    # θ⋆(λ) = (1−λ)·θ₀ + λ·θ⋆(1): a list of ``{"lambda": float, "acc": float}``
+    # dicts, one per requested λ. λ=0 reproduces standalone θ₀ acc, λ=1 reproduces
+    # ``acc``. No retraining — each point reuses the SAME trajectory's {Δ_i}.
+    lambda_curve: Optional[List[Dict]] = None
 
     def to_dict(self) -> Dict:
         return asdict(self)
@@ -659,6 +669,7 @@ def run_cell(
     diagnose: bool = False,
     trainable_scope: Optional[str] = None,
     agg_method: str = "weight_avg",
+    lambda_scales: Optional[Sequence[float]] = None,
 ) -> CellResult:
     """Run one protocol cell end-to-end and return a CellResult.
 
@@ -695,6 +706,18 @@ def run_cell(
     ``res.agg_depth``. This is an INVESTIGATION axis (does any non-linear one-shot
     combine beat the flat weighted average under heterogeneity?), NOT a change to
     the production aggregator — distillation semantics are untouched.
+
+    ``lambda_scales`` (default ``None``) is the issue-026 task-arithmetic λ-sweep
+    hook. When ``None`` (every existing caller) NO new code runs and this function
+    is BYTE-IDENTICAL to its pre-026 behaviour. When a list of floats is supplied
+    AND ``agg_method == "weight_avg"`` (the linear aggregate), then AFTER the λ=1
+    aggregate is scored, the EVAL-ONLY interpolation θ⋆(λ) = θ₀ + λ·Σ_i w_i·Δ_i is
+    additionally scored for each λ using the SAME in-process test eval — no
+    retraining, the trajectory's {Δ_i} are reused — and stored in
+    ``res.lambda_curve`` as ``[{"lambda": λ, "acc": acc}, …]``. λ stays a public
+    scalar so the combine remains depth-1 under CKKS. The hook is a no-op for any
+    non-linear ``agg_method`` (the interpolation identity is a linear-aggregate
+    property).
     """
     import numpy as np
     import torch
@@ -1154,6 +1177,26 @@ def run_cell(
         model.load_state_dict(final_params)
         res.acc = float(eval_model(model))
         populate_incentive_ood(model)
+
+        # --- (optional) issue-026 task-arithmetic λ-sweep (EVAL-ONLY) ---
+        # Strictly opt-in: only fires when ``lambda_scales`` is provided AND the
+        # combine is the linear ``weight_avg`` (the interpolation identity
+        # θ⋆(λ) = θ₀ + λ·Σ w_iΔ_i = (1−λ)θ₀ + λθ⋆(1) is a linear-aggregate
+        # property). When ``lambda_scales is None`` — every existing caller —
+        # this block does not execute and the CellResult is byte-identical to
+        # the pre-026 path (``res.lambda_curve`` stays ``None``). Each λ reuses
+        # the SAME {deltas}: no distillation, no retraining — one ``aggregate``
+        # call (a public-scalar reweight, still depth-1) + one test eval per λ.
+        if lambda_scales is not None and agg_method == "weight_avg":
+            curve = []
+            for lam in lambda_scales:
+                lam = float(lam)
+                theta_lam = agg.aggregate(theta0, deltas, weights, lambda_scale=lam)
+                m_lam = make_model_fn()
+                m_lam.load_state_dict(theta_lam)
+                curve.append({"lambda": lam, "acc": float(eval_model(m_lam))})
+            res.lambda_curve = curve
+
         res.phase_eval_sec = time.time() - t0
 
         # --- (optional) issue-013 KD-dynamics diagnostics ---

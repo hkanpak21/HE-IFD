@@ -77,8 +77,9 @@ def sample_weights(sample_sizes: Sequence[int]) -> List[float]:
     return [float(s) / total for s in sample_sizes]
 
 
-def aggregate(theta0: Dict, deltas: List[Dict], weights: Sequence[float]) -> Dict:
-    """Server aggregation: θ = θ₀ + Σ_i w_i·Δ_i (linear, sample-weighted).
+def aggregate(theta0: Dict, deltas: List[Dict], weights: Sequence[float],
+              lambda_scale: float = 1.0) -> Dict:
+    """Server aggregation: θ = θ₀ + λ·Σ_i w_i·Δ_i (linear, sample-weighted).
 
     Parameters
     ----------
@@ -89,6 +90,17 @@ def aggregate(theta0: Dict, deltas: List[Dict], weights: Sequence[float]) -> Dic
     weights : sequence of float
         Sample weights w_i (use ``sample_weights(sample_sizes)``). Need not be
         re-normalised here — they are passed pre-normalised by the protocol.
+    lambda_scale : float, default 1.0
+        The task-arithmetic SCALING COEFFICIENT λ (Ilharco et al. 2023): the
+        server computes θ₀ + λ·Σ_i w_i·Δ_i. λ is a PUBLIC scalar, so under CKKS
+        the combine stays depth-1 — it folds into each weight (wl = w·λ) and the
+        op is still PT(scalar)×CT + CT+CT only, NO ciphertext multiply. At the
+        default λ=1.0 this is BYTE-IDENTICAL to the pre-λ path: λ is folded as
+        ``wl = w * lambda_scale`` and ``w * 1.0 == w`` exactly in IEEE float, so
+        ``theta[k] + wl * d[k]`` reduces to the original ``theta[k] + w * d[k]``
+        term-for-term. The result interpolates the basin and the λ=1 aggregate:
+        θ⋆(λ) = (1−λ)·θ₀ + λ·θ⋆(1) — sweeping λ slides along that line, eval-only
+        (no retraining), which is what issue 026 verifies cheaply.
 
     Returns
     -------
@@ -101,8 +113,9 @@ def aggregate(theta0: Dict, deltas: List[Dict], weights: Sequence[float]) -> Dic
     theta = {k: v.detach().clone() for k, v in theta0.items()}  # θ₀ baseline
     for i, w in enumerate(weights):
         d = deltas[i]
+        wl = w * lambda_scale                   # fold the PUBLIC scalar λ into w_i
         for k in theta:
-            theta[k] = theta[k] + w * d[k]      # CT+CT and PT(scalar w)×CT only
+            theta[k] = theta[k] + wl * d[k]     # CT+CT and PT(scalar w·λ)×CT only
     return theta
 
 
