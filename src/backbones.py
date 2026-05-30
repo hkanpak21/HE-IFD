@@ -793,7 +793,20 @@ def extract_text_features(
     model = AutoModel.from_pretrained(model_id).to(dev).eval()
     in_dim = model.config.hidden_size if hasattr(model.config, "hidden_size") else 768
 
-    ds = load_dataset(task_name)
+    # Robust dataset id. Newer ``datasets`` (e.g. on Colab) reject the bare
+    # canonical name with ``HfUriError: ... Repository id must be 'namespace/name',
+    # got 'ag_news'`` and require a namespaced repo id; VALAR's older ``datasets``
+    # (and the existing feature cache, which short-circuits this call) use the bare
+    # name. Try the bare name first (byte-identical on VALAR), then fall back to the
+    # namespaced canonical mirror so the same code runs on Colab unchanged.
+    _DS_FALLBACK = {"ag_news": "fancyzhx/ag_news", "dbpedia_14": "fancyzhx/dbpedia_14"}
+    try:
+        ds = load_dataset(task_name)
+    except Exception:
+        _alt = _DS_FALLBACK.get(task_name)
+        if _alt is None:
+            raise
+        ds = load_dataset(_alt)
     if task_name == "dbpedia_14":
         # DBpedia-14 (issue 019 Part 2). 14 topic classes; columns are
         # ``title`` + ``content`` (no ``text`` column). Compose the input as

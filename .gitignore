@@ -62,6 +62,12 @@ cache/
 # per-cell JSON + summary.json + README (the actual results) ARE tracked.
 results/heifd_021_mia/shadows/
 
+# Secrets — NEVER commit (the repo is public). HF tokens, API keys, etc.
+.env
+.env.*
+*.env
+secrets.*
+
 # Local-only Claude state
 .claude/
 git_token.txt
