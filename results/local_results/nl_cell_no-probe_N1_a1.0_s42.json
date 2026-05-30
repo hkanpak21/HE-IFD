@@ -1,0 +1,45 @@
+{
+  "N": 1,
+  "alpha": 1.0,
+  "basin": "no-probe",
+  "seed": 42,
+  "theta0_acc": 0.11810000240802765,
+  "sample_sizes": [
+    60000
+  ],
+  "weights": [
+    1.0
+  ],
+  "combines": {
+    "weight_avg": 0.8757500052452087,
+    "mag_weighted": 0.8757500052452087,
+    "sign_majority": 0.8757500052452087,
+    "norm_normalized": 0.8757500052452087,
+    "agreement_gated": 0.8755000233650208,
+    "second_moment": 0.6587499976158142,
+    "coord_trimmed_mean": 0.8757500052452087,
+    "consensus_proj": 0.8757500052452087,
+    "poly_gate_d2_a": 0.5857499837875366,
+    "poly_gate_d2_b": 0.8757500052452087
+  },
+  "sync_sgd": 0.8762500286102295,
+  "centralized": 0.8585000038146973,
+  "delta_norms": [
+    2.9416141510009766
+  ],
+  "best_oneshot": "weight_avg",
+  "best_oneshot_acc": 0.8757500052452087,
+  "best_lowdepth": "weight_avg",
+  "config": {
+    "K": 100,
+    "BATCH": 64,
+    "LR": 0.1,
+    "HIDDEN": 200,
+    "PROBE_SIZE": 100,
+    "PROBE_EPOCHS": 30,
+    "POLY_C": 0.01
+  },
+  "_wa": 0.8757500052452087,
+  "_cent": 0.8585000038146973,
+  "_sync": 0.8762500286102295
+}
