@@ -80,3 +80,32 @@ Standard `CellResult` columns (`src/report.py`): IID `acc` is the lead, with
 aligned init before distillation; fresh-init accuracy for Mode A column parity).
 `σ` is the DP noise scale on the released per-class RFF mean embedding (0.0 at
 ε=∞; larger as ε shrinks).
+
+## COLLECTED RESULTS (Colab run, 2026-05-30) — pytest 9 passed; 10 cells
+
+| backbone | α | method | acc | θ₀_acc | mean_teacher | oracle | M3_mean_gap |
+|---|---|--------|-----|--------|--------------|--------|-------------|
+| mlp_mnist | 0.05 | dp_synth_all_eps2 (Mode A) | **0.7776** | 0.0887 | 0.3328 | 0.9735 | −0.2148 |
+| mlp_mnist | 0.05 | dp_synth_all_eps8 (Mode A) | 0.7835 | 0.0887 | 0.3328 | 0.9735 | −0.2105 |
+| mlp_mnist | 0.05 | merf_basin_eps2_K20 (Mode B) | 0.5726 | 0.2377 | 0.3328 | 0.9735 | −0.4173 |
+| mlp_mnist | 0.05 | merf_basin_eps8_K20 (Mode B) | 0.6217 | 0.3511 | 0.3328 | 0.9735 | −0.3546 |
+| mlp_mnist | 0.05 | raw_union_K20 (ref) | 0.8466 | 0.8698 | 0.3328 | 0.9735 | −0.1358 |
+| vit_b32_cifar100 | 0.05 | dp_synth_all_eps2 (Mode A) | **0.6490** | 0.0121 | 0.2252 | 0.8692 | −0.3232 |
+| vit_b32_cifar100 | 0.05 | dp_synth_all_eps8 (Mode A) | 0.7848 | 0.0121 | 0.2252 | 0.8692 | −0.1796 |
+| vit_b32_cifar100 | 0.05 | merf_basin_eps2_K20 (Mode B) | 0.2902 | 0.0173 | 0.2252 | 0.8692 | −0.6992 |
+| vit_b32_cifar100 | 0.05 | merf_basin_eps8_K20 (Mode B) | 0.3506 | 0.1011 | 0.2252 | 0.8692 | −0.6334 |
+| vit_b32_cifar100 | 0.05 | raw_union_K20 (ref) | 0.7709 | 0.8091 | 0.2252 | 0.8692 | −0.1903 |
+
+**Primary gate PASSED:** Mode A `dp_synth_all_eps2` dropped from the old bogus
+**~0.97 → 0.7776 (MNIST) / 0.6490 (ViT)** — the DP now bites, the artifact is gone,
+the generator is honestly DP.
+
+**⚠️ Narrative DEVIATION (decision needed, not auto-resolved):** the 022 framing
+expected `Mode B ≈ raw_union ≫ Mode A`. The honest numbers are the **opposite**:
+`raw_union > Mode A (dp_synth_all) > Mode B (merf_basin)`. Mode B privatizes only
+K=20 samples/class → large σ → weak basin θ₀ (acc 0.24 MNIST / 0.017 ViT); Mode A
+privatizes all data/class → small σ → decent synthetic. Once the DP is real,
+"synthesize everything" beats "synthesize a few for the basin," and DP-MERF is NOT
+a competitive basin vs raw_union. **Open question for the PIs:** tune the Mode-B
+generator (more capacity/K, at higher DP cost) vs reframe/drop the synthetic-basin
+angle (raw_union/dp_avg prototypes remain the basin).
