@@ -1,8 +1,8 @@
 # heifd_026_lambda_verify
 
-> **Results collected from the Colab run (2026-05-30).** Table below is verbatim
-> from the auto-written `src.lambda_verify` README on the Colab VM. Full per-cell
-> `lambda_curve` JSONs are in the run bundle `heifd_026_lambda_verify_results.zip`.
+> **Results collected (2026-05-30).** Table below is verbatim from the auto-written
+> `src.lambda_verify` README. Full per-cell `lambda_curve` JSONs committed alongside
+> (VALAR chain rerun; matches the Colab run).
 
 Issue 026 — task-arithmetic scaling coefficient λ, cheap **EVAL-ONLY** verify.
 θ⋆(λ) = θ₀ + λ·Σ_j w_j·Δ_j = (1−λ)·θ₀ + λ·θ⋆(1): a pure interpolation between the

@@ -78,5 +78,8 @@ fellow surfaces are identical here (same θ⋆ confidences), so listed once.
   the pretrained vision backbone under LiRA — flag for the paper / analysis
   (separable CIFAR-100 features + α heterogeneity → more memorization).
 
-Full ROC arrays (for the log-log figure) live in the per-cell `cell_*.json` on the
-Colab VM; pull them via the notebook's EXPORT cell when convenient.
+Full ROC arrays (for the log-log figure) are committed in the per-cell `cell_*.json`
++ `summary.json` (from the VALAR chain rerun, 2026-05-30). Cross-checked vs the Colab
+run: the prototype channel is identical (ViT 0.9671/1.0, RoBERTa 0.529/0.642; DP→~0.49–0.56)
+and the shadow-based attacks (threshold/LiRA/GLiRA) agree to ≤0.02 AUC — conclusions
+unchanged (RoBERTa released-model near-chance; ViT LiRA ≈0.85).
