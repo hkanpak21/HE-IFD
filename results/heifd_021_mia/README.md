@@ -20,34 +20,63 @@ not reimplemented. Per-cell JSONs (`cell_*.json`) carry full ROC arrays for the
 paper's log-log figure; `summary.json` carries the flat records the §VI table
 reads.
 
-## COLLECTED RESULTS — 028 ViT/CIFAR-100 (Colab run, 2026-05-30)
+## COLLECTED RESULTS — 028 both backbones (Colab run, 2026-05-30) ✅
 
-ViT/CIFAR-100 MIA landed (64 shadows). **RoBERTa/AG-News did NOT** — its `mia.run`
-hit the pre-fix `ag_news` loader (the Colab VM repo was stale); re-run after
-`git pull` of the `fancyzhx/ag_news` fix (commit `d8b2847`). Full ROC arrays in
-`heifd_021_mia_results.zip`.
+ViT/CIFAR-100 (vision) + RoBERTa/AG-News (language), N=10, α∈{0.05,1.0}, 64 shadows,
+3 attacks × 3 surfaces. AUC is the headline (TPR@fixed-FPR alongside). External and
+fellow surfaces are identical here (same θ⋆ confidences), so listed once.
 
-| backbone | α | surface | attack | TPR@0.1%FPR | TPR@1%FPR | AUC |
-|---|---|---------|--------|-------------|-----------|-----|
-| vit_b32_cifar100 | 0.05 | external/fellow | threshold | 0.0049 | 0.0220 | 0.6684 |
-| vit_b32_cifar100 | 0.05 | external/fellow | **lira** | **0.1282** | 0.2518 | **0.8518** |
-| vit_b32_cifar100 | 0.05 | external | glira | 0.0033 | 0.0204 | 0.5332 |
-| vit_b32_cifar100 | 0.05 | prototype | raw | 0.9359 | 0.9367 | 0.9671 |
-| vit_b32_cifar100 | 0.05 | prototype | eps8 | 0.0094 | 0.0371 | 0.5677 |
-| vit_b32_cifar100 | 0.05 | prototype | eps2 | 0.0037 | 0.0184 | 0.5271 |
-| vit_b32_cifar100 | 1.0 | external/fellow | threshold | 0.0020 | 0.0229 | 0.6759 |
-| vit_b32_cifar100 | 1.0 | external/fellow | **lira** | **0.1645** | 0.2686 | **0.8597** |
-| vit_b32_cifar100 | 1.0 | external | glira | 0.0045 | 0.0229 | 0.5364 |
-| vit_b32_cifar100 | 1.0 | prototype | raw | 1.0000 | 1.0000 | 1.0000 |
-| vit_b32_cifar100 | 1.0 | prototype | eps8 | 0.0029 | 0.0261 | 0.6000 |
-| vit_b32_cifar100 | 1.0 | prototype | eps2 | 0.0053 | 0.0220 | 0.5620 |
+### RoBERTa / AG-News (language)
 
-**Prototype-channel story HOLDS:** raw release leaks hard (AUC 0.97 / 1.00), DP
-collapses it toward chance (ε8 → 0.57/0.60, ε2 → 0.53/0.56).
+| α | surface | attack | TPR@0.1%FPR | TPR@1%FPR | AUC |
+|---|---------|--------|-------------|-----------|-----|
+| 0.05 | external/fellow | threshold | 0.0024 | 0.0118 | 0.4946 |
+| 0.05 | external/fellow | lira | 0.0012 | 0.0078 | 0.5137 |
+| 0.05 | external | glira | 0.0008 | 0.0147 | 0.4954 |
+| 0.05 | prototype | raw | 0.0735 | 0.0824 | 0.5287 |
+| 0.05 | prototype | eps8 | 0.0016 | 0.0098 | 0.4906 |
+| 0.05 | prototype | eps2 | 0.0033 | 0.0122 | 0.4933 |
+| 1.0 | external/fellow | threshold | 0.0045 | 0.0186 | 0.4960 |
+| 1.0 | external/fellow | lira | 0.0057 | 0.0216 | 0.5300 |
+| 1.0 | external | glira | 0.0008 | 0.0110 | 0.4999 |
+| 1.0 | prototype | raw | 0.2886 | 0.2906 | 0.6421 |
+| 1.0 | prototype | eps8 | 0.0012 | 0.0090 | 0.4915 |
+| 1.0 | prototype | eps2 | 0.0016 | 0.0078 | 0.4904 |
 
-**⚠️ Released-model story DEVIATES from MNIST:** on MNIST the released θ⋆ was
-near-chance (AUC 0.49–0.57). On ViT/CIFAR-100 the threshold/GLiRA attacks stay
-low (0.67 / 0.53) but **LiRA reaches AUC 0.85 (TPR@0.1%FPR ≈ 0.13–0.16)** — the
-released pretrained-vision model leaks materially under the strongest shadow
-attack. The "released model near-chance" headline does **not** replicate on
-ViT/CIFAR-100 under LiRA — flag for the paper / further analysis.
+### ViT / CIFAR-100 (vision)
+
+| α | surface | attack | TPR@0.1%FPR | TPR@1%FPR | AUC |
+|---|---------|--------|-------------|-----------|-----|
+| 0.05 | external/fellow | threshold | 0.0049 | 0.0220 | 0.6684 |
+| 0.05 | external/fellow | **lira** | **0.1282** | 0.2518 | **0.8518** |
+| 0.05 | external | glira | 0.0033 | 0.0204 | 0.5332 |
+| 0.05 | prototype | raw | 0.9359 | 0.9367 | 0.9671 |
+| 0.05 | prototype | eps8 | 0.0094 | 0.0371 | 0.5677 |
+| 0.05 | prototype | eps2 | 0.0037 | 0.0184 | 0.5271 |
+| 1.0 | external/fellow | threshold | 0.0020 | 0.0229 | 0.6759 |
+| 1.0 | external/fellow | **lira** | **0.1645** | 0.2686 | **0.8597** |
+| 1.0 | external | glira | 0.0045 | 0.0229 | 0.5364 |
+| 1.0 | prototype | raw | 1.0000 | 1.0000 | 1.0000 |
+| 1.0 | prototype | eps8 | 0.0029 | 0.0261 | 0.6000 |
+| 1.0 | prototype | eps2 | 0.0053 | 0.0220 | 0.5620 |
+
+### Cross-modality reading (vision + language)
+
+- **RoBERTa/language — the MNIST dual story HOLDS cleanly.** Released θ⋆ is
+  **near-chance under every attack** (AUC 0.49–0.53, incl. LiRA). The prototype
+  channel barely leaks even raw (AUC 0.53 @ α=0.05, 0.64 @ α=1.0) and DP ε≤8
+  drives it to ~0.49. Text sentence-embedding prototypes are far less
+  identifiable than image features.
+- **ViT/vision — prototype story HOLDS, released-model story DEVIATES.** Prototype
+  raw leaks hard (0.97 / 1.00) and DP collapses it (ε8 → 0.57/0.60, ε2 →
+  0.53/0.56) ✅. But **LiRA on the released θ⋆ reaches AUC 0.85** (TPR@0.1%FPR
+  0.13–0.16) while threshold/GLiRA stay low (0.53–0.68) — the "released model
+  near-chance" headline does **not** hold for ViT/CIFAR-100 under the strongest
+  shadow attack.
+- **Net:** prototype-channel DP-collapse is universal (both modalities). The
+  near-chance released-model claim is solid for language but needs a caveat for
+  the pretrained vision backbone under LiRA — flag for the paper / analysis
+  (separable CIFAR-100 features + α heterogeneity → more memorization).
+
+Full ROC arrays (for the log-log figure) live in the per-cell `cell_*.json` on the
+Colab VM; pull them via the notebook's EXPORT cell when convenient.
