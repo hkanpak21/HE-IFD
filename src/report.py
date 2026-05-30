@@ -43,6 +43,9 @@ CASE_BLURB = (
 CSV_FIELDS = [
     "backbone", "dataset", "N", "alpha", "seed", "K", "tau",
     "method", "phase0_kind", "probe_size_actual", "sigma",
+    # Server-combine selector + its HE depth (issue 025). Pre-025 cells default
+    # to weight_avg / depth-1 (the linear production aggregate).
+    "agg_method", "agg_depth",
     "acc", "mean_teacher", "best_teacher", "oracle",
     # standalone θ₀ acc (aligned init, before distillation) — issue 005
     "theta0_acc",
@@ -103,25 +106,31 @@ def render_table(cells: List[CellResult]) -> str:
       M4_ood       mean per-client accuracy on locally-unseen classes (n/a if vacuous).
     The signed per-client M3/M4 lists live in results.csv (JSON-encoded)."""
     rows = [
-        (c.backbone, c.N, c.alpha, c.method, c.seed, c.acc,
+        (c.backbone, c.N, c.alpha, c.method,
+         getattr(c, "agg_method", "weight_avg"), getattr(c, "agg_depth", "depth-1"),
+         c.seed, c.acc,
          c.mean_teacher, c.best_teacher, c.oracle, c.theta0_acc,
          c.m3_mean_gap, c.m3_clients_helped, c.m3_clients_evaluated,
          c.m4_mean, c.sigma, c.status)
         for c in cells
     ]
-    rows.sort(key=lambda r: (str(r[0]), r[1], r[2], str(r[3]), r[4]))
-    head = ("| backbone | N | α | method | seed | acc | mean_teacher | best_teacher | "
-            "oracle | θ₀_acc | M3_mean_gap | M3_helped | M4_ood_acc | σ | status |\n"
-            "|---|---|---|--------|------|-----|--------------|--------------|--------|"
-            "--------|-------------|-----------|------------|---|--------|")
+    # Sort by (backbone, N, α, method, agg_method, seed) so the server-combine
+    # axis (issue 025) groups adjacently within each protocol cell.
+    rows.sort(key=lambda r: (str(r[0]), r[1], r[2], str(r[3]), str(r[4]), r[6]))
+    head = ("| backbone | N | α | method | agg_method | agg_depth | seed | acc | "
+            "mean_teacher | best_teacher | oracle | θ₀_acc | M3_mean_gap | "
+            "M3_helped | M4_ood_acc | σ | status |\n"
+            "|---|---|---|--------|------------|-----------|------|-----|"
+            "--------------|--------------|--------|--------|-------------|"
+            "-----------|------------|---|--------|")
     body = []
-    for (bb, N, a, m, s, acc, mt, bt, orc, t0, m3g, m3h, m3e,
+    for (bb, N, a, m, agm, agd, s, acc, mt, bt, orc, t0, m3g, m3h, m3e,
          m4, sig, st) in rows:
         helped = f"{_fmt_int(m3h)}/{_fmt_int(m3e)}" if m3h is not None else "n/a"
         body.append(
-            f"| {bb} | {N} | {a} | {m} | {s} | {_fmt(acc)} | {_fmt(mt)} | "
-            f"{_fmt(bt)} | {_fmt(orc)} | {_fmt(t0)} | {_fmt(m3g)} | {helped} | "
-            f"{_fmt(m4)} | {_fmt(sig)} | {st} |")
+            f"| {bb} | {N} | {a} | {m} | {agm} | {agd} | {s} | {_fmt(acc)} | "
+            f"{_fmt(mt)} | {_fmt(bt)} | {_fmt(orc)} | {_fmt(t0)} | {_fmt(m3g)} | "
+            f"{helped} | {_fmt(m4)} | {_fmt(sig)} | {st} |")
     return head + "\n" + ("\n".join(body) if body else "| _(no cells yet)_ |")
 
 
@@ -139,6 +148,7 @@ def write_report(results_dir: str, cells: List[CellResult], args: Dict) -> None:
         f"- N values: `{args.get('Ns')}`\n"
         f"- Dirichlet α: `{args.get('alphas')}`\n"
         f"- Methods: `{args.get('methods')}`\n"
+        f"- Server combines (--agg-methods): `{args.get('agg_methods')}`\n"
         f"- Seeds: `{args.get('seeds')}`\n"
         f"- K (bounded trajectory length): `{args.get('K')}`\n"
         f"- τ (distill temperature): `{args.get('tau')}`\n"

@@ -329,6 +329,14 @@ class CellResult:
     phase0_kind: str
     probe_size_actual: int
     sigma: float
+    # Server-combine selector (issue 025). DEFAULTS to "weight_avg" (the linear
+    # production aggregate) so every pre-025 cell JSON — which omits this field —
+    # reloads as the linear baseline, and a weight_avg cell is identity-identical
+    # to the pre-025 path. ``agg_depth`` is the HE multiplicative-depth annotation
+    # for the chosen combine (depth-1 / depth-2 / deep; see
+    # aggregate.NONLINEAR_DEPTH). Recorded here, in the CSV, and in the report.
+    agg_method: str = "weight_avg"
+    agg_depth: str = "depth-1"
     # headline metric + references
     acc: Optional[float] = None
     mean_teacher: Optional[float] = None
@@ -650,6 +658,7 @@ def run_cell(
     node: Optional[str] = None,
     diagnose: bool = False,
     trainable_scope: Optional[str] = None,
+    agg_method: str = "weight_avg",
 ) -> CellResult:
     """Run one protocol cell end-to-end and return a CellResult.
 
@@ -675,6 +684,17 @@ def run_cell(
     aggregate remains element-wise linear regardless — every trainable tensor
     flows through the same FHE-compatible PT×CT + CT+CT combine — see
     ``aggregate.aggregate`` and ``tests/test_aggregate.py`` for the invariant.
+
+    ``agg_method`` (default ``"weight_avg"``) is the issue-025 server-combine
+    selector. The DEFAULT routes the aggregation through the EXISTING linear
+    ``aggregate.aggregate(theta0, deltas, weights)`` — byte-identical to the
+    pre-025 path — so every sweep that does not opt in sees zero behaviour change.
+    Any other value (``mag_weighted`` / ``poly_gate_d2_a`` / … see
+    ``aggregate.NONLINEAR_DEPTH``) instead calls ``aggregate.aggregate_nonlinear``
+    over the SAME one-shot ``deltas``; the combine's HE depth is recorded in
+    ``res.agg_depth``. This is an INVESTIGATION axis (does any non-linear one-shot
+    combine beat the flat weighted average under heterogeneity?), NOT a change to
+    the production aggregator — distillation semantics are untouched.
     """
     import numpy as np
     import torch
@@ -730,6 +750,13 @@ def run_cell(
                "θ₀+Σ w_i·Δ_i of bounded K-step cumulative displacements; "
                "server op is PT×CT + CT+CT only (FHE-compatible)."),
     )
+    # Record the issue-025 server-combine selector + its HE depth up front so
+    # even the short-circuit branches (warmup_only / dp_synth_all, which never
+    # reach the aggregate step) carry the chosen agg_method through to the JSON.
+    # ``weight_avg`` (the default) is depth-1 and routes to the linear aggregate.
+    from .aggregate import NONLINEAR_DEPTH as _NL_DEPTH
+    res.agg_method = agg_method
+    res.agg_depth = _NL_DEPTH.get(agg_method, "depth-1")
     t_start = time.time()
     try:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -1104,10 +1131,19 @@ def run_cell(
         res.phase_distill_sec = time.time() - t0
 
         # --- aggregate: θ = θ₀ + Σ_i w_i·Δ_i (sample-weighted, linear-only) ---
+        # ``agg_method == "weight_avg"`` (the default) takes the EXACT pre-025
+        # linear path: agg.aggregate(theta0, deltas, weights) — byte-identical.
+        # A non-default agg_method (issue 025) instead applies the chosen one-shot
+        # combine over the SAME ``deltas`` via agg.aggregate_nonlinear; the
+        # distillation that produced ``deltas`` is unchanged regardless.
         t0 = time.time()
         weights = agg.sample_weights(sample_sizes)
         res.sample_weights = weights
-        final_params = agg.aggregate(theta0, deltas, weights)
+        if agg_method == "weight_avg":
+            final_params = agg.aggregate(theta0, deltas, weights)
+        else:
+            final_params = agg.aggregate_nonlinear(
+                theta0, deltas, weights, method=agg_method)
         res.phase_aggregate_sec = time.time() - t0
 
         # --- evaluate: IID acc + M3 (per-client gap) + M4 (OOD-class acc) ---
