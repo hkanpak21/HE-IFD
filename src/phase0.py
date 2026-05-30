@@ -695,17 +695,36 @@ def build_probe_synthetic_with_logits(
 #      bound), which we accept as the price of one consistent accounting across
 #      all private builders — documented here and in ``info['dp_note']``.
 #
-#   4. Generator. Rather than train a neural generator network (overkill for a
-#      basin source and not robust without GPU-scale tuning across our 7 backbones),
-#      we use the closed-form moment-matching generator the random-feature MMD
-#      objective admits: synthetic class-c samples are drawn so their RFF mean
-#      embedding matches the privatized μ̂_c^{priv}. Concretely we solve the
-#      ridge-regularized linear pre-image (least-squares from φ back to x) on a
-#      candidate pool and resample, then add Gaussian jitter calibrated to the
-#      per-class feature covariance. This keeps the MMD objective (match the
-#      privatized mean embedding) but is deterministic, fast, and GPU-free — the
-#      port decision is documented in ``info['gen']``. For Mode-A (synthesize
-#      everything) the same machinery runs on ALL of a client's samples per class.
+#   4. Generator (DP-SOUND, issue 027). We train a small neural generator
+#      network G_θ: z ~ N(0, I_latent) ↦ x̂ ∈ R^d (a 2-layer MLP) by minimizing
+#      the random-feature MMD objective DP-MERF defines
+#          L(θ) = ‖ (1/B) Σ_b φ(G_θ(z_b)) − μ̂_c^{priv} ‖₂²
+#      where φ uses the SAME ω drawn for the real embedding (generated points are
+#      re-embedded with the identical frequencies), and μ̂_c^{priv} is the ONLY
+#      data-dependent term — a DP quantity. A few hundred Adam steps suffice for a
+#      basin source. We then sample n_gen FRESH points x̂ = G_θ(z), z ~ N(0, I).
+#      The released set is therefore draws from G — never a stored real record.
+#      After μ̂ is privatized, G's training and sampling are pure post-processing
+#      of a DP quantity plus fresh generator noise, so the released samples
+#      inherit the (ε, δ) guarantee by the DP post-processing theorem.
+#
+#      WHY this replaces the old closed-form stand-in (the issue-027 bug): the
+#      previous generator privatized μ̂ correctly but then RESAMPLED REAL RECORDS
+#      (``base = X_c[pick]``) and added cosmetic jitter, so the released set
+#      literally contained raw data — NO sample-level DP. The neural generator
+#      never indexes ``X_c`` to produce an output; a runtime guard
+#      (``_merf_assert_synthetic_disjoint``) asserts no released sample coincides
+#      with a raw record, and ``tests/test_merf_dpsound.py`` pins the invariant.
+#
+#      Residual non-DP statistics (documented MVP caveat, mirroring
+#      ``build_probe_synthetic``'s σ² caveat): the median-heuristic bandwidth σ_φ
+#      and the frequency draw ω are computed on raw X_c and influence G only via
+#      the *kernel they define* (they set the φ-map G is trained to match), not as
+#      released outputs. The DP-MERF paper treats the kernel/bandwidth as a public
+#      hyperparameter; we follow that. The HARD invariant — no released sample
+#      equals a real record — holds with zero exceptions regardless. For Mode-A
+#      (synthesize everything) the same machinery runs on ALL of a client's
+#      samples per class.
 def _merf_random_features(
     X,
     n_features: int,
@@ -759,6 +778,125 @@ def _merf_bandwidth(X, rng, max_pairs: int = 256) -> float:
     return med if med > 1e-6 else 1.0
 
 
+def _merf_assert_synthetic_disjoint(samples, X_c, atol: float = 1e-6) -> float:
+    """Soundness GUARD (issue 027): assert no generated row equals a raw record.
+
+    The HARD DP invariant of this generator is that the released set is composed
+    of fresh draws from the trained generator G, never a stored real record. We
+    enforce it at runtime by computing the minimum pairwise L2 distance from each
+    synthetic sample to the real set ``X_c`` and asserting it exceeds ``atol``.
+    A generator output coinciding (to float tolerance) with a real record would
+    be a copied datum — exactly the bug this issue fixes (the old generator
+    returned ``X_c[pick]`` + cosmetic jitter). Returns the observed min distance
+    so callers can record it as provenance.
+
+    ``samples``/``X_c`` are numpy ``(n_gen, d)`` / ``(m, d)``. For large m·n_gen
+    we chunk the synthetic rows to bound memory. Continuous generator outputs are
+    almost-surely distinct from the finite real set, so any violation signals a
+    real regression (e.g. a future edit that re-introduces raw-record passthrough)
+    rather than a benign numerical coincidence.
+    """
+    import numpy as np
+
+    if X_c.shape[0] == 0 or samples.shape[0] == 0:
+        return float("inf")
+    real = X_c.astype(np.float64)
+    real_sq = (real ** 2).sum(axis=1)                       # (m,)
+    min_dist = float("inf")
+    chunk = 256
+    for s in range(0, samples.shape[0], chunk):
+        blk = samples[s:s + chunk].astype(np.float64)       # (b, d)
+        # ||a-b||^2 = ||a||^2 + ||b||^2 - 2 a·b, clamped at 0 for fp safety.
+        d2 = (blk ** 2).sum(axis=1)[:, None] + real_sq[None, :] - 2.0 * (blk @ real.T)
+        d2 = np.maximum(d2, 0.0)
+        min_dist = min(min_dist, float(np.sqrt(d2.min())))
+    assert min_dist > atol, (
+        "DP-MERF soundness violation: a released synthetic sample is within "
+        f"{min_dist:.2e} (<= atol={atol:.1e}) of a RAW record — the generator "
+        "must emit draws from G, never copies of X_c.")
+    return min_dist
+
+
+def _merf_train_generator(
+    mu_priv,
+    omega,
+    sigma_phi: float,
+    out_dim: int,
+    rng,
+    latent_dim: int = 16,
+    hidden_dim: int = 128,
+    n_steps: int = 400,
+    batch_size: int = 128,
+    lr: float = 1e-3,
+):
+    """Train a small generator G_θ to match the privatized RFF mean ``mu_priv``.
+
+    DP-MERF generator (Harder et al. 2021). G_θ is a 2-layer MLP
+    z ~ N(0, I_latent) ↦ x̂ ∈ R^{out_dim}; we minimise the random-feature MMD
+        L(θ) = ‖ (1/B) Σ_b φ(G_θ(z_b)) − mu_priv ‖₂²
+    where φ re-embeds the generated batch with the SAME ``omega`` / ``sigma_phi``
+    used to embed the real data (so the two mean embeddings live in one feature
+    space). ``mu_priv`` is the ONLY data-derived quantity and is already DP, so
+    by post-processing the trained G — and every sample it later emits — inherits
+    the (ε, δ) guarantee.
+
+    The torch seed is derived from the passed numpy ``rng`` so a fixed sweep seed
+    reproduces the generator. Uses CUDA when available, else CPU. Returns
+    ``(G, device, gen_cpu, latent_dim)``: the trained ``torch.nn.Module`` (eval
+    mode), the torch device, the CPU ``torch.Generator`` (so sampling reuses the
+    same reproducible stream), and the latent dimension (so the caller samples z
+    with the right shape).
+    """
+    import numpy as np
+    import torch
+    import torch.nn as nn
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # Derive a deterministic torch seed from the numpy rng (advance its state so
+    # distinct (client,class) calls get distinct — but reproducible — seeds).
+    torch_seed = int(rng.integers(0, 2 ** 31 - 1))
+    gen_cpu = torch.Generator(device="cpu").manual_seed(torch_seed)
+
+    omega_t = torch.as_tensor(omega, dtype=torch.float32, device=device)  # (M, d)
+    mu_t = torch.as_tensor(mu_priv, dtype=torch.float32, device=device)   # (2M,)
+    M = omega_t.shape[0]
+    sqrt_inv_M = float(np.sqrt(1.0 / M))
+
+    def phi_map(x):
+        # Same φ as ``_merf_random_features``: φ(x)=sqrt(1/M)[cos(xωᵀ),sin(xωᵀ)].
+        proj = x @ omega_t.t()                              # (B, M)
+        return sqrt_inv_M * torch.cat([torch.cos(proj), torch.sin(proj)], dim=1)
+
+    class _Gen(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.net = nn.Sequential(
+                nn.Linear(latent_dim, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, out_dim),
+            )
+
+        def forward(self, z):
+            return self.net(z)
+
+    # Reproducible parameter init under the derived seed.
+    torch.manual_seed(torch_seed)
+    G = _Gen().to(device)
+    opt = torch.optim.Adam(G.parameters(), lr=lr)
+
+    G.train()
+    for _ in range(n_steps):
+        z = torch.randn(batch_size, latent_dim, generator=gen_cpu).to(device)
+        x_hat = G(z)                                        # (B, out_dim)
+        mu_gen = phi_map(x_hat).mean(dim=0)                 # (2M,)
+        loss = ((mu_gen - mu_t) ** 2).sum()                # RFF-MMD objective
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
+    G.eval()
+    return G, device, gen_cpu, latent_dim
+
+
 def _merf_generate_class(
     X_c,
     n_gen: int,
@@ -767,23 +905,25 @@ def _merf_generate_class(
     delta: float,
     rng,
 ):
-    """DP-MERF generation for ONE class from its samples ``X_c`` (numpy ``(m, d)``).
+    """DP-SOUND DP-MERF generation for ONE class from ``X_c`` (numpy ``(m, d)``).
 
-    Returns ``(samples, gen_info)`` where ``samples`` is ``(n_gen, d)`` float32.
+    Returns ``(samples, gen_info)`` where ``samples`` is ``(n_gen, d)`` float32 —
+    FRESH draws from a trained generator, NEVER raw records (issue 027).
 
     Steps (see the module-level algorithm note):
       * RFF map with median-heuristic bandwidth → φ(X_c), and the per-class mean
         embedding μ̂_c (mean of UNIT-norm vectors, ‖φ‖₂ = 1).
       * DP release: add Gaussian noise to μ̂_c with σ = ``dp_sigma(clip=1, m,
         eps, delta)`` (averaging-variant accounting; clip=1 since ‖φ‖₂ = 1).
-      * Moment-matching generator: pick the ``n_gen`` real candidates whose RFF
-        embeddings best reconstruct μ̂_c^{priv} (non-negative least-squares
-        weights over the candidate embeddings), resample by those weights, and
-        add Gaussian jitter at the per-feature class std. This is a closed-form
-        stand-in for DP-MERF's neural generator that still optimises the same
-        objective (match the privatized mean embedding) and is GPU-free.
+        ε=∞ ⇒ σ=0 (raw-MERF ceiling).
+      * Train a small generator G_θ (``_merf_train_generator``) to minimise the
+        random-feature MMD ‖mean_b φ(G(z_b)) − μ̂^priv‖² (re-embedding with the
+        SAME ω), then SAMPLE n_gen fresh points x̂ = G(z), z ~ N(0, I). μ̂^priv is
+        the only data-derived input, so the samples are post-processing of a DP
+        quantity. A runtime guard asserts none of them equals a real record.
     """
     import numpy as np
+    import torch
 
     m, d = X_c.shape
     sigma_phi = _merf_bandwidth(X_c, rng)
@@ -792,40 +932,28 @@ def _merf_generate_class(
 
     sigma_dp = dp_sigma(1.0, max(m, 1), eps, delta)         # reuse repo accounting
     if sigma_dp > 0:
-        mu = mu + rng.normal(0.0, sigma_dp, size=mu.shape)
+        mu = mu + rng.normal(0.0, sigma_dp, size=mu.shape)  # μ̂^priv (DP)
 
-    # Moment-matching weights: non-negative least squares of the candidate
-    # embeddings onto the privatized mean. ``phi.T w ≈ mu`` with w ≥ 0, then
-    # normalise to a sampling distribution. Solved via the normal equations with
-    # a small ridge for stability; negatives are clipped (a projected solution),
-    # which is adequate because we only need a resampling distribution, not the
-    # exact NNLS optimum.
-    G = phi @ phi.T + 1e-3 * np.eye(m)                      # (m, m)
-    rhs = phi @ mu                                          # (m,)
-    try:
-        w = np.linalg.solve(G, rhs)
-    except np.linalg.LinAlgError:
-        w = np.full(m, 1.0 / m)
-    w = np.clip(w, 0.0, None)
-    if w.sum() <= 1e-12:
-        w = np.full(m, 1.0 / m)
-    else:
-        w = w / w.sum()
+    # Train the generator on the DP mean embedding, then draw FRESH points. The
+    # ONLY data-dependent quantity G ever sees is ``mu`` (already DP); X_c is not
+    # passed in. Sampling is post-processing of a DP quantity + fresh z noise.
+    G, device, gen_cpu, latent_dim = _merf_train_generator(
+        mu, omega, sigma_phi, out_dim=d, rng=rng)
+    with torch.no_grad():
+        z = torch.randn(n_gen, latent_dim, generator=gen_cpu).to(device)
+        samples = G(z).detach().cpu().numpy().astype(np.float32)  # (n_gen, d)
 
-    pick = rng.choice(m, size=n_gen, replace=True, p=w)
-    base = X_c[pick]
-    std = X_c.std(axis=0, ddof=0)
-    std = np.maximum(std, 1e-8)
-    # Jitter scaled down so synthetic samples stay near the matched moment but
-    # do not collapse to exact copies of real records (privacy + diversity).
-    samples = base + 0.5 * rng.normal(0.0, 1.0, size=(n_gen, d)) * std[None, :]
+    # Soundness guard: NO released sample may equal a raw record.
+    min_real_dist = _merf_assert_synthetic_disjoint(samples, X_c)
+
     gen_info = {
         "m_real": int(m),
         "sigma_phi": float(sigma_phi),
         "sigma_dp": float(sigma_dp),
         "n_features": int(n_features),
+        "min_real_dist": float(min_real_dist),
     }
-    return samples.astype(np.float32), gen_info
+    return samples, gen_info
 
 
 def build_probe_merf(
@@ -847,9 +975,10 @@ def build_probe_merf(
     client's contribution flows through the HE-protected bounded distillation,
     NOT through this probe. For each (client, class) with ≥1 local sample we draw
     up to ``K_per_class`` samples, run ``_merf_generate_class`` (RFF mean
-    embedding → DP release via the averaging-variant ``dp_sigma`` → moment-
-    matching generator), and emit ``n_gen_per_class`` synthetic samples
-    (defaults to ``K_per_class`` so the released byte budget matches
+    embedding → DP release via the averaging-variant ``dp_sigma`` → train a small
+    neural generator G to match the DP mean embedding → sample fresh points), and
+    emit ``n_gen_per_class`` synthetic samples — FRESH draws from G, never raw
+    records — (defaults to ``K_per_class`` so the released byte budget matches
     ``raw_union_K`` / ``synthetic``).
 
     Inputs are expected FLAT ``(n_i, feature_dim)`` (the per-feature RFF map is
@@ -897,9 +1026,16 @@ def build_probe_merf(
         "averaging-variant dp_sigma(clip=1, m=K_per_class). clip=1 because the "
         "RFF map bounds ||phi||_2<=1 (analytic sensitivity, no clip search). "
         "Constant differs from paper's 2/m by 2x (replace-one adjacency) — one "
-        "consistent accounting across all private builders."
+        "consistent accounting across all private builders. Released samples are "
+        "FRESH draws from a trained generator G (issue 027), never raw records; "
+        "a runtime guard asserts min L2(sample, X_c)>atol. Residual non-DP "
+        "stat: median-heuristic bandwidth sigma_phi + frequency draw omega are "
+        "computed on raw X_c (public kernel hyperparameter, not a released "
+        "output) — documented MVP caveat."
     )
-    gen = "closed-form moment-matching (NNLS resample + covariance jitter)"
+    gen = ("DP-MERF neural generator: 2-layer MLP z~N(0,I_16)->x_hat trained "
+           "(~400 Adam steps) to match the DP RFF mean embedding via the "
+           "random-feature MMD; n_gen fresh samples drawn from G + disjoint guard")
     if n_pairs_used == 0:
         return (
             torch.zeros(0, feature_dim, dtype=torch.float32),
@@ -978,9 +1114,16 @@ def build_dp_synth_all(
     dp_note = (
         "DP-MERF Mode-A (synthesize-everything baseline): RFF mean embedding "
         "per (client,class) privatized via dp_sigma(clip=1, m=full class count). "
-        "Full data ⇒ the synthetic set carries the whole contribution (no HE)."
+        "Full data ⇒ the synthetic set carries the whole contribution (no HE). "
+        "Released samples are FRESH draws from a trained generator G (issue 027), "
+        "never raw records; a runtime guard asserts min L2(sample, X_c)>atol. "
+        "Residual non-DP stat: median-heuristic bandwidth sigma_phi + frequency "
+        "draw omega are computed on raw X_c (public kernel hyperparameter, not a "
+        "released output) — documented MVP caveat."
     )
-    gen = "closed-form moment-matching (NNLS resample + covariance jitter)"
+    gen = ("DP-MERF neural generator: 2-layer MLP z~N(0,I_16)->x_hat trained "
+           "(~400 Adam steps) to match the DP RFF mean embedding via the "
+           "random-feature MMD; n_gen fresh samples drawn from G + disjoint guard")
     if n_pairs_used == 0:
         return (
             torch.zeros(0, feature_dim, dtype=torch.float32),
