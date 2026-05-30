@@ -395,6 +395,20 @@ class CellResult:
     # dicts, one per requested λ. λ=0 reproduces standalone θ₀ acc, λ=1 reproduces
     # ``acc``. No retraining — each point reuses the SAME trajectory's {Δ_i}.
     lambda_curve: Optional[List[Dict]] = None
+    # Client-side optimizer axis (TIER-1 aggregation study, Axis A). ``None``
+    # (the default) means the field is absent from older JSON — those cells ran
+    # the historical SGD trajectory; ``run_cell`` sets this to the actual
+    # optimizer name (default ``"sgd"``) so every newly-written cell records it.
+    optimizer: Optional[str] = None
+    # Δ-drift diagnostics over the per-client cumulative displacements {Δ_i}.
+    # Populated only in the success path (cheap, CPU). ``delta_norms`` = the list
+    # of ‖Δ_i‖₂; ``delta_norm_spread`` = std/mean of those norms (0 if mean 0);
+    # ``delta_pairwise_cosine_mean`` = mean over i<j of cosine(Δ_i, Δ_j) (None if
+    # N<2). They quantify how the choice of client optimizer spreads / rotates
+    # the deltas the server linearly combines. ``None`` on any older JSON / FAIL.
+    delta_norms: Optional[List[float]] = None
+    delta_norm_spread: Optional[float] = None
+    delta_pairwise_cosine_mean: Optional[float] = None
 
     def to_dict(self) -> Dict:
         return asdict(self)
@@ -670,6 +684,7 @@ def run_cell(
     trainable_scope: Optional[str] = None,
     agg_method: str = "weight_avg",
     lambda_scales: Optional[Sequence[float]] = None,
+    optimizer: str = "sgd",
 ) -> CellResult:
     """Run one protocol cell end-to-end and return a CellResult.
 
@@ -780,6 +795,9 @@ def run_cell(
     from .aggregate import NONLINEAR_DEPTH as _NL_DEPTH
     res.agg_method = agg_method
     res.agg_depth = _NL_DEPTH.get(agg_method, "depth-1")
+    # Client-optimizer axis (default "sgd" → byte-identical trajectory). Recorded
+    # up front so even short-circuit branches carry it through to the JSON.
+    res.optimizer = optimizer
     t_start = time.time()
     try:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -1144,14 +1162,44 @@ def run_cell(
             deltas, step_deltas_per_client = distill_all_clients(
                 teachers, theta0, make_model_fn, client_X_list,
                 K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
-                diagnose=True,
+                diagnose=True, optimizer=optimizer,
             )
         else:
             deltas = distill_all_clients(
                 teachers, theta0, make_model_fn, client_X_list,
-                K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs)
+                K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
+                optimizer=optimizer)
             step_deltas_per_client = None
         res.phase_distill_sec = time.time() - t0
+
+        # --- Δ-drift diagnostics over the per-client cumulative {Δ_i} ---
+        # Cheap, CPU-side. Each Δ_i is flattened to a single vector; we record
+        # the per-client L2 norms, their std/mean spread, and the mean pairwise
+        # cosine. These quantify how the client-optimizer choice (Axis A)
+        # disperses / rotates the deltas the server linearly combines.
+        _flat = [
+            torch.cat([t.detach().reshape(-1).float().cpu() for t in d.values()])
+            for d in deltas
+        ]
+        _norms = [float(v.norm()) for v in _flat]
+        res.delta_norms = _norms
+        if _norms:
+            _mean = sum(_norms) / len(_norms)
+            if _mean != 0.0:
+                _var = sum((x - _mean) ** 2 for x in _norms) / len(_norms)
+                res.delta_norm_spread = float((_var ** 0.5) / _mean)
+            else:
+                res.delta_norm_spread = 0.0
+        if len(_flat) >= 2:
+            _cos = []
+            for _i in range(len(_flat)):
+                for _j in range(_i + 1, len(_flat)):
+                    _ni, _nj = _norms[_i], _norms[_j]
+                    if _ni > 0 and _nj > 0:
+                        _cos.append(float(torch.dot(_flat[_i], _flat[_j])) / (_ni * _nj))
+                    else:
+                        _cos.append(0.0)
+            res.delta_pairwise_cosine_mean = float(sum(_cos) / len(_cos)) if _cos else None
 
         # --- aggregate: θ = θ₀ + Σ_i w_i·Δ_i (sample-weighted, linear-only) ---
         # ``agg_method == "weight_avg"`` (the default) takes the EXACT pre-025

@@ -51,6 +51,10 @@ _LEGACY_TRAINABLE_SCOPE = "head_only"
 # aggregate, so omitting it from the descriptor keeps existing per-cell JSON
 # hashes/filenames identical (resumable across the issue 025 non-linear axis).
 _LEGACY_AGG_METHOD = "weight_avg"
+# Client-side optimizer (TIER-1 aggregation study, Axis A) — ``sgd`` is the
+# pre-axis trajectory optimizer, so omitting it from the descriptor keeps every
+# existing per-cell JSON hash/filename identical (resumable across this axis).
+_LEGACY_OPTIMIZER = "sgd"
 
 
 def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
@@ -58,13 +62,14 @@ def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
                     tau: float = _LEGACY_TAU,
                     student_lr: float = _LEGACY_STUDENT_LR,
                     trainable_scope: str = _LEGACY_TRAINABLE_SCOPE,
-                    agg_method: str = _LEGACY_AGG_METHOD) -> Dict:
+                    agg_method: str = _LEGACY_AGG_METHOD,
+                    optimizer: str = _LEGACY_OPTIMIZER) -> Dict:
     """Deterministic cell descriptor. ``tau`` / ``student_lr`` /
-    ``trainable_scope`` / ``agg_method`` are appended ONLY when they differ from
-    the historical defaults so existing per-cell filenames (which hashed only over
-    {backbone,N,alpha,method,seed,K}) keep their hashes and remain resumable
-    across the issue 010 (tau/LR), issue 011 (scope), and issue 025 (agg_method)
-    extensions."""
+    ``trainable_scope`` / ``agg_method`` / ``optimizer`` are appended ONLY when
+    they differ from the historical defaults so existing per-cell filenames
+    (which hashed only over {backbone,N,alpha,method,seed,K}) keep their hashes
+    and remain resumable across the issue 010 (tau/LR), issue 011 (scope), issue
+    025 (agg_method), and TIER-1 Axis-A (optimizer) extensions."""
     desc: Dict = {"backbone": backbone, "N": N, "alpha": alpha,
                   "method": method, "seed": seed, "K": K}
     if tau != _LEGACY_TAU:
@@ -75,6 +80,8 @@ def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
         desc["trainable_scope"] = trainable_scope
     if agg_method != _LEGACY_AGG_METHOD:
         desc["agg_method"] = agg_method
+    if optimizer != _LEGACY_OPTIMIZER:
+        desc["optimizer"] = optimizer
     return desc
 
 
@@ -98,6 +105,8 @@ def cell_filename(desc: Dict) -> str:
         stem += f"_sc{desc['trainable_scope']}"
     if "agg_method" in desc:
         stem += f"_agg{desc['agg_method']}"
+    if "optimizer" in desc:
+        stem += f"_opt{desc['optimizer']}"
     return f"{stem}_{descriptor_hash(desc)}.json"
 
 
@@ -197,6 +206,17 @@ def parse_args() -> argparse.Namespace:
                         "aggregate.NONLINEAR_DEPTH). Each value is an extra grid "
                         "axis; weight_avg keeps the byte-identical linear path "
                         "and its cells reuse the legacy filename/hash.")
+    p.add_argument("--optimizer", type=str, default="sgd",
+                   help="Client-side distillation optimizer (single value; "
+                        "TIER-1 Axis A). One of sgd (default; the legacy SGD "
+                        "trajectory), sgd_momentum, nesterov, adam, adamw, "
+                        "rmsprop, adagrad, lamb. 'sgd' keeps the byte-identical "
+                        "trajectory and its cells reuse the legacy "
+                        "filename/hash.")
+    p.add_argument("--optimizers", type=str, default=None,
+                   help="Optional comma list of client optimizers to sweep, e.g. "
+                        "sgd,adam,lamb. When set, overrides --optimizer and adds "
+                        "the optimizer as a grid axis (TIER-1 Axis A).")
     p.add_argument("--probe-size", type=int, default=None,
                    help="Labelled-probe size P (default: backbone-specific).")
     p.add_argument("--case", type=str, default="v1_he-ifd_mlp_mnist_verify",
@@ -221,19 +241,21 @@ def build_grid(args) -> List[Dict]:
 
     The default sweep is the historical 6-axis grid (backbone × N × α × method ×
     seed × K with a single K). When ``--Ks`` / ``--taus`` / ``--student-lrs`` /
-    ``--scopes`` / ``--agg-methods`` are provided, those become additional grid
-    axes (single-value flags ``--K`` / ``--tau`` / ``--student-lr`` / ``--scope``
-    are ignored for that axis). Non-default (tau, student_lr, trainable_scope,
-    agg_method) values flow into the descriptor so cell filenames stay distinct —
-    see ``cell_descriptor`` for the backwards-compat rule (``agg_method`` defaults
-    to ``weight_avg``, the linear aggregate, and is omitted from the descriptor
-    there so weight_avg cells keep their legacy filename/hash and resume).
+    ``--scopes`` / ``--agg-methods`` / ``--optimizers`` are provided, those become
+    additional grid axes (single-value flags ``--K`` / ``--tau`` / ``--student-lr``
+    / ``--scope`` / ``--optimizer`` are ignored for that axis). Non-default (tau,
+    student_lr, trainable_scope, agg_method, optimizer) values flow into the
+    descriptor so cell filenames stay distinct — see ``cell_descriptor`` for the
+    backwards-compat rule (``agg_method`` defaults to ``weight_avg`` and
+    ``optimizer`` to ``sgd``, and both are omitted from the descriptor there so
+    those legacy cells keep their filename/hash and resume).
     """
     Ks = parse_int_list(args.Ks) if args.Ks else [args.K]
     taus = parse_float_list(args.taus) if args.taus else [args.tau]
     lrs = parse_float_list(args.student_lrs) if args.student_lrs else [args.student_lr]
     scopes = parse_str_list(args.scopes) if args.scopes else [args.scope]
     agg_methods = parse_str_list(args.agg_methods) if args.agg_methods else [_LEGACY_AGG_METHOD]
+    optimizers = parse_str_list(args.optimizers) if args.optimizers else [args.optimizer]
     grid: List[Dict] = []
     for backbone in parse_str_list(args.backbones):
         for N in parse_int_list(args.Ns):
@@ -245,11 +267,13 @@ def build_grid(args) -> List[Dict]:
                                 for student_lr in lrs:
                                     for scope in scopes:
                                         for agg_method in agg_methods:
-                                            grid.append(cell_descriptor(
-                                                backbone, N, alpha, method, seed, K,
-                                                tau=tau, student_lr=student_lr,
-                                                trainable_scope=scope,
-                                                agg_method=agg_method))
+                                            for optimizer in optimizers:
+                                                grid.append(cell_descriptor(
+                                                    backbone, N, alpha, method, seed, K,
+                                                    tau=tau, student_lr=student_lr,
+                                                    trainable_scope=scope,
+                                                    agg_method=agg_method,
+                                                    optimizer=optimizer))
     return grid
 
 
@@ -300,9 +324,11 @@ def main() -> None:
         cell_lr = desc.get("student_lr", args.student_lr)
         cell_scope = desc.get("trainable_scope", args.scope)
         cell_agg = desc.get("agg_method", _LEGACY_AGG_METHOD)
+        cell_optimizer = desc.get("optimizer", args.optimizer)
         print(f"[sweep] start {desc['backbone']} N={desc['N']} a={desc['alpha']} "
               f"{desc['method']} s={desc['seed']} K={desc['K']} "
-              f"tau={cell_tau} lr={cell_lr} scope={cell_scope} agg={cell_agg}",
+              f"tau={cell_tau} lr={cell_lr} scope={cell_scope} agg={cell_agg} "
+              f"opt={cell_optimizer}",
               flush=True)
         res = run_cell(
             backbone=desc["backbone"], N=desc["N"], alpha=desc["alpha"],
@@ -312,6 +338,7 @@ def main() -> None:
             job_id=job_id, node=node,
             trainable_scope=cell_scope,
             agg_method=cell_agg,
+            optimizer=cell_optimizer,
         )
         write_cell_json(results_dir, res, desc)
         tag = "ok" if res.status == "success" else "FAIL"
@@ -322,7 +349,7 @@ def main() -> None:
         acc = f"{res.acc:.4f}" if res.acc is not None else "n/a"
         mt = f"{res.mean_teacher:.4f}" if res.mean_teacher is not None else "n/a"
         print(f"[sweep] {tag}   {desc['method']} agg={res.agg_method}"
-              f"({res.agg_depth}) acc={acc} mean_teacher={mt} "
+              f"({res.agg_depth}) opt={res.optimizer} acc={acc} mean_teacher={mt} "
               f"wall={res.wall_clock_sec:.1f}s err={res.error}", flush=True)
 
     # Rebuild the case report from ALL per-cell JSONs in the dir (resumable-friendly).

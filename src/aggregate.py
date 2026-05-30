@@ -169,6 +169,17 @@ NONLINEAR_DEPTH: Dict[str, str] = {
     "consensus_proj":      "deep",
     "poly_gate_d2_a":      "depth-2",
     "poly_gate_d2_b":      "depth-2",
+    # Axis B (server-combine rules) + Axis C (client selection) — second batch.
+    "lambda_scaled":       "depth-1",
+    "dare":                "depth-1",
+    "top_k":               "deep",
+    "fedadam_1step":       "deep",
+    "fedadagrad_1step":    "deep",
+    "fedyogi_1step":       "deep",
+    "ties":                "deep",
+    "fisher":              "deep",
+    "drop_topnorm_k1":     "deep",
+    "drop_topnorm_k2":     "deep",
 }
 
 # Numerical floor shared by the division/ratio combines (matches the 024 probe).
@@ -350,6 +361,185 @@ def _combine_poly_gate_d2_b(D, w, t0, c=_POLY_C):
     return t0 + m - shrink * m
 
 
+# ===========================================================================
+# Axis B (more server-combine rules) + Axis C (client/coordinate selection)
+# — added as a SECOND batch of investigation-only combines (same {Δ_i}, same
+# fn(D, w, t0, **kw) signature). m = (w[:,None]*D).sum(0) is the depth-1
+# weighted pseudo-gradient reused throughout. These name the standard
+# task-arithmetic / FedOpt / robust-merge variants (Ilharco λ-scaling,
+# DARE drop-and-rescale, top-k, FedAdam/AdaGrad/Yogi one-step, TIES, FedFisher)
+# so the basin-coherence claim — that NONE beats the depth-1 weighted average
+# (probes 023/024/025) — can be measured against each one. HE depth annotated,
+# NOT implemented; only ``lambda_scaled`` and ``dare`` stay CKKS-cheap.
+# ===========================================================================
+
+# DARE public mask seed — the dropout mask is a PUBLIC pattern (data-independent),
+# so it folds into per-coordinate plaintext scalars => the combine stays depth-1.
+_DARE_SEED = 0
+
+
+def _combine_lambda_scaled(D, w, t0, lam=0.5):
+    """θ₀ + λ·m,  m = Σ_i w_i Δ_i.  Task-arithmetic scaling at a FIXED λ.
+
+    λ is a PUBLIC scalar -> folds into each weight (depth-1, PT×CT + CT+CT only).
+    Mirrors the ``aggregate`` lambda_scale knob but pinned at a single λ so the
+    sweep can place a fixed-λ point alongside the eval-only λ-line of issue 026."""
+    m = (w[:, None] * D).sum(0)                       # Σ_i w_i Δ_i
+    return t0 + lam * m
+
+
+def _combine_dare(D, w, t0, p=0.1):
+    """θ₀ + (mask⊙m)/(1−p),  mask drops fraction p of coords (DARE, Yu'24).
+
+    The mask is drawn from a DETERMINISTIC public seed -> it is a public
+    per-coordinate 0/1 pattern, so masking + the 1/(1−p) rescale are public-scalar
+    multiplies (depth-1, no ciphertext multiply). Drop-and-rescale keeps the
+    expected combine unbiased while sparsifying the merged delta."""
+    import torch
+
+    m = (w[:, None] * D).sum(0)                       # Σ_i w_i Δ_i
+    g = torch.Generator(device=m.device).manual_seed(_DARE_SEED)
+    keep = (torch.rand(m.shape, generator=g, device=m.device) >= p).to(m.dtype)
+    return t0 + (keep * m) / (1.0 - p)                # public mask -> depth-1
+
+
+def _combine_top_k(D, w, t0, k_frac=0.1):
+    """θ₀ + m⊙keep,  keep = top-(k_frac) fraction of coords by |m| (rest zeroed).
+
+    Magnitude-sparsified task vector: keep only the largest-|m| coordinates.
+    The top-k selection is a sort/threshold on ciphertext content -> ``deep``."""
+    import torch
+
+    m = (w[:, None] * D).sum(0)                       # Σ_i w_i Δ_i
+    P = m.numel()
+    k = max(1, int(round(k_frac * P)))
+    thresh = torch.topk(m.abs(), k).values.min()      # kth-largest |m| (sort)
+    keep = (m.abs() >= thresh).to(m.dtype)
+    return t0 + m * keep
+
+
+def _combine_fedadam_1step(D, w, t0, eta=1.0, eps_rel=1e-3):
+    """One-shot FedAdam: θ₀ + η·scale·(m / (√v + ε)),  v = Σ_i w_i Δ_i².
+
+    In one shot there is no running moment, so this collapses to a SINGLE
+    preconditioned step — m divided by the (weighted) per-coord RMS, rescaled to
+    weight_avg's global L1 so step size is comparable. That makes it ≈ the
+    ``second_moment`` RMSProp combine; the equivalence is precisely the study's
+    point (FedOpt's adaptivity buys nothing with one round). Needs √ + division
+    on ciphertexts -> ``deep``. η is a PUBLIC scalar."""
+    import torch
+
+    m = (w[:, None] * D).sum(0)                       # Σ_i w_i Δ_i
+    v = (w[:, None] * D.pow(2)).sum(0)                # weighted 2nd moment Σ_i w_i Δ_i²
+    eps = eps_rel * v.mean()
+    pre = m / (torch.sqrt(v) + eps)                   # Adam-style per-coord precond
+    scale = m.abs().sum() / pre.abs().sum().clamp_min(_EPS)
+    return t0 + eta * scale * pre
+
+
+def _combine_fedadagrad_1step(D, w, t0, eta=1.0, eps_rel=1e-3):
+    """One-shot FedAdaGrad: same as fedadam_1step but v = Σ_i Δ_i² (UNWEIGHTED
+    accumulated squares). One-shot -> a single preconditioned step; rescaled to
+    weight_avg's L1. √ + division on ciphertexts -> ``deep``. η public."""
+    import torch
+
+    m = (w[:, None] * D).sum(0)                       # Σ_i w_i Δ_i
+    v = D.pow(2).sum(0)                               # unweighted accumulated squares
+    eps = eps_rel * v.mean()
+    pre = m / (torch.sqrt(v) + eps)
+    scale = m.abs().sum() / pre.abs().sum().clamp_min(_EPS)
+    return t0 + eta * scale * pre
+
+
+def _combine_fedyogi_1step(D, w, t0, eta=1.0, eps_rel=1e-3):
+    """One-shot FedYogi: same preconditioner form, v = Σ_i w_i Δ_i².
+
+    Yogi's sign-controlled variance update v ← v − (1−β₂)·sign(v−Δ²)·Δ² is
+    DEGENERATE at a single step (there is no prior v to additively correct), so
+    with one round it reduces to the same weighted 2nd-moment preconditioner as
+    fedadam_1step. Kept distinct only to record that equivalence. √ + division on
+    ciphertexts -> ``deep``. η public."""
+    import torch
+
+    m = (w[:, None] * D).sum(0)                       # Σ_i w_i Δ_i
+    v = (w[:, None] * D.pow(2)).sum(0)                # weighted 2nd moment (Yogi ≡ Adam at 1 step)
+    eps = eps_rel * v.mean()
+    pre = m / (torch.sqrt(v) + eps)
+    scale = m.abs().sum() / pre.abs().sum().clamp_min(_EPS)
+    return t0 + eta * scale * pre
+
+
+def _combine_ties(D, w, t0, k_frac=0.2):
+    """TIES-merging (Yadav'23): trim -> elect sign -> merge agreeing clients.
+
+    (1) Trim: per client keep its top-(k_frac) magnitude coordinates, zero the
+        rest -> D_trim.
+    (2) Elect: per coordinate the sign is s = sign(Σ_i w_i·sign(D_trim_ij)).
+    (3) Merge: per coordinate average D_trim over the clients whose sign matches s
+        and are nonzero; coordinates with no agreeing client -> 0.
+    Resolves sign conflicts before merging; the basin-coherence claim is that
+    there is no conflict to resolve here. Needs per-client top-k (sort) + sign +
+    masked division -> ``deep``. Implemented with masks, no python loop over P."""
+    import torch
+
+    N, P = D.shape
+    k = max(1, int(round(k_frac * P)))
+    # (1) Trim: per-client top-k magnitude mask (sort along coords, per row).
+    thresh = torch.topk(D.abs(), k, dim=1).values.min(dim=1, keepdim=True).values  # (N,1)
+    trim_mask = (D.abs() >= thresh).to(D.dtype)       # (N, P) keep-mask per client
+    D_trim = D * trim_mask
+    # (2) Elect a per-coordinate sign from the weighted sign vote.
+    s = torch.sign((w[:, None] * torch.sign(D_trim)).sum(0))      # (P,)
+    # (3) Merge: average D_trim over clients whose sign agrees with s and nonzero.
+    agree = ((torch.sign(D_trim) == s[None, :]) & (D_trim != 0)).to(D.dtype)  # (N, P)
+    count = agree.sum(0)                              # (P,) #agreeing clients/coord
+    merged = (agree * D_trim).sum(0) / count.clamp_min(1.0)       # 0 where count==0
+    return t0 + merged
+
+
+def _combine_fisher(D, w, t0):
+    """Diagonal-Fisher-weighted merge (FedFisher proxy, Jhunjhunwala'24).
+
+    Per-client per-coord importance imp_ij = w_i·Δ_ij²; merge each coordinate as
+    the importance-weighted mean of the client deltas:
+        merged_j = (Σ_i imp_ij·Δ_ij) / (Σ_i imp_ij + ε).
+    Curvature-weighting the merge; the basin-coherence claim is that uniform
+    curvature (=> weight_avg) is already adequate. Needs ct·ct + division
+    (data-dependent per-coord denominator) -> ``deep``."""
+    imp = w[:, None] * D.pow(2)                       # (N, P) per-client importance
+    merged = (imp * D).sum(0) / (imp.sum(0) + _EPS)   # importance-weighted per-coord mean
+    return t0 + merged
+
+
+def _combine_drop_topnorm(D, w, t0, k=1):
+    """Axis C: drop the k clients with the LARGEST ‖Δ_i‖₂ (the divergent ones),
+    renormalize the surviving sample weights, weighted-average the survivors:
+        θ₀ + Σ_{kept} w'_i Δ_i,  w'_i = w_i / Σ_{kept} w_j.
+    If N≤k there is nothing to keep -> fall back to weight_avg. Client selection
+    by ciphertext Δ content (a norm + sort over clients) -> ``deep``."""
+    import torch
+
+    N = D.shape[0]
+    if N <= k:
+        return _combine_weight_avg(D, w, t0)          # nothing left to keep
+    norms = D.norm(dim=1)                             # ‖Δ_i‖₂ per client
+    drop_idx = torch.topk(norms, k).indices           # k largest-norm clients (sort)
+    keep = torch.ones(N, dtype=torch.bool, device=D.device)
+    keep[drop_idx] = False
+    w_keep = w * keep.to(w.dtype)
+    w_keep = w_keep / w_keep.sum().clamp_min(_EPS)     # renormalize survivors
+    m = (w_keep[:, None] * D).sum(0)                  # survivors-only weighted avg
+    return t0 + m
+
+
+def _combine_drop_topnorm_k1(D, w, t0):
+    return _combine_drop_topnorm(D, w, t0, k=1)
+
+
+def _combine_drop_topnorm_k2(D, w, t0):
+    return _combine_drop_topnorm(D, w, t0, k=2)
+
+
 _COMBINE_FN = {
     "mag_weighted":       _combine_mag_weighted,
     "sign_majority":      _combine_sign_majority,
@@ -361,6 +551,17 @@ _COMBINE_FN = {
     "consensus_proj":     _combine_consensus_proj,
     "poly_gate_d2_a":     _combine_poly_gate_d2_a,
     "poly_gate_d2_b":     _combine_poly_gate_d2_b,
+    # Axis B (server-combine rules) + Axis C (client selection) — second batch.
+    "lambda_scaled":      _combine_lambda_scaled,
+    "dare":               _combine_dare,
+    "top_k":              _combine_top_k,
+    "fedadam_1step":      _combine_fedadam_1step,
+    "fedadagrad_1step":   _combine_fedadagrad_1step,
+    "fedyogi_1step":      _combine_fedyogi_1step,
+    "ties":               _combine_ties,
+    "fisher":             _combine_fisher,
+    "drop_topnorm_k1":    _combine_drop_topnorm_k1,
+    "drop_topnorm_k2":    _combine_drop_topnorm_k2,
 }
 
 
