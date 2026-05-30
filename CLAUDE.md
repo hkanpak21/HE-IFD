@@ -34,6 +34,10 @@ One-shot federated distillation under **multiparty CKKS**, resubmitting to **IEE
 
 **Describe it faithfully:** it is *bounded-trajectory cumulative-displacement aggregation from a shared aligned init*, **not** "encrypt and average final weights." The displacement telescopes to a weighted average of finals, but the method works because bounded steps + shared `θ₀` + Phase 0 keep every client in one loss basin; naive averaging of independently-converged / full-FT / different-init students diverges. Do not flatten this to "weight averaging" — that framing is what `methodology.md` §6.1 got loosely, and a reviewer will pounce on it.
 
+**The aggregation is task arithmetic (reframe locked 2026-05-30).** θ₀ + Σᵢ wᵢ·Δᵢ with Δᵢ = θᵢ⁽ᴷ⁾ − θ₀ is exactly **task-vector merging** (Ilharco 2023). Name it that — it owns the "too simple" reflex with a respected framework. The one HE-legal optimization knob is the **scaling coefficient λ** (θ₀ + λ·Σwᵢ·Δᵢ; λ=1 currently); it's a public scalar → depth-1, and sweeping it is eval-only since θ⋆(λ) = (1−λ)θ₀ + λθ⋆(1). The deep conflict-resolution merges (TIES sign-election, FedFisher curvature-weighting) are **provably unnecessary here** because the shared basin pre-aligns the deltas (no conflict to resolve) — and they cost deep HE. Empirically confirmed: probes 023/024/025 show **no one-shot non-linear combine beats the depth-1 weighted average**; momentum already lives client-side in the bounded trajectory. See [PRD Phase III] + memory `aggregation-framing`.
+
+**Current experimental state (2026-05-30):** M1.5 done; M2 rooting underway. FHE PoC (020) ✅ (CKKS within bounds, MiB/round). MIA (021) ✅ on MNIST (released θ⋆ near-chance; prototype channel DP ε≤8 → chance). Aggregation verdict reached (025). **026/027/028 landed (2026-05-30, run on Colab):** 026 (λ) — λ⋆<1 helps under heterogeneity (ViT α=0.05: the basin θ₀ beats the aggregate), λ=1 optimal near-IID; full grid gated. 027 — DP-MERF generator made **DP-sound** (Mode A drops at ε=2, the 0.97 artifact is gone), but the honest numbers **invert 022** (`raw_union > Mode A > Mode B`), so DP-MERF is **not** a competitive basin → open PI decision (tune Mode-B vs reframe/drop the synthetic-basin angle). 028 — MIA on ViT/CIFAR-100 + RoBERTa/AG-News: **language holds** the near-chance released-model story, **vision deviates under LiRA (AUC 0.85)**, prototype-channel DP-collapse universal. Paper writing (M3) is HITL.
+
 ## The plan (milestones)
 
 Full detail in `docs/prd/he-ifd-tnse-resubmission.md`. Named by phase (no v1/v2/Mode-A proliferation):
@@ -53,6 +57,35 @@ The user develops on a local machine (Mac/Linux/Windows) and runs all compute on
 3. **VALAR compute node** (allocated by `sbatch`): runs the actual Python — training, distillation, FHE, data generation.
 
 When Claude runs **on the VALAR side** (repo at `/scratch/hkanpak21/HE_IFD`), treat yourself as on the login node and submit all compute via `sbatch`.
+
+## Colab notebooks (the user's primary run path when the VALAR queue is backed up)
+
+The user runs compute on **Google Colab** (driven from VS Code) when the VALAR GPU queue is congested, and
+collects results by **pasting cell outputs straight into CSV files** — NOT via git / Drive / VS Code
+Explorer round-trips (those are unreliable in their setup). When authoring Colab notebooks
+(`notebooks/colab_*.ipynb`), follow these rules:
+
+- **ONE merged notebook, not one per issue.** Put all issues/experiments in a single notebook with clear
+  section headers (`# ISSUE 026`, etc.). The user does not want to switch environments between notebooks;
+  each section is self-contained but shares the setup. Do not proliferate separate `colab_<issue>.ipynb`
+  files — merge them.
+- **Every results cell prints CSV that is ready to paste directly into a `.csv` file.** Plain
+  comma-separated rows with ONE header line, ONE table per cell, **no markdown pipes/formatting and no prose
+  mixed into the CSV block**. The user copies the cell output verbatim into `results/<case>/<name>.csv`. Use
+  the column order of the matching `src/report.py` / `mia/report.py` table. Canonical formats:
+    - **sweep / accuracy:** `backbone,N,alpha,method,seed,acc,theta0_acc,mean_teacher,best_teacher,oracle,status`
+    - **λ-verify (026):** `backbone,N,alpha,method,seed,lambda,acc`  — one row per λ
+    - **MIA (021/028):** `backbone,N,alpha,method,seed,surface,attack,tpr_at_0.1pct,tpr_at_1pct,auc`
+  Implement as `print(df.to_csv(index=False))` or a manual `print(",".join(...))` loop — header once, then
+  rows, copy-paste-clean. (Keep a human-readable table too if useful, but the CSV block is the deliverable.)
+- **Robust setup, never `git pull`.** Clone if absent, then `git fetch origin master` +
+  `git checkout origin/master -- src mia jobs tests` (refresh CODE only). A plain `git pull` aborts because
+  the runs leave `results/` dirty, so code fixes silently fail to land.
+- **One-shot, reliable environment** so the user can establish it fast: `pip install` the few non-Colab deps
+  (`transformers datasets timm`), pre-download datasets (`download=True`; the `src/` loaders are
+  `download=False` for VALAR), optional HF token via `getpass` (public assets do not require it). Do NOT set
+  `HF_HUB_OFFLINE` (VALAR-only). Newer `datasets` needs namespaced HF ids (`fancyzhx/ag_news`).
+- A zip/git-push export cell is a fine fallback, but the **paste-CSV-from-cell-output path is primary**.
 
 ## GOLDEN RULE
 
