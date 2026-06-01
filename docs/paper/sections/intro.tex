@@ -28,38 +28,35 @@ network to a frozen pretrained backbone.
 
 The difficulty a one-shot linear aggregation must overcome is that independently trained models do not
 average well under heterogeneous data: starting from different initializations and fitting different local
-distributions, their updates point in conflicting directions and cancel when summed. We resolve this with
-what we call a shared loss basin. Before any local training, the clients agree on a common initialization
-for the head, built cheaply from per-class feature summaries exchanged over peer-to-peer channels. This
-initialization need not be an accurate classifier; its role is to place every client in a common region of
-the loss landscape so that their subsequent bounded updates are expressed in one frame and reinforce rather
-than cancel. A weak but shared starting point is worth more than a strong but private one; and the protocol
-still produces a usable model with no shared initialization at all, the basin serving to improve it further
-under heterogeneity.
+distributions, their updates point in conflicting directions and cancel when summed. Fine-tuning a frozen pretrained backbone removes this difficulty without any alignment phase. The fixed
+backbone places every client in a common representation, and every client starts its small trainable unit
+from the same public initialization, so their bounded updates are expressed in one frame and reinforce
+rather than cancel. Where prior one-shot federated learning must first agree on a starting point by
+exchanging per-class summaries --- an extra round that exposes data-derived quantities and, when protected,
+spends a differential-privacy budget --- a pretrained backbone supplies the shared frame for free, and
+nothing data-derived leaves a client before encryption.
 
 We show across vision and language tasks, and from small networks to frozen vision transformers and
 sentence encoders, that the protocol produces a common model stronger than any client's own and close to a
 centralized model trained on the pooled data, while every client gains the ability to classify categories it
-never observed locally. With a frozen pretrained backbone the explicit agreement step is not even needed:
-the fixed features already place all clients in a common loss basin, so the shared initialization comes for
-free. We confirm in a real multiparty CKKS implementation that the encrypted aggregation reproduces the
+never observed locally. We confirm in a real multiparty CKKS implementation that the encrypted aggregation reproduces the
 plaintext result within the approximation bounds of CKKS, at a cost of a few megabytes per round, and we
 trace the privacy--utility frontier of the basin summaries to show that their accuracy cost is negligible
 across the single-digit privacy budgets typical of differentially private learning.
 
 Our contributions are as follows.
 \begin{itemize}
-\item We introduce, to our knowledge, the first one-shot federated distillation whose contributions are
+\item We introduce, to our knowledge, the first one-shot federated fine-tuning whose contributions are
   protected by homomorphic encryption, with a single server operation of multiplicative depth one under
   multiparty CKKS (\cref{sec:method}).
-\item We identify the shared loss basin as the mechanism that makes a one-shot linear aggregation succeed
-  under heterogeneity, and show that the basin's value lies in aligning client updates rather than in
-  classifying well, so that even a deliberately weak or privacy-protected basin suffices, and a frozen
-  pretrained backbone supplies the basin at no cost (\cref{sec:necessity,sec:basin-contribution}).
-\item We give a privacy design that protects the model updates with cryptography, adding no perturbation to
-  them, and confines differential privacy to small per-class summaries, and show empirically that the
-  resulting privacy--utility frontier is flat across practical privacy budgets (\cref{sec:privacy,sec:privacy-eval}).
-\item We demonstrate that the method yields a common, superior model across from-scratch and frozen
+\item We show that fine-tuning a frozen pretrained backbone supplies the shared frame a one-shot linear
+  aggregation needs at no cost, eliminating the data-dependent alignment phase that prior one-shot federated
+  learning requires --- and with it the leakage and the differential-privacy budget that phase entails
+  (\cref{sec:method,sec:superior}).
+\item We give a privacy design in which the contributions are protected by cryptography alone, with no
+  perturbation and no differential privacy, so the only quantity exposed in the clear is the final shared
+  model, whose residual leakage we measure directly with membership inference (\cref{sec:mia}).
+\item We demonstrate that the method yields a common, superior model across frozen
   pretrained backbones in both modalities, and validate the encrypted aggregation in a real multiparty CKKS
   implementation at a cost of a few megabytes per round (\cref{sec:superior,sec:fhe-cost}).
 \end{itemize}

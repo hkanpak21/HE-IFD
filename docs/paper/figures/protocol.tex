@@ -4,61 +4,53 @@
 \begin{tikzpicture}[
   font=\small,
   card/.style={draw=sanzotan!80!black, fill=sanzotanlt, rounded corners, align=center, inner sep=3pt},
-  teacher/.style={draw=sanzotan!80!black, fill=sanzotan, rounded corners, minimum width=11mm, minimum height=6mm, font=\scriptsize, align=center},
+  ftbox/.style={draw=sanzotan!80!black, fill=sanzotan, rounded corners, minimum width=20mm, minimum height=7mm, font=\scriptsize, align=center},
   data/.style={cylinder, shape border rotate=90, draw=sanzotan!80!black, fill=sanzotangrey, aspect=0.28,
                minimum width=10mm, minimum height=8mm, font=\scriptsize, align=center, inner sep=1pt},
-  basin/.style={draw=paperblue, fill=blueB, rounded corners, minimum width=22mm, minimum height=12mm, align=center, font=\small},
+  pub/.style={draw=paperblue, fill=blueA, rounded corners, minimum width=48mm, minimum height=10mm, align=center, font=\small},
+  enc/.style={draw=paperblue, fill=blueC, text=white, rounded corners, minimum width=15mm, minimum height=7mm, font=\scriptsize, align=center},
   server/.style={draw=sanzobluegrey!80!black, fill=sanzobluegrey, rounded corners, minimum width=30mm, minimum height=14mm, align=center, font=\small},
   glob/.style={draw=paperblue, fill=blueD, text=white, rounded corners, minimum width=20mm, minimum height=12mm, align=center, font=\small},
   arr/.style={-{Stealth[length=2.4mm]}, semithick, draw=paperneutral},
-  p2p/.style={{Stealth[length=2mm]}-{Stealth[length=2mm]}, semithick, draw=paperblue},
+  pubarr/.style={-{Stealth[length=2.2mm]}, semithick, draw=paperblue, dashed},
   lbl/.style={font=\scriptsize\itshape, text=paperneutral, align=center, inner sep=1.5pt}
 ]
-% ---- clients (three, stacked) ----
-\foreach \i/\y/\name/\s in {1/2.5/{Client 1}/1, 2/0/{Client 2}/2, 3/-2.5/{Client $N$}/N} {
-  \node[data]    (d\i) at (0,\y) {data\\$\mathcal{D}_{\s}$};
-  \node[teacher] (t\i) at (2.0,\y) {teacher\\$t_{\s}$};
-  \draw[arr] (d\i) -- (t\i);
-  \node[lbl] at (1.0,\y+0.85) {\name};
+% public, shared, carries no client data: frozen backbone + public init
+\node[pub] (pub) at (5.7,3.7)
+  {frozen public backbone $\varphi$ \;+\; public init $\theta_0$\\[1pt]\scriptsize(shared by all; no data, no exchange)};
+
+% clients: data -> local fine-tuning -> encrypted displacement
+\foreach \i/\y/\s in {1/1.7/1, 2/0/2, 3/-1.7/N} {
+  \node[data] (d\i) at (0,\y) {data\\$\mathcal{D}_{\s}$};
+  \node[ftbox] (f\i) at (3.1,\y) {fine-tune adapter\\$K$ steps from $\theta_0$};
+  \node[enc]  (e\i) at (6.7,\y) {$\mathsf{Enc}(\Delta_{\s})$};
+  \draw[arr] (d\i) -- (f\i);
+  \draw[arr, draw=paperblue] (f\i) -- (e\i);
+  \draw[pubarr] (pub.south) -- (f\i.north);
 }
 \begin{scope}[on background layer]
-  \foreach \i in {1,2,3} \node[card, fit=(d\i)(t\i)] {};
+  \foreach \i in {1,2,3} \node[card, fit=(d\i)(e\i)] {};
 \end{scope}
-% P2P exchange among clients
-\draw[p2p] (t1.east) .. controls (3.4,2.5) and (3.4,0) .. (t2.east);
-\draw[p2p] (t2.east) .. controls (3.4,0) and (3.4,-2.5) .. (t3.east);
-\node[lbl, text=paperblue] at (3.55,1.25) {P2P\\prototypes};
 
-% ---- shared loss basin ----
-\node[basin] (basin) at (6.2,0) {shared loss\\basin $\theta_0$};
-\foreach \i in {1,2,3} \draw[arr, draw=paperblue] (t\i.east) -- (basin.west);
-
-% ---- local distillation -> encrypted displacement ----
-\foreach \i/\y/\s in {1/2.5/1, 2/0/2, 3/-2.5/N} {
-  \node[teacher, fill=blueC, draw=paperblue, text=white] (delta\i) at (9.2,\y) {$\mathsf{Enc}(\Delta_{\s})$};
-  \draw[arr, draw=paperblue] (basin) -- node[lbl, sloped, above]{} (delta\i.west);
-}
-\node[lbl] at (9.2,3.5) {distil from $\theta_0$\\($K$ steps), encrypt};
-
-% ---- server (encrypted aggregation) ----
-\node[server] (srv) at (12.8,0) {Server\\$\theta_0+\sum_j w_j\Delta_j$\\\scriptsize(CKKS, depth $1$)};
-\foreach \i in {1,2,3} \draw[arr] (delta\i.east) -- (srv.west);
+% server (encrypted aggregation; never decrypts)
+\node[server] (srv) at (9.9,0) {Server\\$\theta_0+\sum_j w_j\Delta_j$\\\scriptsize(CKKS, depth $1$)};
+\foreach \i in {1,2,3} \draw[arr] (e\i.east) -- (srv.west);
 \begin{scope}[on background layer]
   \node[draw=paperblue, dashed, rounded corners, fit=(srv), inner sep=3mm,
         label={[lbl, text=paperblue]above:encrypted --- no party decrypts alone}] {};
 \end{scope}
 
-% ---- threshold decrypt -> global model ----
-\node[glob] (glob) at (16.4,0) {global\\model $\theta^\star$};
+% threshold decrypt -> global model
+\node[glob] (glob) at (13.5,0) {global\\model $\theta^\star$};
 \draw[arr] (srv.east) -- node[lbl, above]{threshold\\decrypt} (glob.west);
 \end{tikzpicture}%
 }
-\caption{HE-IFD. Each client holds private data $\mathcal{D}_j$ and trains a local teacher $t_j$. In
-Phase~0 the clients exchange per-class feature prototypes over peer-to-peer channels, with the server
-excluded, to agree on a shared loss basin $\theta_0$. Each client then distils its teacher into the shared
-head for a bounded number of steps and encrypts the resulting displacement $\Delta_j$. The server's sole
-operation is the sample-weighted linear combination $\theta^\star=\theta_0+\sum_j w_j\Delta_j$ under
-multiparty CKKS (additions and public-scalar multiplications only; multiplicative depth one); it never
-decrypts. A threshold of clients jointly decrypts the global model $\theta^\star$.}
+\caption{HE-IFD. A frozen public backbone $\varphi$ and a public initialization $\theta_0$ are shared by all
+clients and carry no data, so there is no alignment phase. Each client fine-tunes a small adapter on its own
+private data $\mathcal{D}_j$ for a bounded number of steps from $\theta_0$ and encrypts the resulting
+displacement $\Delta_j$. The server's sole operation is the sample-weighted linear combination
+$\theta^\star=\theta_0+\sum_j w_j\Delta_j$ under multiparty CKKS (additions and public-scalar
+multiplications only; multiplicative depth one); it never decrypts. A threshold of clients jointly decrypts
+the global model $\theta^\star$.}
 \label{fig:protocol}
 \end{figure*}

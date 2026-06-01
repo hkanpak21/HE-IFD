@@ -45,7 +45,6 @@ Pretrained vision & ViT-B/32 on CIFAR-100 & scaling to a strong frozen backbone 
 Pretrained language & RoBERTa, MPNet on AG-News & the method across modalities \\
 Clients $\Nc$ & $5,\ 10,\ 20,\ 50$ & scalability in participants \\
 Heterogeneity $\alpha$ & $0.05$ (severe) to $1.0$ (mild) & robustness to label skew \\
-Shared-basin source & probe, DP prototypes, synthetic, none & interchangeability and Phase-0 privacy \\
 \bottomrule
 \end{tabular}
 \normalsize
@@ -85,60 +84,7 @@ size. This is what lets the approach scale to modern pretrained models without s
 work, and it is the reason a single classifier head, rather than a fine-tuned backbone, is the right unit
 to encrypt.
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.82\linewidth]{figures/fig_necessity.pdf}
-\caption{Neither ingredient suffices alone ($\alpha=0.05$). On CIFAR-100, distillation without a shared
-basin stays at chance, because updates from different initializations do not combine; the shared basin
-makes the same linear combination work. On MNIST the no-basin variant recovers partially but still trails
-the full method. In both cases the full method is best and approaches the centralized reference (dashed).}
-\label{fig:necessity}
-\end{figure}
 
-\subsection{Necessity of the Shared Basin and Bounded Distillation}
-\label{sec:necessity}
-
-The protocol has two active parts, the shared basin and the bounded distillation, and
-\cref{fig:necessity} shows that removing either one breaks it. We compare four points under heterogeneous
-data: the random initialization, distillation with no shared basin, the shared basin on its own, and the
-full method. On the hard task, CIFAR-100, distillation without a shared basin stays at chance ($0.03$):
-when clients begin from different initializations their bounded updates point in unrelated directions, and
-the linear combination of them carries no usable signal. The shared basin removes this failure by placing
-all clients in a common frame, after which the same linear combination yields a strong model. On the easier
-MNIST task the no-basin variant does not collapse completely, because distillation on ten well-separated
-classes recovers some structure even from a random start, but it still trails the full method by a wide
-margin. Neither the basin alone nor distillation alone is sufficient; their combination is what produces
-the result in \cref{sec:superior}.
-
-\subsection{Distillation Lift as a Function of Basin Strength}
-\label{sec:basin-contribution}
-
-A natural question is how much of the final accuracy is already present in the shared basin $\thz$ before
-any distillation, and whether the distillation step is doing real work. \Cref{fig:continuum} answers this
-across the full range of basin strengths, which we vary by changing how the basin is built, from a basin
-formed with no labelled data at all, through differentially-private prototypes, to a rich public probe.
-Two facts stand out. Every point lies above the diagonal, so distillation never reduces accuracy below the
-basin it started from; and the vertical gap, the accuracy that distillation adds, is largest exactly where
-the basin is weakest, reaching more than $0.4$ when the basin alone is near chance and shrinking as the
-basin grows strong. Where a rich basin already classifies well, distillation adds little because there is
-little left to add, and the final model tracks the centralized reference; where the basin is deliberately
-weak, distillation supplies the bulk of the accuracy. The combined mechanism, not either part, is
-responsible for the outcome across the whole range, and the basin's value lies in aligning the clients
-rather than in classifying well on its own. This also shows that the basin source is a deployment choice
-rather than a fixed requirement: the protocol behaves consistently whether the basin comes from a public
-probe, from privacy-protected prototypes, or from no labelled data at all.
-
-Not every candidate basin source survives this test, and the one that fails is instructive. A
-differentially private generator can synthesize a few labelled samples per class and the basin be built from
-those rather than from prototypes. Once the privacy accounting is honest, however, privatizing the handful
-of samples a basin needs injects enough noise that the synthetic basin is markedly weaker than a prototype
-basin at the same budget, and the final model follows it down; prototypes, which average before they
-privatize and so spend the budget on a single low-sensitivity statistic, remain the better source. The same
-generator applied to a client's \emph{entire} dataset, rather than to a few basin samples, is precisely the
-differentially private one-shot baseline of \cref{sec:positioning}: it must carry the whole contribution in
-the clear, as a full synthetic dataset, where our method instead delegates that contribution to encryption
-and releases only the small private prototypes. That difference---what each design leaves exposed in the
-clear---is the subject of \cref{sec:mia}.
 
 \subsection{Scalability and the Effect of Trajectory Length}
 \label{sec:scaling-ablation}
@@ -197,42 +143,7 @@ optimum holding on the pretrained backbone. The coefficient never settles above 
 operative statement: under heterogeneity the displacement should be damped toward the basin, never
 amplified away from it.
 
-\subsection{The Privacy--Utility Frontier of the Basin Prototypes}
-\label{sec:privacy-eval}
 
-Because the model updates are protected by encryption rather than by perturbation, the only place
-differential privacy enters is in releasing the per-class prototypes used to build the basin.
-\Cref{fig:dpfrontier} traces the accuracy of the global model as the privacy budget on those prototypes
-tightens, over the range $\varepsilon\in\{0.5,2,8,32\}$. At every heterogeneity level the frontier is flat
-across the practical privacy regime: accuracy is essentially unchanged from the non-private setting through
-the single-digit budgets commonly reported in differentially private learning, and begins to fall only
-under the most stringent setting, $\varepsilon=0.5$. The reason is the averaging structure of
-\cref{sec:dp}: a client lowers the sensitivity of its prototypes, and hence the noise it must add, by
-averaging over more of its own samples, so the privacy budget is bought with data rather than with
-accuracy. This is the concrete form of the paper's privacy claim, that cryptography on the updates, which adds no noise,
-plus differential privacy confined to the summaries delivers a formal $(\varepsilon,\delta)$ guarantee
-without the utility tax that differentially private one-shot methods pay when they perturb the released
-model itself.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_continuum.pdf}
-\caption{Distillation never hurts and adds most where the basin is weak. Each point is a basin source at a
-given heterogeneity $\alpha$ (MNIST, $\Nc=10$); the horizontal axis is the accuracy of the shared basin
-$\thz$ on its own and the vertical axis the accuracy of the resulting global model. All points lie above
-the no-lift diagonal, and the gap is largest when the basin is weakest.}
-\label{fig:continuum}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_dpfrontier.pdf}
-\caption{The privacy--utility frontier on the basin prototypes is flat across the practical privacy regime.
-Tightening the differential-privacy budget on the per-class summaries through the single-digit $\varepsilon$
-typical of differentially private learning leaves the global model's accuracy essentially unchanged; it
-falls only under the most stringent budget, $\varepsilon=0.5$ (MNIST, $\Nc=10$).}
-\label{fig:dpfrontier}
-\end{figure}
 
 \subsection{Comparison with Prior Work}
 \label{sec:positioning}
@@ -244,16 +155,15 @@ Existing one-shot distillation methods are either plaintext, and so offer no pri
 or differentially private, and so pay a utility cost on the released model. The homomorphic-encryption
 methods in federated learning either run for many rounds, as in encrypted training, or are
 secure-aggregation primitives that sum model updates over an iterative protocol rather than distilling in a
-single shot. To our knowledge the combination we occupy, a one-shot federated distillation whose
-aggregation is protected by homomorphic encryption that adds no accuracy cost, has not previously been demonstrated, and this
-holds whether the shared basin is built from a public probe or from no labelled data at all.
+single shot. To our knowledge the combination we occupy, a one-shot federated fine-tuning whose
+aggregation is protected by homomorphic encryption that adds no accuracy cost, has not previously been demonstrated.
 
 \begin{table*}[t]
 \centering
 \caption{Comparison with representative federated-learning methods. Reported accuracies are taken
 verbatim from each source paper at \emph{its own} setup (dataset, model, $N$, heterogeneity), so the column
 is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are
-the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based,
+the controlled comparison. Our method is the only one that is simultaneously one-shot, fine-tuning-based,
 and protected by encryption that adds no accuracy cost.}
 \label{tab:positioning}
 \footnotesize
@@ -286,7 +196,7 @@ budget that perturbs the released model, while our encryption perturbs nothing. 
 is large and structural: a full-model encrypted protocol of the kind the rejected literature assumed would
 move on the order of hundreds of gigabytes, whereas our single classifier-head ciphertext is a few
 megabytes per round (\cref{sec:fhe-cost}). The protocol is also fully parallel across clients and
-its aggregation is an associative reduction (\cref{sec:cost}), so wall-clock does not grow with the number
+its aggregation is an associative reduction, so wall-clock does not grow with the number
 of participants.
 
 \smallskip

@@ -54,7 +54,7 @@
 
 \begin{document}
 
-\title{HE-IFD: Privacy-Preserving One-Shot Federated Distillation\\ in a Shared Loss Basin under Homomorphic Encryption}
+\title{HE-IFD: Privacy-Preserving One-Shot Federated Fine-Tuning\\ of Pretrained Models under Homomorphic Encryption}
 
 \author{
 Halil \.{I}brahim Kanpak\,\orcidlink{0009-0005-0284-5941},
@@ -68,7 +68,7 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 }
 
 \markboth{IEEE Transactions on Network Science and Engineering}%
-{Kanpak \MakeLowercase{\textit{et al.}}: Privacy-Preserving One-Shot Federated Distillation in a Shared Loss Basin}
+{Kanpak \MakeLowercase{\textit{et al.}}: Privacy-Preserving One-Shot Federated Fine-Tuning under Homomorphic Encryption}
 
 \maketitle
 
@@ -78,28 +78,26 @@ which communicates in a single round, faces an unresolved privacy dilemma: sendi
 in plaintext exposes it, while protecting it with differential privacy injects noise that degrades the
 released model and offers only a statistical, not a cryptographic, guarantee, and homomorphic encryption has
 so far been confined to multi-round encrypted training or to secure-aggregation primitives. We present
-HE-IFD, a one-shot federated distillation whose contributions are protected by homomorphic encryption. Each
-client distils its local teacher into a small shared classifier head along a bounded trajectory, and the
+HE-IFD, a one-shot federated fine-tuning whose contributions are protected by homomorphic encryption. Each
+client fine-tunes a small adapter on a frozen pretrained backbone for a bounded number of steps, and the
 server combines the resulting parameter displacements with a single sample-weighted linear operation under
 multiparty CKKS, at multiplicative depth one. The key to making a one-shot linear aggregation work under
-heterogeneous data is a shared loss basin: a common, possibly weak, initialization agreed from cheap
-per-class summaries, whose role is to align the clients' updates rather than to classify well. Across vision
-and language tasks, and from small networks to frozen pretrained backbones, the method produces a common
-model stronger than any client's own and close to a centralized one, while giving each client coverage of
+heterogeneous data is a shared frame, which a frozen pretrained backbone supplies for free: every client
+fine-tunes from the same public initialization, so there is no alignment phase and nothing data-derived
+leaves a client before encryption. Across vision and language tasks on frozen pretrained backbones, the
+method produces a common model stronger than any client's own and close to a centralized one, while giving each client coverage of
 classes it never observed locally. A real multiparty CKKS implementation reproduces the plaintext aggregate
-within the approximation bounds of CKKS at a few megabytes per round, and differentially private basin
-summaries incur negligible accuracy cost across the practical range of privacy budgets.
+within the approximation bounds of CKKS at a few megabytes per round.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Federated learning, one-shot federated learning, knowledge distillation, homomorphic encryption,
-multiparty computation, differential privacy.
+Federated learning, one-shot federated learning, federated fine-tuning, homomorphic encryption,
+multiparty computation, privacy-preserving machine learning.
 \end{IEEEkeywords}
 
 \input{sections/intro}
 \input{sections/related}
 \input{sections/prelim}
-\input{sections/whyfinetuning}
 \input{sections/method}
 \input{sections/experiments}
 \input{sections/cost}
