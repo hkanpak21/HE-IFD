@@ -76,9 +76,13 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "seeds": [42, 43, 44],
     # Bounded-trajectory length(s) K. A list ⇒ K becomes a grid axis.
     "Ks": [300],
-    # Trainable unit(s): head_only | lora_<rank> | last_block | last_n_blocks_<n>.
-    # A list ⇒ trainable-unit comparison axis.
-    "scopes": ["head_only"],
+    # Local learning step (issue ft01): "finetune" = direct supervised fine-tuning
+    # from the shared basin (the headline) | "distill" = the teacher ablation.
+    # A list ⇒ a grid axis.
+    "local_steps": ["finetune"],
+    # Trainable unit(s) (issue ft01): "lora" (the headline adapter) | "head"
+    # (linear probe) | "last_n". A list ⇒ the trainable-unit comparison axis.
+    "trainable_units": ["lora"],
     # --- scalar knobs (passed straight to run_cell) ---
     "tau": 4.0,
     "student_lr": 0.01,
@@ -110,7 +114,8 @@ def normalize_config(config: Dict[str, Any]) -> Dict[str, Any]:
     valid one-element axis. Pure / side-effect free → safe to call repeatedly."""
     cfg = dict(DEFAULT_CONFIG)
     cfg.update(config or {})
-    for axis in ("backbones", "Ns", "alphas", "methods", "seeds", "Ks", "scopes"):
+    for axis in ("backbones", "Ns", "alphas", "methods", "seeds", "Ks",
+                 "local_steps", "trainable_units"):
         v = cfg.get(axis)
         if v is None:
             cfg[axis] = []
@@ -129,9 +134,10 @@ def normalize_config(config: Dict[str, Any]) -> Dict[str, Any]:
 def build_grid(config: Dict[str, Any]) -> List[Dict]:
     """Cartesian product over the config axes → deterministically-ordered list of
     cell descriptors, each produced by the SAME ``sweep.cell_descriptor`` the
-    sbatch sweep uses. Identical iteration order to ``sweep.build_grid`` (backbone
-    → N → α → method → seed → K → scope), so the two entrypoints agree on cell
-    identity and resume each other's partial runs.
+    sbatch sweep uses. Iteration order backbone → N → α → method → seed → K →
+    local_step → trainable_unit, so the two entrypoints agree on cell identity and
+    resume each other's partial runs (the descriptor omits local_step/trainable_unit
+    at their legacy distill/head values, keeping pre-pivot cells byte-identical).
 
     ``tau`` / ``student_lr`` / ``agg_method`` / ``optimizer`` ride along as the
     scalar knobs from the config; ``cell_descriptor`` omits them from the key when
@@ -147,16 +153,18 @@ def build_grid(config: Dict[str, Any]) -> List[Dict]:
                 for method in cfg["methods"]:
                     for seed in cfg["seeds"]:
                         for K in cfg["Ks"]:
-                            for scope in cfg["scopes"]:
-                                grid.append(cell_descriptor(
-                                    backbone, int(N), float(alpha), method,
-                                    int(seed), int(K),
-                                    tau=float(cfg["tau"]),
-                                    student_lr=float(cfg["student_lr"]),
-                                    trainable_scope=scope,
-                                    agg_method=cfg["agg_method"],
-                                    optimizer=cfg["optimizer"],
-                                ))
+                            for local_step in cfg["local_steps"]:
+                                for unit in cfg["trainable_units"]:
+                                    grid.append(cell_descriptor(
+                                        backbone, int(N), float(alpha), method,
+                                        int(seed), int(K),
+                                        tau=float(cfg["tau"]),
+                                        student_lr=float(cfg["student_lr"]),
+                                        agg_method=cfg["agg_method"],
+                                        optimizer=cfg["optimizer"],
+                                        local_step=local_step,
+                                        trainable_unit=unit,
+                                    ))
     return grid
 
 
@@ -283,6 +291,24 @@ def _maybe_git_commit(results_dir: Path, case: str) -> Optional[str]:
         return f"commit error: {exc!r}"
 
 
+def _print_results_csv(results_dir: Path) -> None:
+    """Print the full ``results.csv`` to stdout, wrapped in copy markers.
+
+    Colab gives no reliable file download from a torn-down runtime, so the
+    canonical results are dumped inline at the end of the run for copy-paste.
+    Between the two marker lines is exactly the raw CSV (header + rows)."""
+    csv_path = results_dir / "results.csv"
+    try:
+        text = csv_path.read_text()
+    except OSError:
+        print("[runner] no results.csv to print", flush=True)
+        return
+    print("\n===== BEGIN results.csv (copy everything between the markers) =====",
+          flush=True)
+    print(text.rstrip("\n"), flush=True)
+    print("===== END results.csv =====\n", flush=True)
+
+
 # ---------------------------------------------------------------------------
 # The entrypoint: run_unattended
 # ---------------------------------------------------------------------------
@@ -326,7 +352,8 @@ def run_unattended(config: Dict[str, Any]) -> Dict[str, Any]:
     for k, desc in enumerate(grid, start=1):
         out_path = results_dir / cell_filename(desc)
         tag_id = (f"{desc['backbone']} N={desc['N']} a={desc['alpha']} "
-                  f"{desc['method']} s={desc['seed']} K={desc['K']}")
+                  f"{desc['method']} s={desc['seed']} K={desc['K']} "
+                  f"{desc.get('trainable_unit', 'head')}/{desc.get('local_step', 'distill')}")
 
         # --- resume: skip a previously-successful cell -----------------------
         if cfg["resume"] and out_path.exists():
@@ -344,21 +371,24 @@ def run_unattended(config: Dict[str, Any]) -> Dict[str, Any]:
         # --- run the cell under a hard per-cell timeout, tolerating failure --
         cell_tau = desc.get("tau", cfg["tau"])
         cell_lr = desc.get("student_lr", cfg["student_lr"])
-        cell_scope = desc.get("trainable_scope", "head_only")
+        # ft01 axes: the descriptor omits these at their legacy values, so an
+        # absent key means the pre-pivot default (distill / head).
+        cell_local_step = desc.get("local_step", "distill")
+        cell_unit = desc.get("trainable_unit", "head")
         cell_agg = desc.get("agg_method", cfg["agg_method"])
         cell_optimizer = desc.get("optimizer", cfg["optimizer"])
         t_cell = time.time()
         try:
             res = _run_with_timeout(
-                lambda d=desc, t=cell_tau, lr=cell_lr, sc=cell_scope,
-                ag=cell_agg, op=cell_optimizer: run_cell(
+                lambda d=desc, t=cell_tau, lr=cell_lr, ls=cell_local_step,
+                tu=cell_unit, ag=cell_agg, op=cell_optimizer: run_cell(
                     backbone=d["backbone"], N=d["N"], alpha=d["alpha"],
                     seed=d["seed"], method=d["method"], K=d["K"],
                     tau=t, student_lr=lr,
                     probe_size=cfg["probe_size"],
                     data_root=cfg["data_root"], cache_root=cfg["cache_root"],
                     job_id=job_id, node=node,
-                    trainable_scope=sc, agg_method=ag,
+                    local_step=ls, trainable_unit=tu, agg_method=ag,
                     optimizer=op,
                     lambda_scales=lambda_scales,
                 ),
@@ -440,6 +470,8 @@ def run_unattended(config: Dict[str, Any]) -> Dict[str, Any]:
         (results_dir / "run_summary.json").write_text(json.dumps(summary, indent=2))
     except OSError:
         pass
+    # Dump the raw CSV inline so it can be copied straight out of the Colab cell.
+    _print_results_csv(results_dir)
     return summary
 
 
