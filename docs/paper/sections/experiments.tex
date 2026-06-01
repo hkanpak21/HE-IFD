@@ -234,36 +234,6 @@ falls only under the most stringent budget, $\varepsilon=0.5$ (MNIST, $\Nc=10$).
 \label{fig:dpfrontier}
 \end{figure}
 
-\subsection{Measured Cost of the Encrypted Aggregation}
-\label{sec:fhe-cost}
-
-The encrypted step is cheap by construction, and we confirm this in a real multiparty CKKS implementation
-of \cref{eq:aggregate} built on the Lattigo library~\cite{lattigo,mouchet2021multiparty}. \Cref{tab:fhe} reports the measured cost. Because a classifier head fits in a single
-ciphertext, each client uploads one ciphertext of about half a megabyte, so an entire round costs a few
-megabytes of communication regardless of the backbone behind the head. The homomorphic computation is a
-depth-one circuit of additions and plaintext multiplications, with no bootstrapping, and the decrypted
-result agrees with the plaintext aggregate to a relative error of about $10^{-9}$. This replaces the
-hundreds of gigabytes that an encrypted full-model protocol would move with a few megabytes, and it does so
-without the multi-round wall-clock of encrypted training.
-
-\begin{table}[t]
-\centering
-\caption{Measured cost of the encrypted aggregation (multiparty CKKS, ring degree $2^{14}$). A classifier
-head fits in one ciphertext, so cost is independent of the frozen backbone.}
-\label{tab:fhe}
-\begin{tabular}{lcc}
-\toprule
- & $\Nc=5$ & $\Nc=10$ \\
-\midrule
-Ciphertexts per client & 1 & 1 \\
-Upload / download per round & 2.5 MiB & 5.0 MiB \\
-Multiplicative depth & 1 & 1 \\
-Correctness vs.\ plaintext (rel.\ $\ell_2$) & $\sim\!10^{-9}$ & $\sim\!10^{-9}$ \\
-Aggregation time (server) & $\sim\!3$ ms & $\sim\!4$ ms \\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \subsection{Comparison with Prior Work}
 \label{sec:positioning}
 
