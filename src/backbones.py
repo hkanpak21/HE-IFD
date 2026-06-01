@@ -411,6 +411,80 @@ def make_head_for_scope(in_dim: int, num_classes: int, scope: str) -> Callable:
 
 
 # ----------------------------------------------------------------------------
+# Trainable UNIT axis (issue ft01 — the fine-tuning pivot)
+# ----------------------------------------------------------------------------
+# ft01 promotes the trainable parameter set to a FIRST-CLASS protocol axis named
+# ``trainable_unit`` with the three tokens the PRD asks for: ``head`` (linear
+# probe), ``lora`` (LoRA adapter + head — the headline), ``last_n`` (last-N
+# blocks as an MLP head in cached-feature space). Rather than fork the model
+# factories, this axis is a THIN ALIAS over the existing issue-011
+# ``trainable_scope`` machinery (``parse_scope`` / ``make_head_for_scope``):
+# every unit resolves to a scope token, so the LoRA+head / last-N parameter sets
+# still land in ``state_dict`` and flow through the SAME element-wise depth-1
+# ``aggregate`` — byte-compatible by construction. Reusing the scope path is
+# what keeps ``aggregate`` untouched (the ft01 hard constraint).
+#
+# The crucial back-compat property: ``head`` -> ``head_only`` is the legacy
+# linear head, so ``trainable_unit="head"`` is byte-identical to today.
+_DEFAULT_LORA_RANK = 8
+
+# Map a (bare or sub-typed) trainable_unit token to the equivalent
+# trainable_scope token. ``lora`` defaults to rank-8 (the issue-011 ``lora_8``
+# scope); an explicit rank may be given as ``lora_<rank>`` and is passed through
+# verbatim. ``last_n`` maps to the cached-feature MLP "last_block" head;
+# ``last_n_<n>`` carries the block count through to ``last_n_blocks_<n>``.
+def trainable_unit_to_scope(unit: str) -> str:
+    """Resolve a ``trainable_unit`` token (ft01) to a ``trainable_scope`` token.
+
+    Tokens (ft01):
+      * ``head``            -> ``head_only``        (linear probe; legacy default)
+      * ``lora`` /
+        ``lora_<rank>``     -> ``lora_<rank>``      (rank-r LoRA adapter + head;
+                                                     bare ``lora`` -> rank 8)
+      * ``last_n`` /
+        ``last_n_<n>``      -> ``last_block`` /
+                               ``last_n_blocks_<n>`` (MLP-on-cached-features)
+
+    The returned scope token is consumed by the EXISTING ``parse_scope`` /
+    ``make_head_for_scope`` dispatch, so the trainable-unit axis reuses the
+    issue-011 factories (and therefore the unchanged depth-1 ``aggregate``)
+    rather than introducing a parallel model path.
+    """
+    if unit == "head":
+        return "head_only"
+    if unit == "lora":
+        return f"lora_{_DEFAULT_LORA_RANK}"
+    if unit.startswith("lora_"):
+        # ``lora_<rank>`` -> pass through verbatim (parse_scope reads the rank).
+        return unit
+    if unit == "last_n":
+        return "last_block"
+    if unit.startswith("last_n_"):
+        # ``last_n_<n>`` -> the issue-011 ``last_n_blocks_<n>`` token.
+        n = unit[len("last_n_"):]
+        return f"last_n_blocks_{n}"
+    # Already a scope token? Accept it so callers may pass either vocabulary.
+    if unit in ("head_only", "last_block") or unit.startswith("last_n_blocks_"):
+        return unit
+    raise ValueError(
+        f"unknown trainable_unit {unit!r}; expected "
+        f"'head' | 'lora' | 'lora_<rank>' | 'last_n' | 'last_n_<n>'"
+    )
+
+
+def make_trainable_unit(in_dim: int, num_classes: int, unit: str) -> Callable:
+    """Zero-arg factory for the ft01 trainable UNIT (head / lora / last_n).
+
+    Convenience wrapper: resolves ``unit`` to a scope and delegates to
+    ``make_head_for_scope`` — so the LoRA(+head) and last-N parameter sets are
+    the exact same tensors issue 011 already aggregates element-wise. ``head``
+    returns the legacy linear-head factory verbatim (byte-identical to today).
+    """
+    return make_head_for_scope(in_dim, num_classes,
+                               trainable_unit_to_scope(unit))
+
+
+# ----------------------------------------------------------------------------
 # Vision feature extractors (notebook Section B.1)
 # ----------------------------------------------------------------------------
 def build_resnet18_extractor():
@@ -692,6 +766,113 @@ def extract_tiny_imagenet_features(
 
 
 # ----------------------------------------------------------------------------
+# Fine-grained vision feature extractors (issue ft02): CUB-200, Stanford Cars,
+# FGVC-Aircraft, + the documented DomainNet domain-shift split.
+# ----------------------------------------------------------------------------
+def _finegrained_pil_tfm(backbone_name: str):
+    """Backbone-matched PIL transform for the fine-grained datasets.
+
+    Small preprocessing hook (the issue's "maybe a small backbones.py
+    preprocessing hook"): the fine-grained sets are variable-resolution natural
+    images, so we Resize the SHORT side to 256 then CenterCrop 224 — the standard
+    ImageNet eval transform (more faithful than the plain ``Resize(224)`` the
+    CIFAR path uses, which squashes the aspect ratio of these non-square photos
+    and hurts the frozen-feature quality). Normalisation matches the backbone
+    exactly: ImageNet mean/std for ResNet-18 / ViT-L, [0.5,0.5,0.5] for the timm
+    ViT-B/32 weights (same per-backbone split as ``_build_vision_extractor``).
+    """
+    from torchvision import transforms
+
+    if backbone_name == "vit_b32":
+        mean, std = [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]
+    else:  # resnet18 / vit_l : ImageNet stats
+        mean, std = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+    return transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ])
+
+
+# Maps a fine-grained dataset slug -> the data.py dataset-factory + a kwargs
+# builder. Adding a dataset is one row here + one prefetch note. ``domainnet``
+# carries the domain in the slug suffix (``domainnet_clipart``) so distinct
+# domains cache to distinct files.
+def _finegrained_dataset(dataset_slug: str, tfm, data_root: str):
+    """Dispatch a fine-grained dataset slug to (train_ds, test_ds, num_classes).
+
+    Slugs: ``cub200`` | ``stanford_cars`` | ``fgvc_aircraft`` |
+    ``domainnet_<domain>`` (e.g. ``domainnet_clipart``). All return a
+    torchvision-style (train_ds, test_ds, num_classes) triple from ``data.py``.
+    """
+    from . import data as dt
+
+    if dataset_slug == "cub200":
+        return dt.make_cub200_datasets(tfm, data_root)
+    if dataset_slug == "stanford_cars":
+        return dt.make_stanford_cars_datasets(tfm, data_root)
+    if dataset_slug == "fgvc_aircraft":
+        return dt.make_fgvc_aircraft_datasets(tfm, data_root)
+    if dataset_slug.startswith("domainnet"):
+        # domainnet | domainnet_<domain>  (default domain = clipart)
+        parts = dataset_slug.split("_", 1)
+        domain = parts[1] if len(parts) > 1 else "clipart"
+        return dt.make_domainnet_datasets(tfm, data_root, domain=domain)
+    raise ValueError(f"unknown fine-grained dataset slug {dataset_slug!r}")
+
+
+def extract_finegrained_features(
+    backbone_name: str,
+    dataset_slug: str,
+    data_root: str = "data",
+    cache_root: str = "cache",
+) -> Tuple:
+    """Extract & cache frozen features for a fine-grained vision dataset (ft02).
+
+    Returns (X_train, y_train, X_test, y_test, in_dim). Mirrors
+    ``extract_cifar10_features`` (same frozen extractor + ``_collate_features``
+    DataLoader loop) but drives the fine-grained dataset objects from ``data.py``
+    under the ImageNet-eval ``_finegrained_pil_tfm`` rather than reading a
+    torchvision built-in directly. CACHE KEY = ``{dataset_slug}_{backbone_name}``
+    (so the SAME (backbone, dataset, split) tensor is computed once and reused
+    offline — train+test live in one file, matching every other extractor).
+
+    These are exactly the tasks where a frozen ViT-B/32 linear probe is NOT
+    already at ceiling (CUB/Cars/Aircraft frozen-probe ≈ 0.55-0.80 depending on
+    backbone), so the fine-tuning lift is visible — the point of issue ft02.
+
+    ``download=False`` is implicit: the data.py loaders never download; they
+    raise FileNotFoundError with the one-time fetch command if the files are
+    absent (placed once on the login node / Colab).
+    """
+    import torch
+
+    cache_dir = Path(cache_root) / "features"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    cache = cache_dir / f"{dataset_slug}_{backbone_name}.pt"
+    if cache.exists():
+        d = torch.load(cache)
+        return d["X_train"], d["y_train"], d["X_test"], d["y_test"], d["in_dim"]
+
+    extractor, in_dim, _tfm_cifar = _build_vision_extractor(backbone_name)
+    tfm = _finegrained_pil_tfm(backbone_name)
+    train_ds, test_ds, _nc = _finegrained_dataset(dataset_slug, tfm, data_root)
+    dev = _device()
+
+    X_train, y_train = _collate_features(extractor, train_ds, dev)
+    X_test, y_test = _collate_features(extractor, test_ds, dev)
+    torch.save(
+        {"X_train": X_train, "y_train": y_train, "X_test": X_test,
+         "y_test": y_test, "in_dim": in_dim},
+        cache,
+    )
+    del extractor
+    torch.cuda.empty_cache()
+    return X_train, y_train, X_test, y_test, in_dim
+
+
+# ----------------------------------------------------------------------------
 # Text feature extractors (notebook Section C.1)
 # ----------------------------------------------------------------------------
 def extract_text_features(
@@ -799,15 +980,46 @@ def extract_text_features(
     # (and the existing feature cache, which short-circuits this call) use the bare
     # name. Try the bare name first (byte-identical on VALAR), then fall back to the
     # namespaced canonical mirror so the same code runs on Colab unchanged.
-    _DS_FALLBACK = {"ag_news": "fancyzhx/ag_news", "dbpedia_14": "fancyzhx/dbpedia_14"}
+    #
+    # Issue ft02 adds three harder many-class text tasks. Their canonical HF ids
+    # + namespaced mirrors are registered here so the bare-then-namespaced
+    # fallback works on both VALAR (old datasets) and Colab (new datasets):
+    #   * banking77      — 77 fine-grained banking intents (text-classification).
+    #   * 20_newsgroups  — 20 topic classes (the SetFit mirror has text+label).
+    #   * trec           — question classification; 6 coarse / 50 fine classes.
+    _DS_FALLBACK = {
+        "ag_news": "fancyzhx/ag_news",
+        "dbpedia_14": "fancyzhx/dbpedia_14",
+        "banking77": "PolyAI/banking77",
+        # 20-Newsgroups: the SetFit mirror is the most reliable HF copy that
+        # ships a clean (text, label) pair over the standard 20 classes.
+        "20_newsgroups": "SetFit/20_newsgroups",
+        "trec": "CogComp/trec",
+    }
+    # The slug we actually request from HF: ``20_newsgroups`` has no bare
+    # canonical repo, so request the namespaced mirror directly.
+    _DS_PRIMARY = {"20_newsgroups": "SetFit/20_newsgroups"}
+    _request_id = _DS_PRIMARY.get(task_name, task_name)
     try:
-        ds = load_dataset(task_name)
+        ds = load_dataset(_request_id)
     except Exception:
         _alt = _DS_FALLBACK.get(task_name)
-        if _alt is None:
+        if _alt is None or _alt == _request_id:
             raise
         ds = load_dataset(_alt)
-    if task_name == "dbpedia_14":
+    if task_name == "trec":
+        # TREC question classification. No ``label`` column — it exposes
+        # ``coarse_label`` (6 classes) and ``fine_label`` (50 classes). We use
+        # the 6-way COARSE label (the standard TREC benchmark target); ``text``
+        # is the question string. Splits are ``train`` (5452) / ``test`` (500).
+        # 6 classes is small but the questions are short and category-ambiguous,
+        # so the frozen-feature linear probe leaves real headroom (the selection
+        # criterion is the headroom check, not the raw class count).
+        train_texts = ds["train"]["text"]
+        train_labels = torch.tensor(ds["train"]["coarse_label"], dtype=torch.long)
+        test_texts = ds["test"]["text"]
+        test_labels = torch.tensor(ds["test"]["coarse_label"], dtype=torch.long)
+    elif task_name == "dbpedia_14":
         # DBpedia-14 (issue 019 Part 2). 14 topic classes; columns are
         # ``title`` + ``content`` (no ``text`` column). Compose the input as
         # "<title>. <content>" — the standard DBpedia text-classification
@@ -832,9 +1044,15 @@ def extract_text_features(
         test_texts = _dbpedia_text(test_split)
         test_labels = torch.tensor(test_split["label"], dtype=torch.long)
     else:
-        # AG-News (default) and any other ``text``-column HF dataset — verbatim
-        # legacy path, so existing text:distilbert/gpt2_small/bert_large cells
-        # reproduce byte-for-byte.
+        # AG-News (default) and any other (``text``, ``label``)-column HF dataset
+        # — verbatim legacy path, so existing text:distilbert/gpt2_small/
+        # bert_large cells reproduce byte-for-byte. Issue ft02's Banking77 (77
+        # intents, columns text+label, splits train 10003 / test 3080) and
+        # 20-Newsgroups (20 topics via the SetFit mirror, columns text+label,
+        # splits train 11314 / test 7532) BOTH expose the canonical (text, label)
+        # pair and so flow through here unchanged — only the dataset id resolved
+        # above differs. (TREC is handled in its own branch because it has
+        # coarse_label/fine_label instead of a bare ``label``.)
         train_texts = ds["train"]["text"]
         train_labels = torch.tensor(ds["train"]["label"], dtype=torch.long)
         test_texts = ds["test"]["text"]

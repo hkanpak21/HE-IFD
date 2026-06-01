@@ -455,3 +455,285 @@ def load_tiny_imagenet_tensors(
         cache,
     )
     return X_train, y_train, X_test, y_test
+
+
+# ----------------------------------------------------------------------------
+# Fine-grained vision datasets (issue ft02): CUB-200-2011, Stanford Cars,
+# FGVC-Aircraft. These are the "frozen-backbone NOT linear-probe-solvable"
+# tasks the fine-tuning pivot needs (ViT-B/32 saturates CIFAR-10 at 0.97).
+# ----------------------------------------------------------------------------
+#
+# DESIGN — why these return torchvision *datasets*, not pre-decoded raw tensors
+# ----------------------------------------------------------------------------
+# Unlike MNIST/CIFAR (small, fixed 28/32 px), the fine-grained sets are tens of
+# thousands of variable-resolution natural images that must be Resize(224)-d for
+# the ImageNet backbones. Caching the *decoded* 224×224×3 raw tensors would be
+# 7-10 GB per dataset and pointless: the protocol only ever consumes the FROZEN
+# FEATURES (~tens of MB/dataset at 768-d), which ``backbones.extract_finegrained_*``
+# caches once. So the loaders below return a ``torchvision`` dataset the extractor
+# drives directly with the backbone's own transform — exactly the
+# ``extract_cifar10_features`` pattern, not the Tiny-ImageNet raw-tensor pattern.
+# (Tiny-ImageNet pre-decodes because it is the from-scratch/raw-pixel path too;
+# the fine-grained sets are pretrained-feature-only.)
+#
+# OFFLINE CONTRACT — ``download=False`` after a one-time fetch
+# ----------------------------------------------------------------------------
+# All three are placed on disk once (login node / Colab; see fetch + license
+# notes per loader) and then opened with ``download=False``. Stanford Cars and
+# FGVC-Aircraft use the torchvision built-in dataset classes (which read the
+# standard on-disk layout); CUB-200-2011 has no torchvision class, so it is read
+# from its standard ``images/<class>/<file>.jpg`` tree + index files (the same
+# robust offline approach as ``load_tiny_imagenet_tensors``). None of the loaders
+# ever download — each raises FileNotFoundError with the fetch command if absent.
+
+
+def _finegrained_root(data_root: str, name: str) -> Path:
+    return Path(data_root) / name
+
+
+def make_cub200_datasets(transform, data_root: str = "data"):
+    """Return (train_ds, test_ds, num_classes=200) for CUB-200-2011.
+
+    CUB-200-2011 (Caltech-UCSD Birds): 200 bird species, 11,788 images total,
+    official split 5,994 train / 5,794 test (per ``train_test_split.txt``). There
+    is NO torchvision built-in for CUB, so we read the standard release layout
+    via the index files shipped in the tarball:
+
+        data/CUB_200_2011/
+            images/<NNN.classname>/<file>.jpg
+            images.txt                 (<img_id> <relative_path>)
+            image_class_labels.txt     (<img_id> <class_id 1..200>)
+            train_test_split.txt       (<img_id> <is_train 0|1>)
+            classes.txt                (<class_id> <NNN.classname>)
+
+    Class index = ``class_id − 1`` (0..199), matching the release's 1-based ids.
+    A lightweight ``torch.utils.data.Dataset`` is built over the official split
+    so the extractor's DataLoader can stream it under the backbone transform.
+
+    FETCH (login node / Colab, once):
+        # CUB-200-2011, ~1.1 GB. Official Caltech mirror:
+        url=https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz
+        curl -L "$url" -o data/CUB_200_2011.tgz && tar -xzf data/CUB_200_2011.tgz -C data/
+    LICENSE: research / non-commercial use (Caltech-UCSD Birds-200-2011, Wah et
+        al. 2011). Images sourced from Flickr; cite the CUB-200-2011 tech report.
+
+    ``download=False`` semantics: the loader NEVER downloads — it raises
+    FileNotFoundError with the fetch command if the tree is absent.
+    """
+    from torch.utils.data import Dataset
+    from PIL import Image
+
+    root = _finegrained_root(data_root, "CUB_200_2011")
+    if not (root / "images.txt").exists():
+        raise FileNotFoundError(
+            f"CUB-200-2011 not found at {root}. Fetch it once on the login "
+            f"node:\n  url=https://data.caltech.edu/records/65de6-vp158/files/"
+            f"CUB_200_2011.tgz\n  curl -L \"$url\" -o {data_root}/CUB_200_2011.tgz "
+            f"&& tar -xzf {data_root}/CUB_200_2011.tgz -C {data_root}/"
+        )
+
+    def _read_pairs(fname):
+        out = {}
+        for line in (root / fname).read_text().splitlines():
+            parts = line.split()
+            if len(parts) >= 2:
+                out[int(parts[0])] = parts[1]
+        return out
+
+    id_to_path = _read_pairs("images.txt")
+    id_to_label = {k: int(v) - 1 for k, v in _read_pairs("image_class_labels.txt").items()}
+    id_to_istrain = {k: int(v) for k, v in _read_pairs("train_test_split.txt").items()}
+
+    train_items, test_items = [], []
+    for img_id, rel in sorted(id_to_path.items()):
+        item = (str(root / "images" / rel), id_to_label[img_id])
+        (train_items if id_to_istrain.get(img_id, 0) == 1 else test_items).append(item)
+
+    class _CUBSplit(Dataset):
+        def __init__(self, items, tfm):
+            self.items = items
+            self.tfm = tfm
+
+        def __len__(self):
+            return len(self.items)
+
+        def __getitem__(self, i):
+            path, label = self.items[i]
+            with Image.open(path) as img:
+                x = self.tfm(img.convert("RGB"))
+            return x, label
+
+    return _CUBSplit(train_items, transform), _CUBSplit(test_items, transform), 200
+
+
+def make_stanford_cars_datasets(transform, data_root: str = "data"):
+    """Return (train_ds, test_ds, num_classes=196) for Stanford Cars.
+
+    Stanford Cars: 196 car models, 16,185 images, official split 8,144 train /
+    8,041 test. Read via torchvision's built-in ``datasets.StanfordCars`` with
+    ``download=False`` (the torchvision auto-download URL is dead upstream, so
+    the files MUST be placed on disk manually — see FETCH).
+
+    On-disk layout torchvision expects (``data/stanford_cars/``):
+        cars_train/<file>.jpg
+        cars_test/<file>.jpg
+        devkit/cars_meta.mat, devkit/cars_train_annos.mat
+        cars_test_annos_withlabels.mat
+
+    FETCH (login node / Colab, once — manual, the torchvision mirror is gone):
+        # Kaggle mirror is the reliable source as of 2024+:
+        #   kaggle datasets download -d jutrera/stanford-car-dataset-by-classes-folder
+        # or an HF mirror. Place files under data/stanford_cars/ in the layout
+        # above, then load offline with download=False.
+    LICENSE: research / non-commercial (Krause et al., 3D Object Representations
+        for Fine-Grained Categorization, ICCV-W 2013). Cite the Stanford Cars
+        dataset; images are not redistributed by torchvision.
+
+    Labels are 0..195 (torchvision returns 0-based class ids).
+    """
+    from torchvision import datasets
+
+    root = _finegrained_root(data_root, "stanford_cars")
+    try:
+        train_ds = datasets.StanfordCars(str(data_root), split="train",
+                                         transform=transform, download=False)
+        test_ds = datasets.StanfordCars(str(data_root), split="test",
+                                        transform=transform, download=False)
+    except (RuntimeError, OSError) as e:
+        raise FileNotFoundError(
+            f"Stanford Cars not found/decodable under {root}. The torchvision "
+            f"auto-download URL is dead; place the files manually (Kaggle/HF "
+            f"mirror) under {root}/ in the cars_train/cars_test/devkit layout, "
+            f"then load with download=False. Original error: {e}"
+        ) from e
+    return train_ds, test_ds, 196
+
+
+def make_fgvc_aircraft_datasets(transform, data_root: str = "data",
+                                annotation_level: str = "variant"):
+    """Return (train_ds, test_ds, num_classes) for FGVC-Aircraft.
+
+    FGVC-Aircraft: 10,000 images of aircraft, hierarchical labels. At the
+    default ``annotation_level="variant"`` there are 100 classes (the standard
+    fine-grained benchmark setting); "family"=70, "manufacturer"=30 are also
+    available. Official split: 6,667 train (train+val) / 3,333 test. Read via
+    torchvision's built-in ``datasets.FGVCAircraft`` with ``download=False``.
+
+    The torchvision class reads ``data/fgvc-aircraft-2013b/``. We use the
+    combined ``trainval`` split for train and ``test`` for test (the conventional
+    train/test partition).
+
+    FETCH (login node / Colab, once):
+        # torchvision can fetch it (the VGG mirror is live); trigger on login
+        # node so compute nodes load offline:
+        python -c "from torchvision.datasets import FGVCAircraft as A; \\
+            A('data', split='trainval', download=True); \\
+            A('data', split='test', download=True)"
+    LICENSE: research / non-commercial (Maji et al., Fine-Grained Visual
+        Classification of Aircraft, 2013). Cite the FGVC-Aircraft dataset.
+
+    Labels are 0-based class ids over the chosen ``annotation_level``.
+    """
+    from torchvision import datasets
+
+    root = _finegrained_root(data_root, "fgvc-aircraft-2013b")
+    try:
+        train_ds = datasets.FGVCAircraft(
+            str(data_root), split="trainval", annotation_level=annotation_level,
+            transform=transform, download=False)
+        test_ds = datasets.FGVCAircraft(
+            str(data_root), split="test", annotation_level=annotation_level,
+            transform=transform, download=False)
+    except (RuntimeError, OSError) as e:
+        raise FileNotFoundError(
+            f"FGVC-Aircraft not found under {root}. Fetch once on the login "
+            f"node: python -c \"from torchvision.datasets import FGVCAircraft "
+            f"as A; A('{data_root}', split='trainval', download=True); "
+            f"A('{data_root}', split='test', download=True)\". Original error: {e}"
+        ) from e
+    # num_classes depends on annotation_level: variant=100, family=70, manuf=30.
+    nc = {"variant": 100, "family": 70, "manufacturer": 30}[annotation_level]
+    return train_ds, test_ds, nc
+
+
+# ----------------------------------------------------------------------------
+# DomainNet single-domain split (issue ft02): the documented domain-shift option.
+# ----------------------------------------------------------------------------
+def make_domainnet_datasets(transform, data_root: str = "data",
+                            domain: str = "clipart"):
+    """Return (train_ds, test_ds, num_classes=345) for one DomainNet domain.
+
+    DomainNet (Peng et al., ICCV 2019): 6 domains (clipart, infograph, painting,
+    quickdraw, real, sketch), 345 object classes shared across domains — the
+    standard domain-shift / feature-skew benchmark. We load ONE domain at a time
+    (default ``clipart``, a clean-loading + widely-cited single split) via its
+    official train/test list files:
+
+        data/domainnet/
+            <domain>/<class>/<file>.jpg
+            <domain>_train.txt          (<relative_path> <class_id 0..344>)
+            <domain>_test.txt
+
+    A single domain is the domain-shift axis the PRD asks for: train the
+    federation on one shifted domain whose ImageNet-frozen features are weaker
+    than the natural-photo "real" domain, giving fine-tuning headroom.
+
+    NOTE — Tiny-ImageNet is the PRIMARY large-label/domain-shift choice (it
+    already loads cleanly via ``load_tiny_imagenet_tensors`` and is wired into
+    BACKBONES). DomainNet is the DOCUMENTED ALTERNATIVE per the issue ("Tiny-
+    ImageNet and/or one DomainNet split — pick what loads cleanly, document it").
+    This loader is provided + syntax-validated so the orchestrator can opt into a
+    true domain-shift cell, but the headline large-label task is Tiny-ImageNet.
+
+    FETCH (login node / Colab, once — per domain, ``clipart`` is ~1.2 GB):
+        base=http://csr.bu.edu/ftp/visda/2019/multi-source
+        mkdir -p data/domainnet
+        curl -L "$base/clipart.zip" -o data/clipart.zip
+        curl -L "$base/txt/clipart_train.txt" -o data/domainnet/clipart_train.txt
+        curl -L "$base/txt/clipart_test.txt"  -o data/domainnet/clipart_test.txt
+        unzip -q data/clipart.zip -d data/domainnet/
+    LICENSE: research / non-commercial (DomainNet, Moment Matching for Multi-
+        Source Domain Adaptation, Peng et al. 2019). Cite the DomainNet paper.
+
+    Labels are the 0..344 class ids from the official list files.
+    """
+    from torch.utils.data import Dataset
+    from PIL import Image
+
+    root = _finegrained_root(data_root, "domainnet")
+    train_list = root / f"{domain}_train.txt"
+    test_list = root / f"{domain}_test.txt"
+    if not train_list.exists():
+        raise FileNotFoundError(
+            f"DomainNet domain {domain!r} not found at {root} (missing "
+            f"{train_list.name}). Fetch the domain zip + train/test txt lists "
+            f"from http://csr.bu.edu/ftp/visda/2019/multi-source and unzip "
+            f"under {root}/ (see this loader's docstring for the exact commands)."
+        )
+
+    def _read_list(p):
+        items = []
+        for line in p.read_text().splitlines():
+            parts = line.split()
+            if len(parts) >= 2:
+                items.append((str(root / parts[0]), int(parts[1])))
+        return items
+
+    train_items = _read_list(train_list)
+    test_items = _read_list(test_list)
+
+    class _DomainNetSplit(Dataset):
+        def __init__(self, items, tfm):
+            self.items = items
+            self.tfm = tfm
+
+        def __len__(self):
+            return len(self.items)
+
+        def __getitem__(self, i):
+            path, label = self.items[i]
+            with Image.open(path) as img:
+                x = self.tfm(img.convert("RGB"))
+            return x, label
+
+    return _DomainNetSplit(train_items, transform), _DomainNetSplit(test_items, transform), 345

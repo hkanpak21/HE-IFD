@@ -55,6 +55,17 @@ _LEGACY_AGG_METHOD = "weight_avg"
 # pre-axis trajectory optimizer, so omitting it from the descriptor keeps every
 # existing per-cell JSON hash/filename identical (resumable across this axis).
 _LEGACY_OPTIMIZER = "sgd"
+# Local-step axis (issue ft01) — the pre-ft01 local step was teacher→student
+# distillation, so the LEGACY value is ``distill``; omitting it from the
+# descriptor when it equals ``distill`` keeps every existing per-cell JSON
+# hash/filename identical (resumable across the ft01 fine-tuning pivot). The
+# new headline ``finetune`` flows into the descriptor and gets a distinct stem.
+_LEGACY_LOCAL_STEP = "distill"
+# Trainable-unit axis (issue ft01) — the pre-ft01 trainable unit was the linear
+# ``head`` (== the issue-011 ``head_only`` scope), so the LEGACY value is
+# ``head``; omitting it when it equals ``head`` keeps existing per-cell JSON
+# hashes/filenames identical (resumable across the ft01 trainable-unit axis).
+_LEGACY_TRAINABLE_UNIT = "head"
 
 
 def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
@@ -63,13 +74,18 @@ def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
                     student_lr: float = _LEGACY_STUDENT_LR,
                     trainable_scope: str = _LEGACY_TRAINABLE_SCOPE,
                     agg_method: str = _LEGACY_AGG_METHOD,
-                    optimizer: str = _LEGACY_OPTIMIZER) -> Dict:
+                    optimizer: str = _LEGACY_OPTIMIZER,
+                    local_step: str = _LEGACY_LOCAL_STEP,
+                    trainable_unit: str = _LEGACY_TRAINABLE_UNIT) -> Dict:
     """Deterministic cell descriptor. ``tau`` / ``student_lr`` /
-    ``trainable_scope`` / ``agg_method`` / ``optimizer`` are appended ONLY when
-    they differ from the historical defaults so existing per-cell filenames
-    (which hashed only over {backbone,N,alpha,method,seed,K}) keep their hashes
-    and remain resumable across the issue 010 (tau/LR), issue 011 (scope), issue
-    025 (agg_method), and TIER-1 Axis-A (optimizer) extensions."""
+    ``trainable_scope`` / ``agg_method`` / ``optimizer`` / ``local_step`` /
+    ``trainable_unit`` are appended ONLY when they differ from the historical
+    defaults so existing per-cell filenames (which hashed only over
+    {backbone,N,alpha,method,seed,K}) keep their hashes and remain resumable
+    across the issue 010 (tau/LR), issue 011 (scope), issue 025 (agg_method),
+    TIER-1 Axis-A (optimizer), and issue ft01 (local_step + trainable_unit)
+    extensions. ft01's legacy values are ``distill`` + ``head`` (the pre-pivot
+    behaviour), so pre-ft01 cells keep their stems/hashes."""
     desc: Dict = {"backbone": backbone, "N": N, "alpha": alpha,
                   "method": method, "seed": seed, "K": K}
     if tau != _LEGACY_TAU:
@@ -82,6 +98,10 @@ def cell_descriptor(backbone: str, N: int, alpha: float, method: str,
         desc["agg_method"] = agg_method
     if optimizer != _LEGACY_OPTIMIZER:
         desc["optimizer"] = optimizer
+    if local_step != _LEGACY_LOCAL_STEP:
+        desc["local_step"] = local_step
+    if trainable_unit != _LEGACY_TRAINABLE_UNIT:
+        desc["trainable_unit"] = trainable_unit
     return desc
 
 
@@ -107,6 +127,10 @@ def cell_filename(desc: Dict) -> str:
         stem += f"_agg{desc['agg_method']}"
     if "optimizer" in desc:
         stem += f"_opt{desc['optimizer']}"
+    if "local_step" in desc:
+        stem += f"_ls{desc['local_step']}"
+    if "trainable_unit" in desc:
+        stem += f"_tu{desc['trainable_unit']}"
     return f"{stem}_{descriptor_hash(desc)}.json"
 
 
@@ -217,6 +241,33 @@ def parse_args() -> argparse.Namespace:
                    help="Optional comma list of client optimizers to sweep, e.g. "
                         "sgd,adam,lamb. When set, overrides --optimizer and adds "
                         "the optimizer as a grid axis (TIER-1 Axis A).")
+    p.add_argument("--local-step", type=str, default="distill",
+                   help="Client-side local step (single value; issue ft01). "
+                        "'distill' (default; the legacy teacher→student KL "
+                        "trajectory — byte-identical, reuses the legacy "
+                        "filename/hash) or 'finetune' (the headline: DIRECT "
+                        "supervised fine-tuning, cross-entropy on local hard "
+                        "labels). NOTE: defaults to 'distill' here so existing "
+                        "sweeps reproduce byte-for-byte; the run_cell default is "
+                        "'finetune' (the new headline for notebooks).")
+    p.add_argument("--local-steps", type=str, default=None,
+                   help="Optional comma list of local steps to sweep, e.g. "
+                        "finetune,distill. When set, overrides --local-step and "
+                        "adds the local step as a grid axis (issue ft01).")
+    p.add_argument("--trainable-unit", type=str, default="head",
+                   help="Trainable unit (single value; issue ft01). 'head' "
+                        "(default; linear probe == legacy head_only — "
+                        "byte-identical, reuses the legacy filename/hash), 'lora' "
+                        "(LoRA adapter + head — the headline; 'lora_<rank>' for "
+                        "an explicit rank), or 'last_n' / 'last_n_<n>' (last-N "
+                        "blocks as an MLP-on-cached-features head). Resolves to "
+                        "an issue-011 trainable_scope so the displacement flows "
+                        "through the UNCHANGED depth-1 aggregate.")
+    p.add_argument("--trainable-units", type=str, default=None,
+                   help="Optional comma list of trainable units to sweep, e.g. "
+                        "head,lora,last_n (the ft07 trainable-unit comparison). "
+                        "When set, overrides --trainable-unit and adds the unit "
+                        "as a grid axis (issue ft01).")
     p.add_argument("--probe-size", type=int, default=None,
                    help="Labelled-probe size P (default: backbone-specific).")
     p.add_argument("--case", type=str, default="v1_he-ifd_mlp_mnist_verify",
@@ -241,14 +292,17 @@ def build_grid(args) -> List[Dict]:
 
     The default sweep is the historical 6-axis grid (backbone × N × α × method ×
     seed × K with a single K). When ``--Ks`` / ``--taus`` / ``--student-lrs`` /
-    ``--scopes`` / ``--agg-methods`` / ``--optimizers`` are provided, those become
-    additional grid axes (single-value flags ``--K`` / ``--tau`` / ``--student-lr``
-    / ``--scope`` / ``--optimizer`` are ignored for that axis). Non-default (tau,
-    student_lr, trainable_scope, agg_method, optimizer) values flow into the
-    descriptor so cell filenames stay distinct — see ``cell_descriptor`` for the
-    backwards-compat rule (``agg_method`` defaults to ``weight_avg`` and
-    ``optimizer`` to ``sgd``, and both are omitted from the descriptor there so
-    those legacy cells keep their filename/hash and resume).
+    ``--scopes`` / ``--agg-methods`` / ``--optimizers`` / ``--local-steps`` /
+    ``--trainable-units`` are provided, those become additional grid axes
+    (single-value flags ``--K`` / ``--tau`` / ``--student-lr`` / ``--scope`` /
+    ``--optimizer`` / ``--local-step`` / ``--trainable-unit`` are ignored for
+    that axis). Non-default (tau, student_lr, trainable_scope, agg_method,
+    optimizer, local_step, trainable_unit) values flow into the descriptor so
+    cell filenames stay distinct — see ``cell_descriptor`` for the
+    backwards-compat rule (``agg_method`` defaults to ``weight_avg``, ``optimizer``
+    to ``sgd``, ``local_step`` to ``distill``, ``trainable_unit`` to ``head``, and
+    each is omitted from the descriptor at its legacy value so those legacy cells
+    keep their filename/hash and resume).
     """
     Ks = parse_int_list(args.Ks) if args.Ks else [args.K]
     taus = parse_float_list(args.taus) if args.taus else [args.tau]
@@ -256,6 +310,10 @@ def build_grid(args) -> List[Dict]:
     scopes = parse_str_list(args.scopes) if args.scopes else [args.scope]
     agg_methods = parse_str_list(args.agg_methods) if args.agg_methods else [_LEGACY_AGG_METHOD]
     optimizers = parse_str_list(args.optimizers) if args.optimizers else [args.optimizer]
+    local_steps = parse_str_list(args.local_steps) if args.local_steps else [args.local_step]
+    trainable_units = (
+        parse_str_list(args.trainable_units) if args.trainable_units
+        else [args.trainable_unit])
     grid: List[Dict] = []
     for backbone in parse_str_list(args.backbones):
         for N in parse_int_list(args.Ns):
@@ -268,12 +326,16 @@ def build_grid(args) -> List[Dict]:
                                     for scope in scopes:
                                         for agg_method in agg_methods:
                                             for optimizer in optimizers:
-                                                grid.append(cell_descriptor(
-                                                    backbone, N, alpha, method, seed, K,
-                                                    tau=tau, student_lr=student_lr,
-                                                    trainable_scope=scope,
-                                                    agg_method=agg_method,
-                                                    optimizer=optimizer))
+                                                for local_step in local_steps:
+                                                    for trainable_unit in trainable_units:
+                                                        grid.append(cell_descriptor(
+                                                            backbone, N, alpha, method, seed, K,
+                                                            tau=tau, student_lr=student_lr,
+                                                            trainable_scope=scope,
+                                                            agg_method=agg_method,
+                                                            optimizer=optimizer,
+                                                            local_step=local_step,
+                                                            trainable_unit=trainable_unit))
     return grid
 
 
@@ -325,10 +387,12 @@ def main() -> None:
         cell_scope = desc.get("trainable_scope", args.scope)
         cell_agg = desc.get("agg_method", _LEGACY_AGG_METHOD)
         cell_optimizer = desc.get("optimizer", args.optimizer)
+        cell_local_step = desc.get("local_step", _LEGACY_LOCAL_STEP)
+        cell_trainable_unit = desc.get("trainable_unit", _LEGACY_TRAINABLE_UNIT)
         print(f"[sweep] start {desc['backbone']} N={desc['N']} a={desc['alpha']} "
               f"{desc['method']} s={desc['seed']} K={desc['K']} "
               f"tau={cell_tau} lr={cell_lr} scope={cell_scope} agg={cell_agg} "
-              f"opt={cell_optimizer}",
+              f"opt={cell_optimizer} ls={cell_local_step} tu={cell_trainable_unit}",
               flush=True)
         res = run_cell(
             backbone=desc["backbone"], N=desc["N"], alpha=desc["alpha"],
@@ -339,6 +403,8 @@ def main() -> None:
             trainable_scope=cell_scope,
             agg_method=cell_agg,
             optimizer=cell_optimizer,
+            local_step=cell_local_step,
+            trainable_unit=cell_trainable_unit,
         )
         write_cell_json(results_dir, res, desc)
         tag = "ok" if res.status == "success" else "FAIL"

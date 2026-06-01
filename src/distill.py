@@ -205,6 +205,150 @@ def local_distill_trajectory(
     return delta
 
 
+def local_finetune_trajectory(
+    init_params: Dict,
+    make_model_fn: Callable,
+    X,
+    y,
+    K_steps: int,
+    lr: float,
+    momentum: float,
+    bs: int,
+    return_steps: bool = False,
+    optimizer: str = "sgd",
+) -> Union[Dict, Tuple[Dict, List[Dict]]]:
+    """Direct supervised fine-tuning trajectory -> cumulative displacement Δ.
+
+    The fine-tuning pivot's HEADLINE local step (PRD ft-pivot, issue ft01). It is
+    the *exact structural twin* of ``local_distill_trajectory`` — same bounded
+    K-step trajectory from the shared basin θ₀, same per-step minibatch sampling
+    (``torch.randint`` with replacement), same optimizer construction, and the
+    same returned object: the cumulative trainable-parameter displacement
+
+            Δ = θ_K − θ₀
+
+    — a SINGLE parameter-set that flows, byte-for-byte, through the *unchanged*
+    depth-1 ``aggregate`` (task arithmetic; see ``aggregate.aggregate``). The
+    ONLY difference from the distillation trajectory is the per-step loss: where
+    distillation minimises temperatured KL against a frozen teacher's soft
+    targets, fine-tuning minimises **cross-entropy on the client's own hard
+    labels** ``y``. There is no teacher and no temperature here — the supervision
+    is the local labelled data itself, which is what makes the title "federated
+    *fine-tuning*" honest.
+
+    Parameters mirror ``local_distill_trajectory`` minus ``teacher``/``tau`` and
+    plus the hard-label tensor ``y`` (aligned row-for-row with ``X``). The
+    minibatch sampler and optimizer are identical, so for the SAME trainable
+    unit, init, and optimizer the only thing that changes the resulting Δ is the
+    loss — exactly the headline-vs-ablation comparison the PRD asks for.
+
+    Returns
+    -------
+    delta : dict
+        Cumulative displacement Δ = θ_final − θ₀ (per trainable tensor).
+    (delta, step_deltas) : if ``return_steps`` — also the list of K per-step
+        deltas (for the coherence / KD-dynamics diagnostics). ``sum_k
+        step_deltas[k] == delta``.
+
+    A zero-sample client returns Δ = 0 (it moves the aggregate not at all),
+    matching the distillation path's zero-sample contract.
+    """
+    import torch
+    import torch.nn.functional as F
+
+    from .backbones import get_params
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    student = make_model_fn()
+    student.load_state_dict(init_params)
+    X = X.to(device)
+    y = y.to(device)
+    n = X.shape[0]
+
+    if n == 0:
+        delta = zero_like(init_params)
+        if return_steps:
+            return delta, [zero_like(init_params) for _ in range(K_steps)]
+        return delta
+
+    opt = _make_optimizer(student.parameters(), optimizer, lr, momentum)
+    step_deltas: List[Dict] = []
+    for _ in range(K_steps):
+        idx = torch.randint(0, n, (min(bs, n),), device=device)
+        xb = X[idx]
+        yb = y[idx]
+        prev = get_params(student)
+        opt.zero_grad()
+        s_logits = student(xb)
+        # Direct supervised loss: cross-entropy on the client's own hard labels.
+        # NO teacher, NO temperature — this is the fine-tuning headline step.
+        loss = F.cross_entropy(s_logits, yb)
+        loss.backward()
+        opt.step()
+        if return_steps:
+            step_deltas.append(params_diff(get_params(student), prev))
+
+    # Cumulative displacement Δ = θ_final − θ₀ (the object that is encrypted),
+    # identical in form/return-contract to local_distill_trajectory's Δ so the
+    # server aggregate is byte-compatible.
+    final = get_params(student)
+    delta = params_diff(final, init_params)
+    if return_steps:
+        return delta, step_deltas
+    return delta
+
+
+def finetune_all_clients(
+    init_params: Dict,
+    make_model_fn: Callable,
+    client_X_list: List,
+    client_y_list: List,
+    K_steps: int,
+    lr: float,
+    momentum: float,
+    bs: int,
+    diagnose: bool = False,
+    optimizer: str = "sgd",
+) -> Union[List[Dict], Tuple[List[Dict], List[List[Dict]]]]:
+    """Run the direct fine-tuning trajectory for every client; return the Δ_i list.
+
+    The fine-tuning twin of ``distill_all_clients``: same return contract (a list
+    of cumulative Δ_i, or — with ``diagnose=True`` — additionally the per-client
+    per-step deltas), same zero-sample handling, but each client runs
+    ``local_finetune_trajectory`` (CE on its own hard labels) instead of
+    ``local_distill_trajectory`` (KL against a teacher). It therefore needs
+    ``client_y_list`` (the labels) and takes NO ``teachers``/``tau`` argument.
+    Every Δ_i is what client i would encrypt under the multiparty CKKS key; the
+    server linearly combines them with the SAME unchanged ``aggregate``.
+    """
+    if not diagnose:
+        deltas: List[Dict] = []
+        for i in range(len(client_X_list)):
+            deltas.append(
+                local_finetune_trajectory(
+                    init_params, make_model_fn,
+                    client_X_list[i], client_y_list[i],
+                    K_steps, lr, momentum, bs,
+                    optimizer=optimizer,
+                )
+            )
+        return deltas
+
+    deltas_d: List[Dict] = []
+    step_deltas_per_client: List[List[Dict]] = []
+    for i in range(len(client_X_list)):
+        delta_i, steps_i = local_finetune_trajectory(
+            init_params, make_model_fn,
+            client_X_list[i], client_y_list[i],
+            K_steps, lr, momentum, bs,
+            return_steps=True, optimizer=optimizer,
+        )
+        deltas_d.append(delta_i)
+        step_deltas_per_client.append(steps_i)
+    return deltas_d, step_deltas_per_client
+
+
 def distill_all_clients(
     teachers: List,
     init_params: Dict,

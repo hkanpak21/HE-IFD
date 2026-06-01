@@ -311,6 +311,90 @@ BACKBONES: Dict[str, BackboneSpec] = {
         oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
         feature_loader="text:mpnet_st:dbpedia_14", normalize_features="zscore",
     ),
+    # ------------------------------------------------------------------------
+    # Fine-grained VISION on the FROZEN ViT-B/32 backbone (issue ft02). These
+    # are the tasks where a frozen linear probe is NOT already at ceiling, so
+    # the fine-tuning lift is visible (CIFAR-10 saturates ViT-B/32 at 0.97).
+    # Head-on-cached-features pattern, identical to the CIFAR/Tiny-ImageNet
+    # entries; only num_classes + the ``finegrained:<bb>:<slug>`` feature_loader
+    # differ. Probe density mirrors the CIFAR-100/Tiny-ImageNet entries (~3
+    # labelled samples/class): CUB 200·3=600, Cars 196·3≈600, Aircraft 100·3=300.
+    # ViT-B/32 is the PRD's core vision backbone; resnet18 variants can be added
+    # the same way if the orchestrator wants the cross-backbone comparison.
+    "vit_b32_cub200": BackboneSpec(
+        label="vit_b32_cub200", kind="head", num_classes=200,
+        labelled_probe_default=600, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="finegrained:vit_b32:cub200",
+    ),
+    "vit_b32_stanford_cars": BackboneSpec(
+        label="vit_b32_stanford_cars", kind="head", num_classes=196,
+        labelled_probe_default=600, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="finegrained:vit_b32:stanford_cars",
+    ),
+    "vit_b32_fgvc_aircraft": BackboneSpec(
+        label="vit_b32_fgvc_aircraft", kind="head", num_classes=100,
+        labelled_probe_default=300, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="finegrained:vit_b32:fgvc_aircraft",
+    ),
+    # DomainNet-clipart on ViT-B/32 — the documented domain-shift alternative
+    # to Tiny-ImageNet (345 classes; clipart's non-photo style makes the
+    # ImageNet-frozen features weaker → headroom). Probe density kept modest
+    # (345·~2≈700) since clipart-train is ~33k images. Off the headline path
+    # (Tiny-ImageNet is the primary large-label task) but wired so the
+    # orchestrator can opt into a true feature-skew cell.
+    "vit_b32_domainnet_clipart": BackboneSpec(
+        label="vit_b32_domainnet_clipart", kind="head", num_classes=345,
+        labelled_probe_default=700, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="finegrained:vit_b32:domainnet_clipart",
+    ),
+    # ------------------------------------------------------------------------
+    # Harder many-class TEXT (issue ft02) on the strong frozen text backbones
+    # (roberta_base / mpnet_st — the issue-019 encoders). Same zscore feature
+    # standardization + AG-News head hyperparams; only num_classes + the
+    # ``text:<bb>:<task>`` dataset segment differ. Banking77 (77 intents) and
+    # 20-Newsgroups (20 topics) leave real frozen-probe headroom; TREC is the
+    # 6-way coarse question-type task. Probe density: ~3-4 samples/class (231 for
+    # 77 classes, 100 for 20, kept at 100 floor for TREC's 6 classes).
+    "roberta_base_banking77": BackboneSpec(
+        label="roberta_base_banking77", kind="head", num_classes=77,
+        labelled_probe_default=231, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:roberta_base:banking77", normalize_features="zscore",
+    ),
+    "mpnet_st_banking77": BackboneSpec(
+        label="mpnet_st_banking77", kind="head", num_classes=77,
+        labelled_probe_default=231, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:mpnet_st:banking77", normalize_features="zscore",
+    ),
+    "roberta_base_20news": BackboneSpec(
+        label="roberta_base_20news", kind="head", num_classes=20,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:roberta_base:20_newsgroups", normalize_features="zscore",
+    ),
+    "mpnet_st_20news": BackboneSpec(
+        label="mpnet_st_20news", kind="head", num_classes=20,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:mpnet_st:20_newsgroups", normalize_features="zscore",
+    ),
+    "roberta_base_trec": BackboneSpec(
+        label="roberta_base_trec", kind="head", num_classes=6,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:roberta_base:trec", normalize_features="zscore",
+    ),
+    "mpnet_st_trec": BackboneSpec(
+        label="mpnet_st_trec", kind="head", num_classes=6,
+        labelled_probe_default=100, teacher_epochs=3, teacher_lr=0.01,
+        oracle_epochs=5, warmup_epochs=_WARMUP_EPOCHS, bs=128,
+        feature_loader="text:mpnet_st:trec", normalize_features="zscore",
+    ),
 }
 
 
@@ -400,6 +484,20 @@ class CellResult:
     # the historical SGD trajectory; ``run_cell`` sets this to the actual
     # optimizer name (default ``"sgd"``) so every newly-written cell records it.
     optimizer: Optional[str] = None
+    # Local-step axis (issue ft01 — the fine-tuning pivot). The client-side
+    # learning rule that produced each Δᵢ: ``"finetune"`` (direct supervised CE
+    # on local hard labels — the headline) or ``"distill"`` (the legacy
+    # teacher→student KL trajectory — now a switchable ablation). ``None`` on any
+    # pre-ft01 JSON; ``run_cell`` records the actual value. ``distill`` is
+    # byte-identical to the pre-ft01 distillation path.
+    local_step: Optional[str] = None
+    # Trainable-unit axis (issue ft01). The trainable parameter set the protocol
+    # fine-tunes/aggregates: ``"head"`` (linear probe; legacy), ``"lora"`` (LoRA
+    # adapter + head — the headline) or ``"last_n"`` (last-N blocks). ``None`` on
+    # any pre-ft01 JSON; recorded here when set. Resolves to an issue-011
+    # ``trainable_scope`` token internally so the displacement still flows through
+    # the UNCHANGED depth-1 ``aggregate``.
+    trainable_unit: Optional[str] = None
     # Δ-drift diagnostics over the per-client cumulative displacements {Δ_i}.
     # Populated only in the success path (cheap, CPU). ``delta_norms`` = the list
     # of ‖Δ_i‖₂; ``delta_norm_spread`` = std/mean of those norms (0 if mean 0);
@@ -638,6 +736,21 @@ def _load_features(
         def _head_factory(in_dim_, num_classes_):
             return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
         return Xtr, ytr, Xte, yte, in_dim, _head_factory
+    if spec.feature_loader.startswith("finegrained:"):
+        # Pretrained-feature path on the issue-ft02 fine-grained datasets
+        # (CUB-200 / Stanford Cars / FGVC-Aircraft) + the documented DomainNet
+        # domain-shift split. Format: ``finegrained:<backbone>:<dataset_slug>``
+        # where <dataset_slug> ∈ {cub200, stanford_cars, fgvc_aircraft,
+        # domainnet_<domain>}. Same head-on-cached-features pattern + scope
+        # dispatch as the CIFAR/Tiny-ImageNet paths; the extractor caches one
+        # frozen-feature tensor per (backbone, dataset) (train+test in one file).
+        rest = spec.feature_loader.split(":", 1)[1]
+        name, dataset_slug = rest.split(":", 1)
+        Xtr, ytr, Xte, yte, in_dim = bk.extract_finegrained_features(
+            name, dataset_slug, data_root, cache_root)
+        def _head_factory(in_dim_, num_classes_):
+            return bk.make_head_for_scope(in_dim_, num_classes_, trainable_scope)
+        return Xtr, ytr, Xte, yte, in_dim, _head_factory
     if spec.feature_loader.startswith("text:"):
         # ``text:<model>``            -> AG-News (legacy default), or
         # ``text:<model>:<dataset>``  -> a specific HF text dataset (issue 019
@@ -685,6 +798,8 @@ def run_cell(
     agg_method: str = "weight_avg",
     lambda_scales: Optional[Sequence[float]] = None,
     optimizer: str = "sgd",
+    local_step: str = "finetune",
+    trainable_unit: Optional[str] = None,
 ) -> CellResult:
     """Run one protocol cell end-to-end and return a CellResult.
 
@@ -733,26 +848,71 @@ def run_cell(
     scalar so the combine remains depth-1 under CKKS. The hook is a no-op for any
     non-linear ``agg_method`` (the interpolation identity is a linear-aggregate
     property).
+
+    ``local_step`` (default ``"finetune"``) is the issue-ft01 fine-tuning-pivot
+    lever — the client-side learning rule on the bounded K-step trajectory from
+    θ₀. ``"finetune"`` (the headline) runs DIRECT supervised fine-tuning
+    (cross-entropy on each client's own hard labels) via
+    ``distill.finetune_all_clients``; ``"distill"`` runs the legacy teacher→student
+    KL trajectory via ``distill.distill_all_clients`` and is BYTE-IDENTICAL to the
+    pre-ft01 distillation path (same teachers, same τ, same sampler). Either way
+    the per-client cumulative displacement Δᵢ = θᵢ⁽ᴷ⁾ − θ₀ is the object the
+    UNCHANGED depth-1 ``aggregate`` linearly combines, so the crypto contract is
+    identical. NOTE the sweep CLI defaults ``--local-step`` to ``"distill"`` so
+    EXISTING sweep invocations (which never pass the flag) reproduce their cells
+    byte-for-byte; ``run_cell``'s own default is ``"finetune"`` because that is
+    the new headline for direct callers / the fine-tuning notebooks.
+
+    ``trainable_unit`` (default ``None``) is the issue-ft01 trainable-unit axis:
+    ``"head"`` (linear probe; legacy), ``"lora"`` (LoRA adapter + head — the
+    headline) or ``"last_n"`` (last-N blocks as an MLP-on-cached-features head).
+    When set it RESOLVES to the equivalent issue-011 ``trainable_scope`` token
+    (``backbones.trainable_unit_to_scope``) and takes precedence over
+    ``trainable_scope`` — so the LoRA+head / last-N parameter sets land in the
+    same ``state_dict`` and flow through the SAME element-wise ``aggregate``
+    (byte-compatible; ``aggregate`` is untouched). ``trainable_unit="head"`` is
+    byte-identical to the legacy ``head_only`` linear head. ``None`` leaves the
+    existing ``trainable_scope`` resolution unchanged.
     """
     import numpy as np
     import torch
 
     from . import aggregate as agg
     from . import phase0 as p0
-    from .backbones import get_params
+    from .backbones import get_params, trainable_unit_to_scope
     from .data import partition_pool, per_client_per_class_counts, reserve_probe_and_pool
     from .distill import distill_all_clients
     from .evaluate import accuracy_on, ood_accuracy, per_client_gap
     from .teacher import train_supervised_model
 
     spec = BACKBONES[backbone]
-    # Resolve the effective trainable-layer scope (issue 011). ``None`` falls
-    # back to the BackboneSpec default, which is ``"head_only"`` for every
-    # registered backbone today — so cells written before issue 011 reproduce
-    # exactly under the same descriptor/hash.
-    effective_scope = (
-        trainable_scope if trainable_scope is not None else spec.trainable_scope
+    # Resolve the effective trainable-layer scope (issue 011), now with the
+    # issue-ft01 ``trainable_unit`` axis layered on top. Precedence is chosen so
+    # the new axis NEVER clobbers an explicit issue-011 ``trainable_scope`` at
+    # the legacy default — i.e. a sweep that sets ``--scopes lora_8`` (the
+    # scope vocabulary) while leaving ``trainable_unit`` at its legacy ``head``
+    # stays byte-identical:
+    #   * a NON-LEGACY ``trainable_unit`` (lora / last_n / an explicit token that
+    #     does NOT resolve to head_only) WINS, mapped to its scope token. This is
+    #     the ft01 first-class axis name.
+    #   * else ``trainable_scope`` set -> the issue-011 token verbatim.
+    #   * else                       -> the BackboneSpec default (``head_only``
+    #     for every registered backbone), so pre-issue-011 cells reproduce
+    #     exactly under the same descriptor/hash.
+    # ``trainable_unit="head"`` and ``trainable_scope="head_only"`` both resolve
+    # to the legacy linear head, so the default path is byte-identical to today.
+    _unit_scope = (
+        trainable_unit_to_scope(trainable_unit)
+        if trainable_unit is not None else None
     )
+    if _unit_scope is not None and _unit_scope != "head_only":
+        effective_scope = _unit_scope
+    elif trainable_scope is not None:
+        effective_scope = trainable_scope
+    elif _unit_scope is not None:
+        effective_scope = _unit_scope          # == "head_only" (the legacy head)
+    else:
+        effective_scope = spec.trainable_scope
     phase0_kind, kwargs = parse_method(method)
     probe_size = spec.labelled_probe_default if probe_size is None else probe_size
     momentum = _TEACHER_MOMENTUM
@@ -768,8 +928,20 @@ def run_cell(
     if _loader_prefix == "text":
         _text_parts = spec.feature_loader.split(":")
         _text_ds = _text_parts[2] if len(_text_parts) > 2 else "ag_news"
-        dataset = {"ag_news": "AGNews", "dbpedia_14": "DBpedia14"}.get(
-            _text_ds, _text_ds)
+        dataset = {
+            "ag_news": "AGNews", "dbpedia_14": "DBpedia14",
+            "banking77": "Banking77", "20_newsgroups": "20Newsgroups",
+            "trec": "TREC",
+        }.get(_text_ds, _text_ds)
+    elif _loader_prefix == "finegrained":
+        # ``finegrained:<bb>:<slug>`` (issue ft02). The 3rd segment is the
+        # dataset slug; map it to a human-readable label.
+        _fg_parts = spec.feature_loader.split(":")
+        _fg_ds = _fg_parts[2] if len(_fg_parts) > 2 else "cub200"
+        dataset = {
+            "cub200": "CUB200", "stanford_cars": "StanfordCars",
+            "fgvc_aircraft": "FGVCAircraft",
+        }.get(_fg_ds, "DomainNet" if _fg_ds.startswith("domainnet") else _fg_ds)
     else:
         dataset = {
             "mnist": "MNIST",
@@ -798,6 +970,14 @@ def run_cell(
     # Client-optimizer axis (default "sgd" → byte-identical trajectory). Recorded
     # up front so even short-circuit branches carry it through to the JSON.
     res.optimizer = optimizer
+    # Issue-ft01 axes recorded up front (so warmup_only / dp_synth_all short-
+    # circuits carry them through too). ``trainable_unit`` records the requested
+    # token if given, else mirrors the resolved scope so the JSON always names
+    # the trainable parameter set.
+    res.local_step = local_step
+    res.trainable_unit = (
+        trainable_unit if trainable_unit is not None else effective_scope
+    )
     t_start = time.time()
     try:
         device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -1152,24 +1332,49 @@ def run_cell(
             raise ValueError(phase0_kind)
         res.phase_phase0_sec = time.time() - t0
 
-        # --- distillation: each client runs the bounded K-step trajectory -> Δ_i ---
-        # ``diagnose=False`` (the sweep default) takes the byte-identical path
-        # — distill_all_clients returns only the cumulative Δ list. With
-        # ``diagnose=True`` the per-step trajectories are additionally collected
-        # so src.diagnostics can compute the per-step ‖Δ⁽ᵏ⁾‖₂ profile (issue 013).
+        # --- local step: each client runs the bounded K-step trajectory -> Δ_i ---
+        # Issue ft01: ``local_step`` selects the client-side learning rule.
+        #   * ``"finetune"`` (default headline) — DIRECT supervised fine-tuning,
+        #     cross-entropy on each client's OWN hard labels (no teacher, no τ),
+        #     via ``finetune_all_clients(... client_y_list ...)``.
+        #   * ``"distill"`` — the legacy teacher→student KL trajectory via
+        #     ``distill_all_clients``; BYTE-IDENTICAL to the pre-ft01 path.
+        # Either rule produces the SAME object — the cumulative displacement
+        # Δᵢ = θᵢ⁽ᴷ⁾ − θ₀ — which the unchanged depth-1 ``aggregate`` combines.
+        # ``diagnose=False`` (the sweep default) returns only the cumulative Δ
+        # list; ``diagnose=True`` additionally collects per-step trajectories so
+        # src.diagnostics can compute the per-step ‖Δ⁽ᵏ⁾‖₂ profile (issue 013).
         t0 = time.time()
-        if diagnose:
-            deltas, step_deltas_per_client = distill_all_clients(
-                teachers, theta0, make_model_fn, client_X_list,
-                K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
-                diagnose=True, optimizer=optimizer,
-            )
-        else:
-            deltas = distill_all_clients(
-                teachers, theta0, make_model_fn, client_X_list,
-                K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
-                optimizer=optimizer)
-            step_deltas_per_client = None
+        if local_step not in ("finetune", "distill"):
+            raise ValueError(
+                f"unknown local_step {local_step!r}; expected 'finetune' | 'distill'")
+        if local_step == "finetune":
+            from .distill import finetune_all_clients
+            if diagnose:
+                deltas, step_deltas_per_client = finetune_all_clients(
+                    theta0, make_model_fn, client_X_list, client_y_list,
+                    K_steps=K, lr=student_lr, momentum=0.0, bs=spec.bs,
+                    diagnose=True, optimizer=optimizer,
+                )
+            else:
+                deltas = finetune_all_clients(
+                    theta0, make_model_fn, client_X_list, client_y_list,
+                    K_steps=K, lr=student_lr, momentum=0.0, bs=spec.bs,
+                    optimizer=optimizer)
+                step_deltas_per_client = None
+        else:  # local_step == "distill" — legacy KL trajectory, byte-identical.
+            if diagnose:
+                deltas, step_deltas_per_client = distill_all_clients(
+                    teachers, theta0, make_model_fn, client_X_list,
+                    K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
+                    diagnose=True, optimizer=optimizer,
+                )
+            else:
+                deltas = distill_all_clients(
+                    teachers, theta0, make_model_fn, client_X_list,
+                    K_steps=K, lr=student_lr, momentum=0.0, tau=tau, bs=spec.bs,
+                    optimizer=optimizer)
+                step_deltas_per_client = None
         res.phase_distill_sec = time.time() - t0
 
         # --- Δ-drift diagnostics over the per-client cumulative {Δ_i} ---

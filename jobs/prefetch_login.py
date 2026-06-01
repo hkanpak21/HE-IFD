@@ -12,6 +12,9 @@ from a compute node (which has no internet and would blow the 3h job cap).
     cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py --include-cifar100 --include-tiny-imagenet
     # issue 018 Part A (ViT-L needs CIFAR-100 too):
     cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py --include-cifar100 --include-big-backbones
+    # issue ft02 harder datasets (text always-fetchable; FGVC via live mirror;
+    # CUB/Cars are manual — see src/data.py loader docstrings):
+    cd /scratch/hkanpak21/HE_IFD && python jobs/prefetch_login.py --include-text019 --include-ft02-text --include-ft02-fgvc
 
 Datasets MNIST / FashionMNIST / CIFAR-10 are already on VALAR under data/ —
 not fetched here. AG News (HF), the four pretrained backbones, plus the
@@ -123,7 +126,64 @@ def parse_args() -> argparse.Namespace:
                         "sentence-transformers package needed) plus the "
                         "DBpedia-14 HF dataset (~70MB). Idempotent. Off by "
                         "default so the normal prefetch is unchanged.")
+    p.add_argument("--include-ft02-text", action="store_true",
+                   help="Also fetch the issue-ft02 harder TEXT datasets: "
+                        "Banking77 (~5MB), 20-Newsgroups (SetFit mirror, ~50MB), "
+                        "TREC (~1MB) HF datasets. Idempotent. (The frozen text "
+                        "backbones roberta-base / all-mpnet-base-v2 come with "
+                        "--include-text019.) Off by default.")
+    p.add_argument("--include-ft02-fgvc", action="store_true",
+                   help="Also fetch FGVC-Aircraft (~2.7GB, VGG mirror live via "
+                        "torchvision) — the one ft02 fine-grained-vision dataset "
+                        "with a working auto-download. CUB-200 and Stanford Cars "
+                        "have dead/manual mirrors and must be placed by hand (see "
+                        "src/data.py loader docstrings for the curl/Kaggle "
+                        "commands). Idempotent. Off by default.")
     return p.parse_args()
+
+
+def _prefetch_ft02_text() -> None:
+    """Fetch the issue-ft02 harder many-class TEXT datasets into the HF cache.
+
+    Login-node only (DOWNLOAD-ONLY, no compute). Idempotent: each
+    ``load_dataset`` is a cache hit once present. Pulls:
+      * Banking77      (HF ``PolyAI/banking77``; 77 intents; ~5MB)
+                       LICENSE: CC-BY-4.0 (PolyAI). Cite Casanueva et al. 2020.
+      * 20-Newsgroups  (HF ``SetFit/20_newsgroups``; 20 topics; ~50MB)
+                       LICENSE: public domain / research (the classic 20NG corpus,
+                       Lang 1995). Cite the 20 Newsgroups dataset.
+      * TREC           (HF ``CogComp/trec``; 6 coarse / 50 fine classes; ~1MB)
+                       LICENSE: research use (Li & Roth 2002). Cite TREC QC.
+    The 3 namespaced ids match ``src.backbones.extract_text_features``'s
+    ``_DS_FALLBACK`` so the same code loads them offline on the compute node.
+    """
+    from datasets import load_dataset
+    for ds_id in ("PolyAI/banking77", "SetFit/20_newsgroups", "CogComp/trec"):
+        load_dataset(ds_id)
+        print(f"[prefetch] hf dataset {ds_id} ok", flush=True)
+
+
+def _prefetch_ft02_fgvc(data_root: str) -> None:
+    """Trigger torchvision's FGVC-Aircraft download once (VGG mirror is live).
+
+    Login-node only. Idempotent: torchvision skips the download if the
+    ``fgvc-aircraft-2013b`` tree is already present. Pulls both the ``trainval``
+    and ``test`` splits so the compute node loads offline with download=False.
+    LICENSE: research / non-commercial (Maji et al. 2013). ~2.7GB.
+
+    NOTE: CUB-200-2011 and Stanford Cars are NOT auto-fetchable here — CUB has no
+    torchvision class (manual curl from the Caltech mirror) and the Stanford Cars
+    torchvision URL is dead (manual Kaggle/HF placement). Their exact fetch
+    commands live in the ``src.data.make_cub200_datasets`` /
+    ``make_stanford_cars_datasets`` docstrings; run them by hand on the login node.
+    """
+    from torchvision.datasets import FGVCAircraft
+
+    Path(data_root).mkdir(parents=True, exist_ok=True)
+    FGVCAircraft(root=data_root, split="trainval", download=True)
+    FGVCAircraft(root=data_root, split="test", download=True)
+    print(f"[prefetch] fgvc-aircraft ok ({data_root}/fgvc-aircraft-2013b/)",
+          flush=True)
 
 
 def _prefetch_big_backbones() -> None:
@@ -209,6 +269,12 @@ def main() -> None:
     # all-mpnet-base-v2, DBpedia-14).
     if args.include_text019:
         _prefetch_text019()
+
+    # Optional, issue-ft02 harder-dataset extension.
+    if args.include_ft02_text:
+        _prefetch_ft02_text()
+    if args.include_ft02_fgvc:
+        _prefetch_ft02_fgvc(args.data_root)
 
     print("[prefetch] PREFETCH DONE", flush=True)
 
