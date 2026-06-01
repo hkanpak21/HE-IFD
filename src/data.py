@@ -268,8 +268,13 @@ def load_cifar10_raw_tensors(
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
     ])
-    train_ds = datasets.CIFAR10(data_root, train=True, download=False, transform=tfm)
-    test_ds = datasets.CIFAR10(data_root, train=False, download=False, transform=tfm)
+    # download=False on VALAR (pre-cached); retry download=True if missing (Colab online).
+    def _c10(tr):
+        try:
+            return datasets.CIFAR10(data_root, train=tr, download=False, transform=tfm)
+        except (RuntimeError, OSError):
+            return datasets.CIFAR10(data_root, train=tr, download=True, transform=tfm)
+    train_ds, test_ds = _c10(True), _c10(False)
     X_train, y_train, X_test, y_test = _stack_image_tensors(train_ds, test_ds)
     torch.save(
         {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},
@@ -315,8 +320,13 @@ def load_cifar100_tensors(
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2470, 0.2435, 0.2616)),
     ])
-    train_ds = datasets.CIFAR100(data_root, train=True, download=False, transform=tfm)
-    test_ds = datasets.CIFAR100(data_root, train=False, download=False, transform=tfm)
+    # download=False on VALAR (pre-cached); retry download=True if missing (Colab online).
+    def _c100(tr):
+        try:
+            return datasets.CIFAR100(data_root, train=tr, download=False, transform=tfm)
+        except (RuntimeError, OSError):
+            return datasets.CIFAR100(data_root, train=tr, download=True, transform=tfm)
+    train_ds, test_ds = _c100(True), _c100(False)
     X_train, y_train, X_test, y_test = _stack_image_tensors(train_ds, test_ds)
     torch.save(
         {"X_train": X_train, "y_train": y_train, "X_test": X_test, "y_test": y_test},

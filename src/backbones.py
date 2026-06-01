@@ -1000,13 +1000,24 @@ def extract_text_features(
     # canonical repo, so request the namespaced mirror directly.
     _DS_PRIMARY = {"20_newsgroups": "SetFit/20_newsgroups"}
     _request_id = _DS_PRIMARY.get(task_name, task_name)
-    try:
-        ds = load_dataset(_request_id)
-    except Exception:
-        _alt = _DS_FALLBACK.get(task_name)
-        if _alt is None or _alt == _request_id:
-            raise
-        ds = load_dataset(_alt)
+
+    def _load_any(ids):
+        # Try each candidate id normally, then via HF's auto-converted parquet
+        # branch ("refs/convert/parquet"), which bypasses the script-based loaders
+        # that newer ``datasets`` (>=3.0) refuse to run ("Dataset scripts are no
+        # longer supported"). Works on any ``datasets`` version, no pin needed.
+        last = None
+        for did in ids:
+            for kw in ({}, {"revision": "refs/convert/parquet"}):
+                try:
+                    return load_dataset(did, **kw)
+                except Exception as e:  # noqa: BLE001 — try the next candidate
+                    last = e
+        raise last
+
+    _alt = _DS_FALLBACK.get(task_name)
+    _candidates = [_request_id] + ([_alt] if _alt and _alt != _request_id else [])
+    ds = _load_any(_candidates)
     if task_name == "trec":
         # TREC question classification. No ``label`` column — it exposes
         # ``coarse_label`` (6 classes) and ``fine_label`` (50 classes). We use
