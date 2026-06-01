@@ -76,89 +76,99 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-D}}Threat Model}{4}{subsection.3.4}\protected@file@percent }
 \newlabel{sec:threat}{{\mbox  {III-D}}{4}{Threat Model}{subsection.3.4}{}}
 \newlabel{sec:threat@cref}{{[subsection][4][3]\mbox  {III-D}}{[1][4][]4}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {IV}Method}{4}{section.4}\protected@file@percent }
-\newlabel{sec:method}{{IV}{4}{Method}{section.4}{}}
-\newlabel{sec:method@cref}{{[section][4][]IV}{[1][4][]4}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Setting and Overview}{4}{subsection.4.1}\protected@file@percent }
-\newlabel{sec:setting}{{\mbox  {IV-A}}{4}{Setting and Overview}{subsection.4.1}{}}
-\newlabel{sec:setting@cref}{{[subsection][1][4]\mbox  {IV-A}}{[1][4][]4}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}The Shared Loss Basin}{4}{subsection.4.2}\protected@file@percent }
-\newlabel{sec:basin}{{\mbox  {IV-B}}{4}{The Shared Loss Basin}{subsection.4.2}{}}
-\newlabel{sec:basin@cref}{{[subsection][2][4]\mbox  {IV-B}}{[1][4][]4}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces HE-IFD. Each client holds private data $\mathcal  {D}_j$ and trains a local teacher $t_j$. In Phase~0 the clients exchange per-class feature prototypes over peer-to-peer channels, with the server excluded, to agree on a shared loss basin $\theta _0$. Each client then distils its teacher into the shared head for a bounded number of steps and encrypts the resulting displacement $\Delta _j$. The server's sole operation is the sample-weighted linear combination $\theta ^\star =\theta _0+\DOTSB \sum@ \slimits@ _j w_j\Delta _j$ under multiparty CKKS (additions and public-scalar multiplications only; multiplicative depth one); it never decrypts. A threshold of clients jointly decrypts the global model $\theta ^\star $.}}{5}{figure.1}\protected@file@percent }
-\newlabel{fig:protocol}{{1}{5}{HE-IFD. Each client holds private data $\mathcal {D}_j$ and trains a local teacher $t_j$. In Phase~0 the clients exchange per-class feature prototypes over peer-to-peer channels, with the server excluded, to agree on a shared loss basin $\theta _0$. Each client then distils its teacher into the shared head for a bounded number of steps and encrypts the resulting displacement $\Delta _j$. The server's sole operation is the sample-weighted linear combination $\theta ^\star =\theta _0+\sum _j w_j\Delta _j$ under multiparty CKKS (additions and public-scalar multiplications only; multiplicative depth one); it never decrypts. A threshold of clients jointly decrypts the global model $\theta ^\star $}{figure.1}{}}
-\newlabel{fig:protocol@cref}{{[figure][1][]1}{[1][4][]5}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Step-by-step view of the protocol. Steps 1--3 run among the clients without the server; the displacements are encrypted (step~4) and the server's single operation is the linear combination of step~5, which it performs without being able to decrypt; the global model is recovered only by a quorum of clients (step~7).}}{5}{figure.2}\protected@file@percent }
-\newlabel{fig:protocol-steps}{{2}{5}{Step-by-step view of the protocol. Steps 1--3 run among the clients without the server; the displacements are encrypted (step~4) and the server's single operation is the linear combination of step~5, which it performs without being able to decrypt; the global model is recovered only by a quorum of clients (step~7)}{figure.2}{}}
-\newlabel{fig:protocol-steps@cref}{{[figure][2][]2}{[1][4][]5}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Motivation}{4}{section.4}\protected@file@percent }
+\newlabel{sec:whyfinetune}{{IV}{4}{Motivation}{section.4}{}}
+\newlabel{sec:whyfinetune@cref}{{[section][4][]IV}{[1][4][]4}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Method}{5}{section.5}\protected@file@percent }
+\newlabel{sec:method}{{V}{5}{Method}{section.5}{}}
+\newlabel{sec:method@cref}{{[section][5][]V}{[1][5][]5}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Setting and Overview}{5}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:setting}{{\mbox  {V-A}}{5}{Setting and Overview}{subsection.5.1}{}}
+\newlabel{sec:setting@cref}{{[subsection][1][5]\mbox  {V-A}}{[1][5][]5}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}The Shared Loss Basin}{5}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:basin}{{\mbox  {V-B}}{5}{The Shared Loss Basin}{subsection.5.2}{}}
+\newlabel{sec:basin@cref}{{[subsection][2][5]\mbox  {V-B}}{[1][5][]5}{}{}{}}
 \@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces One-shot federated distillation with encrypted aggregation. $\mathsf  {Enc}(\cdot )$ denotes encryption under the clients' collective CKKS key.}}{5}{algorithm.1}\protected@file@percent }
 \newlabel{alg:protocol}{{1}{5}{Setting and Overview}{algorithm.1}{}}
-\newlabel{alg:protocol@cref}{{[algorithm][1][]1}{[1][4][]5}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Local Bounded-Trajectory Distillation}{6}{subsection.4.3}\protected@file@percent }
-\newlabel{sec:distill}{{\mbox  {IV-C}}{6}{Local Bounded-Trajectory Distillation}{subsection.4.3}{}}
-\newlabel{sec:distill@cref}{{[subsection][3][4]\mbox  {IV-C}}{[1][6][]6}{}{}{}}
+\newlabel{alg:protocol@cref}{{[algorithm][1][]1}{[1][5][]5}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces HE-IFD. Each client holds private data $\mathcal  {D}_j$ and trains a local teacher $t_j$. In Phase~0 the clients exchange per-class feature prototypes over peer-to-peer channels, with the server excluded, to agree on a shared loss basin $\theta _0$. Each client then distils its teacher into the shared head for a bounded number of steps and encrypts the resulting displacement $\Delta _j$. The server's sole operation is the sample-weighted linear combination $\theta ^\star =\theta _0+\DOTSB \sum@ \slimits@ _j w_j\Delta _j$ under multiparty CKKS (additions and public-scalar multiplications only; multiplicative depth one); it never decrypts. A threshold of clients jointly decrypts the global model $\theta ^\star $.}}{6}{figure.1}\protected@file@percent }
+\newlabel{fig:protocol}{{1}{6}{HE-IFD. Each client holds private data $\mathcal {D}_j$ and trains a local teacher $t_j$. In Phase~0 the clients exchange per-class feature prototypes over peer-to-peer channels, with the server excluded, to agree on a shared loss basin $\theta _0$. Each client then distils its teacher into the shared head for a bounded number of steps and encrypts the resulting displacement $\Delta _j$. The server's sole operation is the sample-weighted linear combination $\theta ^\star =\theta _0+\sum _j w_j\Delta _j$ under multiparty CKKS (additions and public-scalar multiplications only; multiplicative depth one); it never decrypts. A threshold of clients jointly decrypts the global model $\theta ^\star $}{figure.1}{}}
+\newlabel{fig:protocol@cref}{{[figure][1][]1}{[1][5][]6}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Step-by-step view of the protocol. Steps 1--3 run among the clients without the server; the displacements are encrypted (step~4) and the server's single operation is the linear combination of step~5, which it performs without being able to decrypt; the global model is recovered only by a quorum of clients (step~7).}}{6}{figure.2}\protected@file@percent }
+\newlabel{fig:protocol-steps}{{2}{6}{Step-by-step view of the protocol. Steps 1--3 run among the clients without the server; the displacements are encrypted (step~4) and the server's single operation is the linear combination of step~5, which it performs without being able to decrypt; the global model is recovered only by a quorum of clients (step~7)}{figure.2}{}}
+\newlabel{fig:protocol-steps@cref}{{[figure][2][]2}{[1][5][]6}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Local Bounded-Trajectory Distillation}{6}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:distill}{{\mbox  {V-C}}{6}{Local Bounded-Trajectory Distillation}{subsection.5.3}{}}
+\newlabel{sec:distill@cref}{{[subsection][3][5]\mbox  {V-C}}{[1][6][]6}{}{}{}}
 \newlabel{eq:displacement}{{1}{6}{Local Bounded-Trajectory Distillation}{equation.1}{}}
 \newlabel{eq:displacement@cref}{{[equation][1][]1}{[1][6][]6}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Encrypted Linear Aggregation}{6}{subsection.4.4}\protected@file@percent }
-\newlabel{sec:aggregation}{{\mbox  {IV-D}}{6}{Encrypted Linear Aggregation}{subsection.4.4}{}}
-\newlabel{sec:aggregation@cref}{{[subsection][4][4]\mbox  {IV-D}}{[1][6][]6}{}{}{}}
-\newlabel{eq:aggregate}{{2}{6}{Encrypted Linear Aggregation}{equation.2}{}}
-\newlabel{eq:aggregate@cref}{{[equation][2][]2}{[1][6][]6}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Privacy}{7}{subsection.4.5}\protected@file@percent }
-\newlabel{sec:privacy}{{\mbox  {IV-E}}{7}{Privacy}{subsection.4.5}{}}
-\newlabel{sec:privacy@cref}{{[subsection][5][4]\mbox  {IV-E}}{[1][6][]7}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-F}}Security Analysis}{7}{subsection.4.6}\protected@file@percent }
-\newlabel{sec:security}{{\mbox  {IV-F}}{7}{Security Analysis}{subsection.4.6}{}}
-\newlabel{sec:security@cref}{{[subsection][6][4]\mbox  {IV-F}}{[1][7][]7}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Encrypted Linear Aggregation}{7}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:aggregation}{{\mbox  {V-D}}{7}{Encrypted Linear Aggregation}{subsection.5.4}{}}
+\newlabel{sec:aggregation@cref}{{[subsection][4][5]\mbox  {V-D}}{[1][7][]7}{}{}{}}
+\newlabel{eq:aggregate}{{2}{7}{Encrypted Linear Aggregation}{equation.2}{}}
+\newlabel{eq:aggregate@cref}{{[equation][2][]2}{[1][7][]7}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Privacy}{7}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:privacy}{{\mbox  {V-E}}{7}{Privacy}{subsection.5.5}{}}
+\newlabel{sec:privacy@cref}{{[subsection][5][5]\mbox  {V-E}}{[1][7][]7}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Security Analysis}{7}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:security}{{\mbox  {V-F}}{7}{Security Analysis}{subsection.5.6}{}}
+\newlabel{sec:security@cref}{{[subsection][6][5]\mbox  {V-F}}{[1][7][]7}{}{}{}}
 \newlabel{prop:server}{{1}{7}{}{proposition.1}{}}
 \newlabel{prop:server@cref}{{[proposition][1][]1}{[1][7][]7}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-G}}Communication and Computation Cost}{7}{subsection.4.7}\protected@file@percent }
-\newlabel{sec:cost}{{\mbox  {IV-G}}{7}{Communication and Computation Cost}{subsection.4.7}{}}
-\newlabel{sec:cost@cref}{{[subsection][7][4]\mbox  {IV-G}}{[1][7][]7}{}{}{}}
 \citation{xiao2017fashion}
 \citation{krizhevsky2009learning}
-\@writefile{toc}{\contentsline {section}{\numberline {V}Experiments}{8}{section.5}\protected@file@percent }
-\newlabel{sec:experiments}{{V}{8}{Experiments}{section.5}{}}
-\newlabel{sec:experiments@cref}{{[section][5][]V}{[1][8][]8}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Setup}{8}{subsection.5.1}\protected@file@percent }
-\newlabel{sec:setup}{{\mbox  {V-A}}{8}{Setup}{subsection.5.1}{}}
-\newlabel{sec:setup@cref}{{[subsection][1][5]\mbox  {V-A}}{[1][8][]8}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}From Local Specialists to a Shared Global Model}{8}{subsection.5.2}\protected@file@percent }
-\newlabel{sec:superior}{{\mbox  {V-B}}{8}{From Local Specialists to a Shared Global Model}{subsection.5.2}{}}
-\newlabel{sec:superior@cref}{{[subsection][2][5]\mbox  {V-B}}{[1][8][]8}{}{}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Evaluation design. Each axis isolates one question rather than forming an exhaustive grid; results below vary one axis at a time around the default ($N=10$, raw prototypes, three seeds).}}{8}{table.2}\protected@file@percent }
-\newlabel{tab:setup}{{II}{8}{Evaluation design. Each axis isolates one question rather than forming an exhaustive grid; results below vary one axis at a time around the default ($\Nc =10$, raw prototypes, three seeds)}{table.2}{}}
-\newlabel{tab:setup@cref}{{[table][2][]II}{[1][8][]8}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Necessity of the Shared Basin and Bounded Distillation}{8}{subsection.5.3}\protected@file@percent }
-\newlabel{sec:necessity}{{\mbox  {V-C}}{8}{Necessity of the Shared Basin and Bounded Distillation}{subsection.5.3}{}}
-\newlabel{sec:necessity@cref}{{[subsection][3][5]\mbox  {V-C}}{[1][8][]8}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}Communication and Computation Cost}{8}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:cost}{{\mbox  {V-G}}{8}{Communication and Computation Cost}{subsection.5.7}{}}
+\newlabel{sec:cost@cref}{{[subsection][7][5]\mbox  {V-G}}{[1][8][]8}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Experiments}{8}{section.6}\protected@file@percent }
+\newlabel{sec:experiments}{{VI}{8}{Experiments}{section.6}{}}
+\newlabel{sec:experiments@cref}{{[section][6][]VI}{[1][8][]8}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Setup}{8}{subsection.6.1}\protected@file@percent }
+\newlabel{sec:setup}{{\mbox  {VI-A}}{8}{Setup}{subsection.6.1}{}}
+\newlabel{sec:setup@cref}{{[subsection][1][6]\mbox  {VI-A}}{[1][8][]8}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}From Local Specialists to a Shared Global Model}{8}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:superior}{{\mbox  {VI-B}}{8}{From Local Specialists to a Shared Global Model}{subsection.6.2}{}}
+\newlabel{sec:superior@cref}{{[subsection][2][6]\mbox  {VI-B}}{[1][8][]8}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces The protocol turns narrow local teachers into a single, broadly capable model. Under heterogeneous data ($\alpha =0.05$, $N=10$), the global model (blue) reaches three to four times the accuracy of the average local teacher and comes within a few points of the centralized reference, on both vision (ViT-B/32, CIFAR-100) and language (RoBERTa, MPNet, AG-News). The frozen backbone never enters the encrypted aggregation, so the protocol and its cost are unchanged across these scales.}}{9}{figure.3}\protected@file@percent }
 \newlabel{fig:scaling}{{3}{9}{The protocol turns narrow local teachers into a single, broadly capable model. Under heterogeneous data ($\alpha =0.05$, $\Nc =10$), the global model (blue) reaches three to four times the accuracy of the average local teacher and comes within a few points of the centralized reference, on both vision (ViT-B/32, CIFAR-100) and language (RoBERTa, MPNet, AG-News). The frozen backbone never enters the encrypted aggregation, so the protocol and its cost are unchanged across these scales}{figure.3}{}}
 \newlabel{fig:scaling@cref}{{[figure][3][]3}{[1][8][]9}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Evaluation design. Each axis isolates one question rather than forming an exhaustive grid; results below vary one axis at a time around the default ($N=10$, raw prototypes, three seeds).}}{9}{table.2}\protected@file@percent }
+\newlabel{tab:setup}{{II}{9}{Evaluation design. Each axis isolates one question rather than forming an exhaustive grid; results below vary one axis at a time around the default ($\Nc =10$, raw prototypes, three seeds)}{table.2}{}}
+\newlabel{tab:setup@cref}{{[table][2][]II}{[1][8][]9}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Neither ingredient suffices alone ($\alpha =0.05$). On CIFAR-100, distillation without a shared basin stays at chance, because updates from different initializations do not combine; the shared basin makes the same linear combination work. On MNIST the no-basin variant recovers partially but still trails the full method. In both cases the full method is best and approaches the centralized reference (dashed).}}{9}{figure.4}\protected@file@percent }
 \newlabel{fig:necessity}{{4}{9}{Neither ingredient suffices alone ($\alpha =0.05$). On CIFAR-100, distillation without a shared basin stays at chance, because updates from different initializations do not combine; the shared basin makes the same linear combination work. On MNIST the no-basin variant recovers partially but still trails the full method. In both cases the full method is best and approaches the centralized reference (dashed)}{figure.4}{}}
-\newlabel{fig:necessity@cref}{{[figure][4][]4}{[1][8][]9}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}Distillation Lift as a Function of Basin Strength}{9}{subsection.5.4}\protected@file@percent }
-\newlabel{sec:basin-contribution}{{\mbox  {V-D}}{9}{Distillation Lift as a Function of Basin Strength}{subsection.5.4}{}}
-\newlabel{sec:basin-contribution@cref}{{[subsection][4][5]\mbox  {V-D}}{[1][8][]9}{}{}{}}
+\newlabel{fig:necessity@cref}{{[figure][4][]4}{[1][9][]9}{}{}{}}
 \citation{ilharco2023editing}
-\citation{lattigo}
-\citation{mouchet2021multiparty}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Necessity of the Shared Basin and Bounded Distillation}{10}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:necessity}{{\mbox  {VI-C}}{10}{Necessity of the Shared Basin and Bounded Distillation}{subsection.6.3}{}}
+\newlabel{sec:necessity@cref}{{[subsection][3][6]\mbox  {VI-C}}{[1][9][]10}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-D}}Distillation Lift as a Function of Basin Strength}{10}{subsection.6.4}\protected@file@percent }
+\newlabel{sec:basin-contribution}{{\mbox  {VI-D}}{10}{Distillation Lift as a Function of Basin Strength}{subsection.6.4}{}}
+\newlabel{sec:basin-contribution@cref}{{[subsection][4][6]\mbox  {VI-D}}{[1][10][]10}{}{}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces The global model's accuracy is stable as the number of clients grows from $5$ to $50$ (ViT-B/32, CIFAR-100), at every heterogeneity level.}}{10}{figure.5}\protected@file@percent }
 \newlabel{fig:nscaling}{{5}{10}{The global model's accuracy is stable as the number of clients grows from $5$ to $50$ (ViT-B/32, CIFAR-100), at every heterogeneity level}{figure.5}{}}
 \newlabel{fig:nscaling@cref}{{[figure][5][]5}{[1][10][]10}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces The bounded trajectory matters. With a low temperature the global model stays just above the shared basin and declines gently as the trajectory lengthens (clients drift away from the basin); a high temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha =0.05$).}}{10}{figure.6}\protected@file@percent }
-\newlabel{fig:ksweep}{{6}{10}{The bounded trajectory matters. With a low temperature the global model stays just above the shared basin and declines gently as the trajectory lengthens (clients drift away from the basin); a high temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha =0.05$)}{figure.6}{}}
-\newlabel{fig:ksweep@cref}{{[figure][6][]6}{[1][10][]10}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}Scalability and the Effect of Trajectory Length}{10}{subsection.5.5}\protected@file@percent }
-\newlabel{sec:scaling-ablation}{{\mbox  {V-E}}{10}{Scalability and the Effect of Trajectory Length}{subsection.5.5}{}}
-\newlabel{sec:scaling-ablation@cref}{{[subsection][5][5]\mbox  {V-E}}{[1][9][]10}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-F}}Regularizing the Aggregated Displacement}{10}{subsection.5.6}\protected@file@percent }
-\newlabel{sec:lambda}{{\mbox  {V-F}}{10}{Regularizing the Aggregated Displacement}{subsection.5.6}{}}
-\newlabel{sec:lambda@cref}{{[subsection][6][5]\mbox  {V-F}}{[1][10][]10}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-G}}The Privacy--Utility Frontier of the Basin Prototypes}{10}{subsection.5.7}\protected@file@percent }
-\newlabel{sec:privacy-eval}{{\mbox  {V-G}}{10}{The Privacy--Utility Frontier of the Basin Prototypes}{subsection.5.7}{}}
-\newlabel{sec:privacy-eval@cref}{{[subsection][7][5]\mbox  {V-G}}{[1][10][]10}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-E}}Scalability and the Effect of Trajectory Length}{10}{subsection.6.5}\protected@file@percent }
+\newlabel{sec:scaling-ablation}{{\mbox  {VI-E}}{10}{Scalability and the Effect of Trajectory Length}{subsection.6.5}{}}
+\newlabel{sec:scaling-ablation@cref}{{[subsection][5][6]\mbox  {VI-E}}{[1][10][]10}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-F}}Regularizing the Aggregated Displacement}{10}{subsection.6.6}\protected@file@percent }
+\newlabel{sec:lambda}{{\mbox  {VI-F}}{10}{Regularizing the Aggregated Displacement}{subsection.6.6}{}}
+\newlabel{sec:lambda@cref}{{[subsection][6][6]\mbox  {VI-F}}{[1][10][]10}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces The bounded trajectory matters. With a low temperature the global model stays just above the shared basin and declines gently as the trajectory lengthens (clients drift away from the basin); a high temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha =0.05$).}}{11}{figure.6}\protected@file@percent }
+\newlabel{fig:ksweep}{{6}{11}{The bounded trajectory matters. With a low temperature the global model stays just above the shared basin and declines gently as the trajectory lengthens (clients drift away from the basin); a high temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha =0.05$)}{figure.6}{}}
+\newlabel{fig:ksweep@cref}{{[figure][6][]6}{[1][10][]11}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-G}}The Privacy--Utility Frontier of the Basin Prototypes}{11}{subsection.6.7}\protected@file@percent }
+\newlabel{sec:privacy-eval}{{\mbox  {VI-G}}{11}{The Privacy--Utility Frontier of the Basin Prototypes}{subsection.6.7}{}}
+\newlabel{sec:privacy-eval@cref}{{[subsection][7][6]\mbox  {VI-G}}{[1][11][]11}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Distillation never hurts and adds most where the basin is weak. Each point is a basin source at a given heterogeneity $\alpha $ (MNIST, $N=10$); the horizontal axis is the accuracy of the shared basin $\theta _0$ on its own and the vertical axis the accuracy of the resulting global model. All points lie above the no-lift diagonal, and the gap is largest when the basin is weakest.}}{11}{figure.7}\protected@file@percent }
+\newlabel{fig:continuum}{{7}{11}{Distillation never hurts and adds most where the basin is weak. Each point is a basin source at a given heterogeneity $\alpha $ (MNIST, $\Nc =10$); the horizontal axis is the accuracy of the shared basin $\thz $ on its own and the vertical axis the accuracy of the resulting global model. All points lie above the no-lift diagonal, and the gap is largest when the basin is weakest}{figure.7}{}}
+\newlabel{fig:continuum@cref}{{[figure][7][]7}{[1][11][]11}{}{}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The privacy--utility frontier on the basin prototypes is flat across the practical privacy regime. Tightening the differential-privacy budget on the per-class summaries through the single-digit $\varepsilon $ typical of differentially private learning leaves the global model's accuracy essentially unchanged; it falls only under the most stringent budget, $\varepsilon =0.5$ (MNIST, $N=10$).}}{11}{figure.8}\protected@file@percent }
+\newlabel{fig:dpfrontier}{{8}{11}{The privacy--utility frontier on the basin prototypes is flat across the practical privacy regime. Tightening the differential-privacy budget on the per-class summaries through the single-digit $\varepsilon $ typical of differentially private learning leaves the global model's accuracy essentially unchanged; it falls only under the most stringent budget, $\varepsilon =0.5$ (MNIST, $\Nc =10$)}{figure.8}{}}
+\newlabel{fig:dpfrontier@cref}{{[figure][8][]8}{[1][11][]11}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-H}}Comparison with Prior Work}{11}{subsection.6.8}\protected@file@percent }
+\newlabel{sec:positioning}{{\mbox  {VI-H}}{11}{Comparison with Prior Work}{subsection.6.8}{}}
+\newlabel{sec:positioning@cref}{{[subsection][8][6]\mbox  {VI-H}}{[1][11][]11}{}{}{}}
 \citation{lin2020feddf}
 \citation{tang2024fusefl}
 \citation{zhang2022dense}
@@ -168,23 +178,42 @@
 \citation{feddiff2024}
 \citation{sav2021poseidon}
 \citation{kemmaka2025hybagg}
-\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Distillation never hurts and adds most where the basin is weak. Each point is a basin source at a given heterogeneity $\alpha $ (MNIST, $N=10$); the horizontal axis is the accuracy of the shared basin $\theta _0$ on its own and the vertical axis the accuracy of the resulting global model. All points lie above the no-lift diagonal, and the gap is largest when the basin is weakest.}}{11}{figure.7}\protected@file@percent }
-\newlabel{fig:continuum}{{7}{11}{Distillation never hurts and adds most where the basin is weak. Each point is a basin source at a given heterogeneity $\alpha $ (MNIST, $\Nc =10$); the horizontal axis is the accuracy of the shared basin $\thz $ on its own and the vertical axis the accuracy of the resulting global model. All points lie above the no-lift diagonal, and the gap is largest when the basin is weakest}{figure.7}{}}
-\newlabel{fig:continuum@cref}{{[figure][7][]7}{[1][10][]11}{}{}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces The privacy--utility frontier on the basin prototypes is flat across the practical privacy regime. Tightening the differential-privacy budget on the per-class summaries through the single-digit $\varepsilon $ typical of differentially private learning leaves the global model's accuracy essentially unchanged; it falls only under the most stringent budget, $\varepsilon =0.5$ (MNIST, $N=10$).}}{11}{figure.8}\protected@file@percent }
-\newlabel{fig:dpfrontier}{{8}{11}{The privacy--utility frontier on the basin prototypes is flat across the practical privacy regime. Tightening the differential-privacy budget on the per-class summaries through the single-digit $\varepsilon $ typical of differentially private learning leaves the global model's accuracy essentially unchanged; it falls only under the most stringent budget, $\varepsilon =0.5$ (MNIST, $\Nc =10$)}{figure.8}{}}
-\newlabel{fig:dpfrontier@cref}{{[figure][8][]8}{[1][10][]11}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-H}}Measured Cost of the Encrypted Aggregation}{11}{subsection.5.8}\protected@file@percent }
-\newlabel{sec:fhe-cost}{{\mbox  {V-H}}{11}{Measured Cost of the Encrypted Aggregation}{subsection.5.8}{}}
-\newlabel{sec:fhe-cost@cref}{{[subsection][8][5]\mbox  {V-H}}{[1][10][]11}{}{}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Measured cost of the encrypted aggregation (multiparty CKKS, ring degree $2^{14}$). A classifier head fits in one ciphertext, so cost is independent of the frozen backbone.}}{11}{table.3}\protected@file@percent }
-\newlabel{tab:fhe}{{III}{11}{Measured cost of the encrypted aggregation (multiparty CKKS, ring degree $2^{14}$). A classifier head fits in one ciphertext, so cost is independent of the frozen backbone}{table.3}{}}
-\newlabel{tab:fhe@cref}{{[table][3][]III}{[1][11][]11}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-I}}Comparison with Prior Work}{11}{subsection.5.9}\protected@file@percent }
-\newlabel{sec:positioning}{{\mbox  {V-I}}{11}{Comparison with Prior Work}{subsection.5.9}{}}
-\newlabel{sec:positioning@cref}{{[subsection][9][5]\mbox  {V-I}}{[1][11][]11}{}{}{}}
+\citation{lattigo}
+\citation{mouchet2021multiparty}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-I}}The Incentive to Participate}{12}{subsection.6.9}\protected@file@percent }
+\newlabel{sec:incentive}{{\mbox  {VI-I}}{12}{The Incentive to Participate}{subsection.6.9}{}}
+\newlabel{sec:incentive@cref}{{[subsection][9][6]\mbox  {VI-I}}{[1][12][]12}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-J}}Scope and Limitations}{12}{subsection.6.10}\protected@file@percent }
+\newlabel{sec:scope}{{\mbox  {VI-J}}{12}{Scope and Limitations}{subsection.6.10}{}}
+\newlabel{sec:scope@cref}{{[subsection][10][6]\mbox  {VI-J}}{[1][12][]12}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Efficiency}{12}{section.7}\protected@file@percent }
+\newlabel{sec:fhe-cost}{{VII}{12}{Efficiency}{section.7}{}}
+\newlabel{sec:fhe-cost@cref}{{[section][7][]VII}{[1][12][]12}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {VII-}0a}Parameters and setup.}{12}{paragraph.7.0.0.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {VII-}0b}Communication.}{12}{paragraph.7.0.0.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {VII-}0c}Computation.}{12}{paragraph.7.0.0.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {VII-}0d}The adapter budget.}{12}{paragraph.7.0.0.4}\protected@file@percent }
+\citation{sav2021poseidon}
+\citation{kemmaka2025hybagg}
 \citation{shokri2017membership}
 \citation{nasr2019comprehensive}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Comparison with representative federated-learning methods. Reported accuracies are taken verbatim from each source paper at \emph  {its own} setup (dataset, model, $N$, heterogeneity), so the column is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based, and protected by encryption that adds no accuracy cost.}}{13}{table.3}\protected@file@percent }
+\newlabel{tab:positioning}{{III}{13}{Comparison with representative federated-learning methods. Reported accuracies are taken verbatim from each source paper at \emph {its own} setup (dataset, model, $N$, heterogeneity), so the column is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based, and protected by encryption that adds no accuracy cost}{table.3}{}}
+\newlabel{tab:positioning@cref}{{[table][3][]III}{[1][12][]13}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Communication per round (multiparty CKKS, ring $2^{14}$). Per-client traffic is fixed by the trainable unit; totals scale linearly in $N$. Each ciphertext is $0.5$\,MiB.}}{13}{table.4}\protected@file@percent }
+\newlabel{tab:cost-comm}{{IV}{13}{Communication per round (multiparty CKKS, ring $2^{14}$). Per-client traffic is fixed by the trainable unit; totals scale linearly in $\Nc $. Each ciphertext is $0.5$\,MiB}{table.4}{}}
+\newlabel{tab:cost-comm@cref}{{[table][4][]IV}{[1][12][]13}{}{}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Computation time (ms, one CPU core). DKG is a one-time setup; the encrypt figure is per client (clients encrypt in parallel); aggregation and decryption scale linearly in $N\times $ciphertexts.}}{13}{table.5}\protected@file@percent }
+\newlabel{tab:cost-time}{{V}{13}{Computation time (ms, one CPU core). DKG is a one-time setup; the encrypt figure is per client (clients encrypt in parallel); aggregation and decryption scale linearly in $\Nc \times $ciphertexts}{table.5}{}}
+\newlabel{tab:cost-time@cref}{{[table][5][]V}{[1][12][]13}{}{}{}}
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {VII-}0e}Correctness.}{13}{paragraph.7.0.0.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\numberline {\mbox  {VII-}0f}Comparison with prior cryptographic federated learning.}{13}{paragraph.7.0.0.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Privacy Analysis}{13}{section.8}\protected@file@percent }
+\newlabel{sec:mia}{{VIII}{13}{Privacy Analysis}{section.8}{}}
+\newlabel{sec:mia@cref}{{[section][8][]VIII}{[1][13][]13}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-A}}What each protocol leaves exposed}{13}{subsection.8.1}\protected@file@percent }
+\newlabel{sec:mia-surface}{{\mbox  {VIII-A}}{13}{What each protocol leaves exposed}{subsection.8.1}{}}
+\newlabel{sec:mia-surface@cref}{{[subsection][1][8]\mbox  {VIII-A}}{[1][13][]13}{}{}{}}
 \citation{yeom2018privacy}
 \citation{salem2019ml}
 \citation{carlini2022membership}
@@ -192,24 +221,6 @@
 \citation{wang2024graddiff}
 \citation{gu2023ldia}
 \citation{jagielski2023students}
-\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Comparison with representative federated-learning methods. Reported accuracies are taken verbatim from each source paper at \emph  {its own} setup (dataset, model, $N$, heterogeneity), so the column is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based, and protected by lossless encryption.}}{12}{table.4}\protected@file@percent }
-\newlabel{tab:positioning}{{IV}{12}{Comparison with representative federated-learning methods. Reported accuracies are taken verbatim from each source paper at \emph {its own} setup (dataset, model, $N$, heterogeneity), so the column is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based, and protected by lossless encryption}{table.4}{}}
-\newlabel{tab:positioning@cref}{{[table][4][]IV}{[1][11][]12}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-J}}The Incentive to Participate}{12}{subsection.5.10}\protected@file@percent }
-\newlabel{sec:incentive}{{\mbox  {V-J}}{12}{The Incentive to Participate}{subsection.5.10}{}}
-\newlabel{sec:incentive@cref}{{[subsection][10][5]\mbox  {V-J}}{[1][11][]12}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-K}}Scope and Limitations}{12}{subsection.5.11}\protected@file@percent }
-\newlabel{sec:scope}{{\mbox  {V-K}}{12}{Scope and Limitations}{subsection.5.11}{}}
-\newlabel{sec:scope@cref}{{[subsection][11][5]\mbox  {V-K}}{[1][12][]12}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VI}Attack Surface and Residual Leakage}{12}{section.6}\protected@file@percent }
-\newlabel{sec:mia}{{VI}{12}{Attack Surface and Residual Leakage}{section.6}{}}
-\newlabel{sec:mia@cref}{{[section][6][]VI}{[1][12][]12}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}What each protocol leaves exposed}{12}{subsection.6.1}\protected@file@percent }
-\newlabel{sec:mia-surface}{{\mbox  {VI-A}}{12}{What each protocol leaves exposed}{subsection.6.1}{}}
-\newlabel{sec:mia-surface@cref}{{[subsection][1][6]\mbox  {VI-A}}{[1][12][]12}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Measured residual on the open channels}{12}{subsection.6.2}\protected@file@percent }
-\newlabel{sec:mia-measured}{{\mbox  {VI-B}}{12}{Measured residual on the open channels}{subsection.6.2}{}}
-\newlabel{sec:mia-measured@cref}{{[subsection][2][6]\mbox  {VI-B}}{[1][12][]12}{}{}{}}
 \citation{viand2023verifiable}
 \citation{atapoor2024vfhe}
 \bibstyle{IEEEtran}
@@ -225,19 +236,22 @@
 \bibcite{garimella2021sisyphus}{9}
 \bibcite{baruch2022methodology}{10}
 \bibcite{agamennone2025polynomial}{11}
+\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Membership inference on the Phase-0 prototype channel, area under the ROC curve. A raw prototype release leaks (most at the near-homogeneous setting, where prototypes are more informative); applying the averaging-variant differential-privacy budget collapses the signal to the chance level ($0.5$) at $\varepsilon \le 8$ on both modalities.}}{14}{table.6}\protected@file@percent }
+\newlabel{tab:mia-proto}{{VI}{14}{Membership inference on the Phase-0 prototype channel, area under the ROC curve. A raw prototype release leaks (most at the near-homogeneous setting, where prototypes are more informative); applying the averaging-variant differential-privacy budget collapses the signal to the chance level ($0.5$) at $\varepsilon \le 8$ on both modalities}{table.6}{}}
+\newlabel{tab:mia-proto@cref}{{[table][6][]VI}{[1][14][]14}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-B}}Measured residual on the open channels}{14}{subsection.8.2}\protected@file@percent }
+\newlabel{sec:mia-measured}{{\mbox  {VIII-B}}{14}{Measured residual on the open channels}{subsection.8.2}{}}
+\newlabel{sec:mia-measured@cref}{{[subsection][2][8]\mbox  {VIII-B}}{[1][14][]14}{}{}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VIII-C}}The inherent limit}{14}{subsection.8.3}\protected@file@percent }
+\newlabel{sec:mia-limit}{{\mbox  {VIII-C}}{14}{The inherent limit}{subsection.8.3}{}}
+\newlabel{sec:mia-limit@cref}{{[subsection][3][8]\mbox  {VIII-C}}{[1][14][]14}{}{}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Conclusion}{14}{section.9}\protected@file@percent }
+\newlabel{sec:conclusion}{{IX}{14}{Conclusion}{section.9}{}}
+\newlabel{sec:conclusion@cref}{{[section][9][]IX}{[1][14][]14}{}{}{}}
+\@writefile{toc}{\contentsline {section}{References}{14}{section*.1}\protected@file@percent }
 \bibcite{alhossain2025training}{12}
 \bibcite{ibarrondo2021fhebn}{13}
 \bibcite{guha2019oneshot}{14}
-\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Membership inference on the Phase-0 prototype channel, area under the ROC curve. A raw prototype release leaks (most at the near-homogeneous setting, where prototypes are more informative); applying the averaging-variant differential-privacy budget collapses the signal to the chance level ($0.5$) at $\varepsilon \le 8$ on both modalities.}}{13}{table.5}\protected@file@percent }
-\newlabel{tab:mia-proto}{{V}{13}{Membership inference on the Phase-0 prototype channel, area under the ROC curve. A raw prototype release leaks (most at the near-homogeneous setting, where prototypes are more informative); applying the averaging-variant differential-privacy budget collapses the signal to the chance level ($0.5$) at $\varepsilon \le 8$ on both modalities}{table.5}{}}
-\newlabel{tab:mia-proto@cref}{{[table][5][]V}{[1][13][]13}{}{}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}The inherent limit}{13}{subsection.6.3}\protected@file@percent }
-\newlabel{sec:mia-limit}{{\mbox  {VI-C}}{13}{The inherent limit}{subsection.6.3}{}}
-\newlabel{sec:mia-limit@cref}{{[subsection][3][6]\mbox  {VI-C}}{[1][13][]13}{}{}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{13}{section.7}\protected@file@percent }
-\newlabel{sec:conclusion}{{VII}{13}{Conclusion}{section.7}{}}
-\newlabel{sec:conclusion@cref}{{[section][7][]VII}{[1][13][]13}{}{}{}}
-\@writefile{toc}{\contentsline {section}{References}{13}{section*.1}\protected@file@percent }
 \bibcite{wang2025towards}{15}
 \bibcite{li2019fedmd}{16}
 \bibcite{itahara2021dsfl}{17}
@@ -280,8 +294,8 @@
 \bibcite{lattigo}{54}
 \bibcite{viand2023verifiable}{55}
 \bibcite{atapoor2024vfhe}{56}
-\@writefile{toc}{\contentsline {section}{Biographies}{15}{IEEEbiography.0}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{HALİL İBRAHİM KANPAK}{15}{IEEEbiography.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{Asst. Prof. SİNEM SAV}{15}{IEEEbiography.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{Prof. ALPTEKİN KÜPÇÜ}{15}{IEEEbiography.3}\protected@file@percent }
-\gdef \@abspage@last{15}
+\@writefile{toc}{\contentsline {section}{Biographies}{16}{IEEEbiography.0}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{HALİL İBRAHİM KANPAK}{16}{IEEEbiography.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Asst. Prof. SİNEM SAV}{16}{IEEEbiography.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{Prof. ALPTEKİN KÜPÇÜ}{16}{IEEEbiography.3}\protected@file@percent }
+\gdef \@abspage@last{16}

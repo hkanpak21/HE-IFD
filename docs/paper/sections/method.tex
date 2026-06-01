@@ -184,7 +184,7 @@ The protocol protects privacy in two layers, applied to two different objects. T
 themselves are protected cryptographically. The aggregation of \cref{eq:aggregate} runs entirely under
 multiparty CKKS with threshold decryption, so the displacements $\disp$ are never exposed to the server or
 to any minority of clients, and they are protected without any perturbation: the cryptographic layer is
-lossless and costs no accuracy. This is the central privacy claim of the paper and the point on which it
+adds no accuracy cost. This is the main privacy claim of the paper and the point on which it
 departs from differentially private one-shot federated learning, which injects noise into the model updates
 that are ultimately released and therefore pays a utility tax on the very thing it ships.
 
@@ -194,7 +194,7 @@ the averaging variant of the Gaussian mechanism. Averaging $\Kpc$ samples per cl
 the sensitivity of the summary in proportion to $1/\Kpc$, so the noise needed for an $(\varepsilon,\delta)$
 guarantee scales as $\mathrm{clip}/(\Kpc\,\varepsilon)$; a client buys privacy budget by averaging more
 samples rather than by degrading the model it contributes. Confining the perturbed quantity to these small
-summaries, and protecting the actual updates with lossless cryptography, is what lets the method offer
+summaries, and protecting the actual updates with cryptography that adds no noise, is what lets the method offer
 a formal $(\varepsilon,\delta)$ guarantee at little cost in accuracy. In \cref{sec:experiments} we trace
 this frontier and find that accuracy is essentially unchanged across the practical range of privacy
 budgets, from the non-private setting through the single-digit $\varepsilon$ typical of differentially
@@ -255,7 +255,7 @@ membership inference in \cref{sec:mia}. No third channel exists.
 \subsection{Communication and Computation Cost}
 \label{sec:cost}
 
-The protocol is cheap and scales gracefully, by construction. Each client sends one ciphertext and receives
+The protocol is inexpensive and scales well with the number of clients. Each client sends one ciphertext and receives
 one: because a classifier head of $d$ parameters fits in a single CKKS ciphertext whenever $d$ is at most the
 slot count, a client's upload and download are each $O(d)$ and, crucially, independent of the frozen
 backbone behind the head. The entire exchange is a single round. The server's work is $\Nc$ multiplications

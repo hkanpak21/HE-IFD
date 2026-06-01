@@ -1,4 +1,4 @@
-\section{Why Fine-Tuning, not Training from Scratch}
+\section{Motivation}
 \label{sec:whyfinetune}
 
 The privacy goal fixes the shape of the protocol before any modeling choice is made. The contributions must
@@ -6,7 +6,7 @@ be combined while encrypted, in a single round, and the party that combines them
 process. That party is therefore \emph{blind}: it holds ciphertexts that the security of the scheme makes
 indistinguishable from random, and it must produce the aggregate without ever seeing a value it operates on.
 
-Blindness is a sharper constraint than cost. A homomorphic server evaluates a fixed arithmetic circuit chosen
+Blindness is a stronger constraint than cost. A homomorphic server evaluates a fixed arithmetic circuit chosen
 in advance, and it cannot read a value, compare two values, or branch on the outcome of a comparison without
 the deep circuits, bootstrapping, or extra interaction that a one-shot, low-depth protocol rules out. Little
 programmability is available in practice: the server cannot cheaply decide which client to trust, which
@@ -28,7 +28,7 @@ model (\cref{sec:necessity}).
 Training from scratch cannot supply that common point in a single round. Independently initialized clients
 have no shared frame, and the methods that recover one after the fact, by matching neurons or permutations
 across models, must read the models --- which is exactly what encryption withholds. A pretrained model
-supplies the frame for nothing. Freezing the backbone fixes the representation every client sees, so each
+supplies this frame already. Freezing the backbone fixes the representation every client sees, so each
 client's trainable parameters start at the same place and move only a short distance; the shared loss basin
 \emph{is} the pretrained model. Fine-tuning a small set of parameters on top of a fixed, common backbone is
 therefore not a deployment convenience but the learning paradigm that fits a one-shot, blind, low-depth

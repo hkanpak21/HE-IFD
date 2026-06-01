@@ -5,7 +5,7 @@ Our evaluation answers, in order, what the method delivers, why each part of it 
 basin contributes, and what privacy and communication cost the cryptographic protocol carries. Throughout,
 the question we are asking is not whether the global model attains the highest possible test accuracy, but
 whether the clients can jointly produce a single model that is stronger and more broadly capable than what
-any of them could obtain alone, and whether they can do so under one round of communication and lossless
+any of them could obtain alone, and whether they can do so under one round of communication and accuracy-preserving
 cryptographic privacy.
 
 \subsection{Setup}
@@ -65,7 +65,7 @@ encrypted aggregation, so the protocol and its cost are unchanged across these s
 \subsection{From Local Specialists to a Shared Global Model}
 \label{sec:superior}
 
-The central result is that the protocol turns a set of narrow local teachers into a single model that is
+The main experiment shows that the protocol turns a set of narrow local teachers into a single model that is
 strong across the whole label space. \Cref{fig:scaling} shows this under heterogeneous data
 ($\alpha=0.05$) for the pretrained backbones. On each task the average local teacher is weak, because under
 this partition a client sees only a fraction of the classes and its teacher specialises accordingly: the
@@ -209,7 +209,7 @@ the single-digit budgets commonly reported in differentially private learning, a
 under the most stringent setting, $\varepsilon=0.5$. The reason is the averaging structure of
 \cref{sec:dp}: a client lowers the sensitivity of its prototypes, and hence the noise it must add, by
 averaging over more of its own samples, so the privacy budget is bought with data rather than with
-accuracy. This is the concrete form of the paper's privacy claim, that lossless cryptography on the updates
+accuracy. This is the concrete form of the paper's privacy claim, that cryptography on the updates, which adds no noise,
 plus differential privacy confined to the summaries delivers a formal $(\varepsilon,\delta)$ guarantee
 without the utility tax that differentially private one-shot methods pay when they perturb the released
 model itself.
@@ -245,7 +245,7 @@ or differentially private, and so pay a utility cost on the released model. The 
 methods in federated learning either run for many rounds, as in encrypted training, or are
 secure-aggregation primitives that sum model updates over an iterative protocol rather than distilling in a
 single shot. To our knowledge the combination we occupy, a one-shot federated distillation whose
-aggregation is protected by lossless homomorphic encryption, has not previously been demonstrated, and this
+aggregation is protected by homomorphic encryption that adds no accuracy cost, has not previously been demonstrated, and this
 holds whether the shared basin is built from a public probe or from no labelled data at all.
 
 \begin{table*}[t]
@@ -254,7 +254,7 @@ holds whether the shared basin is built from a public probe or from no labelled 
 verbatim from each source paper at \emph{its own} setup (dataset, model, $N$, heterogeneity), so the column
 is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are
 the controlled comparison. Our method is the only one that is simultaneously one-shot, distillation-based,
-and protected by lossless encryption.}
+and protected by encryption that adds no accuracy cost.}
 \label{tab:positioning}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -269,9 +269,9 @@ FedLPA~\cite{liu2024fedlpa}         & yes  & none        & 1     & 85.8\% (MNIST
 FedKT~\cite{li2021fedkt}            & yes  & DP-capable  & 1     & 90.5\% (MNIST)                     & lossy when private \\
 FedAUXfdp~\cite{hoech2022fedauxfdp} & yes  & DP (lossy)  & 1     & 75.2\% (CIFAR-10, $\varepsilon{=}0.5$) & accuracy falls with budget \\
 FedDiff~\cite{feddiff2024}  & yes  & DP (lossy)  & 1     & 27.8\% (CIFAR-10, $\varepsilon{=}10$)  & accuracy falls with budget \\
-POSEIDON~\cite{sav2021poseidon}     & no   & HE (lossless) & many & 89.9\% (MNIST, $\sim$1.4\,h)       & multi-round; encrypted training \\
+POSEIDON~\cite{sav2021poseidon}     & no   & HE (no noise) & many & 89.9\% (MNIST, $\sim$1.4\,h)       & multi-round; encrypted training \\
 HE secure agg.~\cite{kemmaka2025hybagg} & no & HE      & per round & protocol only                  & aggregation, not distillation \\
-\textbf{HE-IFD (ours)} & \textbf{yes} & \textbf{HE (lossless)} & \textbf{1} & \textbf{84.9 / 81.1 / 84.6\%$^\ddagger$} & \textbf{---} \\
+\textbf{HE-IFD (ours)} & \textbf{yes} & \textbf{HE (no noise)} & \textbf{1} & \textbf{84.9 / 81.1 / 84.6\%$^\ddagger$} & \textbf{---} \\
 \bottomrule
 \end{tabular}
 \normalsize
@@ -285,7 +285,7 @@ one-shot methods, the natural utility peers, the contrast is that their accuracy
 budget that perturbs the released model, while our encryption perturbs nothing. The communication advantage
 is large and structural: a full-model encrypted protocol of the kind the rejected literature assumed would
 move on the order of hundreds of gigabytes, whereas our single classifier-head ciphertext is a few
-megabytes per round (\cref{sec:fhe-cost}). The protocol is also embarrassingly parallel across clients and
+megabytes per round (\cref{sec:fhe-cost}). The protocol is also fully parallel across clients and
 its aggregation is an associative reduction (\cref{sec:cost}), so wall-clock does not grow with the number
 of participants.
 

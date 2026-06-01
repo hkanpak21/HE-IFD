@@ -22,14 +22,14 @@ nothing about any individual one, using masking protocols that cancel in the agg
 sum and still operates within the iterative protocol. Differential privacy instead perturbs the updates
 themselves, most commonly through differentially private stochastic gradient descent~\cite{abadi2016deep};
 the guarantee is strong and composable, but because the noise enters the released model it trades privacy
-directly against accuracy. This lossless-versus-lossy distinction is the axis along which our own privacy
+directly against accuracy. This distinction, between privacy that costs accuracy and privacy that does not, is the axis along which our own privacy
 design is best understood, and it recurs throughout what follows.
 
 Homomorphic encryption offers a third route, protecting the updates by computing on them while they remain
 encrypted. In its most ambitious form it has been used to train a neural network entirely under encryption
 across many parties. POSEIDON, for instance, runs encrypted stochastic gradient descent under multiparty
 CKKS, with the nonlinear activations replaced by polynomial approximations so that they can be evaluated
-homomorphically~\cite{sav2021poseidon}. The privacy is lossless and the result strong, but the approach
+homomorphically~\cite{sav2021poseidon}. The privacy adds no accuracy cost and the result is strong, but the approach
 remains fundamentally iterative and pays for the encrypted nonlinearities with a deep multiplicative
 circuit, repeated bootstrapping, and a wall-clock measured in hours. A lighter line keeps the encryption
 but narrows its job to aggregation alone: schemes that combine multi-key CKKS with masking reduce a round
@@ -93,4 +93,4 @@ without loss is either multi-round encrypted training or a secure-aggregation pr
 distillation work that communicates in a single round is either plaintext or made private only by lossy
 perturbation. The method we present occupies the empty intersection: a one-shot federated distillation
 whose single encrypted operation is a linear aggregation under multiparty homomorphic encryption, giving
-the lossless privacy of the cryptographic line at the communication budget of the one-shot line.
+the accuracy-preserving privacy of the cryptographic line at the communication budget of the one-shot line.
