@@ -221,3 +221,39 @@ For each (backbone, dataset) cell in the final headline set:
 - `M4 > 0` at low α (federation provides OOD value to clients).
 
 Any setting that fails *raw_union ≥ θ₀* at α=0.05 must be fixed by Phase α, or that setting drops from the headline (per the fallback path).
+
+---
+
+## Phase III — Post-MIA three-thread grill (appended 2026-05-30)
+
+### Position at this grill
+
+M1.5 landed; M2 rooting is underway. **FHE PoC (020) ✅** (end-to-end multiparty CKKS, decrypted == plaintext within CKKS bounds, cost a few MiB/round — replaces the rejected 460 GB figure). **MIA (021) ✅ on MNIST.** Aggregation-design probes (023/024/025) reached a verdict. A grill consolidated the three remaining experimental threads — **aggregation, MIA, synthetic generation** — into four decisions.
+
+### Thread 1 — Aggregation is *task arithmetic* (framing lock + one cheap verify)
+
+The server op θ⋆ = θ₀ + Σⱼ wⱼ·Δⱼ (Δⱼ = θⱼ⁽ᴷ⁾ − θ₀) **is task arithmetic** (Ilharco et al. 2023, `ilharco2023editing`) — task vectors merged from a shared init. This is the dominant model-merging framework, not a naive trick; it answers the "isn't this too simple?" reflex by *naming* it.
+
+- **Non-linear verdict (settled).** The 408-row local probe (023/024) + a 6-cell VALAR verify (025) agree: **no one-shot non-linear combine beats the depth-1 weighted average.** `second_moment`/RMSProp loses on paired (within-partition) comparison; the only thing that wins is multi-round `sync_sgd`, which breaks one-shot. The full 960-cell grid is **not needed**. (The earlier "+22 RMSProp win" was a non-reproducible single-run artifact — the Dirichlet-partition lottery alone moves accuracy up to ~15pp.)
+- **Why the deep merges lose — the citable defense.** TIES (Yadav 2023, `yadav2023ties`) sign-election and FedFisher (Jhunjhunwala et al. 2024, `jhunjhunwala2024fedfisher`) curvature-weighting help only when task vectors **conflict**; the merging literature reports diminishing returns when deltas are well-aligned. **Our shared basin θ₀ pre-aligns the deltas, so these merges have no conflict to resolve while still costing deep HE.** Same mechanism as the "basin is the lever" headline. Momentum/curvature therefore live **client-side**, in the bounded local trajectory (already SGD+momentum, `distill.py`), not at the encrypted server step.
+- **The one HE-legal optimization lever = the scaling coefficient λ.** θ⋆(λ) = θ₀ + λ·Σⱼ wⱼ·Δⱼ (we pin λ=1). It collapses to an interpolation θ⋆(λ) = (1−λ)θ₀ + λθ⋆(1), so it is **eval-only, no retraining**, and λ stays a public scalar → depth-1. MetaGPT (Zhou 2024, `zhou2024metagpt`) even solves λ in closed form from task-vector geometry. **Decision: verify λ cheaply first (issue 026)** before committing any grid; a peak at λ<1 reinforces "alignment does most of the work," λ>1 means push harder along the trajectory.
+
+### Thread 2 — MIA: extend to a second backbone family (issue 028)
+
+021 landed clean on MNIST: **released θ⋆ near-chance** (AUC 0.49–0.57 across Yeom/LiRA/GLiRA × external/fellow); **prototype channel** leaks raw (AUC→0.80 @ α=1.0) but **DP ε≤8 → chance** (validates the averaging-variant accounting). The dual story (crypto protects the model; DP collapses the only leaky channel) is publishable. **Decision: cover a pretrained backbone in *both* modalities** — ViT/CIFAR-100 (wrapper exists) + RoBERTa/AG-News (write a wrapper; chunk 64-shadow training ≤3h).
+
+### Thread 3 — Synthetic generation: fix DP-MERF, keep both modes (issue 027 → re-run 022)
+
+The 022 generator is **not differentially private**: it emits raw records + cosmetic jitter, with DP noise only on the φ-mean that sets resampling weights. The verify's inverted contrast (Mode A `dp_synth_all` 0.97 @ ε=2 > Mode B basin) is therefore an **artifact of the DP not biting**, not a finding. **Decision: keep both modes and fix the generator properly (DP-MERF, Harder 2021)** — train a small generator to match the DP-privatized RFF mean embedding and **sample fresh points, never raw `X_c`**; re-verify (Mode A accuracy must *drop* at ε=2) before re-running the grid. Our basin lives in frozen-backbone feature space, so DP-MERF there is already "perceptual" — its strongest regime.
+
+### Cross-thread payoff
+
+Once the DP generator is sound, **Mode A becomes our own measured DP-one-shot baseline**, and its released-model MIA contrasts directly against HE-IFD's near-chance leakage — the **"crypto leaks less than DP"** claim, the strongest privacy statement in the paper, tying threads 2 and 3 together. The λ result ties thread 1 to the "alignment does most of the work" headline.
+
+### Issues cut at this grill
+
+- **026** — task-arithmetic λ-coefficient cheap verify (eval-only) [AFK].
+- **027** — fix the DP-MERF generator to be DP-sound + re-verify; supersedes 022's generator [AFK].
+- **028** — MIA second backbone family (ViT/CIFAR-100 + RoBERTa/AG-News); extends 021 [AFK].
+
+All AFK (compute); paper writing remains HITL. New bib keys to add when writing: `ilharco2023editing`, `yadav2023ties`, `jhunjhunwala2024fedfisher`, `zhou2024metagpt` (DP-MERF `harder2021dpmerf` already planned).

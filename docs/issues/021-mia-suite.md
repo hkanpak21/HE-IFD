@@ -1,6 +1,6 @@
 # 021 — Membership-inference suite (3 surfaces, LiRA + GLiRA + threshold)  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-29) — dispatched as a worktree agent. Implements the code; VALAR runs submitted separately.
+> **STATUS: ✅ DONE (MNIST) → extended by [028](028-mia-second-backbone-family.md)** (2026-05-30) — `mia/` suite built + landed clean on MNIST/MLP (2 cells, 3 attacks × 3 surfaces, 64 shadows): released model θ⋆ **near-chance** (AUC 0.49–0.57 across Yeom/LiRA/GLiRA × external/fellow); prototype channel leaks raw (AUC→0.80 @ α=1.0) but **DP ε≤8 collapses it to chance**, validating the averaging-variant accounting. Second backbone family (ViT/CIFAR-100 + RoBERTa/AG-News) is issue 028.
 
 **Phase:** M2 (privacy validation) · **Blocked by:** none · **Blocks:** the empty §VI (Residual Leakage) of the paper.
 

@@ -78,6 +78,7 @@ type result struct {
 	EncryptMs       float64 `json:"client_encrypt_ms_total"`
 	AggregateMs     float64 `json:"server_aggregate_ms"`
 	DecryptMs       float64 `json:"threshold_decrypt_ms"`
+	DkgMs           float64 `json:"dkg_keygen_ms"`
 }
 
 const lattigoVersion = "github.com/tuneinsight/lattigo/v6 v6.2.0"
@@ -200,6 +201,7 @@ func run(c config) result {
 	// 1. DKG: N parties sample sk_i, jointly build the collective public key.
 	//    Ideal secret key s = Σ_i sk_i (never reconstructed in the clear).
 	// =======================================================================
+	tDkg := time.Now()
 	kgen := rlwe.NewKeyGenerator(params)
 	sks := make([]*rlwe.SecretKey, c.n)
 	for i := 0; i < c.n; i++ {
@@ -220,6 +222,7 @@ func run(c config) result {
 	}
 	collectivePK := rlwe.NewPublicKey(params)
 	ckg.GenPublicKey(ckgCombined, ckgCRP, collectivePK)
+	dkgMs := float64(time.Since(tDkg).Microseconds()) / 1000.0
 
 	encryptor := rlwe.NewEncryptor(params, collectivePK)
 
@@ -334,13 +337,13 @@ func run(c config) result {
 
 	return result_(c, params, slots, ctPerClient, bytesPerCt, uploadBytes,
 		downloadBytes, decShareBytes*ctPerClient, relL2, maxAbs, multDepth,
-		encryptMs, aggregateMs, decryptMs)
+		encryptMs, aggregateMs, decryptMs, dkgMs)
 }
 
 // result_ assembles the result struct (kept separate to keep run() readable).
 func result_(c config, params ckks.Parameters, slots, ctPerClient, bytesPerCt,
 	uploadBytes, downloadBytes, decShareBytes int, relL2, maxAbs float64,
-	multDepth int, encMs, aggMs, decMs float64) result {
+	multDepth int, encMs, aggMs, decMs, dkgMs float64) result {
 	return result{
 		Scenario:       fmt.Sprintf("d=%d N=%d logN=%d", c.d, c.n, c.logN),
 		LattigoVersion: lattigoVersion,
@@ -362,6 +365,7 @@ func result_(c config, params ckks.Parameters, slots, ctPerClient, bytesPerCt,
 		EncryptMs:      encMs,
 		AggregateMs:    aggMs,
 		DecryptMs:      decMs,
+		DkgMs:          dkgMs,
 	}
 }
 
@@ -401,6 +405,7 @@ func printResult(r result) {
 	fmt.Printf("  total upload (N=%d)    : %s\n", r.N, human(r.UploadBytes))
 	fmt.Printf("  total download (N=%d)  : %s\n", r.N, human(r.DownloadBytes))
 	fmt.Printf("  decrypt-share traffic : %s\n", human(r.DecShareBytes))
+	fmt.Printf("  DKG keygen time       : %.1f ms\n", r.DkgMs)
 	fmt.Printf("  encrypt time (all i)  : %.1f ms\n", r.EncryptMs)
 	fmt.Printf("  server aggregate time : %.1f ms\n", r.AggregateMs)
 	fmt.Printf("  threshold decrypt time: %.1f ms\n", r.DecryptMs)

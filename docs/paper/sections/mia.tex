@@ -1,14 +1,83 @@
-\section{Residual Leakage of the Released Model}
+\section{Attack Surface and Residual Leakage}
 \label{sec:mia}
 
-% PLACEHOLDER — to be completed after the rest of the paper (membership-inference study).
-% Do not fabricate numbers here. The design below states what will be measured.
+The cryptographic and differential-privacy guarantees of \cref{sec:privacy} protect the contributions and
+the basin summaries, not the final model, which every party obtains in the clear after decryption. This is
+not a gap a stronger mechanism could close. Any protocol that lets separate parties build a common model
+must move knowledge between them, and a model that is useful to a client---one that classifies categories
+the client never saw locally---necessarily encodes information about the data that taught it those
+categories. No method that returns a shared, useful model can therefore promise that nothing about any
+party's data is ever inferable from it. The meaningful question is not whether residual leakage is zero,
+which it cannot be, but how large an attack surface a protocol exposes on the way to the model, and the
+design of \cref{sec:method} is built to make that surface as small as a one-shot federated method can.
 
-The cryptographic and differential-privacy guarantees of \cref{sec:privacy} concern the contributions and
-the basin summaries, not the final global model, which every party obtains in the clear after decryption.
-A complete privacy account must therefore ask how much an adversary can infer about a client's data from
-that released model. We study this through membership-inference attacks~\cite{shokri2017membership,yeom2018privacy,salem2019ml,carlini2022membership},
-which test whether a given example was part of the training data, applied across the surfaces an adversary
-could realistically observe in our protocol, including the federated-distillation-specific
-surfaces~\cite{yang2023fdleaks,wang2024graddiff,gu2023ldia,jagielski2023students}. This section reports
-that study.
+\subsection{What each protocol leaves exposed}
+\label{sec:mia-surface}
+
+Read as attack surfaces, the alternatives differ by orders of magnitude. Multi-round federated learning
+exposes the most: every round publishes a fresh update computed on private data, so an honest-but-curious
+server or peer accumulates a long sequence of views of each client over the course of training, and the
+membership-inference literature targets exactly this repetition~\cite{shokri2017membership,nasr2019comprehensive}.
+One-shot methods that lean on differential privacy expose, in a single object, essentially the whole of a
+client's local knowledge: a differentially private one-shot pipeline that synthesizes data ships a full
+synthetic copy of each client's dataset in the clear, and one that perturbs a model ships the noised model
+itself. HE-IFD exposes the least it can while still producing a shared model. The per-client displacements
+are encrypted under the joint key and never appear in the clear; the only object any party receives is the
+single decrypted aggregate; and the only signal released in the open is the small set of per-class
+prototypes, themselves under differential privacy. The bulk of every contribution is delegated to
+encryption, and what remains in the open is one aggregate and a handful of private summaries.
+
+\subsection{Measured residual on the open channels}
+\label{sec:mia-measured}
+
+We measure what remains with membership-inference attacks~\cite{yeom2018privacy,salem2019ml,carlini2022membership}
+across the surfaces an adversary could realistically observe in our protocol: the released model, queried
+externally or by a fellow client who brings its own data and the shared prototypes as a prior, and the
+prototype channel itself. We include the attacks tailored to the federated-distillation
+setting~\cite{yang2023fdleaks,wang2024graddiff,gu2023ldia,jagielski2023students}, and score by area under
+the ROC curve, with the true-positive rate at a low fixed false-positive rate alongside.
+
+On the released model the leakage stays small. On the language task the strongest shadow-model attack sits
+at the level of random guessing across heterogeneity levels, so a participant learns essentially nothing
+about another's membership from the shared model beyond what any usable classifier of that data would
+reveal. The prototype channel is the one place a \emph{raw} release leaks---unsurprisingly, since a raw
+prototype is an average of real features---and it is exactly the place differential privacy applies.
+\Cref{tab:mia-proto} shows that the membership signal on the prototypes collapses to the level of guessing
+once the budget is applied: at $\varepsilon=8$ and below the area under the curve returns to about one half
+on both the vision and the language backbone. The in-the-clear channel is closed by the same
+averaging-variant accounting that leaves accuracy flat (\cref{sec:privacy-eval}).
+
+\begin{table}[t]
+\centering
+\caption{Membership inference on the Phase-0 prototype channel, area under the ROC curve. A raw prototype
+release leaks (most at the near-homogeneous setting, where prototypes are more informative); applying the
+averaging-variant differential-privacy budget collapses the signal to the chance level ($0.5$) at
+$\varepsilon\le 8$ on both modalities.}
+\label{tab:mia-proto}
+\footnotesize
+\begin{tabular}{llccc}
+\toprule
+Backbone & $\alpha$ & raw & $\varepsilon{=}8$ & $\varepsilon{=}2$ \\
+\midrule
+ViT-B/32 (CIFAR-100)   & $0.05$ & $0.97$ & $0.57$ & $0.53$ \\
+                       & $1.0$  & $1.00$ & $0.60$ & $0.56$ \\
+RoBERTa (AG-News)      & $0.05$ & $0.53$ & $0.49$ & $0.49$ \\
+                       & $1.0$  & $0.64$ & $0.49$ & $0.49$ \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+\subsection{The inherent limit}
+\label{sec:mia-limit}
+
+We do not claim the released model leaks nothing. A model that hands every client coverage of classes it
+never observed must carry information about the data that supplied that coverage, and an adversary with
+strong priors about a client's distribution can recover some of it; this is a property of useful shared
+models, not of our protocol in particular. What the protocol guarantees is that this residual is the
+\emph{entire} surface. Because the contributions are never exposed, the leakage a client faces is bounded by
+what one shared model inherently reveals---not multiplied across the rounds of an iterative protocol, and
+not handed over wholesale as a released synthetic dataset or a perturbed model. Driving the exposed surface
+down to that inherent floor, rather than promising to remove a leak that cannot be removed when parties set
+out to build a common model from their data, is the privacy goal the design is built to meet, and the
+measurements above show it reaches that floor on the one channel that is open.

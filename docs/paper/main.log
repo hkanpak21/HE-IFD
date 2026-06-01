@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.5)  29 MAY 2026 20:17
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.5.5)  30 MAY 2026 21:28
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -859,33 +859,29 @@ Package hyperref Info: Link coloring OFF on input line 55.
 \@outlinefile=\write4
 \openout4 = `main.out'.
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 90.
+ (./sections/intro.tex
+LaTeX Font Info:    Trying to load font information for U+msa on input line 20.
 
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 90.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 20.
 
 
 (/usr/local/texlive/2026basic/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-)
-(./sections/intro.tex [1{/Users/a90/Library/texlive/2026basic/texmf-var/fonts/m
-ap/pdftex/updmap/pdftex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/
-dvips/base/8r.enc}
+) [1{/Users/a90/Library/texlive/2026basic/texmf-var/fonts/map/pdftex/updmap/pdf
+tex.map}{/usr/local/texlive/2026basic/texmf-dist/fonts/enc/dvips/base/8r.enc}
 
 
-]) (./sections/related.tex [2]) (./sections/prelim.tex
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [3])
-(./sections/method.tex (./figures/protocol.tex) (./figures/protocol_steps.tex)
+])
+(./sections/related.tex [2]) (./sections/prelim.tex [3]) (./sections/method.tex
+(./figures/protocol.tex) (./figures/protocol_steps.tex)
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
 put line 42.
-
-[4]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+ [4]
+Underfull \vbox (badness 3302) has occurred while \output is active []
 
 
 Underfull \vbox (badness 2237) has occurred while \output is active []
@@ -896,105 +892,106 @@ Underfull \hbox (badness 2368) in paragraph at lines 115--126
  []
 
 [6]) (./sections/experiments.tex [7]
-Underfull \hbox (badness 10000) in paragraph at lines 41--41
+Underfull \hbox (badness 10000) in paragraph at lines 43--43
 []\OT1/ptm/m/n/8 MNIST (MLP),
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 41--41
+Underfull \hbox (badness 10000) in paragraph at lines 43--43
 \OT1/ptm/m/n/8 Fashion-MNIST
  []
 
 
-Underfull \hbox (badness 7595) in paragraph at lines 41--42
+Underfull \hbox (badness 7595) in paragraph at lines 43--44
 []\OT1/ptm/m/n/8 behaviour with-out a
  []
 
 
-Underfull \hbox (badness 1960) in paragraph at lines 42--42
+Underfull \hbox (badness 1960) in paragraph at lines 44--44
 []\OT1/ptm/m/n/8 ViT-B/32 on CIFAR-
  []
 
 
-Underfull \hbox (badness 6876) in paragraph at lines 42--43
+Underfull \hbox (badness 6876) in paragraph at lines 44--45
 []\OT1/ptm/m/n/8 scaling to a strong
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 43--44
+Underfull \hbox (badness 10000) in paragraph at lines 45--46
 []\OT1/ptm/m/n/8 the method across
  []
 
 
-Underfull \hbox (badness 3407) in paragraph at lines 44--45
+Underfull \hbox (badness 3407) in paragraph at lines 46--47
 []\OT1/ptm/m/n/8 scalability in par-tic-i-
  []
 
 
-Underfull \hbox (badness 1874) in paragraph at lines 45--45
+Underfull \hbox (badness 1874) in paragraph at lines 47--47
 []$\OT1/cmr/m/n/8 0\OML/cmm/m/it/8 :\OT1/cmr/m/n/8 05$ \OT1/ptm/m/n/8 (se-vere)
  to $\OT1/cmr/m/n/8 1\OML/cmm/m/it/8 :\OT1/cmr/m/n/8 0$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 45--46
+Underfull \hbox (badness 10000) in paragraph at lines 47--48
 []\OT1/ptm/m/n/8 robustness to la-bel
  []
 
 
-Underfull \hbox (badness 2435) in paragraph at lines 46--47
+Underfull \hbox (badness 2435) in paragraph at lines 48--49
 []\OT1/ptm/m/n/8 interchangeability and
  []
 
 
-Overfull \hbox (10.8023pt too wide) in paragraph at lines 37--50
+Overfull \hbox (10.8023pt too wide) in paragraph at lines 39--52
  [][] 
  []
 
-<figures/fig_scaling.pdf, id=369, 649.25563pt x 251.91214pt>
+<figures/fig_scaling.pdf, id=384, 649.25563pt x 240.43175pt>
 File: figures/fig_scaling.pdf Graphic file (type pdf)
 <use figures/fig_scaling.pdf>
-Package pdftex.def Info: figures/fig_scaling.pdf  used on input line 54.
-(pdftex.def)             Requested size: 381.84283pt x 148.15407pt.
-<figures/fig_necessity.pdf, id=371, 227.84346pt x 356.25284pt>
+Package pdftex.def Info: figures/fig_scaling.pdf  used on input line 56.
+(pdftex.def)             Requested size: 381.84283pt x 141.40224pt.
+<figures/fig_necessity.pdf, id=386, 227.84346pt x 356.25284pt>
 File: figures/fig_necessity.pdf Graphic file (type pdf)
 <use figures/fig_necessity.pdf>
-Package pdftex.def Info: figures/fig_necessity.pdf  used on input line 88.
+Package pdftex.def Info: figures/fig_necessity.pdf  used on input line 90.
 (pdftex.def)             Requested size: 206.64185pt x 323.1197pt.
 [8]
-Underfull \vbox (badness 5022) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
-<figures/fig_nscaling.pdf, id=387, 348.83011pt x 280.85202pt>
+ [9 <./figures/fig_scaling.pdf> <./figures/fig_necessity.pdf>]
+<figures/fig_nscaling.pdf, id=431, 348.7222pt x 254.70119pt>
 File: figures/fig_nscaling.pdf Graphic file (type pdf)
 <use figures/fig_nscaling.pdf>
-Package pdftex.def Info: figures/fig_nscaling.pdf  used on input line 145.
-(pdftex.def)             Requested size: 252.0pt x 202.8904pt.
-<figures/fig_ksweep.pdf, id=388, 350.8222pt x 281.27548pt>
+Package pdftex.def Info: figures/fig_nscaling.pdf  used on input line 159.
+(pdftex.def)             Requested size: 252.0pt x 184.05705pt.
+<figures/fig_ksweep.pdf, id=432, 350.8222pt x 250.54503pt>
 File: figures/fig_ksweep.pdf Graphic file (type pdf)
 <use figures/fig_ksweep.pdf>
-Package pdftex.def Info: figures/fig_ksweep.pdf  used on input line 153.
-(pdftex.def)             Requested size: 252.0pt x 202.04607pt.
- [9 <./figures/fig_scaling.pdf> <./figures/fig_necessity.pdf>]
-<figures/fig_continuum.pdf, id=435, 347.10301pt x 325.60559pt>
+Package pdftex.def Info: figures/fig_ksweep.pdf  used on input line 167.
+(pdftex.def)             Requested size: 252.0pt x 179.97174pt.
+<figures/fig_continuum.pdf, id=437, 347.10301pt x 299.64296pt>
 File: figures/fig_continuum.pdf Graphic file (type pdf)
 <use figures/fig_continuum.pdf>
-Package pdftex.def Info: figures/fig_continuum.pdf  used on input line 179.
-(pdftex.def)             Requested size: 252.0pt x 236.39833pt.
-
-Underfull \vbox (badness 1406) has occurred while \output is active []
-
-<figures/fig_dpfrontier.pdf, id=436, 381.54796pt x 266.47957pt>
+Package pdftex.def Info: figures/fig_continuum.pdf  used on input line 219.
+(pdftex.def)             Requested size: 252.0pt x 217.54877pt.
+<figures/fig_dpfrontier.pdf, id=438, 359.92404pt x 255.12463pt>
 File: figures/fig_dpfrontier.pdf Graphic file (type pdf)
 <use figures/fig_dpfrontier.pdf>
-Package pdftex.def Info: figures/fig_dpfrontier.pdf  used on input line 189.
-(pdftex.def)             Requested size: 252.0pt x 175.99904pt.
- [10 <./figures/fig_nscaling.pdf> <./figures/fig_ksweep.pdf> <./figures/fig_con
-tinuum.pdf> <./figures/fig_dpfrontier.pdf>]
+Package pdftex.def Info: figures/fig_dpfrontier.pdf  used on input line 229.
+(pdftex.def)             Requested size: 252.0pt x 178.62495pt.
+ [10 <./figures/fig_nscaling.pdf> <./figures/fig_ksweep.pdf>]
 
 LaTeX Font Warning: Font shape `OT1/ptm/m/scit' undefined
-(Font)              using `OT1/ptm/m/it' instead on input line 247.
+(Font)              using `OT1/ptm/m/it' instead on input line 287.
 
-) (./sections/mia.tex) (./sections/conclusion.tex) [11] (./main.bbl
+
+Underfull \vbox (badness 1038) has occurred while \output is active []
+
+ [11 <./figures/fig_continuum.pdf> <./figures/fig_dpfrontier.pdf>]) (./sections
+/mia.tex
+[12]) (./sections/conclusion.tex) (./main.bbl [13]
 Underfull \hbox (badness 10000) in paragraph at lines 166--171
 []$\OT1/ptm/m/n/8 https : / / openaccess . thecvf . com / content / WACV2025 / 
 html / Mendieta[]
@@ -1006,8 +1003,8 @@ Underfull \hbox (badness 10000) in paragraph at lines 166--171
 ed[]
  []
 
-[12])
-<authors/hkanpak.jpg, id=603, 142.3719pt x 170.7981pt>
+) [14]
+<authors/hkanpak.jpg, id=630, 142.3719pt x 170.7981pt>
 File: authors/hkanpak.jpg Graphic file (type jpg)
 <use authors/hkanpak.jpg>
 Package pdftex.def Info: authors/hkanpak.jpg  used on input line 112.
@@ -1016,7 +1013,7 @@ File: authors/hkanpak.jpg Graphic file (type jpg)
 <use authors/hkanpak.jpg>
 Package pdftex.def Info: authors/hkanpak.jpg  used on input line 112.
 (pdftex.def)             Requested size: 72.27197pt x 86.7019pt.
-<authors/sinem.jpg, id=606, 557.9244pt x 743.8992pt>
+<authors/sinem.jpg, id=633, 557.9244pt x 743.8992pt>
 File: authors/sinem.jpg Graphic file (type jpg)
 <use authors/sinem.jpg>
 Package pdftex.def Info: authors/sinem.jpg  used on input line 117.
@@ -1025,7 +1022,7 @@ File: authors/sinem.jpg Graphic file (type jpg)
 <use authors/sinem.jpg>
 Package pdftex.def Info: authors/sinem.jpg  used on input line 117.
 (pdftex.def)             Requested size: 67.74828pt x 90.33104pt.
-<authors/alptekinkupcu3.jpg, id=609, 341.3553pt x 340.3917pt>
+<authors/alptekinkupcu3.jpg, id=636, 341.3553pt x 340.3917pt>
 File: authors/alptekinkupcu3.jpg Graphic file (type jpg)
 <use authors/alptekinkupcu3.jpg>
 Package pdftex.def Info: authors/alptekinkupcu3.jpg  used on input line 122.
@@ -1034,24 +1031,22 @@ File: authors/alptekinkupcu3.jpg Graphic file (type jpg)
 <use authors/alptekinkupcu3.jpg>
 Package pdftex.def Info: authors/alptekinkupcu3.jpg  used on input line 122.
 (pdftex.def)             Requested size: 72.27008pt x 72.06609pt.
- [13 <./authors/hkanpak.jpg> <./authors/sinem.jpg> <./authors/alptekinkupcu3.jp
-g>] (./main.aux)
+ [15
+
+ <./authors/hkanpak.jpg> <./authors/sinem.jpg> <./authors/alptekinkupcu3.jpg>] 
+(./main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 6F0E2955B88716767E4580A2F2806EA2;6236.
+(rerunfilecheck)             Checksum: 8905B4ACA43B14666627F92F94C0F881;7138.
  ) 
 Here is how much of TeX's memory you used:
- 25635 strings out of 469006
- 495805 string characters out of 5454814
- 925015 words of memory out of 5000000
- 53769 multiletter control sequences out of 15000+600000
+ 25660 strings out of 469006
+ 496232 string characters out of 5454814
+ 926032 words of memory out of 5000000
+ 53786 multiletter control sequences out of 15000+600000
  674116 words of font info for 129 fonts, out of 8000000 for 9000
  319 hyphenation exceptions out of 8191
  99i,11n,108p,864b,963s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -1081,10 +1076,10 @@ cal/texlive/2026basic/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr
 l/texlive/2026basic/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/local/te
 xlive/2026basic/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/local/texlive
 /2026basic/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (13 pages, 2441832 bytes).
+Output written on main.pdf (15 pages, 2434750 bytes).
 PDF statistics:
- 761 PDF objects out of 1000 (max. 8388607)
- 606 compressed objects within 7 object streams
- 129 named destinations out of 1000 (max. 500000)
- 358 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 782 PDF objects out of 1000 (max. 8388607)
+ 631 compressed objects within 7 object streams
+ 137 named destinations out of 1000 (max. 500000)
+ 390 words of extra memory for PDF output out of 10000 (max. 10000000)
 

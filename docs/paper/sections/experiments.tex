@@ -17,8 +17,10 @@ LeNet-style convolutional network on Fashion-MNIST~\cite{xiao2017fashion}. In th
 feature extractor is a fixed, publicly available backbone whose features are read off without fine-tuning:
 a ViT-B/32 vision transformer on CIFAR-100~\cite{krizhevsky2009learning}, and the RoBERTa-base and MPNet
 sentence encoders on AG-News. Data are partitioned
-across clients by a Dirichlet distribution over labels with concentration $\alpha$; we report the
-heterogeneous ($\alpha=0.05$), mild ($\alpha=0.3$), and near-homogeneous ($\alpha=1.0$) settings. Unless
+across clients by a Dirichlet distribution over labels with concentration parameter $\alpha$ (the standard label-skew
+partition of federated learning: a smaller $\alpha$ leaves each client a few dominant classes and almost
+none of the rest); we report the heterogeneous ($\alpha=0.05$), mild ($\alpha=0.3$), and near-homogeneous
+($\alpha=1.0$) settings. Unless
 stated otherwise there are $\Nc=10$ clients, the shared basin is built from raw per-class prototypes, the
 local distillation runs for a small fixed number of steps $\Ksteps$ at temperature $\temp$, and every
 number is averaged over three seeds. \Cref{tab:setup} summarises the configuration.
@@ -126,6 +128,18 @@ rather than in classifying well on its own. This also shows that the basin sourc
 rather than a fixed requirement: the protocol behaves consistently whether the basin comes from a public
 probe, from privacy-protected prototypes, or from no labelled data at all.
 
+Not every candidate basin source survives this test, and the one that fails is instructive. A
+differentially private generator can synthesize a few labelled samples per class and the basin be built from
+those rather than from prototypes. Once the privacy accounting is honest, however, privatizing the handful
+of samples a basin needs injects enough noise that the synthetic basin is markedly weaker than a prototype
+basin at the same budget, and the final model follows it down; prototypes, which average before they
+privatize and so spend the budget on a single low-sensitivity statistic, remain the better source. The same
+generator applied to a client's \emph{entire} dataset, rather than to a few basin samples, is precisely the
+differentially private one-shot baseline of \cref{sec:positioning}: it must carry the whole contribution in
+the clear, as a full synthetic dataset, where our method instead delegates that contribution to encryption
+and releases only the small private prototypes. That difference---what each design leaves exposed in the
+clear---is the subject of \cref{sec:mia}.
+
 \subsection{Scalability and the Effect of Trajectory Length}
 \label{sec:scaling-ablation}
 
@@ -156,6 +170,32 @@ shared basin and declines gently as the trajectory lengthens (clients drift away
 temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha=0.05$).}
 \label{fig:ksweep}
 \end{figure}
+
+\subsection{Regularizing the Aggregated Displacement}
+\label{sec:lambda}
+
+The trajectory length $\Ksteps$ is one of two levers that keep clients inside the shared basin; the other is
+how far the server moves the model along the combined displacement. Writing the aggregate with an explicit
+scaling coefficient,
+\[
+  \thstar(\lambda) \;=\; \thz + \lambda \sum_j \wj \disp ,
+\]
+exposes the task-vector scaling coefficient of model merging~\cite{ilharco2023editing}: $\lambda$ sets the
+magnitude of the step away from the basin, and because it is a public scalar the encrypted aggregation stays
+at multiplicative depth one whatever value it takes. We sweep $\lambda$ from $0$ to $2$ by re-scoring the
+same trajectories, with no retraining. The behaviour splits cleanly by heterogeneity. On near-homogeneous
+data ($\alpha=1.0$) the optimum is exactly $\lambda=1$: the per-client displacements already agree, and
+applying the combined displacement in full is best. Under severe heterogeneity ($\alpha=0.05$) the optimum
+moves below $1$ and accuracy declines once $\lambda$ passes $1$, the same shape the trajectory-length sweep
+shows in \cref{fig:ksweep}. Both report one mechanism: when clients fit very different local distributions,
+their displacements applied at full strength carry the aggregate too far out of the common basin, and the
+combined step has to be regularized. Read this way $\lambda$ is a drift regularizer, the continuous
+counterpart of the bounded step budget, and treating it as one rather than pinning it at $1$ recovers a few
+points of accuracy in exactly the heterogeneous regime where drift is worst---on MNIST the heterogeneous
+optimum adds $2.4$ points over $\lambda=1$---at no cryptographic cost, with the same downward shift of the
+optimum holding on the pretrained backbone. The coefficient never settles above $1$, which is the
+operative statement: under heterogeneity the displacement should be damped toward the basin, never
+amplified away from it.
 
 \subsection{The Privacy--Utility Frontier of the Basin Prototypes}
 \label{sec:privacy-eval}

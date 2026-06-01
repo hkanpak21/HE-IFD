@@ -1,6 +1,6 @@
 # 022 — Synthetic-basin study: DP-synthesize-everything vs DP-few-for-basin + HE (DP-MERF)  [AFK]
 
-> **STATUS: 📥 OPEN** (2026-05-29) — dispatched as a worktree agent. Implements the code; VALAR runs submitted separately.
+> **STATUS: ⚠️ BLOCKED — generator DP-unsound; superseded by [027](027-fix-dpmerf-generator-dpsound.md)** (2026-05-30) — code built + verify ran, but `_merf_generate_class` emits **raw records + cosmetic jitter** (DP noise only on the φ-mean that sets resampling weights), so the released set is **not** differentially private. The verify's inverted contrast (Mode A 0.97 @ ε=2 > Mode B basin) is therefore an **artifact** of the DP not biting, not a finding. Grill decision (2026-05-30): **keep both modes** (A = DP-one-shot baseline, B = synth-few basin), **fix the generator first** (issue 027 — sample fresh from a DP-fit model, never raw `X_c`), then re-run this grid.
 
 **Phase:** M1.5 / γ extension (alignment-source) · **Blocked by:** none · **Blocks:** the alignment-source comparison table + the synthetic-basin paragraph.
 

@@ -77,7 +77,6 @@ def fig_scaling():
         ax.text(xi, v + 0.015, f"{v:.2f}", ha="center", va="bottom", fontsize=11, color=BLUE)
     ax.set_xticks(x); ax.set_xticklabels(labels)
     ax.set_ylabel("test accuracy"); ax.set_ylim(0, 1.0)
-    ax.set_title("Heterogeneous clients ($\\alpha=0.05$): a common, superior model")
     ax.legend(loc="upper left", frameon=False, bbox_to_anchor=(1.0, 1.0))
     fig.savefig(os.path.join(OUT, "fig_scaling.pdf")); plt.close(fig)
     print("scaling:", {l: round(o,3) for l,o in zip(labels, ours)}, "teacher", [round(t,3) for t in teacher])
@@ -108,7 +107,6 @@ def fig_continuum():
     ax.set_xlabel("shared-basin accuracy ($\\theta_0$ alone)")
     ax.set_ylabel("global model accuracy")
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
-    ax.set_title("Distillation never hurts; it adds most\nwhere the basin is weak")
     ax.legend(loc="lower right", frameon=False)
     fig.savefig(os.path.join(OUT, "fig_continuum.pdf")); plt.close(fig)
 
@@ -162,7 +160,6 @@ def fig_dpfrontier():
     ax.set_xticks(xticks); ax.set_xticklabels([e for e,_ in eps_methods])
     ax.set_xlabel("privacy budget $\\varepsilon$ (smaller = more private)")
     ax.set_ylabel("global model accuracy"); ax.set_ylim(0, 1.0)
-    ax.set_title("Flat privacy–utility frontier across practical budgets")
     ax.legend(loc="center right", frameon=False)
     fig.savefig(os.path.join(OUT, "fig_dpfrontier.pdf")); plt.close(fig)
 
@@ -181,7 +178,7 @@ def fig_nscaling():
         ax.plot(range(len(Ns)), ys, marker="o", color=BLUE_RAMP[ai], lw=1.8, label=f"$\\alpha={a}$")
     ax.set_xticks(range(len(Ns))); ax.set_xticklabels(Ns)
     ax.set_xlabel("number of clients $N$"); ax.set_ylabel("global model accuracy")
-    ax.set_ylim(0, 1.0); ax.set_title("Accuracy is stable as the client count grows\n(ViT-B/32, CIFAR-100)")
+    ax.set_ylim(0, 1.0)
     ax.legend(loc="lower left", frameon=False)
     fig.savefig(os.path.join(OUT, "fig_nscaling.pdf")); plt.close(fig)
 
@@ -200,7 +197,7 @@ def fig_ksweep():
     ax.text(0.05, th0+0.01, "shared basin $\\theta_0$", color=NEUTRAL, fontsize=10)
     ax.set_xticks(range(len(Ks))); ax.set_xticklabels(Ks)
     ax.set_xlabel("distillation steps $K$"); ax.set_ylabel("global model accuracy")
-    ax.set_ylim(0.4, 0.85); ax.set_title("Bounded trajectories: short is best,\nlong drifts away (ResNet-18, CIFAR-10)")
+    ax.set_ylim(0.4, 0.85)
     ax.legend(loc="lower left", frameon=False)
     fig.savefig(os.path.join(OUT, "fig_ksweep.pdf")); plt.close(fig)
 
@@ -221,7 +218,6 @@ def fig_alignment():
         ax.text(i, v+0.015, f"{v:.2f}", ha="center", va="bottom", fontsize=10)
     ax.set_xticks(range(len(items))); ax.set_xticklabels([l for _,l in items], fontsize=10)
     ax.set_ylim(0, 1.0); ax.set_ylabel("global model accuracy")
-    ax.set_title("Interchangeable basin sources ($\\alpha=0.05$, MNIST)")
     fig.savefig(os.path.join(OUT, "fig_alignment.pdf")); plt.close(fig)
 
 if __name__ == "__main__":

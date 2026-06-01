@@ -333,6 +333,10 @@ H.~Xiao, K.~Rasul, and R.~Vollgraf, ``{Fashion-MNIST}: A novel image dataset
 A.~Krizhevsky, ``Learning multiple layers of features from tiny images,''
   University of Toronto, Tech. Rep., 2009.
 
+\bibitem{ilharco2023editing}
+G.~Ilharco, M.~T. Ribeiro, M.~Wortsman, L.~Schmidt, H.~Hajishirzi, and
+  A.~Farhadi, ``Editing models with task arithmetic,'' in \emph{ICLR}, 2023.
+
 \bibitem{lattigo}
 C.~Mouchet, J.-P. Bossuat, J.~Troncoso-Pastoriza, and J.-P. Hubaux, ``{Lattigo
   v5}: A multiparty homomorphic encryption library in {Go},'' in \emph{WAHC},

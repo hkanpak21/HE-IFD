@@ -75,20 +75,20 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 \begin{abstract}
 Federated learning lets parties train a shared model without pooling their data, but its one-shot variant,
 which communicates in a single round, faces an unresolved privacy dilemma: sending a client's contribution
-in plaintext exposes it, while protecting it with differential privacy degrades the released model, and
-homomorphic encryption has so far been confined to multi-round encrypted training or to secure-aggregation
-primitives. We present HE-IFD, a one-shot federated distillation whose contributions are protected by
-lossless homomorphic encryption. Each client distils its local teacher into a small shared classifier head along a
-bounded trajectory, and the server combines the resulting parameter displacements with a single
-sample-weighted linear operation under multiparty CKKS, using only additions and multiplications by public
-scalars, at multiplicative depth one. The key to making a one-shot linear aggregation work under
+in plaintext exposes it, while protecting it with differential privacy injects noise that degrades the
+released model and offers only a statistical, not a cryptographic, guarantee, and homomorphic encryption has
+so far been confined to multi-round encrypted training or to secure-aggregation primitives. We present
+HE-IFD, a one-shot federated distillation whose contributions are protected by homomorphic encryption. Each
+client distils its local teacher into a small shared classifier head along a bounded trajectory, and the
+server combines the resulting parameter displacements with a single sample-weighted linear operation under
+multiparty CKKS, at multiplicative depth one. The key to making a one-shot linear aggregation work under
 heterogeneous data is a shared loss basin: a common, possibly weak, initialization agreed from cheap
 per-class summaries, whose role is to align the clients' updates rather than to classify well. Across vision
 and language tasks, and from small networks to frozen pretrained backbones, the method produces a common
-model far stronger than any client's own and close to a centralized one, while giving each client coverage
-of classes it never observed locally. A real multiparty CKKS implementation matches the plaintext aggregate
-to a relative error near $10^{-9}$ at a few megabytes per round, and differentially private basin summaries
-incur negligible accuracy cost across the practical range of privacy budgets.
+model stronger than any client's own and close to a centralized one, while giving each client coverage of
+classes it never observed locally. A real multiparty CKKS implementation reproduces the plaintext aggregate
+within the approximation bounds of CKKS at a few megabytes per round, and differentially private basin
+summaries incur negligible accuracy cost across the practical range of privacy budgets.
 \end{abstract}
 
 \begin{IEEEkeywords}
