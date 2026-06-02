@@ -90,8 +90,20 @@ the step a from-scratch federation cannot take and must replace with a data-depe
 phase that costs an extra round, exposes a per-client summary, and, when that summary is protected, spends a
 differential-privacy budget. Fine-tuning a pretrained model removes the phase, and with it the only channel
 through which client data would otherwise leave in the clear before encryption. We verify in
-\cref{sec:experiments} that the shared frame is necessary --- without it the one-shot combination collapses
---- and that the frozen backbone supplies it without any alignment phase.
+\cref{sec:experiments} that this shared start is what makes the one-shot combination work --- averaging
+independently trained units without it collapses --- and that the frozen backbone supplies the start with no
+alignment phase.
+
+The frame the backbone supplies is the representation, not the classifier. The shared initializer $\thz$ is
+an untrained head: it places every client at the same point in parameter space but encodes nothing about any
+class. A client therefore contributes a useful displacement for a class only when it holds examples of that
+class, so the global model's accuracy on a class is bounded by how many clients cover it. This is the one
+accuracy cost of dropping alignment, and it is a property of \emph{coverage} rather than of the frame. It is
+most visible when the label space is large and the skew extreme, so that each client sees only a sliver of
+the classes, and it narrows as each client sees more of the label space, closing well before the data become
+uniform. We characterize this gap directly in \cref{sec:experiments}, measured against an alignment-based
+reference that closes it only by exposing per-client class summaries in the clear --- the exposure the
+cryptographic design exists to remove.
 
 \subsection{Local Fine-Tuning}
 \label{sec:distill}

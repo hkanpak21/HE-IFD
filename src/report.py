@@ -55,6 +55,12 @@ CSV_FIELDS = [
     "m3_gap", "m3_student_acc_on_Di", "m3_teacher_acc_on_Di",
     # M4 — per-client OOD-class accuracy (issue 005); null/NaN-safe at α=1.0.
     "m4_mean", "m4_clients_evaluated", "m4_ood_acc",
+    # Fine-tuning-pivot axes (issue ft01) + client-optimizer axis. Recorded so
+    # the trainable-unit / direct-FT-vs-distill / optimizer ablations are
+    # distinguishable in the long-form CSV — without them every ablation row
+    # collides on the identity columns (the Stage-2 reporting bug). Pre-ft01
+    # cells leave these blank.
+    "local_step", "trainable_unit", "optimizer",
     "wall_clock_sec", "phase_teacher_sec", "phase_phase0_sec",
     "phase_distill_sec", "phase_aggregate_sec", "phase_eval_sec",
     "job_id", "node", "status", "error",

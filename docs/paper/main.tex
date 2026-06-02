@@ -85,8 +85,10 @@ multiparty CKKS, at multiplicative depth one. The key to making a one-shot linea
 heterogeneous data is a shared frame, which a frozen pretrained backbone supplies for free: every client
 fine-tunes from the same public initialization, so there is no alignment phase and nothing data-derived
 leaves a client before encryption. Across vision and language tasks on frozen pretrained backbones, the
-method produces a common model stronger than any client's own and close to a centralized one, while giving each client coverage of
-classes it never observed locally. A real multiparty CKKS implementation reproduces the plaintext aggregate
+method produces a common model stronger than any client's own and, outside the most skewed regimes, close to
+a centralized one, while giving each client coverage of classes it never observed locally; the residual gap
+to centralized accuracy is set by how much of the label space each client sees and narrows as that coverage
+grows. A real multiparty CKKS implementation reproduces the plaintext aggregate
 within the approximation bounds of CKKS at a few megabytes per round.
 \end{abstract}
 

@@ -647,20 +647,35 @@ def make_fgvc_aircraft_datasets(transform, data_root: str = "data",
     from torchvision import datasets
 
     root = _finegrained_root(data_root, "fgvc-aircraft-2013b")
-    try:
+
+    def _load(download: bool):
         train_ds = datasets.FGVCAircraft(
             str(data_root), split="trainval", annotation_level=annotation_level,
-            transform=transform, download=False)
+            transform=transform, download=download)
         test_ds = datasets.FGVCAircraft(
             str(data_root), split="test", annotation_level=annotation_level,
-            transform=transform, download=False)
-    except (RuntimeError, OSError) as e:
-        raise FileNotFoundError(
-            f"FGVC-Aircraft not found under {root}. Fetch once on the login "
-            f"node: python -c \"from torchvision.datasets import FGVCAircraft "
-            f"as A; A('{data_root}', split='trainval', download=True); "
-            f"A('{data_root}', split='test', download=True)\". Original error: {e}"
-        ) from e
+            transform=transform, download=download)
+        return train_ds, test_ds
+
+    try:
+        train_ds, test_ds = _load(download=False)
+    except (RuntimeError, OSError):
+        # Self-heal on an online host (Colab): the cached copy is absent, so
+        # fetch it once. VALAR compute nodes never reach here — the login-node
+        # prefetch lands the files and ``download=False`` succeeds. Mirrors the
+        # CIFAR loaders' retry. If the download itself fails (offline node with
+        # no prefetch), surface the actionable prefetch hint.
+        try:
+            train_ds, test_ds = _load(download=True)
+        except (RuntimeError, OSError) as e:
+            raise FileNotFoundError(
+                f"FGVC-Aircraft not found under {root} and download failed. "
+                f"Fetch once on a host with internet: python -c \"from "
+                f"torchvision.datasets import FGVCAircraft as A; "
+                f"A('{data_root}', split='trainval', download=True); "
+                f"A('{data_root}', split='test', download=True)\". "
+                f"Original error: {e}"
+            ) from e
     # num_classes depends on annotation_level: variant=100, family=70, manuf=30.
     nc = {"variant": 100, "family": 70, "manufacturer": 30}[annotation_level]
     return train_ds, test_ds, nc
