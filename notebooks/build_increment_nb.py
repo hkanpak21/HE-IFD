@@ -72,6 +72,12 @@ import importlib, subprocess, sys
 for pkg in ["transformers", "peft", "datasets"]:
     if importlib.util.find_spec(pkg) is None:
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", pkg], check=True)
+# Colab ships an old torchao (0.10) that newer peft rejects at get_peft_model time.
+# We use plain LoRA (no torchao), so remove it -> peft skips that backend cleanly.
+# Takes effect with NO kernel restart: peft re-checks find_spec at call time.
+if importlib.util.find_spec("torchao") is not None:
+    subprocess.run([sys.executable, "-m", "pip", "uninstall", "-y", "-q", "torchao"], check=False)
+    importlib.invalidate_caches()
 
 import os, json, math, time, random
 import numpy as np
