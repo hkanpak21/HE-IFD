@@ -315,6 +315,27 @@ for r in [0, 8]:
 code(r"""print_csv(S6)""")
 
 # ---------------------------------------------------------------------------
+md(r"""## S7 — Byzantine-lite robustness via leave-one-out candidates (issue fa04)
+
+One client (the largest shard) submits a crafted displacement (sign-flip / large
+Gaussian / label-flip training). The server forms the plain aggregate + all N
+leave-one-out aggregates (every one depth-1, public renormalized weights);
+clients decrypt all N+1 candidates and vote on local holdouts. Success = the
+vote excludes the attacker (`attacker_excluded=1`) and `acc_selected` recovers
+toward `acc_oracle` (the attacker-free aggregate). ~18 cells. Paste into
+`results/finetune_improve/s7_robust.csv`.""")
+
+code(r"""S7 = []
+for task in ["dbpedia_14", "ag_news"]:
+    for attack in ["sign_flip", "gauss", "label_flip"]:
+        for s in [42, 43, 44]:
+            run_robust_resumable(S7, task=task, backbone="roberta_base", N=10,
+                                 alpha=0.1, seed=s, K=200, r=8, freeze_a=True,
+                                 attack=attack)""")
+
+code(r"""print_csv_robust(S7)""")
+
+# ---------------------------------------------------------------------------
 md(r"""## Notes
 
 - **Decision flow**: S1 decides the LoRA config (expect freeze-A). S2 decides

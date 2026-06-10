@@ -477,6 +477,129 @@ def print_csv(rows):
         print(",".join(str(r[c]) for c in CSV_COLS))
 
 
+# --------------------------------------------------------------------------
+# S7 (issue fa04) — Byzantine-lite robustness via leave-one-out candidates.
+# The server forms the plain aggregate plus all N leave-one-out aggregates —
+# every one a depth-1 linear combine with public renormalized weights — and
+# the clients threshold-decrypt all N+1 candidates and vote on local holdouts.
+# A poisoned contribution shows up as the LOO candidate whose exclusion wins.
+# --------------------------------------------------------------------------
+def craft_attack(delta_honest, attack, all_deltas, rng):
+    """Replace the attacker's honest delta with a crafted one (client-side)."""
+    if attack == "sign_flip":
+        return {k: -5.0 * v for k, v in delta_honest.items()}
+    if attack == "gauss":
+        out = {}
+        for k, v in delta_honest.items():
+            rms = float(torch.stack([d[k] for d in all_deltas]).pow(2).mean().sqrt())
+            out[k] = torch.randn_like(v) * 5.0 * max(rms, 1e-8)
+        return out
+    raise ValueError(attack)
+
+
+def run_robust_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
+                    attack="sign_flip", freeze_a=True, val_frac=0.1):
+    ids_tr, mask_tr, ytr, ids_te, mask_te, yte, C = _data(task, backbone, seed)
+    set_seed(seed)
+    model = TextLoRA(backbone, C, r=r, freeze_a=freeze_a).to(DEVICE)
+    theta0 = trainable_state(model)
+
+    parts = dirichlet_partition(ytr, N, alpha, C, seed)
+    rng = np.random.default_rng(seed + 1)
+    deltas, sizes, vals = [], [], []
+    for ci in parts:
+        if len(ci) == 0:
+            deltas.append({k: torch.zeros_like(v) for k, v in theta0.items()})
+            sizes.append(0); vals.append(np.array([], dtype=np.int64)); continue
+        ci = rng.permutation(ci)
+        nv = int(val_frac * len(ci)) if len(ci) >= 20 else 0
+        val_idx, tr_idx = ci[:nv], ci[nv:]
+        load_trainable(model, theta0)
+        train_steps(model, ids_tr[tr_idx], mask_tr[tr_idx], ytr[tr_idx], steps=K, lr=lr, bs=bs)
+        st = trainable_state(model)
+        deltas.append({k: st[k] - theta0[k] for k in theta0})
+        sizes.append(int(len(tr_idx))); vals.append(val_idx)
+
+    # Attacker = the largest shard (worst case for sample weighting).
+    atk = int(np.argmax(sizes))
+    if attack == "label_flip":
+        ci = parts[atk]
+        ci = rng.permutation(ci)
+        nv = int(val_frac * len(ci)) if len(ci) >= 20 else 0
+        tr_idx = ci[nv:]
+        load_trainable(model, theta0)
+        y_flip = (ytr[tr_idx] + 1) % C
+        train_steps(model, ids_tr[tr_idx], mask_tr[tr_idx], y_flip, steps=K, lr=lr, bs=bs)
+        st = trainable_state(model)
+        deltas[atk] = {k: st[k] - theta0[k] for k in theta0}
+    else:
+        deltas[atk] = craft_attack(deltas[atk], attack, deltas, rng)
+
+    tot = max(sum(sizes), 1); w = [s / tot for s in sizes]
+    cands = {"plain": agg_plain(theta0, deltas, w, lam=1.0)}
+    for i in range(N):
+        wi = [w[j] for j in range(N) if j != i]
+        s = sum(wi)
+        wloo = [(w[j] / s if s > 0 else 0.0) for j in range(N) if j != i]
+        dloo = [deltas[j] for j in range(N) if j != i]
+        cands[f"loo_{i}"] = agg_plain(theta0, dloo, wloo, lam=1.0)
+
+    test_acc = {}
+    for name, st in cands.items():
+        load_trainable(model, st)
+        test_acc[name] = evaluate(model, ids_te, mask_te, yte)
+
+    votes = {name: 0.0 for name in cands}
+    vtot = 0.0
+    for i, vi in enumerate(vals):
+        if len(vi) == 0:
+            continue
+        for name, st in cands.items():
+            load_trainable(model, st)
+            votes[name] += sizes[i] * evaluate(model, ids_tr[vi], mask_tr[vi], ytr[vi])
+        vtot += sizes[i]
+    selected = max(votes, key=lambda nme: votes[nme]) if vtot > 0 else "plain"
+
+    return dict(task=task, backbone=backbone, N=N, alpha=alpha, seed=seed,
+                K=K, r=r, freeze_a=int(freeze_a), attack=attack,
+                attacker=atk, attacker_w=round(w[atk], 4),
+                acc_poisoned_plain=round(test_acc["plain"], 4),
+                acc_selected=round(test_acc[selected], 4),
+                selected=selected,
+                attacker_excluded=int(selected == f"loo_{atk}"),
+                acc_oracle=round(test_acc[f"loo_{atk}"], 4))
+
+
+CSV_COLS_ROBUST = ["task", "backbone", "N", "alpha", "seed", "K", "r", "freeze_a",
+                   "attack", "attacker", "attacker_w", "acc_poisoned_plain",
+                   "acc_selected", "selected", "attacker_excluded", "acc_oracle"]
+
+
+def run_robust_resumable(rows, **c):
+    f = OUTDIR / ("robust_" + cell_name(c).replace(".json", "") +
+                  "_atk%s.json" % c.get("attack", "sign_flip"))
+    if f.exists():
+        rows.append(json.loads(f.read_text()))
+        print(f"skip (done): {f.name}", flush=True)
+        return rows[-1]
+    t = time.time()
+    row = run_robust_cell(**c)
+    row["wall"] = round(time.time() - t, 1)
+    f.write_text(json.dumps(row))
+    rows.append(row)
+    print(f"ok {row['task']} atk={row['attack']} s={row['seed']} | "
+          f"poisoned={row['acc_poisoned_plain']:.3f} sel={row['selected']}:"
+          f"{row['acc_selected']:.3f} oracle={row['acc_oracle']:.3f} "
+          f"excluded={row['attacker_excluded']} ({row['wall']}s)", flush=True)
+    return row
+
+
+def print_csv_robust(rows):
+    print(",".join(CSV_COLS_ROBUST))
+    for r in rows:
+        print(",".join(str(r[c]) for c in CSV_COLS_ROBUST))
+
+
 # ===== CLI (VALAR) =====
 # Everything below this marker is VALAR-only; the notebook builder drops it.
 
@@ -508,6 +631,13 @@ def grid(stage):
             for s in seeds:
                 cells.append({**base, "task": "banking77", "r": r,
                               "sem_init": True, "seed": s})
+    elif stage == "s7":          # Byzantine-lite LOO robustness (issue fa04)
+        for task in ["dbpedia_14", "ag_news"]:
+            for attack in ["sign_flip", "gauss", "label_flip"]:
+                for s in seeds:
+                    cells.append(dict(task=task, backbone="roberta_base", N=10,
+                                      alpha=0.1, K=200, r=8, freeze_a=True,
+                                      attack=attack, seed=s))
     else:
         raise SystemExit(f"unknown stage {stage!r}")
     return cells
@@ -515,16 +645,19 @@ def grid(stage):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", required=True, choices=["s1", "s2", "s3", "s4", "s5"])
+    ap.add_argument("--stage", required=True,
+                    choices=["s1", "s2", "s3", "s4", "s5", "s7"])
     ap.add_argument("--bs", type=int, default=32)
     args = ap.parse_args()
 
+    robust = args.stage == "s7"
+    runner = run_robust_resumable if robust else run_resumable
     cells = grid(args.stage)
     print(f"[{args.stage}] device={DEVICE} cells={len(cells)}", flush=True)
     rows = []
     for c in cells:
         try:
-            run_resumable(rows, bs=args.bs, **c)
+            runner(rows, bs=args.bs, **c)
         except Exception as e:  # noqa: BLE001 — keep the stage alive on a bad cell
             import traceback
             (OUTDIR / (cell_name(c).replace(".json", ".FAIL"))).write_text(
@@ -532,7 +665,7 @@ def main():
             print(f"[{args.stage}] FAIL {cell_name(c)}: {e}", flush=True)
 
     print(f"\n===== BEGIN results.csv ({args.stage}) =====", flush=True)
-    print_csv(rows)
+    (print_csv_robust if robust else print_csv)(rows)
     print("===== END results.csv =====\n", flush=True)
 
 
