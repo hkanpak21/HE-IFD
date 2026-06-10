@@ -3,6 +3,18 @@
 File-based issue tracker for the **fine-tuning pivot** (2026-06-01). Each issue is a self-contained brief
 for a **context-zero agent** (no conversation history — read the linked files). Plan:
 [`docs/prd/he-ifd-finetuning.md`](../prd/he-ifd-finetuning.md). Operations: [`../../CLAUDE.md`](../../CLAUDE.md).
+
+> **📥 NEEDS-TRIAGE (2026-06-10):** new PRD
+> [`docs/prd/he-ifd-freeze-a-improvement.md`](../prd/he-ifd-freeze-a-improvement.md) — the
+> **freeze-A era**: both-A-B LoRA's bilinear merge falsified the task-arithmetic spine (and caused
+> the α=0.1 seed collapses), so the method moves to freeze-A + a measured improvement program
+> (semantic head init, depth-1 Fisher/count-head num-denom merges, λ grid + client-vote selection,
+> CIFAR-100/ViT vision arm) BEFORE headline claims are worded. Code already landed:
+> `jobs/finetune_improve.{py,sh}`, `notebooks/improve_program.ipynb`,
+> `results/finetune_improve/`. It supersedes the "both LoRA matrices trained" wording of ft01 and
+> re-scopes ft04–ft09's configs to the program's winning configuration; triage should break it
+> into issues (suggested: run-S1–S6, agg-math unit tests, matched-setup comparators, threat-model
+> + leakage section rewrite, FHE cost re-measurement on the freeze-A payload).
 Pre-pivot planning state (distillation era, issues 001–028) is archived at
 [`docs/archive/pre-finetuning-pivot/`](../archive/pre-finetuning-pivot/).
 
