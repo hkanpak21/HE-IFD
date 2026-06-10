@@ -1,6 +1,6 @@
 \documentclass[journal]{IEEEtran}
 
-% --- packages ---
+% packages
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{amsthm}
 \newtheorem{proposition}{Proposition}
@@ -15,7 +15,7 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
 
-% --- SANZO palette (mirrors docs/paper/figures/make_figures.py and FL_TDSC/figures/sanzo.md) ---
+% SANZO palette (mirrors docs/paper/figures/make_figures.py and FL_TDSC/figures/sanzo.md)
 \definecolor{paperblue}{HTML}{5B7FA6}     % SANZO primary blue (borders / primary)
 \definecolor{paperbluelt}{HTML}{C9D6E3}   % light blue fill
 \definecolor{paperneutral}{HTML}{5B7B6E}  % SANZO dark sage (neutral / reference)
@@ -33,7 +33,7 @@
 \definecolor{sanzobluegrey}{HTML}{8B9EA8}
 \definecolor{sanzosage}{HTML}{7B9E87}
 
-% --- notation macros (single source of truth; mirrors docs/paper/notation-and-terms.md) ---
+% notation macros (single source of truth; mirrors docs/paper/notation-and-terms.md)
 \newcommand{\Nc}{N}                                  % number of clients
 \newcommand{\Dj}{\mathcal{D}_j}                      % client j local dataset
 \newcommand{\nj}{n_j}                                % |D_j|
@@ -52,9 +52,16 @@
 \newcommand{\Kpc}{K_{\mathrm{pc}}}                   % samples per class per client
 \newcommand{\KL}{\mathrm{KL}}
 
+% DRAFT placeholders (replace when the runs land; \tbd marks a pending number)
+\newcommand{\tbd}{{\color{red}\textbf{??}}}
+\newcommand{\figtbd}[1]{\begin{center}\fbox{\parbox[c][2.6cm][c]{0.86\linewidth}{\centering\color{red}\itshape [figure placeholder: #1]}}\end{center}}
+
+% from-scratch discussion toggle: set \fromscratchfalse to exclude that part entirely
+\newif\iffromscratch\fromscratchtrue
+
 \begin{document}
 
-\title{HE-IFD: Privacy-Preserving One-Shot Federated Fine-Tuningß of Pretrained Models under Homomorphic Encryption}
+\title{HE-IFD: Privacy-Preserving One-Shot Federated Fine-Tuning of Pretrained Models under Homomorphic Encryption}
 
 \author{
 Halil \.{I}brahim Kanpak\,\orcidlink{0009-0005-0284-5941},
@@ -89,7 +96,7 @@ method produces a common model stronger than any client's own and, outside the m
 a centralized one, while giving each client coverage of classes it never observed locally; the residual gap
 to centralized accuracy is set by how much of the label space each client sees and narrows as that coverage
 grows. A real multiparty CKKS implementation reproduces the plaintext aggregate
-within the approximation bounds of CKKS at a few megabytes per round.
+within the approximation bounds of CKKS at tens of megabytes per round.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -99,12 +106,14 @@ multiparty computation, privacy-preserving machine learning.
 
 \input{sections/intro}
 \input{sections/related}
-\input{sections/prelim}
 \input{sections/method}
 \input{sections/experiments}
-\input{sections/cost}
-\input{sections/mia}
 \input{sections/conclusion}
+
+\section*{Acknowledgments}
+We acknowledge the support of T\"UB\.{I}TAK (the Scientific and Technological Research Council of T\"urkiye)
+projects 124E091 and 124N941. The authors used Claude Sonnet 4.6 and Claude Opus 4.6 to enhance the
+manuscript by shortening sentences, correcting typos, and improving grammar.
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}

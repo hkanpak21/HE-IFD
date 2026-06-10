@@ -1,3 +1,14 @@
+# LaTeX build artefacts — paper dir (PDFs and figures stay tracked)
+docs/paper/*.aux
+docs/paper/*.log
+docs/paper/*.out
+docs/paper/*.toc
+docs/paper/*.bbl
+docs/paper/*.blg
+docs/paper/*.fdb_latexmk
+docs/paper/*.fls
+docs/paper/*.synctex.gz
+
 # LaTeX build artefacts (scoped to FL_TDSC/ so they don't mask slurm .out files)
 FL_TDSC/*.aux
 FL_TDSC/*.log

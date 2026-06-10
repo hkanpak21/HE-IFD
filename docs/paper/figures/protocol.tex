@@ -17,7 +17,7 @@
 ]
 % public, shared, carries no client data: frozen backbone + public init
 \node[pub] (pub) at (5.7,3.7)
-  {frozen public backbone $\varphi$ \;+\; public init $\theta_0$\\[1pt]\scriptsize(shared by all; no data, no exchange)};
+  {frozen public backbone $\varphi$ \;+\; public adapter\,$+$\,head init $\theta_0$\\[1pt]\scriptsize(shared by all; no data, no exchange)};
 
 % clients: data -> local fine-tuning -> encrypted displacement
 \foreach \i/\y/\s in {1/1.7/1, 2/0/2, 3/-1.7/N} {
@@ -37,7 +37,7 @@
 \foreach \i in {1,2,3} \draw[arr] (e\i.east) -- (srv.west);
 \begin{scope}[on background layer]
   \node[draw=paperblue, dashed, rounded corners, fit=(srv), inner sep=3mm,
-        label={[lbl, text=paperblue]above:encrypted --- no party decrypts alone}] {};
+        label={[lbl, text=paperblue]above:encrypted, no party decrypts alone}] {};
 \end{scope}
 
 % threshold decrypt -> global model
@@ -45,10 +45,11 @@
 \draw[arr] (srv.east) -- node[lbl, above]{threshold\\decrypt} (glob.west);
 \end{tikzpicture}%
 }
-\caption{HE-IFD. A frozen public backbone $\varphi$ and a public initialization $\theta_0$ are shared by all
-clients and carry no data, so there is no alignment phase. Each client fine-tunes a small adapter on its own
+\caption{HE-IFD. A frozen public backbone $\varphi$ and a public initialization $\theta_0$ of the small
+trainable unit (low-rank adapter and head) are shared by all clients and carry no data, so there is no
+alignment phase; the backbone is never trained or encrypted. Each client fine-tunes the adapter on its own
 private data $\mathcal{D}_j$ for a bounded number of steps from $\theta_0$ and encrypts the resulting
-displacement $\Delta_j$. The server's sole operation is the sample-weighted linear combination
+displacement $\Delta_j=\theta_j-\theta_0$. The server's sole operation is the sample-weighted linear combination
 $\theta^\star=\theta_0+\sum_j w_j\Delta_j$ under multiparty CKKS (additions and public-scalar
 multiplications only; multiplicative depth one); it never decrypts. A threshold of clients jointly decrypts
 the global model $\theta^\star$.}

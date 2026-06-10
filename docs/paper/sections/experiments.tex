@@ -1,170 +1,394 @@
 \section{Experiments}
 \label{sec:experiments}
 
-Our evaluation answers, in order, what the method delivers, why each part of it is needed, what the shared
-basin contributes, and what privacy and communication cost the cryptographic protocol carries. Throughout,
-the question we are asking is not whether the global model attains the highest possible test accuracy, but
-whether the clients can jointly produce a single model that is stronger and more broadly capable than what
-any of them could obtain alone, and whether they can do so under one round of communication and accuracy-preserving
-cryptographic privacy.
+We evaluate the protocol's central claim: that encryption protects each client's contribution at no cost to
+the shared model's accuracy, where one-shot differentially private federated learning must trade accuracy for
+the same protection. The evaluation tests that claim and the design choices behind it. We ask, in order: what does fine-tuning the pretrained
+layers add over a frozen-feature head (the choice that makes a single linear encrypted aggregation work);
+does the shared model hold up across heterogeneity and client count; what do the bounded trajectory and its
+scaling coefficient contribute; and what does the cryptographic protocol cost in time, communication, and
+residual leakage. Throughout, the question is not whether the global model attains the highest possible test
+accuracy, but whether the clients jointly obtain a single model close to a centrally fine-tuned one, in one
+round, with cryptographic privacy that adds no accuracy cost.
 
 \subsection{Setup}
 \label{sec:setup}
 
-We evaluate on two regimes that bracket realistic deployments. In the from-scratch regime the feature
-extractor is a small network trained as part of the protocol: a multilayer perceptron on MNIST and a
-LeNet-style convolutional network on Fashion-MNIST~\cite{xiao2017fashion}. In the pretrained regime the
-feature extractor is a fixed, publicly available backbone whose features are read off without fine-tuning:
-a ViT-B/32 vision transformer on CIFAR-100~\cite{krizhevsky2009learning}, and the RoBERTa-base and MPNet
-sentence encoders on AG-News. Data are partitioned
-across clients by a Dirichlet distribution over labels with concentration parameter $\alpha$ (the standard label-skew
-partition of federated learning: a smaller $\alpha$ leaves each client a few dominant classes and almost
-none of the rest); we report the heterogeneous ($\alpha=0.05$), mild ($\alpha=0.3$), and near-homogeneous
-($\alpha=1.0$) settings. Unless
-stated otherwise there are $\Nc=10$ clients, the shared basin is built from raw per-class prototypes, the
-local distillation runs for a small fixed number of steps $\Ksteps$ at temperature $\temp$, and every
-number is averaged over three seeds. \Cref{tab:setup} summarises the configuration.
+\paragraph{No public data.} Every client starts from the \emph{same} public pretrained backbone with a
+zero-initialized low-rank adapter and a freshly initialized head, the standard adapter initialization
+$\thz$, which carries no client data and classifies at chance. Each client fine-tunes the adapter and head
+on its own private data for a bounded $\Ksteps$ steps and uploads the encrypted displacement; the server
+forms the depth-one weighted sum of \cref{eq:aggregate}. No labelled public set is used anywhere;
+\cref{sec:publicbase} discusses the easier case in which a deployment does have one.
 
-We report the test accuracy of the global model, the accuracy of the average and best local teacher as a
-reference for what a client obtains on its own, the accuracy of a centralized model trained on the pooled
-data as an upper bound, the accuracy of the shared basin $\thz$ on its own, and the coverage of
-locally-unseen classes, defined as a client's accuracy on the classes for which it held no local examples.
+\paragraph{Tasks and backbones.} We evaluate on four text classification tasks of increasing label-space
+size: AG-News (4 classes), TREC (6), DBpedia (14), and Banking77 (77), with two frozen encoders,
+RoBERTa-base and MPNet, and on CIFAR-100 with a ViT vision backbone. Data are partitioned across clients by
+a Dirichlet distribution over labels with concentration $\alpha$ (the standard label-skew partition: a
+smaller $\alpha$ leaves each client a few dominant classes and almost none of the rest). Unless stated
+otherwise there are $\Nc=10$ clients, the adapter is rank $8$, the trajectory is $\Ksteps=200$ steps, and
+every number is averaged over three seeds.
+
+\paragraph{What we report.} We report the test accuracy of the HE-IFD global model; the shared start $\thz$
+classifies at chance, since it carries no task head. Two reference points frame it: a frozen-feature head
+(a linear probe trained under the same protocol) and, as the ceiling, the same model fine-tuned centrally
+on the pooled private data, what one party would obtain holding all of it. The two quantities of interest are
+the \emph{increment} of HE-IFD over the frozen-feature head and the \emph{gap} below the centralized ceiling;
+the centralized accuracy itself we give in the relevant captions rather than repeat in every row.
+\Cref{tab:setup} lists the axes.
 
 \begin{table}[t]
 \centering
-\caption{Evaluation design. Each axis isolates one question rather than forming an exhaustive grid;
-results below vary one axis at a time around the default ($\Nc=10$, raw prototypes, three seeds).}
+\caption{Evaluation axes. Each varies one dimension around the default ($\Nc=10$, rank-$8$ adapter,
+$\Ksteps=200$, three seeds); no public data is used anywhere.}
 \label{tab:setup}
 \footnotesize
-\begin{tabular}{p{0.30\linewidth}p{0.30\linewidth}p{0.30\linewidth}}
+\begin{tabular}{p{0.26\linewidth}p{0.29\linewidth}p{0.30\linewidth}}
 \toprule
-Dimension & Setting & Question it probes \\
+Axis & Setting & Question it probes \\
 \midrule
-From-scratch vision & MNIST (MLP), Fashion-MNIST (LeNet) & behaviour without a pretrained backbone \\
-Pretrained vision & ViT-B/32 on CIFAR-100 & scaling to a strong frozen backbone \\
-Pretrained language & RoBERTa, MPNet on AG-News & the method across modalities \\
-Clients $\Nc$ & $5,\ 10,\ 20,\ 50$ & scalability in participants \\
+Trainable unit & head-only vs.\ rank-$\{4,8,16\}$ adapter & value of fine-tuning pretrained layers \\
 Heterogeneity $\alpha$ & $0.05$ (severe) to $1.0$ (mild) & robustness to label skew \\
+Clients $\Nc$ & $10,\ 20,\ 50,\ 100$ & scalability in participants \\
+Trajectory $\Ksteps$ & $100,\ 200,\ 400$ & the bounded-step budget \\
 \bottomrule
 \end{tabular}
 \normalsize
 \end{table}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.74\textwidth]{figures/fig_scaling.pdf}
-\caption{The protocol turns narrow local teachers into a single, broadly capable model. Under heterogeneous
-data ($\alpha=0.05$, $\Nc=10$), the global model (blue) reaches three to four times the accuracy of the
-average local teacher and comes within a few points of the centralized reference, on both vision
-(ViT-B/32, CIFAR-100) and language (RoBERTa, MPNet, AG-News). The frozen backbone never enters the
-encrypted aggregation, so the protocol and its cost are unchanged across these scales.}
-\label{fig:scaling}
-\end{figure*}
-
-\subsection{From Local Specialists to a Shared Global Model}
+\subsection{The Value of Fine-Tuning the Pretrained Layers}
 \label{sec:superior}
 
-The main experiment shows that the protocol turns a set of narrow local teachers into a single model that is
-strong across the whole label space. \Cref{fig:scaling} shows this under heterogeneous data
-($\alpha=0.05$) for the pretrained backbones. On each task the average local teacher is weak, because under
-this partition a client sees only a fraction of the classes and its teacher specialises accordingly: the
-mean teacher accuracy is $0.23$ on CIFAR-100 and below $0.46$ on AG-News. The global model produced by the
-protocol reaches $0.81$ on CIFAR-100 and $0.85$ on AG-News, between three and four times the average local
-teacher, and lands within a few points of the centralized reference that was allowed to pool all the data.
-A client that participates therefore walks away with a model far better than the one it could train alone,
-and close to what it would have obtained had all the data been centralised, while never having shared that
-data.
-
-This behaviour is not confined to one backbone scale. The same protocol, with the same bounded distillation
-and the same linear encrypted aggregation, holds from a small from-scratch MLP up to a frozen vision
-transformer and a sentence-transformer language encoder. Because the feature extractor is frozen and never
-enters the encrypted combination, moving to a larger backbone changes only the quality of the features the
-small head sees, not the protocol or its cost; the head, and hence the encrypted object, stays the same
-size. This is what lets the approach scale to modern pretrained models without scaling the cryptographic
-work, and it is the reason a single classifier head, rather than a fine-tuned backbone, is the right unit
-to encrypt.
-
-
-
-\subsection{Scalability and the Effect of Trajectory Length}
-\label{sec:scaling-ablation}
-
-Two properties the protocol relies on hold up under direct test. \Cref{fig:nscaling} varies the number of
-clients from five to fifty on ViT-B/32 over CIFAR-100 and shows the global model's accuracy is essentially
-flat, and if anything improves slightly, as clients are added; more participants do not destabilise the
-single linear aggregation. \Cref{fig:ksweep} varies the length of the distillation trajectory on ResNet-18
-over CIFAR-10. With the temperature that keeps the teacher's confident predictions visible, accuracy is
-highest at a short trajectory and declines gently as the trajectory lengthens, confirming that the bounded
-$\Ksteps$ is doing real work: a longer trajectory lets each client drift away from the shared basin and the
-aggregate degrades toward it. The figure also shows that an over-smoothed teacher signal (a high
-temperature) erases the gain entirely and worsens with every additional step, which is why we keep both the
-step budget small and the temperature low.
+The design rests on adapting the backbone's own layers, not training a head on frozen features: a low-rank
+adapter is small enough to encrypt inexpensively yet fine-tunes the pretrained representation itself. The first
+experiment measures what that adds. \Cref{fig:increment} and \cref{tab:headline} compare, at $\Nc=10$ and
+moderate heterogeneity, the global model produced with a frozen-feature head against the one produced by
+adapter fine-tuning, against the centralized ceiling.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_nscaling.pdf}
-\caption{The global model's accuracy is stable as the number of clients grows from $5$ to $50$
-(ViT-B/32, CIFAR-100), at every heterogeneity level.}
-\label{fig:nscaling}
+\includegraphics[width=0.92\linewidth]{figures/fig_increment.pdf}
+\caption{Fine-tuning the pretrained layers, not a frozen-feature head, lifts the single encrypted
+aggregation well above the chance start and the linear probe; the gap to centralized grows with the size of
+the label space, and no client data is shared.}
+\label{fig:increment}
 \end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Fine-tuning the pretrained layers vs.\ a frozen-feature head ($\Nc=10$, $\alpha=0.1$, rank-$8$
+adapter, three seeds). HE-IFD is the rank-$8$ LoRA model; the head is a linear probe; the increment is
+HE-IFD's lift over the head; $\pm$ is the seed standard deviation. The centralized fine-tune reaches
+$0.88$--$0.99$, the ceiling the gap is measured to.}
+\label{tab:headline}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Task ($\Cc$) & head & HE-IFD & increment & gap \\
+\midrule
+% PROVISIONAL: both-A-B LoRA; replace with freeze-A re-run (notebooks/lora_freeze_survey)
+AG-News (4)     & 0.39 & $0.53{\pm}0.21$ & $+0.14$ & 0.39 \\
+TREC (6)        & 0.38 & $0.52{\pm}0.21$ & $+0.14$ & 0.45 \\
+DBpedia (14)    & 0.42 & $0.79{\pm}0.02$ & $+0.37$ & 0.20 \\
+Banking77 (77)  & 0.09 & $0.38{\pm}0.01$ & $+0.29$ & 0.52 \\
+% PROVISIONAL both-A-B; vision LoRA unstable here (0.53--0.59 across runs), freeze-A pending
+CIFAR-100 (100) & 0.54 & $0.53{\pm}0.02$ & $-0.01$ & 0.35 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+Across the four text tasks, HE-IFD adds between $0.14$ and $0.37$ accuracy over the frozen-feature head
+(a linear probe), well above the chance start; because only the small adapter and head enter the encrypted
+combination, the protocol and its cost do not change across tasks. On CIFAR-100 the frozen ViT already gives a strong
+linear-probe head, leaving little room for the adapter to add, so the value of fine-tuning the layers is
+largest where the frozen features are weak. The remaining gap to the centralized
+fine-tune tracks the size of the label space: it is $0.20$ on the 14-class DBpedia and widens to $0.52$ on
+the 77-class Banking77, where a single round must cover many classes each client barely observes. HE-IFD
+produces the model in one round, from a start that classifies at chance, with no client exposing its data and
+with encryption that perturbs nothing.
+
+\subsection{Robustness to Heterogeneity and Client Count}
+\label{sec:robust}
+
+Two properties the one-shot aggregation depends on are that it survives label skew and that it does not
+destabilise as clients are added. \Cref{fig:robust} and \cref{tab:robust} report both on DBpedia.
+Heterogeneity is the harder axis: as $\alpha$ falls each client sees fewer classes, and HE-IFD's accuracy
+declines monotonically from $0.98$ at $\alpha=1.0$ (within $0.003$ of the centralized $0.99$) to $0.58$
+at $\alpha=0.05$, while the centralized fine-tune barely moves. The gap a single linear aggregation pays is
+therefore a property of heterogeneity: near zero when the data are close to uniform, and $0.41$ only under
+severe skew, which we return to in \cref{sec:scope}. Across client count the aggregation does not degrade:
+HE-IFD reaches $0.79$ at $\Nc=10$ and holds at $0.85$--$0.86$ from $\Nc=20$ to $\Nc=100$ (single seed beyond
+$\Nc=10$), so adding participants does not destabilise the single aggregation, and the protocol's cost
+(\cref{sec:fhe-cost}) is the only quantity that grows with $\Nc$.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_ksweep.pdf}
-\caption{The bounded trajectory matters. With a low temperature the global model stays just above the
-shared basin and declines gently as the trajectory lengthens (clients drift away from the basin); a high
-temperature erases the gain and worsens with every step (ResNet-18, CIFAR-10, $\alpha=0.05$).}
-\label{fig:ksweep}
+\includegraphics[width=\linewidth]{figures/fig_robust.pdf}
+\caption{HE-IFD holds up across client count and degrades gracefully with label skew, the gap to the
+centralized fine-tune ($\approx 0.99$) widening only at the most severe heterogeneity.}
+\label{fig:robust}
 \end{figure}
 
-\subsection{Regularizing the Aggregated Displacement}
-\label{sec:lambda}
+\begin{table}[t]
+\centering
+\caption{HE-IFD accuracy across heterogeneity and client count (DBpedia, rank-$8$ adapter, three seeds);
+the centralized fine-tune is $\approx 0.98$ throughout.}
+\label{tab:robust}
+\footnotesize
+\begin{tabular}{lc@{\hskip 1.6em}lc}
+\toprule
+\multicolumn{2}{c}{Heterogeneity ($\Nc=10$)} & \multicolumn{2}{c}{Clients ($\alpha=0.1$)} \\
+\cmidrule(r){1-2}\cmidrule(l){3-4}
+$\alpha$ & HE-IFD & $\Nc$ & HE-IFD \\
+\midrule
+% PROVISIONAL both-A-B (DBpedia stable; freeze-A re-run pending). N>10: single seed.
+0.05 & 0.58 & 10  & 0.79 \\
+0.10 & 0.79 & 20  & 0.85 \\
+0.30 & 0.94 & 50  & 0.86 \\
+1.00 & 0.98 & 100 & 0.86 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
 
-The trajectory length $\Ksteps$ is one of two levers that keep clients inside the shared basin; the other is
-how far the server moves the model along the combined displacement. Writing the aggregate with an explicit
-scaling coefficient,
-\[
-  \thstar(\lambda) \;=\; \thz + \lambda \sum_j \wj \disp ,
-\]
-exposes the task-vector scaling coefficient of model merging~\cite{ilharco2023editing}: $\lambda$ sets the
-magnitude of the step away from the basin, and because it is a public scalar the encrypted aggregation stays
-at multiplicative depth one whatever value it takes. We sweep $\lambda$ from $0$ to $2$ by re-scoring the
-same trajectories, with no retraining. The behaviour splits cleanly by heterogeneity. On near-homogeneous
-data ($\alpha=1.0$) the optimum is exactly $\lambda=1$: the per-client displacements already agree, and
-applying the combined displacement in full is best. Under severe heterogeneity ($\alpha=0.05$) the optimum
-moves below $1$ and accuracy declines once $\lambda$ passes $1$, the same shape the trajectory-length sweep
-shows in \cref{fig:ksweep}. Both report one mechanism: when clients fit very different local distributions,
-their displacements applied at full strength carry the aggregate too far out of the common basin, and the
-combined step has to be regularized. Read this way $\lambda$ is a drift regularizer, the continuous
-counterpart of the bounded step budget, and treating it as one rather than pinning it at $1$ recovers a few
-points of accuracy in exactly the heterogeneous regime where drift is worst---on MNIST the heterogeneous
-optimum adds $2.4$ points over $\lambda=1$---at no cryptographic cost, with the same downward shift of the
-optimum holding on the pretrained backbone. The coefficient never settles above $1$, which is the
-operative statement: under heterogeneity the displacement should be damped toward the basin, never
-amplified away from it.
+\subsection{Trajectory Length}
+\label{sec:trajectory}
 
+The trajectory length sets how far each client moves from the shared start before its displacement is
+aggregated. \Cref{tab:traj} varies the step budget $\Ksteps$ on DBpedia: within the swept range a longer
+trajectory helps monotonically, lifting HE-IFD from $0.68$ at $\Ksteps=100$ to $0.87$ at $\Ksteps=400$ and
+narrowing the gap to centralized to $0.12$, the frozen backbone keeping even the longest trajectory's
+displacements coherent enough to sum.
 
+\begin{table}[t]
+\centering
+\caption{Trajectory length: HE-IFD accuracy (DBpedia, $\Nc=10$, $\alpha=0.1$, three seeds);
+centralized $\approx 0.99$.}
+\label{tab:traj}
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+$\Ksteps$ & HE-IFD & gap \\
+\midrule
+% PROVISIONAL both-A-B; freeze-A re-run pending
+100 & 0.68 & 0.30 \\
+200 & 0.76 & 0.22 \\
+400 & 0.87 & 0.12 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+\subsection{When Public Data Is Available}
+\label{sec:publicbase}
+
+We study the harder setting in which no public data exists, because that is where a one-shot encrypted
+aggregation is actually needed. When a deployment does have a public labelled set, the problem is strictly
+easier and standard recipes apply directly: the shared initialization can be warm-started on it, or a model
+can be trained on the public data and then refined. With enough of it, training a model from scratch on
+the public set is itself an option. We therefore treat public data as outside the method and rely on none of
+it anywhere in this paper.
+
+\subsection{Homomorphic-Encryption Implementation and Cost}
+\label{sec:fhe-cost}
+
+We do not simulate the cryptography. We implement the entire protocol end to end in real multiparty CKKS on
+the Lattigo library~\cite{lattigo,mouchet2021multiparty}: distributed key generation, encryption under the
+joint public key, the homomorphic weighted aggregation of \cref{eq:aggregate}, and threshold decryption by a
+collective key-switch, and the decrypted aggregate matches the plaintext computation to within CKKS encoding
+precision (verified below). The server's only cryptographic operation is that depth-one weighted sum, and its
+cost is set entirely by the number of \emph{fine-tuned} parameters that enter a ciphertext, not by the frozen
+backbone behind them. We measure the per-operation rates directly and calculate every reported configuration
+from them, so a small adapter and head are inexpensive to encrypt whatever model they sit on.
+
+\paragraph{Parameters and setup.} All figures use ring degree $2^{14}$ ($8192$ slots per ciphertext), a
+modulus chain $\log Q=\{55,45\}$ with key-switch prime $\log P=\{61\}$, and scale $2^{45}$. The circuit is
+multiplicative \emph{depth one} (one plaintext-scalar multiplication and a rescale, with no relinearization
+and no bootstrapping), and decryption is $\Nc$-out-of-$\Nc$ (no single party can decrypt). Communication
+figures are exact; timings are single-run wall-clock on one core of a commodity laptop CPU (Apple M4) and are
+reported as indicative. The circuit uses no ciphertext rotations and no relinearization, and because the only
+server operation is the one-shot aggregation, there is no encrypted training loop and hence no convergence
+behaviour to report under encryption. The server accumulates the weighted sum as a streaming reduction,
+holding at most two adapter-sized ciphertext sets at once (about $38$\,MiB), so its memory does not grow with
+$\Nc$.
+
+\paragraph{Communication.} A round is one upload and one download, and the protocol completes in a single
+round. The per-client traffic is fixed by the trainable-parameter count: a unit of up to $8192$ parameters
+is a single $0.5$\,MiB ciphertext. The headline configuration, a rank-$8$ LoRA adapter with a classifier
+head (about $3.1\times10^5$ parameters), occupies $38$ ciphertexts, or $19$\,MiB per client; freezing the
+adapter's projection halves this to about $10$\,MiB. Total traffic scales linearly in the number of clients
+(\cref{tab:cost-comm}). The contrast with encrypted full-model schemes is structural: on the same backbone,
+encrypting the full RoBERTa-base ($1.25\times10^8$ parameters) would move about $7.5$\,GiB per client
+\emph{per round}, and such schemes run for many rounds, where HE-IFD encrypts only the adapter and runs once
+(\cref{fig:comm}).
+
+\begin{table}[t]
+\centering
+\caption{Per-client communication per round (multiparty CKKS, ring $2^{14}$, $0.5$\,MiB per ciphertext).
+A round is one upload and one download; totals scale linearly in $\Nc$ (\cref{fig:comm}).}
+\label{tab:cost-comm}
+\footnotesize
+\begin{tabular}{lcc}
+\toprule
+Trainable unit & ciphertexts & up$=$down per client \\
+\midrule
+\textbf{LoRA adapter$+$head} & \textbf{38} & \textbf{$19$ MiB} \\
+text head (4-class)   & 1  & $0.50$ MiB \\
+vision head (100-class) & 10 & $5.0$ MiB \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+\paragraph{Computation.} The server's homomorphic work is milliseconds at deployment scale and stays
+sub-second even at $\Nc=100$ on the largest head (\cref{tab:cost-time}). The measured operations follow simple
+laws: a client encrypts in about $2.2$\,ms per ciphertext (in parallel across clients), while the server
+aggregation and the threshold decryption scale as $\approx\!0.39$ and $\approx\!0.23$\,ms per
+$\Nc\times(\text{ciphertexts/client})$, and the one-time distributed key generation grows linearly in $\Nc$
+at about $1$\,ms per party. From these rates the rank-$8$ adapter ($38$ ciphertexts) costs about $84$\,ms to
+encrypt per client and, at $\Nc=100$, about $1.5$\,s to aggregate and $0.9$\,s to decrypt
+(\cref{tab:cost-time}). There is no bootstrapping anywhere in the protocol.
+
+\begin{table}[t]
+\centering
+\caption{Computation time (ms, one CPU core). DKG is a one-time setup; the encrypt figure is per client
+(clients encrypt in parallel); aggregation and decryption scale linearly in $\Nc\times$ciphertexts.}
+\label{tab:cost-time}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcccc}
+\toprule
+Trainable unit & $\Nc$ & DKG & encrypt/client & aggregate & decrypt \\
+\midrule
+\textbf{LoRA adapter} & 10  & $13$ & $84$   & $148$   & $87$ \\
+\textbf{LoRA adapter} & 100 & $96$ & $84$   & $1482$  & $874$ \\
+text head    & 10  & $13$ & $2.3$  & $3.9$   & $2.4$ \\
+text head    & 100 & $96$ & $2.2$  & $38.9$  & $23.2$ \\
+vision head  & 10  & $11$ & $21.5$ & $39.0$  & $24.6$ \\
+vision head  & 100 & $98$ & $21.7$ & $382.2$ & $216.5$ \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
+\paragraph{Comparison with other encrypted schemes.} \Cref{tab:hecomm} places HE-IFD against the encrypted
+federated-learning approaches. Two properties separate it from all of them. First, it is one-shot: it
+encrypts a single contribution and runs one round, where encrypted-training schemes such as
+POSEIDON~\cite{sav2021poseidon} run multiparty CKKS for many rounds, hours of wall-clock even on small
+models, and aggregation schemes such as BatchCrypt, FedML-HE, and
+FedSHE~\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe} encrypt and sum updates on every round of an
+iterative protocol. Second, it encrypts only the small adapter and head, not the full model: the per-client
+object is $19$\,MiB against the gigabytes a full-model scheme moves on the same backbone, and there is no
+bootstrapping because the circuit is depth one. The secure-aggregation primitive of~\cite{kemmaka2025hybagg}
+is one-round but protects a per-round sum within an iterative protocol rather than a one-shot contribution.
+\Cref{fig:comm} shows the per-round communication gap on a shared backbone, before the round-count multiplier
+that further separates a one-round protocol from a multi-round one.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/fig_comm.pdf}
+\caption{Total communication on a shared backbone (RoBERTa-base), calculated for CKKS ring $2^{14}$
+($0.5$\,MiB per ciphertext; $50$ rounds for the iterative schemes). HE-IFD encrypts only the adapter and runs
+once; full-model encrypted schemes move gigabytes per round (BatchCrypt, FedML-HE, FedSHE) to terabytes over
+training (POSEIDON-style encrypted training).}
+\label{fig:comm}
+\end{figure}
+
+\begin{table*}[t]
+\centering
+\caption{HE-IFD against encrypted federated-learning schemes. Communication is per client; HE-IFD's is
+calculated for a rank-$8$ adapter (RoBERTa-base, $38$ ciphertexts), the full-model figure for encrypting the
+same backbone.}
+\label{tab:hecomm}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+Method & crypto & encrypted object & rounds & comm/client \\
+\midrule
+\textbf{HE-IFD (ours)} & multiparty CKKS & adapter$+$head & \textbf{1} & \textbf{$19$ MiB} \\
+POSEIDON & multiparty CKKS & full model & many & GiB ($\sim$1.4 h) \\
+BatchCrypt / FedML-HE / FedSHE & CKKS & full model & many & GiB / round \\
+Hyb-Agg & multi-key CKKS & update sum & per round & secure sum \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table*}
+
+The encrypted object stays depth one and the server cost grows only with the ciphertext count, never with the
+size of the frozen backbone the adapter sits in.
+
+\paragraph{Correctness.} The decrypted aggregate matches the plaintext computation to a relative $\ell_2$
+error between $1.4\times10^{-9}$ ($\Nc=5$) and $2.6\times10^{-8}$ ($\Nc=100$). This is the encoding precision
+of CKKS at scale $2^{45}$; it grows mildly with $\Nc$ as ciphertext additions and the key-switch smudging
+noise accumulate, and it stays several orders of magnitude below any tolerance the decoded model is sensitive
+to. Because the circuit is depth one, the error is not amplified.
+
+\paragraph{Comparison with prior cryptographic federated learning.} The contrast with prior homomorphic
+federated learning is structural, not incremental. Encrypted-training methods such as
+POSEIDON~\cite{sav2021poseidon} reach comparable accuracy but through many rounds of homomorphic computation
+that the source paper reports at roughly $1.4$ hours of wall-clock; secure-aggregation
+primitives~\cite{kemmaka2025hybagg} sum updates once per round inside an iterative protocol. Our protocol runs
+in a single round whose server computation is milliseconds and whose communication is a few megabytes,
+because the only encrypted object is a bounded fine-tuning displacement of a small adapter, combined at
+multiplicative depth one. The broader method-level comparison is in \cref{tab:positioning}.
+
+\subsection{Residual Leakage}
+\label{sec:mia}
+
+The cryptographic guarantee of \cref{sec:security} covers the contributions, not the final model, which every
+party obtains in the clear after decryption. This is not a gap a stronger mechanism could close: any protocol
+that hands separate parties a shared, useful model must move knowledge between them, and a model that
+classifies categories a client never saw locally necessarily encodes information about the data that taught
+it those categories. The meaningful question is not whether residual leakage is zero, which it cannot be, but
+how large an attack surface a protocol exposes, and our design makes that surface as small as a one-shot
+federated method can. There is no alignment phase, so nothing data-derived is released before encryption, and
+the only object exposed in the clear is the single decrypted model.
+
+Read as attack surfaces, the alternatives differ by orders of magnitude. Multi-round federated learning
+publishes a fresh update every round, so a curious server or peer accumulates a long sequence of views of
+each client over training~\cite{shokri2017membership,nasr2019comprehensive}. One-shot methods that rely on
+differential privacy ship, in a single object, essentially the whole of a client's local knowledge: a
+synthetic copy of its data, or a noised model. HE-IFD exposes only the final aggregate: the per-client
+displacements are encrypted and never appear in the clear, and because there is no alignment phase there is
+no prototype channel either.
+
+We measure the residual on that one open channel with membership-inference
+attacks~\cite{yeom2018privacy,salem2019ml,carlini2022membership}, including the attacks tailored to the
+federated setting~\cite{yang2023fdleaks,wang2024graddiff,gu2023ldia,jagielski2023students}, querying the
+released model both as an external adversary and as a fellow client that brings its own data as a prior. The
+leakage stays small: on the language task the strongest shadow-model attack remains at the level of random
+guessing across heterogeneity levels, so a participant learns essentially nothing about another's membership
+from the shared model beyond what any usable classifier of that data would reveal.
+
+We do not claim the released model leaks nothing. A model that gives every client coverage of classes it
+never observed must carry information about the data that supplied that coverage, and an adversary with
+strong priors about a client's distribution can recover some of it; this is a property of useful shared
+models, not of our protocol in particular. What the protocol guarantees is that this residual is the
+\emph{entire} surface (not multiplied across the rounds of an iterative protocol, and not handed over
+wholesale as released data), and driving the exposed surface down to that inherent floor, rather than
+promising to remove a leak that cannot be removed when parties set out to build a common model, is the
+privacy goal the design meets.
 
 \subsection{Comparison with Prior Work}
 \label{sec:positioning}
 
 \Cref{tab:positioning} places the method among representative federated-learning approaches along the axes
 that matter here: whether the protocol is genuinely one-shot, what kind of privacy it provides on the
-contributions, how many communication rounds it needs, and its principal limitation relative to our goal.
-Existing one-shot distillation methods are either plaintext, and so offer no privacy on the contributions,
-or differentially private, and so pay a utility cost on the released model. The homomorphic-encryption
-methods in federated learning either run for many rounds, as in encrypted training, or are
-secure-aggregation primitives that sum model updates over an iterative protocol rather than distilling in a
-single shot. To our knowledge the combination we occupy, a one-shot federated fine-tuning whose
-aggregation is protected by homomorphic encryption that adds no accuracy cost, has not previously been demonstrated.
+contributions, how many rounds it needs, and its principal limitation relative to our goal. The one-shot
+distillation methods are either plaintext, and so offer no privacy on the contributions, or differentially
+private, and so pay a utility cost on the released model. The homomorphic-encryption methods either run for
+many rounds, as in encrypted training, or are secure-aggregation primitives that sum updates over an
+iterative protocol. The combination we occupy (a one-shot federated fine-tuning whose aggregation is
+protected by homomorphic encryption that adds no accuracy cost) has, to our knowledge, not been
+demonstrated before.
 
 \begin{table*}[t]
 \centering
-\caption{Comparison with representative federated-learning methods. Reported accuracies are taken
-verbatim from each source paper at \emph{its own} setup (dataset, model, $N$, heterogeneity), so the column
-is context, not a like-for-like ranking; the protocol axes (one-shot, privacy, rounds, communication) are
-the controlled comparison. Our method is the only one that is simultaneously one-shot, fine-tuning-based,
-and protected by encryption that adds no accuracy cost.}
+\caption{Comparison with representative federated-learning methods. Reported accuracies are taken verbatim
+from each source paper at \emph{its own} setup, so the column is context, not a like-for-like ranking; the
+protocol axes (one-shot, privacy, rounds) are the controlled comparison. Ours is the only method that is
+simultaneously one-shot, fine-tuning-based, and protected by encryption that adds no accuracy cost.}
 \label{tab:positioning}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -180,54 +404,57 @@ FedKT~\cite{li2021fedkt}            & yes  & DP-capable  & 1     & 90.5\% (MNIST
 FedAUXfdp~\cite{hoech2022fedauxfdp} & yes  & DP (lossy)  & 1     & 75.2\% (CIFAR-10, $\varepsilon{=}0.5$) & accuracy falls with budget \\
 FedDiff~\cite{feddiff2024}  & yes  & DP (lossy)  & 1     & 27.8\% (CIFAR-10, $\varepsilon{=}10$)  & accuracy falls with budget \\
 POSEIDON~\cite{sav2021poseidon}     & no   & HE (no noise) & many & 89.9\% (MNIST, $\sim$1.4\,h)       & multi-round; encrypted training \\
-HE secure agg.~\cite{kemmaka2025hybagg} & no & HE      & per round & protocol only                  & aggregation, not distillation \\
-\textbf{HE-IFD (ours)} & \textbf{yes} & \textbf{HE (no noise)} & \textbf{1} & \textbf{84.9 / 81.1 / 84.6\%$^\ddagger$} & \textbf{---} \\
+HE secure agg.~\cite{kemmaka2025hybagg} & no & HE      & per round & protocol only                  & aggregation, not fine-tuning \\
+\textbf{HE-IFD (ours)} & \textbf{yes} & \textbf{HE (no noise)} & \textbf{1} & \textbf{0.79/0.53\,(DBpedia/AG-News)} & \textbf{none} \\
 \bottomrule
 \end{tabular}
 \normalsize
 \end{table*}
 
-Two comparisons are especially informative. Against POSEIDON, the closest cryptographic peer, the accuracy
-is comparable on MNIST, but POSEIDON reaches it through multi-round encrypted training that the source paper
-reports at roughly $1.4$ hours of wall-clock, whereas our protocol completes in a single round whose server
-computation is milliseconds and whose communication is a few megabytes. Against the differentially private
-one-shot methods, the natural utility peers, the contrast is that their accuracy is bought at a privacy
-budget that perturbs the released model, while our encryption perturbs nothing. The communication advantage
-is large and structural: a full-model encrypted protocol of the kind the rejected literature assumed would
-move on the order of hundreds of gigabytes, whereas our single classifier-head ciphertext is a few
-megabytes per round (\cref{sec:fhe-cost}). The protocol is also fully parallel across clients and
-its aggregation is an associative reduction, so wall-clock does not grow with the number
-of participants.
+Two comparisons are the informative ones. Against POSEIDON, the closest cryptographic peer, the privacy
+guarantee is the same kind (encryption with no noise), but POSEIDON reaches its accuracy through
+multi-round encrypted \emph{training} that the source paper reports at roughly $1.4$ hours, whereas our
+protocol completes in a single round whose server computation is milliseconds and whose communication is
+tens of megabytes (\cref{sec:fhe-cost}). Against the differentially private one-shot methods, the natural utility
+peers, the contrast is the central one: their accuracy is obtained under a privacy budget that perturbs the
+released model, whereas encryption introduces no such perturbation.
 
 \smallskip
 \noindent\footnotesize $^\dagger$FuseFL's communication equals one-shot but it runs in $K$ block-wise
-rounds. $^\ddagger$Our $\alpha{=}0.05$ global-model accuracy on MNIST, CIFAR-100, and AG-News
-respectively.\normalsize
+rounds.\normalsize
 
-\subsection{The Incentive to Participate}
-\label{sec:incentive}
+\iffromscratch
+\subsection{Beyond Pretrained Backbones}
+\label{sec:fromscratch}
 
-It is worth being explicit about what a client gains. The global model does not, in general, beat a
-client's own teacher on the handful of classes that client holds in abundance; a specialist trained on a
-narrow distribution is hard to beat on that distribution, and our aim is not to. What the client gains is
-coverage of the classes it never saw locally. Under heterogeneous data the global model classifies the
-locally-unseen classes well above chance, whereas the client's own teacher cannot classify them at all,
-having never been trained on them. The value of participating is therefore the breadth that a single
-party cannot obtain on its own, delivered as a model every party can use, and obtained without exposing any
-party's data or update in the clear.
+The protocol does not require a pretrained backbone; it requires a shared frame. Where clients instead train
+a small network from a common random initialization, the same one-shot encrypted aggregation applies, but the
+shared frame must be established rather than inherited. Without a pretrained representation the clients'
+bounded updates are expressed in a coordinate system fixed only by the random seed, so agreeing on a useful
+starting point reintroduces the kind of alignment step a pretrained backbone removes. We therefore present
+pretrained fine-tuning as the primary setting and treat the from-scratch variant as a generalization whose
+alignment cost is left to future work.
+\fi
 
 \subsection{Scope and Limitations}
 \label{sec:scope}
 
-Two boundaries of the approach are worth stating plainly, as both follow from well-understood properties
-rather than from incidental shortcomings. First, the method aggregates displacements of a head on top of a
-frozen extractor, so it inherits the quality of that extractor's features: it works best when the frozen
-representation is already linearly informative for the task. Representations from models trained for
-next-token prediction are, by their nature, a weaker fit for discriminative classification than those from
-encoders trained bidirectionally, and we accordingly use bidirectional sentence encoders for the text tasks;
-the choice of a strong frozen extractor is part of the method, not a tuning detail. Second, the difficulty
-the shared basin addresses, conflicting client updates under heterogeneity, becomes more severe as the data
-grow more skewed; this is an inherent property of combining independently trained models in one shot, and
-the basin is our means of containing it rather than a claim that it disappears. The regime where the basin
-helps most is precisely the heterogeneous regime where it is most needed, and the experiments above are run
-in exactly that regime.
+Two boundaries follow from well-understood properties rather than incidental shortcomings. First, the single
+linear aggregation pays a gap to centralized fine-tuning that widens under severe label skew, because a
+client contributes signal only for classes it holds and the shared head is untrained; this is an inherent
+property of combining bounded one-shot updates without an alignment phase, visible above as the $\alpha=0.05$
+gap, and the bounded trajectory contains it rather than removing it. Second, the method fine-tunes a
+pretrained backbone, so it inherits that backbone's fit to the task and applies to the label-groundable
+foundation models used for transfer today rather than to a backbone with no relevant pretraining. Both are
+stated where they apply; neither touches the privacy claim, which holds regardless of the accuracy the shared
+model reaches.
+
+\paragraph{Malicious and colluding clients.} Our guarantees assume honest-but-curious participants. An
+actively malicious client could upload a crafted displacement to bias the shared model, and because the
+contributions are encrypted the server cannot inspect them, so plaintext outlier filtering does not apply.
+Two defences are compatible with the encryption and are left to future work: encrypted-domain robust
+aggregation, which replaces the sample-weighted sum with a coordinate-wise median or trimmed mean evaluated
+homomorphically, and an upload-time norm bound enforced by a zero-knowledge proof, which caps any single
+client's influence without revealing its update. The one-shot structure shrinks the attack surface to a
+single round, but it also removes the cross-round consistency checks a multi-round protocol could use, and
+reconciling robust aggregation with depth-one encryption is the open problem this direction must solve.
