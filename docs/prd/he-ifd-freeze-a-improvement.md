@@ -178,6 +178,48 @@ work in logical units.
 - The final paper writing pass itself (HITL with the user, separate from this PRD's compute and
   hygiene scope).
 
+## Second iteration (2026-06-10, field scan) — addendum
+
+A two-agent literature scan (federated-LoRA aggregation; crypto-FL + semantic-init prior art)
+plus a full read of the draft produced these **binding decisions** (user-confirmed):
+
+1. **Core claim = "the first one-shot federated learning protocol under (multiparty) homomorphic
+   encryption."** The "first" rides on the crypto side — both scans found no one-shot FL under HE
+   (all HE-FL is multi-round; all one-shot FL is plaintext or DP). "First one-shot federated
+   *fine-tuning*" is dead (arXiv:2412.04650). The **co-design argument** is the supporting spine:
+   fine-tuning + freeze-A is what makes one-shot HE possible and cheap (exact task arithmetic →
+   depth-1, no per-round re-encryption, no bilinear cross-terms under encryption) — no prior work
+   connects these.
+2. **Freeze-A is FFA-LoRA's (ICLR 2024, arXiv:2403.12313) — cite, never claim.** Related work
+   gains two paragraphs: the federated-LoRA aggregation family (FedIT, SLoRA, HetLoRA, FlexLoRA,
+   FLoRA, FFA-LoRA, FedSA-LoRA, LoRA-FAIR) and one-shot-FT/task-arithmetic (arXiv:2412.04650,
+   arXiv:2411.18607 "task arithmetic ≡ one-shot FedAvg" — legitimizes our framing). Semantic-init
+   lineage (dataless classification → DeViSE → BERT head-init arXiv:2203.05676) plus the FL
+   differentiators FedAlign (KDD 2023) and FedTSP (CVPR 2026, both multi-round anchoring) enter if
+   S2 wins.
+3. **SHE-LoRA (ICLR 2026) and FedShield-LLM are engaged head-on** in the cost/comparison tables:
+   multi-round selective/gradient-level encryption vs our one-shot full-delta threshold-CKKS;
+   they inherit aggregation noise under encryption, freeze-A dissolves it. FedSD2C (NeurIPS 2024)
+   becomes the plaintext one-shot anchor; surveys arXiv:2502.09104 / 2505.02426 feed the table.
+4. **MIA escalates to the FULL suite on the new method** (supersedes "prior-work base only"): the
+   response-to-reviewers promises measured near-chance MIA (R1-W4/R2-Q5) and the existing numbers
+   are from the superseded distillation method. All tasks, seeds, both attack families
+   (loss-threshold + LiRA), plus the fellow-client-prior adversary.
+5. **All four expansion directions are in scope**: coverage-gap/semantic-init (promotable to named
+   contribution — "public zero-shot init closes the missing-class gap in one-shot FL" is untaken);
+   crypto robustness (Byzantine-lite leave-one-out candidates, measured, not future-work);
+   LLM-scale feasibility (one billion-param-class LoRA cell, the arXiv:2412.04650 regime);
+   **multi-candidate threshold decryption as a named protocol contribution** (no precedent found
+   in MHE-FL) with its leakage caveat stated: λ candidates are collinear (reveal nothing beyond
+   θ⋆), Fisher num/denom reveals the two aggregates separately — admissible under the threat
+   model, but said explicitly.
+6. Known paper defects from the full read, tracked for the rewrite: stale "distillation"
+   terminology (intro l.16, related l.41/95); the dangling λ-subsection promise in the
+   experiments intro; the negative CIFAR-100 increment row (gated on freeze-A); related work
+   missing the federated-PEFT field entirely.
+
+Work breakdown: issues `fa01`–`fa08` in the tracker.
+
 ## Further Notes
 
 - The grilling resolved one open contradiction in the repo's memory: the earlier "deep merges are

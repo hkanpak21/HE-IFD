@@ -4,17 +4,26 @@ File-based issue tracker for the **fine-tuning pivot** (2026-06-01). Each issue 
 for a **context-zero agent** (no conversation history — read the linked files). Plan:
 [`docs/prd/he-ifd-finetuning.md`](../prd/he-ifd-finetuning.md). Operations: [`../../CLAUDE.md`](../../CLAUDE.md).
 
-> **📥 NEEDS-TRIAGE (2026-06-10):** new PRD
-> [`docs/prd/he-ifd-freeze-a-improvement.md`](../prd/he-ifd-freeze-a-improvement.md) — the
-> **freeze-A era**: both-A-B LoRA's bilinear merge falsified the task-arithmetic spine (and caused
-> the α=0.1 seed collapses), so the method moves to freeze-A + a measured improvement program
-> (semantic head init, depth-1 Fisher/count-head num-denom merges, λ grid + client-vote selection,
-> CIFAR-100/ViT vision arm) BEFORE headline claims are worded. Code already landed:
-> `jobs/finetune_improve.{py,sh}`, `notebooks/improve_program.ipynb`,
-> `results/finetune_improve/`. It supersedes the "both LoRA matrices trained" wording of ft01 and
-> re-scopes ft04–ft09's configs to the program's winning configuration; triage should break it
-> into issues (suggested: run-S1–S6, agg-math unit tests, matched-setup comparators, threat-model
-> + leakage section rewrite, FHE cost re-measurement on the freeze-A payload).
+## ⚡ FREEZE-A ERA (2026-06-10) — active track, supersedes ft04–ft09 configs
+
+PRD: [`docs/prd/he-ifd-freeze-a-improvement.md`](../prd/he-ifd-freeze-a-improvement.md)
+(incl. the second-iteration field-map addendum). Core claim locked: **first one-shot federated
+learning under multiparty HE** (freeze-A cite: FFA-LoRA ICLR 2024; one-shot-FT premise cite:
+arXiv:2412.04650). Program code landed: `jobs/finetune_improve.{py,sh}`,
+`notebooks/improve_program.ipynb`.
+
+| # | Issue | Type | Status | One-line |
+|---|---|---|---|---|
+| fa01 | [Run improvement program S1–S6 + decision memo](fa01-run-improvement-program.md) | AFK/user | 📥 OPEN | freeze-A vs both, semantic init, candidates, K/lr/r, vision arm |
+| fa02 | [Full MIA suite on freeze-A released model](fa02-full-mia-suite-freeze-a.md) | AFK | 📥 OPEN | backs the R1-W4/R2-Q5 promise on THE submitted method |
+| fa03 | [LLM-scale feasibility cell](fa03-llm-scale-cell.md) | AFK | 📥 OPEN | one ~1B-param LoRA cell; does the merge hold at scale |
+| fa04 | [Byzantine-lite LOO robustness (S7)](fa04-robustness-loo-stage.md) | AFK | 📥 OPEN | leave-one-out candidates + client vote vs a poisoned client |
+| fa05 | [Matched-setup comparators](fa05-matched-comparators.md) | AFK | 📥 OPEN | HE-IFD at FedAUXfdp/FedKT/FedSD2C setups; select later |
+| fa06 | [FHE cost re-measure (freeze-A payload)](fa06-fhe-cost-remeasure.md) | AFK | 📥 OPEN | Lattigo numbers for the real payload + SHE-LoRA rows |
+| fa07 | [Claim + related-work rewrite](fa07-claim-and-related-rewrite.md) | HITL | 📥 OPEN | new claim, fed-LoRA + task-arithmetic paragraphs, terminology |
+| fa08 | [Multi-candidate decryption as contribution](fa08-multicandidate-contribution.md) | HITL | 📥 OPEN | protocol box + leakage analysis + selection quality |
+
+Order: fa01 first (gates everything); fa02–fa06 parallel after; fa07/fa08 with the user as data lands.
 Pre-pivot planning state (distillation era, issues 001–028) is archived at
 [`docs/archive/pre-finetuning-pivot/`](../archive/pre-finetuning-pivot/).
 
