@@ -1,0 +1,12 @@
+[e3] device=cuda N=10 task=dbpedia_14 seeds=[42, 43, 44]
+[e3] ok N=10 s=42 A0=0.063 A*=0.766 Ac=0.988 inc=+0.703 (1322.8s)
+[e3] ok N=10 s=43 A0=0.047 A*=0.812 Ac=0.988 inc=+0.765 (1318.3s)
+[e3] ok N=10 s=44 A0=0.080 A*=0.768 Ac=0.987 inc=+0.687 (1321.4s)
+
+===== BEGIN results.csv (N=10) =====
+task,backbone,N,alpha,seed,base_frac,K,r,n_trainable,A0,Astar,A_central,increment,gap
+dbpedia_14,roberta_base,10,0.1,42,0.0,200,8,305678,0.063,0.766,0.9878,0.703,0.2218
+dbpedia_14,roberta_base,10,0.1,43,0.0,200,8,305678,0.0474,0.8124,0.9882,0.765,0.1758
+dbpedia_14,roberta_base,10,0.1,44,0.0,200,8,305678,0.0804,0.7678,0.9868,0.6874,0.219
+===== END results.csv =====
+

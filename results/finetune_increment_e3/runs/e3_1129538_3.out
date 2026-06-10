@@ -1,0 +1,1 @@
+[e3] device=cuda N=100 task=dbpedia_14 seeds=[42, 43, 44]

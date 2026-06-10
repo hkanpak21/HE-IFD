@@ -1,0 +1,21 @@
+Traceback (most recent call last):
+  File "/scratch/hkanpak21/HE_IFD/jobs/finetune_increment_e3.py", line 256, in <module>
+    main()
+  File "/scratch/hkanpak21/HE_IFD/jobs/finetune_increment_e3.py", line 239, in main
+    row = run_increment(args.task, args.backbone, args.N, args.alpha, s,
+  File "/scratch/hkanpak21/HE_IFD/jobs/finetune_increment_e3.py", line 158, in run_increment
+    ids_tr, mask_tr, ytr, ids_te, mask_te, yte, C = _data(task, backbone, seed)
+  File "/scratch/hkanpak21/HE_IFD/jobs/finetune_increment_e3.py", line 149, in _data
+    Xtr, ytr, Xte, yte, C = load_text(task, seed=seed)
+  File "/scratch/hkanpak21/HE_IFD/jobs/finetune_increment_e3.py", line 49, in load_text
+    ds = load_dataset(cfg["hf"])
+  File "/home/hkanpak21/.conda/envs/he_ofl/lib/python3.9/site-packages/datasets/load.py", line 1488, in load_dataset
+    builder_instance = load_dataset_builder(
+  File "/home/hkanpak21/.conda/envs/he_ofl/lib/python3.9/site-packages/datasets/load.py", line 1133, in load_dataset_builder
+    dataset_module = dataset_module_factory(
+  File "/home/hkanpak21/.conda/envs/he_ofl/lib/python3.9/site-packages/datasets/load.py", line 1032, in dataset_module_factory
+    raise e1 from None
+  File "/home/hkanpak21/.conda/envs/he_ofl/lib/python3.9/site-packages/datasets/load.py", line 974, in dataset_module_factory
+    raise ConnectionError(f"Couldn't reach '{path}' on the Hub ({e.__class__.__name__})") from e
+ConnectionError: Couldn't reach 'fancyzhx/dbpedia_14' on the Hub (OfflineModeIsEnabled)
+srun: error: ai02: task 0: Exited with exit code 1
