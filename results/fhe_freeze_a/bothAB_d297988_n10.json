@@ -1,0 +1,25 @@
+[
+  {
+    "scenario": "d=297988 N=10 logN=14",
+    "lattigo_version": "github.com/tuneinsight/lattigo/v6 v6.2.0",
+    "d_head_params": 297988,
+    "n_clients": 10,
+    "log_ring_degree": 14,
+    "ring_degree": 16384,
+    "slots_per_ciphertext": 8192,
+    "ciphertexts_per_client": 37,
+    "log_scale": 45,
+    "multiplicative_depth_used": 1,
+    "bytes_per_ciphertext_fresh": 524622,
+    "total_upload_bytes": 194110140,
+    "total_download_bytes": 194110140,
+    "decrypt_share_bytes_total": 48502560,
+    "relative_l2_error": 2.692963980164182e-9,
+    "max_abs_error": 7.333767371164868e-9,
+    "passed_1e-3": true,
+    "client_encrypt_ms_total": 802.921,
+    "server_aggregate_ms": 144.553,
+    "threshold_decrypt_ms": 89.301,
+    "dkg_keygen_ms": 11.154
+  }
+]
