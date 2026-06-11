@@ -617,6 +617,12 @@ def grid(stage):
         for task in ["ag_news", "trec", "dbpedia_14", "banking77"]:
             for s in seeds:
                 cells.append({**base, "task": task, "sem_init": True, "seed": s})
+        # Attribution baseline: banking77 WITHOUT semantic init (freeze-A,
+        # r=8) — s1 covers only ag_news/trec, so without these three cells the
+        # banking77 jump cannot be split between freeze-A+candidates and the
+        # semantic init.
+        for s in seeds:
+            cells.append({**base, "task": "banking77", "seed": s})
     elif stage == "s3":          # client-side levers on the unstable task
         for kv in [dict(swa=True), dict(prox_mu=0.01), dict(calib_tau=1.0)]:
             for s in seeds:
