@@ -14,12 +14,12 @@ arXiv:2412.04650). Program code landed: `jobs/finetune_improve.{py,sh}`,
 
 | # | Issue | Type | Status | One-line |
 |---|---|---|---|---|
-| fa01 | [Run improvement program S1–S6 + decision memo](fa01-run-improvement-program.md) | AFK/user | 📥 OPEN | freeze-A vs both, semantic init, candidates, K/lr/r, vision arm |
-| fa02 | [Full MIA suite on freeze-A released model](fa02-full-mia-suite-freeze-a.md) | AFK | 📥 OPEN | backs the R1-W4/R2-Q5 promise on THE submitted method |
-| fa03 | [LLM-scale feasibility cell](fa03-llm-scale-cell.md) | AFK | 📥 OPEN | one ~1B-param LoRA cell; does the merge hold at scale |
-| fa04 | [Byzantine-lite LOO robustness (S7)](fa04-robustness-loo-stage.md) | AFK | 📥 OPEN | leave-one-out candidates + client vote vs a poisoned client |
+| fa01 | [Run improvement program S1–S6 + decision memo](fa01-run-improvement-program.md) | AFK/user | ✅ DONE (memo in results/finetune_improve/README.md) | freeze-A vs both, semantic init, candidates, K/lr/r, vision arm |
+| fa02 | [Full MIA suite on freeze-A released model](fa02-full-mia-suite-freeze-a.md) | AFK | 🔄 RUNNING (1172560, count_head target) | backs the R1-W4/R2-Q5 promise on THE submitted method |
+| fa03 | [LLM-scale feasibility cell](fa03-llm-scale-cell.md) | AFK | ✅ DONE (Qwen2.5-0.5B holds; results/llm_scale/) | one ~1B-param LoRA cell; does the merge hold at scale |
+| fa04 | [Byzantine-lite LOO robustness (S7)](fa04-robustness-loo-stage.md) | AFK | 🔄 RUNNING (8/18; 8-for-8 excluded) | leave-one-out candidates + client vote vs a poisoned client |
 | fa05 | [Matched-setup comparators](fa05-matched-comparators.md) | AFK | 📥 OPEN | HE-IFD at FedAUXfdp/FedKT/FedSD2C setups; select later |
-| fa06 | [FHE cost re-measure (freeze-A payload)](fa06-fhe-cost-remeasure.md) | AFK | 📥 OPEN | Lattigo numbers for the real payload + SHE-LoRA rows |
+| fa06 | [FHE cost re-measure (freeze-A payload)](fa06-fhe-cost-remeasure.md) | AFK | ✅ DONE (results/fhe_freeze_a/) | Lattigo numbers for the real payload + SHE-LoRA rows |
 | fa07 | [Claim + related-work rewrite](fa07-claim-and-related-rewrite.md) | HITL | 📥 OPEN | new claim, fed-LoRA + task-arithmetic paragraphs, terminology |
 | fa08 | [Multi-candidate decryption as contribution](fa08-multicandidate-contribution.md) | HITL | 📥 OPEN | protocol box + leakage analysis + selection quality |
 
