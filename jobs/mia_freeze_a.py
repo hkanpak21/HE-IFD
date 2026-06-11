@@ -73,8 +73,12 @@ def pool_stats(model, ids, mask, y, bs=256):
 
 def train_released_model(task, backbone, in_idx, y_pool, ids_pool, mask_pool,
                          N, alpha, seed, model_seed, K, lr, bs, r, freeze_a,
-                         sem_init, C):
-    """One federated run on the IN half of the pool -> the released theta*."""
+                         sem_init, C, agg="count_head"):
+    """One federated run on the IN half of the pool -> the released theta*.
+
+    ``agg`` selects the released aggregate. Default ``count_head`` — the modal
+    client-vote winner across the fa01 program — so the attacked artifact is
+    the one the protocol actually releases; ``plain`` is the λ=1 average."""
     head_init = None
     if sem_init:
         hk = (task, backbone)
@@ -89,27 +93,32 @@ def train_released_model(task, backbone, in_idx, y_pool, ids_pool, mask_pool,
     y_in = y_pool[in_idx]
     parts_local = FI.dirichlet_partition(y_in, N, alpha, C, model_seed)
     parts = [in_idx[p] if len(p) else p for p in parts_local]
-    deltas, sizes = [], []
+    deltas, sizes, counts = [], [], []
     for ci in parts:
         if len(ci) == 0:
             deltas.append({k: torch.zeros_like(v) for k, v in theta0.items()})
-            sizes.append(0); continue
+            counts.append(np.zeros(C)); sizes.append(0); continue
         FI.load_trainable(model, theta0)
         FI.train_steps(model, ids_pool[ci], mask_pool[ci], y_pool[ci],
                        steps=K, lr=lr, bs=bs)
         st = FI.trainable_state(model)
         deltas.append({k: st[k] - theta0[k] for k in theta0})
+        counts.append(np.bincount(y_pool[ci], minlength=C).astype(np.float64))
         sizes.append(int(len(ci)))
     tot = max(sum(sizes), 1)
     w = [s / tot for s in sizes]
-    FI.load_trainable(model, FI.agg_plain(theta0, deltas, w, lam=1.0))
+    if agg == "count_head":
+        st = FI.agg_count_head(theta0, deltas, w, counts)
+    else:
+        st = FI.agg_plain(theta0, deltas, w, lam=1.0)
+    FI.load_trainable(model, st)
     return model
 
 
 def run_cell(task, seed, backbone="roberta_base", N=10, alpha=0.1, K=200,
              lr=5e-4, bs=32, r=8, freeze_a=True, sem_init=False,
-             n_shadows=16, pool_size=6000):
-    method = f"freeze_a_lora_r{r}" + ("_sem" if sem_init else "")
+             n_shadows=16, pool_size=6000, agg="count_head"):
+    method = f"freeze_a_lora_r{r}_{agg}" + ("_sem" if sem_init else "")
     cell = OUTDIR / f"cell_{task}_{backbone}_N{N}_a{alpha}_{method}_s{seed}.json"
     if cell.exists():
         row = json.loads(cell.read_text())
@@ -136,7 +145,7 @@ def run_cell(task, seed, backbone="roberta_base", N=10, alpha=0.1, K=200,
         model = train_released_model(
             task, backbone, in_idx, y_p, ids_p, mask_p, N, alpha, seed,
             model_seed=seed * 10007 + m, K=K, lr=lr, bs=bs, r=r,
-            freeze_a=freeze_a, sem_init=sem_init, C=C)
+            freeze_a=freeze_a, sem_init=sem_init, C=C, agg=agg)
         loss, conf, phi = pool_stats(model, ids_p, mask_p, y_p)
         acc = FI.evaluate(model, ids_te, mask_te, yte)
         np.savez_compressed(ck, in_mask=in_mask, loss=loss, conf=conf,
@@ -204,6 +213,7 @@ def main():
     ap.add_argument("--pool-size", type=int, default=6000)
     ap.add_argument("--sem-init", action="store_true")
     ap.add_argument("--r", type=int, default=8)
+    ap.add_argument("--agg", default="count_head", choices=["count_head", "plain"])
     args = ap.parse_args()
 
     cells = [(t, s) for t in TASKS for s in SEEDS]
@@ -215,6 +225,7 @@ def main():
     for task, seed in cells:
         try:
             rows.append(run_cell(task, seed, r=args.r, sem_init=args.sem_init,
+                                 agg=args.agg,
                                  n_shadows=args.n_shadows,
                                  pool_size=args.pool_size))
         except Exception as e:  # noqa: BLE001
