@@ -1,0 +1,18 @@
+[s4] device=cuda cells=6
+ok dbpedia_14 fa=1 si=0 s=42 | A0=0.063 A*=0.648 fis=0.840 cnt=0.901 sel=count_head:0.901 Ac=0.985 (935.6s)
+ok dbpedia_14 fa=1 si=0 s=42 | A0=0.063 A*=0.725 fis=0.830 cnt=0.911 sel=count_head:0.911 Ac=0.985 (933.9s)
+ok dbpedia_14 fa=1 si=0 s=42 | A0=0.063 A*=0.783 fis=0.834 cnt=0.921 sel=count_head:0.921 Ac=0.988 (1488.7s)
+ok dbpedia_14 fa=1 si=0 s=42 | A0=0.063 A*=0.817 fis=0.861 cnt=0.934 sel=count_head:0.934 Ac=0.987 (1489.0s)
+ok dbpedia_14 fa=1 si=0 s=42 | A0=0.063 A*=0.834 fis=0.869 cnt=0.937 sel=count_head:0.937 Ac=0.989 (2598.2s)
+ok dbpedia_14 fa=1 si=0 s=42 | A0=0.063 A*=0.852 fis=0.880 cnt=0.938 sel=count_head:0.938 Ac=0.987 (2599.0s)
+
+===== BEGIN results.csv (s4) =====
+task,backbone,N,alpha,seed,K,r,freeze_a,sem_init,swa,prox_mu,calib_tau,n_trainable,A0,Astar,acc_fisher,acc_counthead,lam_best,acc_lam_best,selected,acc_selected,A_central,increment,gap
+dbpedia_14,roberta_base,10,0.1,42,100,8,1,0,0,0.0,0.0,158222,0.063,0.648,0.8404,0.9014,1.0,0.648,count_head,0.9014,0.9846,0.585,0.3366
+dbpedia_14,roberta_base,10,0.1,42,100,8,1,0,0,0.0,0.0,158222,0.063,0.7246,0.8304,0.9114,1.0,0.7246,count_head,0.9114,0.9848,0.6616,0.2602
+dbpedia_14,roberta_base,10,0.1,42,200,8,1,0,0,0.0,0.0,158222,0.063,0.783,0.8336,0.9212,1.0,0.783,count_head,0.9212,0.988,0.72,0.205
+dbpedia_14,roberta_base,10,0.1,42,200,8,1,0,0,0.0,0.0,158222,0.063,0.8174,0.8614,0.9344,1.0,0.8174,count_head,0.9344,0.9866,0.7544,0.1692
+dbpedia_14,roberta_base,10,0.1,42,400,8,1,0,0,0.0,0.0,158222,0.063,0.8342,0.869,0.9368,1.0,0.8342,count_head,0.9368,0.9892,0.7712,0.155
+dbpedia_14,roberta_base,10,0.1,42,400,8,1,0,0,0.0,0.0,158222,0.063,0.8524,0.8798,0.9376,1.0,0.8524,count_head,0.9376,0.987,0.7894,0.1346
+===== END results.csv =====
+

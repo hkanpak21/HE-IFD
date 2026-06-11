@@ -1,0 +1,36 @@
+[s2] device=cuda cells=15
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s42_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s43_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s44_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_trec_roberta_base_N10_a0.1_s42_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_trec_roberta_base_N10_a0.1_s43_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_trec_roberta_base_N10_a0.1_s44_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_dbpedia_14_roberta_base_N10_a0.1_s42_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_dbpedia_14_roberta_base_N10_a0.1_s43_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+ok dbpedia_14 fa=1 si=1 s=44 | A0=0.101 A*=0.776 fis=0.874 cnt=0.875 sel=fisher:0.874 Ac=0.986 (1424.9s)
+skip (done): cell_banking77_roberta_base_N10_a0.1_s42_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s43_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s44_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+ok banking77 fa=1 si=0 s=42 | A0=0.014 A*=0.367 fis=0.664 cnt=0.754 sel=count_head:0.754 Ac=0.880 (1241.4s)
+ok banking77 fa=1 si=0 s=43 | A0=0.006 A*=0.419 fis=0.734 cnt=0.784 sel=count_head:0.784 Ac=0.887 (1237.1s)
+ok banking77 fa=1 si=0 s=44 | A0=0.008 A*=0.385 fis=0.667 cnt=0.769 sel=count_head:0.769 Ac=0.881 (1231.1s)
+
+===== BEGIN results.csv (s2) =====
+task,backbone,N,alpha,seed,K,r,freeze_a,sem_init,swa,prox_mu,calib_tau,n_trainable,A0,Astar,acc_fisher,acc_counthead,lam_best,acc_lam_best,selected,acc_selected,A_central,increment,gap
+ag_news,roberta_base,10,0.1,42,200,8,1,1,0,0.0,0.0,150532,0.249,0.3848,0.7284,0.6604,0.75,0.5612,fisher,0.7284,0.907,0.1358,0.5222
+ag_news,roberta_base,10,0.1,43,200,8,1,1,0,0.0,0.0,150532,0.2536,0.617,0.6876,0.7792,1.0,0.617,count_head,0.7792,0.9068,0.3634,0.2898
+ag_news,roberta_base,10,0.1,44,200,8,1,1,0,0.0,0.0,150532,0.2534,0.387,0.7418,0.6494,1.0,0.387,fisher,0.7418,0.8992,0.1336,0.5122
+trec,roberta_base,10,0.1,42,200,8,1,1,0,0.0,0.0,152070,0.13,0.364,0.538,0.464,1.0,0.364,count_head,0.464,0.886,0.234,0.522
+trec,roberta_base,10,0.1,43,200,8,1,1,0,0.0,0.0,152070,0.13,0.286,0.322,0.308,1.0,0.286,plain_l0.75,0.224,0.946,0.156,0.66
+trec,roberta_base,10,0.1,44,200,8,1,1,0,0.0,0.0,152070,0.13,0.462,0.542,0.588,1.0,0.462,count_head,0.588,0.946,0.332,0.484
+dbpedia_14,roberta_base,10,0.1,42,200,8,1,1,0,0.0,0.0,158222,0.1006,0.7328,0.8968,0.8436,1.0,0.7328,fisher,0.8968,0.988,0.6322,0.2552
+dbpedia_14,roberta_base,10,0.1,43,200,8,1,1,0,0.0,0.0,158222,0.1044,0.792,0.921,0.8986,1.0,0.792,fisher,0.921,0.9866,0.6876,0.1946
+dbpedia_14,roberta_base,10,0.1,44,200,8,1,1,0,0.0,0.0,158222,0.1014,0.7764,0.8742,0.8752,1.0,0.7764,fisher,0.8742,0.986,0.675,0.2096
+banking77,roberta_base,10,0.1,42,200,8,1,1,0,0.0,0.0,206669,0.0604,0.4916,0.6903,0.7166,1.0,0.4916,count_head,0.7166,0.875,0.4312,0.3834
+banking77,roberta_base,10,0.1,43,200,8,1,1,0,0.0,0.0,206669,0.0604,0.5123,0.7237,0.724,1.0,0.5123,fisher,0.7237,0.8831,0.4519,0.3708
+banking77,roberta_base,10,0.1,44,200,8,1,1,0,0.0,0.0,206669,0.0604,0.5539,0.7006,0.7312,1.0,0.5539,count_head,0.7312,0.8805,0.4935,0.3266
+banking77,roberta_base,10,0.1,42,200,8,1,0,0,0.0,0.0,206669,0.014,0.3666,0.6643,0.7536,1.0,0.3666,count_head,0.7536,0.8799,0.3526,0.5133
+banking77,roberta_base,10,0.1,43,200,8,1,0,0,0.0,0.0,206669,0.0065,0.4192,0.7344,0.7844,1.0,0.4192,count_head,0.7844,0.8867,0.4127,0.4675
+banking77,roberta_base,10,0.1,44,200,8,1,0,0,0.0,0.0,206669,0.0081,0.3854,0.6675,0.7692,1.0,0.3854,count_head,0.7692,0.8808,0.3773,0.4955
+===== END results.csv =====
+

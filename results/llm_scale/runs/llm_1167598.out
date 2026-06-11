@@ -1,0 +1,14 @@
+[llm_scale] device=cuda backbone=qwen25_05b
+ok ag_news qwen25_05b s=42 | A0=0.294 A*=0.723 cnt=0.713 sel=count_head:0.713 Ac=0.892 | 200196 params = 25 cts (1918.5s)
+ok ag_news qwen25_05b s=43 | A0=0.270 A*=0.567 cnt=0.719 sel=count_head:0.719 Ac=0.883 | 200196 params = 25 cts (1621.3s)
+ok dbpedia_14 qwen25_05b s=42 | A0=0.067 A*=0.435 cnt=0.878 sel=count_head:0.878 Ac=0.971 | 209166 params = 26 cts (2020.5s)
+ok dbpedia_14 qwen25_05b s=43 | A0=0.072 A*=0.498 cnt=0.869 sel=count_head:0.869 Ac=0.930 | 209166 params = 26 cts (2024.3s)
+
+===== BEGIN results.csv =====
+task,backbone,N,alpha,seed,K,r,freeze_a,n_trainable,ciphertexts,A0,Astar,acc_counthead,selected,acc_selected,A_central,increment,gap,wall
+ag_news,qwen25_05b,10,0.1,42,200,8,1,200196,25,0.2945,0.723,0.713,count_head,0.713,0.8925,0.4285,0.1795,1918.5
+ag_news,qwen25_05b,10,0.1,43,200,8,1,200196,25,0.2695,0.5665,0.7185,count_head,0.7185,0.8835,0.297,0.165,1621.3
+dbpedia_14,qwen25_05b,10,0.1,42,200,8,1,209166,26,0.067,0.435,0.878,count_head,0.878,0.971,0.368,0.093,2020.5
+dbpedia_14,qwen25_05b,10,0.1,43,200,8,1,209166,26,0.0725,0.4985,0.869,count_head,0.869,0.93,0.426,0.061,2024.3
+===== END results.csv =====
+

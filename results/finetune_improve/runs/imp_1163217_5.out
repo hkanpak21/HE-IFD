@@ -1,0 +1,9 @@
+[s7] device=cuda cells=18
+ok dbpedia_14 atk=sign_flip s=42 | poisoned=0.066 sel=loo_5:0.693 oracle=0.693 excluded=1 (1326.6s)
+ok dbpedia_14 atk=sign_flip s=43 | poisoned=0.240 sel=loo_4:0.736 oracle=0.736 excluded=1 (1332.7s)
+ok dbpedia_14 atk=sign_flip s=44 | poisoned=0.123 sel=loo_9:0.643 oracle=0.643 excluded=1 (1331.4s)
+ok dbpedia_14 atk=gauss s=42 | poisoned=0.605 sel=loo_5:0.693 oracle=0.693 excluded=1 (1322.1s)
+ok dbpedia_14 atk=gauss s=43 | poisoned=0.702 sel=loo_4:0.736 oracle=0.736 excluded=1 (1323.4s)
+ok dbpedia_14 atk=gauss s=44 | poisoned=0.469 sel=loo_9:0.643 oracle=0.643 excluded=1 (1321.1s)
+ok dbpedia_14 atk=label_flip s=42 | poisoned=0.474 sel=loo_5:0.693 oracle=0.693 excluded=1 (1408.9s)
+ok dbpedia_14 atk=label_flip s=43 | poisoned=0.587 sel=loo_4:0.736 oracle=0.736 excluded=1 (1412.9s)

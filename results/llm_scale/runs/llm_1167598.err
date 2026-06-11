@@ -1,0 +1,9 @@
+Using the latest cached version of the dataset since fancyzhx/ag_news couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'default' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___ag_news/default/0.0.0/eb185aade064a813bc0b7f42de02595523103ca4 (last modified on Wed Jun 10 19:53:57 2026).
+`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`.
+Using the latest cached version of the dataset since fancyzhx/ag_news couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'default' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___ag_news/default/0.0.0/eb185aade064a813bc0b7f42de02595523103ca4 (last modified on Wed Jun 10 19:53:57 2026).
+Using the latest cached version of the dataset since fancyzhx/dbpedia_14 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'dbpedia_14' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___dbpedia_14/dbpedia_14/0.0.0/9abd46cf7fc8b4c64290f26993c540b92aa145ac (last modified on Tue Jun  2 08:35:23 2026).
+Using the latest cached version of the dataset since fancyzhx/dbpedia_14 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'dbpedia_14' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___dbpedia_14/dbpedia_14/0.0.0/9abd46cf7fc8b4c64290f26993c540b92aa145ac (last modified on Tue Jun  2 08:35:23 2026).

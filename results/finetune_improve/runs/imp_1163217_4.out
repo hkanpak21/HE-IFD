@@ -1,0 +1,9 @@
+[s5] device=cuda cells=9
+ok banking77 fa=1 si=1 s=42 | A0=0.060 A*=0.492 fis=0.690 cnt=0.717 sel=count_head:0.717 Ac=0.875 (1300.7s)
+ok banking77 fa=1 si=1 s=43 | A0=0.060 A*=0.512 fis=0.724 cnt=0.724 sel=fisher:0.724 Ac=0.883 (1302.0s)
+ok banking77 fa=1 si=1 s=44 | A0=0.060 A*=0.554 fis=0.701 cnt=0.731 sel=count_head:0.731 Ac=0.880 (1300.6s)
+ok banking77 fa=1 si=1 s=42 | A0=0.060 A*=0.506 fis=0.669 cnt=0.705 sel=count_head:0.705 Ac=0.881 (1296.4s)
+ok banking77 fa=1 si=1 s=43 | A0=0.060 A*=0.535 fis=0.713 cnt=0.708 sel=fisher:0.713 Ac=0.886 (1296.0s)
+ok banking77 fa=1 si=1 s=44 | A0=0.060 A*=0.578 fis=0.686 cnt=0.714 sel=count_head:0.714 Ac=0.881 (1294.4s)
+ok banking77 fa=1 si=1 s=42 | A0=0.060 A*=0.520 fis=0.656 cnt=0.682 sel=count_head:0.682 Ac=0.886 (1297.0s)
+ok banking77 fa=1 si=1 s=43 | A0=0.060 A*=0.537 fis=0.693 cnt=0.697 sel=count_head:0.697 Ac=0.884 (1297.8s)

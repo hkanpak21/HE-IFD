@@ -1,0 +1,30 @@
+Using the latest cached version of the dataset since fancyzhx/dbpedia_14 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'dbpedia_14' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___dbpedia_14/dbpedia_14/0.0.0/9abd46cf7fc8b4c64290f26993c540b92aa145ac (last modified on Tue Jun  2 08:35:23 2026).
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Using the latest cached version of the dataset since fancyzhx/dbpedia_14 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'dbpedia_14' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___dbpedia_14/dbpedia_14/0.0.0/9abd46cf7fc8b4c64290f26993c540b92aa145ac (last modified on Tue Jun  2 08:35:23 2026).
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Using the latest cached version of the dataset since fancyzhx/dbpedia_14 couldn't be found on the Hugging Face Hub (offline mode is enabled).
+Found the latest cached dataset configuration 'dbpedia_14' at /home/hkanpak21/.cache/huggingface/datasets/fancyzhx___dbpedia_14/dbpedia_14/0.0.0/9abd46cf7fc8b4c64290f26993c540b92aa145ac (last modified on Tue Jun  2 08:35:23 2026).
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+Some weights of RobertaModel were not initialized from the model checkpoint at roberta-base and are newly initialized: ['pooler.dense.bias', 'pooler.dense.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** JOB 1163217 ON ai02 CANCELLED AT 2026-06-11T10:43:25 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 1163217.0 ON ai02 CANCELLED AT 2026-06-11T10:43:25 DUE TO TIME LIMIT ***
+srun: got SIGCONT
+srun: forcing job termination
+srun: error: ai02: task 0: Terminated

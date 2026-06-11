@@ -1,0 +1,9 @@
+[s7] device=cuda cells=18
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s42_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atksign_flip.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s43_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atksign_flip.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s44_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atksign_flip.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s42_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atkgauss.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s43_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atkgauss.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s44_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atkgauss.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s42_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atklabel_flip.json
+skip (done): robust_cell_dbpedia_14_roberta_base_N10_a0.1_s43_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005_atklabel_flip.json

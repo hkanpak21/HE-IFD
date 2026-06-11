@@ -1,0 +1,24 @@
+[s5] device=cuda cells=9
+skip (done): cell_banking77_roberta_base_N10_a0.1_s42_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s43_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s44_K200_r8_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s42_K200_r16_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s43_K200_r16_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s44_K200_r16_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s42_K200_r32_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_banking77_roberta_base_N10_a0.1_s43_K200_r32_fa1_si1_sw0_pm0.0_ct0.0_lr0.0005.json
+ok banking77 fa=1 si=1 s=44 | A0=0.060 A*=0.602 fis=0.669 cnt=0.701 sel=count_head:0.701 Ac=0.881 (1244.2s)
+
+===== BEGIN results.csv (s5) =====
+task,backbone,N,alpha,seed,K,r,freeze_a,sem_init,swa,prox_mu,calib_tau,n_trainable,A0,Astar,acc_fisher,acc_counthead,lam_best,acc_lam_best,selected,acc_selected,A_central,increment,gap
+banking77,roberta_base,10,0.1,42,200,8,1,1,0,0.0,0.0,206669,0.0604,0.4916,0.6903,0.7166,1.0,0.4916,count_head,0.7166,0.875,0.4312,0.3834
+banking77,roberta_base,10,0.1,43,200,8,1,1,0,0.0,0.0,206669,0.0604,0.5123,0.7237,0.724,1.0,0.5123,fisher,0.7237,0.8831,0.4519,0.3708
+banking77,roberta_base,10,0.1,44,200,8,1,1,0,0.0,0.0,206669,0.0604,0.5539,0.7006,0.7312,1.0,0.5539,count_head,0.7312,0.8805,0.4935,0.3266
+banking77,roberta_base,10,0.1,42,200,16,1,1,0,0.0,0.0,354125,0.0604,0.5058,0.6692,0.7052,1.0,0.5058,count_head,0.7052,0.8815,0.4455,0.3756
+banking77,roberta_base,10,0.1,43,200,16,1,1,0,0.0,0.0,354125,0.0604,0.5351,0.7133,0.7075,1.0,0.5351,fisher,0.7133,0.886,0.4747,0.351
+banking77,roberta_base,10,0.1,44,200,16,1,1,0,0.0,0.0,354125,0.0604,0.5779,0.686,0.714,1.0,0.5779,count_head,0.714,0.8812,0.5175,0.3032
+banking77,roberta_base,10,0.1,42,200,32,1,1,0,0.0,0.0,649037,0.0604,0.5205,0.6558,0.6821,1.0,0.5205,count_head,0.6821,0.8857,0.4601,0.3653
+banking77,roberta_base,10,0.1,43,200,32,1,1,0,0.0,0.0,649037,0.0604,0.5373,0.6925,0.6968,1.0,0.5373,count_head,0.6968,0.8844,0.4769,0.3471
+banking77,roberta_base,10,0.1,44,200,32,1,1,0,0.0,0.0,649037,0.0604,0.6019,0.6692,0.7006,1.0,0.6019,count_head,0.7006,0.8815,0.5416,0.2795
+===== END results.csv =====
+

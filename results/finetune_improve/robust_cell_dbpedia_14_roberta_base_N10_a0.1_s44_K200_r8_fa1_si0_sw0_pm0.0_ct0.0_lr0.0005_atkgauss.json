@@ -1,0 +1,1 @@
+{"task": "dbpedia_14", "backbone": "roberta_base", "N": 10, "alpha": 0.1, "seed": 44, "K": 200, "r": 8, "freeze_a": 1, "attack": "gauss", "attacker": 9, "attacker_w": 0.2681, "acc_poisoned_plain": 0.4692, "acc_selected": 0.6426, "selected": "loo_9", "attacker_excluded": 1, "acc_oracle": 0.6426, "wall": 1321.1}

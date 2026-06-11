@@ -1,0 +1,30 @@
+[s1] device=cuda cells=12
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s42_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s43_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s44_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s42_K200_r8_fa0_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s43_K200_r8_fa0_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_ag_news_roberta_base_N10_a0.1_s44_K200_r8_fa0_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+skip (done): cell_trec_roberta_base_N10_a0.1_s42_K200_r8_fa1_si0_sw0_pm0.0_ct0.0_lr0.0005.json
+ok trec fa=1 si=0 s=43 | A0=0.140 A*=0.268 fis=0.470 cnt=0.656 sel=count_head:0.656 Ac=0.956 (1060.3s)
+ok trec fa=1 si=0 s=44 | A0=0.108 A*=0.620 fis=0.612 cnt=0.730 sel=count_head:0.730 Ac=0.958 (1008.5s)
+ok trec fa=0 si=0 s=42 | A0=0.190 A*=0.660 fis=0.752 cnt=0.714 sel=fisher:0.752 Ac=0.966 (1100.1s)
+ok trec fa=0 si=0 s=43 | A0=0.140 A*=0.212 fis=0.416 cnt=0.488 sel=count_head:0.488 Ac=0.962 (1065.9s)
+ok trec fa=0 si=0 s=44 | A0=0.108 A*=0.394 fis=0.460 cnt=0.480 sel=fisher:0.460 Ac=0.964 (1012.7s)
+
+===== BEGIN results.csv (s1) =====
+task,backbone,N,alpha,seed,K,r,freeze_a,sem_init,swa,prox_mu,calib_tau,n_trainable,A0,Astar,acc_fisher,acc_counthead,lam_best,acc_lam_best,selected,acc_selected,A_central,increment,gap
+ag_news,roberta_base,10,0.1,42,200,8,1,0,0,0.0,0.0,150532,0.2578,0.5142,0.8286,0.799,1.0,0.5142,fisher,0.8286,0.9104,0.2564,0.3962
+ag_news,roberta_base,10,0.1,43,200,8,1,0,0,0.0,0.0,150532,0.2448,0.7114,0.5926,0.7762,1.0,0.7114,count_head,0.7762,0.909,0.4666,0.1976
+ag_news,roberta_base,10,0.1,44,200,8,1,0,0,0.0,0.0,150532,0.243,0.3058,0.6504,0.6526,0.5,0.3652,count_head,0.6526,0.9062,0.0628,0.6004
+ag_news,roberta_base,10,0.1,42,200,8,0,0,0,0.0,0.0,297988,0.2578,0.539,0.6966,0.7602,1.0,0.539,count_head,0.7602,0.9126,0.2812,0.3736
+ag_news,roberta_base,10,0.1,43,200,8,0,0,0,0.0,0.0,297988,0.2448,0.7638,0.7274,0.8144,1.0,0.7638,count_head,0.8144,0.9124,0.519,0.1486
+ag_news,roberta_base,10,0.1,44,200,8,0,0,0,0.0,0.0,297988,0.243,0.2854,0.4398,0.4754,0.5,0.2968,count_head,0.4754,0.9096,0.0424,0.6242
+trec,roberta_base,10,0.1,42,200,8,1,0,0,0.0,0.0,152070,0.19,0.644,0.738,0.762,1.0,0.644,count_head,0.762,0.938,0.454,0.294
+trec,roberta_base,10,0.1,43,200,8,1,0,0,0.0,0.0,152070,0.14,0.268,0.47,0.656,0.5,0.494,count_head,0.656,0.956,0.128,0.688
+trec,roberta_base,10,0.1,44,200,8,1,0,0,0.0,0.0,152070,0.108,0.62,0.612,0.73,1.0,0.62,count_head,0.73,0.958,0.512,0.338
+trec,roberta_base,10,0.1,42,200,8,0,0,0,0.0,0.0,299526,0.19,0.66,0.752,0.714,1.0,0.66,fisher,0.752,0.966,0.47,0.306
+trec,roberta_base,10,0.1,43,200,8,0,0,0,0.0,0.0,299526,0.14,0.212,0.416,0.488,0.5,0.3,count_head,0.488,0.962,0.072,0.75
+trec,roberta_base,10,0.1,44,200,8,0,0,0,0.0,0.0,299526,0.108,0.394,0.46,0.48,1.0,0.394,fisher,0.46,0.964,0.286,0.57
+===== END results.csv =====
+

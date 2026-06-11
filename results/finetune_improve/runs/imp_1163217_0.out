@@ -1,0 +1,8 @@
+[s1] device=cuda cells=12
+ok ag_news fa=1 si=0 s=42 | A0=0.258 A*=0.514 fis=0.829 cnt=0.799 sel=fisher:0.829 Ac=0.910 (1540.4s)
+ok ag_news fa=1 si=0 s=43 | A0=0.245 A*=0.711 fis=0.593 cnt=0.776 sel=count_head:0.776 Ac=0.909 (1543.9s)
+ok ag_news fa=1 si=0 s=44 | A0=0.243 A*=0.306 fis=0.650 cnt=0.653 sel=count_head:0.653 Ac=0.906 (1292.1s)
+ok ag_news fa=0 si=0 s=42 | A0=0.258 A*=0.539 fis=0.697 cnt=0.760 sel=count_head:0.760 Ac=0.913 (1539.7s)
+ok ag_news fa=0 si=0 s=43 | A0=0.245 A*=0.764 fis=0.727 cnt=0.814 sel=count_head:0.814 Ac=0.912 (1536.6s)
+ok ag_news fa=0 si=0 s=44 | A0=0.243 A*=0.285 fis=0.440 cnt=0.475 sel=count_head:0.475 Ac=0.910 (1281.7s)
+ok trec fa=1 si=0 s=42 | A0=0.190 A*=0.644 fis=0.738 cnt=0.762 sel=count_head:0.762 Ac=0.938 (1195.2s)
