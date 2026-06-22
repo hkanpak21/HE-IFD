@@ -637,6 +637,13 @@ def grid(stage):
             for s in seeds:
                 cells.append({**base, "task": "banking77", "r": r,
                               "sem_init": True, "seed": s})
+    elif stage == "s8":          # heterogeneity + client-count sweep (freeze-A), dbpedia
+        for a in [0.05, 0.3, 1.0]:
+            for s in seeds:
+                cells.append({**base, "task": "dbpedia_14", "alpha": a, "seed": s})
+        for n in [20, 50, 100]:
+            for s in seeds:
+                cells.append({**base, "task": "dbpedia_14", "N": n, "seed": s})
     elif stage == "s7":          # Byzantine-lite LOO robustness (issue fa04)
         for task in ["dbpedia_14", "ag_news"]:
             for attack in ["sign_flip", "gauss", "label_flip"]:
@@ -652,7 +659,7 @@ def grid(stage):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True,
-                    choices=["s1", "s2", "s3", "s4", "s5", "s7"])
+                    choices=["s1", "s2", "s3", "s4", "s5", "s7", "s8"])
     ap.add_argument("--bs", type=int, default=32)
     args = ap.parse_args()
 
