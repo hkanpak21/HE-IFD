@@ -1,0 +1,1 @@
+{"task": "ag_news", "backbone": "roberta_base", "N": 10, "alpha": 0.1, "seed": 43, "K": 200, "r": 8, "freeze_a": 1, "attack": "label_flip", "attacker": 6, "attacker_w": 0.2329, "acc_poisoned_plain": 0.4676, "acc_selected": 0.503, "selected": "loo_6", "attacker_excluded": 1, "acc_oracle": 0.503, "wall": 1386.9}
