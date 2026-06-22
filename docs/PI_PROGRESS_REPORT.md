@@ -24,13 +24,85 @@ Sayılar `results/` altındaki run'lardan; MIA (membership inference) testleri s
 - Freeze-A + count-head + vote ile 0.77'ye çıktı, gap 0.11; ek communication ve privacy budget yok.
 - DBpedia K=400'de 0.94 (centralized'a 0.05 yakın).
 
-## Deneyler
+## Deney tabloları
 
-- **Vision (frozen ViT-B/16):** eskiden negative result'tı (CIFAR-100'de adapter −0.01 katkı). Yeni method'da positive: CIFAR-100 0.78 (centralized 0.87). Cross-modality claim artık kanıtlı.
-- **Matched setup'lar** (önceki round'un "setup'lar uyuşmuyor" itirazına yanıt): CIFAR-10 N=5 (DENSE) → 0.96 (onlar 0.50/0.60); CIFAR-10 N=20 α=0.04 (FedAUXfdp, DP) → 0.94 (onlar ε=0.5'te 0.75); Tiny-ImageNet N=10 α=0.1 (FedSD2C) → 0.73. Model class bizimki (frozen ViT + adapter), belirtiliyor.
-- **LLM scale:** frozen Qwen2.5-0.5B ile çalışıyor — DBpedia 0.87–0.88 (plain average 0.44'e collapse oluyor), AG-News 0.71–0.72. Encrypted object hâlâ 26 ciphertext / 13 MiB; sadece adapter encrypt ediliyor, 0.5B backbone değil.
-- **Crypto cost (Lattigo, end-to-end):** gerçek freeze-A payload'unda (~150k parametre) client başına 19 ciphertext / 9.5 MiB (eski payload'un yarısı), tek round; server aggregation 76 ms (N=10) – 0.72 s (N=100), threshold decrypt 44 ms – 0.43 s, bootstrapping yok; decrypt sonucu plaintext'e göre relative ℓ₂ ≈ 10⁻⁹. Multi-candidate k decryption ekliyor (12 candidate ~0.5 s).
-- **MIA:** artık ölçülüyor, assert edilmiyor — external adversary ve fellow-client adversary (kendi datasını prior kullanan participant). İlk scorlanan cell (AG-News) chance seviyesinde: AUC 0.49–0.51, %1 FPR'de TPR ≈ %1. Kalan 11 cell cluster'da scoring aşamasında; full tablo yakında eklenecek.
+Ortak default: RoBERTa-base (frozen), N=10, α=0.1, K=200, r=8, 3 seed {42,43,44}, freeze-A. Her tablo bu default'tan bir ekseni değiştirir.
+
+**S1 — freeze-A vs both-A-B**
+| | |
+|---|---|
+| Dataset / backbone | AG-News (4), TREC (6) / RoBERTa-base |
+| Setup | N=10, α=0.1, K=200, r=8, 3 seed |
+| Değişen | freeze_a ∈ {True, False} |
+| Hedef | freeze-A, seed collapse'leri ve "linear aggregation" claim'ini düzeltiyor mu |
+| Sonuç | AG-News 0.75±0.09 vs 0.68±0.15; TREC 0.72±0.05 vs 0.57±0.13; variance 2–3× düşük, payload yarıya iniyor |
+
+**S2 — semantic head init**
+| | |
+|---|---|
+| Dataset / backbone | AG-News, TREC, DBpedia (14), Banking77 (77) / RoBERTa-base |
+| Setup | N=10, α=0.1, K=200, r=8, 3 seed; sem_init ∈ {on, off} |
+| Değişen | head θ₀ = class-name embedding (zero-shot) vs standart init |
+| Hedef | semantic init, coverage gap'i kapatıyor mu |
+| Sonuç | Kapatmıyor; Banking77 0.72 (sem) vs 0.77 (no-sem). Method'tan çıkarıldı, ablation kaldı |
+
+**S4 — trajectory length (K) × learning rate**
+| | |
+|---|---|
+| Dataset / backbone | DBpedia / RoBERTa-base |
+| Setup | N=10, α=0.1, r=8, seed 42 |
+| Değişen | K ∈ {100, 200, 400}, lr ∈ {5e-4, 1e-3} |
+| Hedef | freeze-A için en iyi trajectory/lr |
+| Sonuç | Monoton: K=100→0.90, K=200→0.93, K=400→0.94; lr 1e-3 ≥ 5e-4 |
+
+**S5 — rank compensation**
+| | |
+|---|---|
+| Dataset / backbone | Banking77 / RoBERTa-base |
+| Setup | N=10, α=0.1, K=200, sem_init on, 3 seed |
+| Değişen | r ∈ {8, 16, 32} |
+| Hedef | A'yı freeze edince kaybolan capacity'yi yüksek rank telafi ediyor mu |
+| Sonuç | Etmiyor; r=8 0.724 ≥ r=16 0.711 ≥ r=32 0.693. r=8 sabit |
+
+**S7 / fa04 — Byzantine-lite robustness (leave-one-out + vote)**
+| | |
+|---|---|
+| Dataset / backbone | DBpedia, AG-News / RoBERTa-base |
+| Setup | N=10, α=0.1, K=200, r=8, 3 seed; 1 poison client (largest shard) |
+| Değişen | attack ∈ {sign_flip, gauss, label_flip} |
+| Hedef | LOO candidate + vote, zehirli client'ı dışlıyor mu |
+| Sonuç | 18 cell'in 17'sinde attacker dışlandı, oracle accuracy'ye dönüldü; savunmasız plain aggregate 0.07–0.70'e düşüyor |
+
+**fa05 / s6 — vision + matched setup'lar (frozen ViT-B/16 + adapter)**
+| | |
+|---|---|
+| Setup | N ve α ilgili comparator'ın published partition'ı; 3 seed |
+| Hedef | (1) vision modality kanıtlı mı (eski both-A-B'de negative'di), (2) matched setup'ta comparator'lara karşı |
+| Sonuç | CIFAR-100 (s6, N=10 α=0.1) 0.78 vs centralized 0.87 (eskiden −0.01, artık positive). CIFAR-10 N=5 (DENSE) 0.96 vs 0.50/0.60. CIFAR-10 N=20 α=0.04 (FedAUXfdp DP) 0.94 vs 0.75 (ε=0.5). Tiny-ImageNet N=10 α=0.1 (FedSD2C) 0.73 |
+
+**fa03 — LLM scale**
+| | |
+|---|---|
+| Dataset / backbone | AG-News, DBpedia / frozen Qwen2.5-0.5B (causal LM) |
+| Setup | N=10, α=0.1, K=200, r=8, 2 seed |
+| Hedef | protocol billion-param-class backbone'da çalışıyor mu, cost adapter'a mı bağlı |
+| Sonuç | DBpedia 0.87–0.88 (plain 0.44'e collapse), AG-News 0.71–0.72; encrypted object 26 ciphertext / 13 MiB (0.5B backbone değil, sadece adapter) |
+
+**fa06 — crypto cost (Lattigo, multiparty CKKS, end-to-end)**
+| | |
+|---|---|
+| Setup | gerçek freeze-A payload ~150k param; ring 2¹⁴, scale 2⁴⁵, depth-1; N ∈ {10, 100} |
+| Hedef | gerçek payload'da communication + computation cost + correctness |
+| Sonuç | 19 ciphertext / 9.5 MiB per client (eski yükün yarısı), tek round; aggregation 76 ms (N=10)–0.72 s (N=100), threshold decrypt 44 ms–0.43 s, bootstrapping yok; relative ℓ₂ ≈ 10⁻⁹. Multi-candidate k decryption ekliyor (~0.5 s / 12 candidate) |
+
+**fa02 — membership inference (MIA)**
+| | |
+|---|---|
+| Dataset / backbone | AG-News, TREC, DBpedia, Banking77 / RoBERTa-base |
+| Setup | released model (count-head aggregate); 1 target + 16 shadow / cell, 3 seed |
+| Değişen | adversary ∈ {external, fellow-client}; attack ∈ {loss-threshold, LiRA} |
+| Hedef | released model gerçekten az mı sızdırıyor (assert değil, ölçüm) |
+| Sonuç | İlk scorlanan cell (AG-News) chance: AUC 0.49–0.51, %1 FPR'de TPR ≈ %1 (her iki adversary). **Kalan 11 cell scoring aşamasında; full tablo yakında** |
 
 ## Positioning
 
