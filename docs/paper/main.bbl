@@ -67,6 +67,11 @@ X.~Wei, R.~Huang, L.~Lei, and J.~Wu, ``Fedshe--cq: A communication-efficient
   homomorphic encryption framework for federated learning,'' \emph{Computer
   Networks}, vol. 260, p. 111813, 2025.
 
+\bibitem{li2025shelora}
+J.~Li \emph{et~al.}, ``{SHE-LoRA}: Selective homomorphic encryption for
+  federated tuning with heterogeneous {LoRA},'' \emph{arXiv preprint
+  arXiv:2505.21051}, 2025.
+
 \bibitem{garimella2021sisyphus}
 K.~Garimella, N.~K. Jha, and B.~Reagen, ``Sisyphus: A cautionary tale of using
   low-degree polynomial activations in privacy-preserving deep learning,'' in
@@ -96,6 +101,54 @@ A.~Ibarrondo and M.~{\"O}nen, ``{FHE}-compatible batch normalization for
   Workshop (PriML), NeurIPS}, 2021. [Online]. Available:
   \url{https://www.eurecom.fr/en/publication/5626}
 \BIBentrySTDinterwordspacing
+
+\bibitem{zhang2024fedit}
+J.~Zhang, S.~Vahidian, M.~Kuo, C.~Li, R.~Zhang, T.~Yu, G.~Wang, and Y.~Chen,
+  ``Towards building the federated {GPT}: Federated instruction tuning,'' in
+  \emph{IEEE International Conference on Acoustics, Speech and Signal
+  Processing (ICASSP)}, 2024, arXiv:2305.05644 (FedIT).
+
+\bibitem{wang2024flora}
+Z.~Wang, Z.~Shen, Y.~He, G.~Sun, H.~Wang, L.~Lyu, and A.~Li, ``{FLoRA}:
+  Federated fine-tuning large language models with heterogeneous low-rank
+  adaptations,'' in \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2024, arXiv:2409.05976.
+
+\bibitem{bai2024flexlora}
+J.~Bai, D.~Chen, B.~Qian, L.~Yao, and Y.~Li, ``Federated fine-tuning of large
+  language models under heterogeneous tasks and client resources,'' in
+  \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2024,
+  arXiv:2402.11505 (FlexLoRA).
+
+\bibitem{cho2024hetlora}
+Y.~J. Cho, L.~Liu, Z.~Xu, A.~Fahrezi, and G.~Joshi, ``Heterogeneous {LoRA} for
+  federated fine-tuning of on-device foundation models,'' in \emph{Conference
+  on Empirical Methods in Natural Language Processing (EMNLP)}, 2024,
+  arXiv:2401.06432.
+
+\bibitem{guo2025fedsalora}
+P.~Guo, S.~Zeng, Y.~Wang, H.~Fan, F.~Wang, and L.~Qu, ``Selective aggregation
+  for low-rank adaptation in federated learning,'' in \emph{International
+  Conference on Learning Representations (ICLR)}, 2025, arXiv:2410.01463
+  (FedSA-LoRA).
+
+\bibitem{sun2024ffalora}
+Y.~Sun, Z.~Li, Y.~Li, and B.~Ding, ``Improving {LoRA} in privacy-preserving
+  federated learning,'' in \emph{International Conference on Learning
+  Representations (ICLR)}, 2024, arXiv:2403.12313.
+
+\bibitem{ilharco2023editing}
+G.~Ilharco, M.~T. Ribeiro, M.~Wortsman, L.~Schmidt, H.~Hajishirzi, and
+  A.~Farhadi, ``Editing models with task arithmetic,'' in \emph{ICLR}, 2023.
+
+\bibitem{tao2024taskarith}
+Z.~Tao, I.~Mason, S.~Kulkarni, and X.~Boix, ``Task arithmetic through the lens
+  of one-shot federated learning,'' \emph{Transactions on Machine Learning
+  Research (TMLR)}, 2025, arXiv:2411.18607.
+
+\bibitem{malinovsky2024oneround}
+Anonymous, ``Revisiting federated fine-tuning: A single communication round is
+  enough for foundation models,'' \emph{arXiv preprint arXiv:2412.04650}, 2024.
 
 \bibitem{guha2019oneshot}
 \BIBentryALTinterwordspacing
@@ -321,21 +374,6 @@ J.~So, R.~E. Ali, B.~G{\"u}ler, J.~Jiao, and A.~S. Avestimehr, ``Securing
 R.~Kerkouche, G.~{\'A}cs, and M.~Fritz, ``Client-specific property inference
   against secure aggregation in federated learning,'' in \emph{WPES}.\hskip 1em
   plus 0.5em minus 0.4em\relax ACM, 2023, pp. 15--30.
-
-\bibitem{xiao2017fashion}
-\BIBentryALTinterwordspacing
-H.~Xiao, K.~Rasul, and R.~Vollgraf, ``{Fashion-MNIST}: A novel image dataset
-  for benchmarking machine learning algorithms,'' 2017. [Online]. Available:
-  \url{https://arxiv.org/abs/1708.07747}
-\BIBentrySTDinterwordspacing
-
-\bibitem{krizhevsky2009learning}
-A.~Krizhevsky, ``Learning multiple layers of features from tiny images,''
-  University of Toronto, Tech. Rep., 2009.
-
-\bibitem{ilharco2023editing}
-G.~Ilharco, M.~T. Ribeiro, M.~Wortsman, L.~Schmidt, H.~Hajishirzi, and
-  A.~Farhadi, ``Editing models with task arithmetic,'' in \emph{ICLR}, 2023.
 
 \bibitem{lattigo}
 C.~Mouchet, J.-P. Bossuat, J.~Troncoso-Pastoriza, and J.-P. Hubaux, ``{Lattigo

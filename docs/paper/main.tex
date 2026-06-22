@@ -85,18 +85,21 @@ which communicates in a single round, faces an unresolved privacy dilemma: sendi
 in plaintext exposes it, while protecting it with differential privacy injects noise that degrades the
 released model and offers only a statistical, not a cryptographic, guarantee, and homomorphic encryption has
 so far been confined to multi-round encrypted training or to secure-aggregation primitives. We present
-HE-IFD, a one-shot federated fine-tuning whose contributions are protected by homomorphic encryption. Each
-client fine-tunes a small adapter on a frozen pretrained backbone for a bounded number of steps, and the
-server combines the resulting parameter displacements with a single sample-weighted linear operation under
-multiparty CKKS, at multiplicative depth one. The key to making a one-shot linear aggregation work under
-heterogeneous data is a shared frame, which a frozen pretrained backbone supplies for free: every client
-fine-tunes from the same public initialization, so there is no alignment phase and nothing data-derived
-leaves a client before encryption. Across vision and language tasks on frozen pretrained backbones, the
-method produces a common model stronger than any client's own and, outside the most skewed regimes, close to
-a centralized one, while giving each client coverage of classes it never observed locally; the residual gap
-to centralized accuracy is set by how much of the label space each client sees and narrows as that coverage
-grows. A real multiparty CKKS implementation reproduces the plaintext aggregate
-within the approximation bounds of CKKS at tens of megabytes per round.
+HE-IFD, to our knowledge the first one-shot federated learning protocol whose contributions are protected by
+homomorphic encryption. Each client fine-tunes a small low-rank adapter on a frozen pretrained backbone for a
+bounded number of steps, and the server combines the resulting parameter displacements with a single
+sample-weighted linear operation under multiparty CKKS, at multiplicative depth one. Two design choices make
+this work: a frozen pretrained backbone supplies, for free, the shared frame a one-shot linear aggregation
+needs under heterogeneous data, so there is no alignment phase and nothing data-derived leaves a client
+before encryption; and freezing the adapter's down-projection makes the encrypted aggregate exact task
+arithmetic, halving the encrypted payload and keeping the circuit at depth one. Because a server computing
+under encryption is blind, we let it emit several depth-one candidate aggregates and have the clients select
+among them after decryption, which lifts the released model under heterogeneity and yields a measured defense
+against a poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa and
+ViT to a billion-parameter language model, the method produces a common model stronger than any client's own
+and, outside the most skewed regimes, close to a centralized one, while membership inference against the
+released model stays at chance. A real multiparty CKKS implementation reproduces the plaintext aggregate
+within the approximation bounds of CKKS at a few megabytes per round.
 \end{abstract}
 
 \begin{IEEEkeywords}

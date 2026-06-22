@@ -38,18 +38,43 @@ These are efficient and genuinely cryptographic, but they encrypt the sum of mod
 iterative training protocol rather than a one-shot contribution, and they perform aggregation rather than
 knowledge transfer. On the encryption axis these works are the closest to ours, and the contrast is
 precise: they are either multi-round or are secure-aggregation primitives, whereas we encrypt a single
-distillation displacement.
+fine-tuning displacement.
 
 Homomorphic encryption has also been applied to federated learning purely for aggregation, encrypting the
 per-round updates so the server can sum them without seeing any in the clear; BatchCrypt, FedML-HE, and
 FedSHE develop this for cross-silo training with various packing and quantization
-optimisations~\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe}. These remain multi-round and, like
-secure aggregation, protect the sum rather than transferring knowledge. A recurring obstacle across all
+optimisations~\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe}, and a recent line encrypts only the
+low-rank adapters of a parameter-efficient fine-tune: SHE-LoRA selectively encrypts a sensitivity-chosen
+subset of the adapter under CKKS each round~\cite{li2025shelora}. These remain multi-round and, like
+secure aggregation, protect the sum rather than transferring knowledge; encrypting the adapter rather than
+the full model narrows the per-round object, but the cost is still paid on every round of an iterative
+protocol, and the bilinear coupling of the two adapter factors (discussed below) is left to be resolved
+under encryption. Our protocol differs on both axes: a single round, and an adapter parameterisation for
+which the aggregate is exactly linear, so no coupling remains to resolve under encryption. A recurring obstacle across all
 encrypted-training work is the nonlinearity: activations must be replaced by polynomial approximations to be
 evaluated homomorphically, which deepens the multiplicative circuit and is delicate to train, as a line of
 work on polynomial activations and encryption-friendly networks documents~\cite{garimella2021sisyphus,baruch2022methodology,agamennone2025polynomial,alhossain2025training,ibarrondo2021fhebn}.
 Our design sidesteps this entirely: the only encrypted operation is linear, so no activation is ever
 evaluated under encryption and the circuit stays at depth one.
+
+A separate line federates \emph{parameter-efficient fine-tuning}, communicating only a low-rank adapter
+rather than the full model. FedIT first applied this to instruction tuning by averaging the adapters round
+by round~\cite{zhang2024fedit}, but naive per-factor averaging is biased: a client learns an update
+$\Delta W = BA$, and averaging the factors separately yields $(\sum_j B_j)(\sum_j A_j)\neq\sum_j B_jA_j$,
+a discrepancy formalised as aggregation noise by FLoRA, which removes it by stacking the clients'
+factors~\cite{wang2024flora}; FlexLoRA instead reconstructs and averages the full products before
+redistributing by SVD~\cite{bai2024flexlora}, HetLoRA reconciles heterogeneous ranks~\cite{cho2024hetlora},
+and FedSA-LoRA shares only one factor~\cite{guo2025fedsalora}. The fix we adopt is FFA-LoRA, which freezes
+the randomly initialised down-projection and trains only the up-projection, so that averaging the trained
+factor is exact; it was introduced to stabilise multi-round, differentially private federated
+tuning~\cite{sun2024ffalora}. Under encryption this choice has a sharper consequence than in plaintext: the
+bilinearity is not merely a bias to correct but a cost cliff, since resolving it on the server would require
+ciphertext-by-ciphertext products, whereas freezing the down-projection makes the one-shot encrypted
+aggregate exact at multiplicative depth one. Our aggregation is, algebraically, task-vector
+merging~\cite{ilharco2023editing}, which has been shown equivalent to one-shot federated
+averaging~\cite{tao2024taskarith}; that a single round of fine-tuning suffices for foundation models is
+itself established in plaintext~\cite{malinovsky2024oneround}. What none of these provide is cryptographic
+protection of the contributions, which is our subject.
 
 The communication problem has driven the parallel development of one-shot federated learning, which
 collapses the entire exchange into a single upload and download~\cite{guha2019oneshot,wang2025towards}. The earliest approaches transferred
@@ -90,7 +115,7 @@ in \cref{sec:mia} what the released model still reveals.
 
 Seen together, the two strongest lines never meet. The cryptographic work that would protect contributions
 without loss is either multi-round encrypted training or a secure-aggregation primitive, and the one-shot
-distillation work that communicates in a single round is either plaintext or made private only by lossy
-perturbation. The method we present occupies the empty intersection: a one-shot federated distillation
+work that communicates in a single round is either plaintext or made private only by lossy
+perturbation. The method we present occupies the empty intersection: a one-shot federated learning protocol
 whose single encrypted operation is a linear aggregation under multiparty homomorphic encryption, giving
 the accuracy-preserving privacy of the cryptographic line at the communication budget of the one-shot line.

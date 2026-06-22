@@ -12,7 +12,7 @@ with differential privacy injects noise into the released model and provides onl
 cryptographic, guarantee. Homomorphic encryption promises a way out by operating on contributions while they
 stay encrypted, but it has been applied to federated learning either as multi-round encrypted training, whose
 cost is measured in hours and gigabytes, or as a secure-aggregation primitive embedded in an iterative
-protocol. No existing method delivers a one-shot federated distillation whose contributions are protected
+protocol. No existing method delivers a one-shot federated learning protocol whose contributions are protected
 cryptographically rather than by accuracy-degrading noise.
 
 We present \textbf{HE-IFD}. Each client fine-tunes a small low-rank adapter and classifier head on a frozen
@@ -45,17 +45,25 @@ only quantity exposed in the clear, the released model, leaks little about any c
 
 Our contributions are as follows.
 \begin{itemize}
-\item We introduce, to our knowledge, the first one-shot federated fine-tuning whose contributions are
-  protected by homomorphic encryption, with a single server operation of multiplicative depth one under
-  multiparty CKKS (\cref{sec:method}).
-\item We show that fine-tuning a frozen pretrained backbone supplies the shared frame a one-shot linear
-  aggregation needs at no cost, eliminating the data-dependent alignment phase that prior one-shot federated
-  learning requires, and with it the leakage and the differential-privacy budget that phase entails
-  (\cref{sec:method,sec:superior}).
+\item We introduce, to our knowledge, the first one-shot federated learning protocol whose contributions are
+  protected by homomorphic encryption: a single round whose only server operation is a linear aggregation of
+  multiplicative depth one under multiparty CKKS, followed by threshold decryption (\cref{sec:method}). All
+  prior homomorphic federated learning is multi-round, and all prior one-shot federated learning is plaintext
+  or differentially private.
+\item We identify a co-design that makes one-shot encryption cheap. Fine-tuning a frozen pretrained backbone
+  supplies the shared frame a linear aggregation needs at no cost, and freezing the low-rank adapter's
+  down-projection (training only the up-projection and head) makes the encrypted aggregate \emph{exact} task
+  arithmetic on the weight updates, with no bilinear cross-terms to resolve under encryption. The entire
+  cryptographic object is then tens of ciphertexts, communicated once (\cref{sec:method,sec:basin}).
+\item We introduce encrypted multi-candidate release with client-side selection: the server emits several
+  depth-one candidate aggregates (scaled, curvature- and coverage-weighted via separate
+  numerator/denominator decryption, and leave-one-out), and the clients, after threshold decryption, select
+  one by a weighted vote on their local data. This restores data-dependent aggregation choice to a
+  cryptographically blind server at no homomorphic cost, lifts the released model under heterogeneity, and
+  yields a measured robustness defense (\cref{sec:aggregation,sec:robust}).
 \item We give a privacy design in which the contributions are protected by cryptography alone, with no
   perturbation and no differential privacy, so the only quantity exposed in the clear is the final shared
-  model, whose residual leakage we measure directly with membership inference (\cref{sec:mia}).
-\item We demonstrate that the method yields a common, superior model across frozen
-  pretrained backbones in both modalities, and validate the encrypted aggregation in a real multiparty CKKS
-  implementation at a cost of tens of megabytes per round (\cref{sec:superior,sec:fhe-cost}).
+  model, whose residual leakage we measure directly with membership inference (\cref{sec:mia}); and we
+  validate the encrypted aggregation in a real multiparty CKKS implementation across vision and language
+  backbones at a cost of a few megabytes per round (\cref{sec:superior,sec:fhe-cost}).
 \end{itemize}

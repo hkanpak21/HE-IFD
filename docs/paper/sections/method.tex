@@ -28,7 +28,13 @@ which spends an extra communication phase, and often a differential-privacy budg
 common frame before they begin.
 
 Concretely, every client uses a frozen public backbone $\featx$ followed by a small trainable unit:
-low-rank adapters together with a classifier head, with parameters $\headp$. The backbone never changes, is
+low-rank adapters together with a classifier head, with parameters $\headp$. A low-rank adapter writes the
+update to a weight matrix as a product $\Delta W = BA$ of two small factors; we freeze the down-projection
+$A$ at its shared public initialisation and train only the up-projection $B$ and the head. This single
+choice is what makes the encrypted aggregation \emph{exact}: with $A$ fixed and common to all clients, a
+weighted sum of the trained factors reconstructs the weighted sum of the updates,
+$\big(\sum_j \wj B_j\big)A = \sum_j \wj B_jA$, whereas training both factors would make the update bilinear
+and the per-factor average a different, and worse, quantity. The backbone never changes, is
 never transmitted, and is never encrypted; only the trainable unit is fine-tuned, communicated, and operated
 on under encryption. Keeping that unit small is what makes the encrypted step inexpensive: it is a tiny fraction of the backbone
 (a low-rank adapter and head, on the order of $10^5$ parameters against a backbone of $10^8$), so a client's
@@ -204,13 +210,50 @@ CKKS implementation and report its measured correctness and cost in \cref{sec:fh
 
 It is worth being precise about why this works, because \cref{eq:aggregate} is easily misread. Since
 the weights sum to one, the displacement form is algebraically a weighted average of the clients' fine-tuned
-units, $\thstar = \sum_j \wj\, \theta_j^{(\Ksteps)}$. That linearity is what keeps the operation inexpensive to
-encrypt. But the same average over units trained independently, from different starts, to convergence is the
+units, $\thstar = \sum_j \wj\, \theta_j^{(\Ksteps)}$, which is exactly task-vector merging~\cite{ilharco2023editing}.
+That linearity is what keeps the operation inexpensive to encrypt, and it is exact rather than approximate
+only because the adapter's down-projection is frozen: were both adapter factors trained, the per-client update
+$B_jA_j$ would be bilinear, the average of the factors would not equal the average of the updates, and the
+quantity the server can cheaply compute would no longer be the one the method needs. But the same average over
+units trained independently, from different starts, to convergence is the
 naive combination that fails above. What makes the average land in a good region here is the protocol around
 it: every $\theta_j^{(\Ksteps)}$ starts from the shared $\thz$ and moves only a bounded distance, so all of
 them stay in the common frame and their weighted average is itself a sensible model. The contribution is not
 a new aggregation rule but a one-shot protocol under which a linear, and therefore inexpensively encryptable,
 aggregation produces a strong shared model.
+
+\subsection{Multi-Candidate Release and Client-Side Selection}
+\label{sec:candidates}
+
+A server computing under encryption is blind: it cannot inspect a value, so it cannot adapt the aggregation
+rule to the data the way a plaintext aggregator could. We recover that adaptivity without giving the server
+any power to read, by moving the choice to the clients after decryption. The key observation is that several
+useful aggregation rules are each, on their own, a depth-one linear function of the encrypted displacements,
+so the server can evaluate \emph{all of them} in one pass and let the clients pick. We form a small set of
+candidate aggregates:
+\begin{itemize}
+\item a \emph{scaling family} $\thz + \lambda\sum_j\wj\disp$ for a public grid of $\lambda$, which trades the
+  shared start against the aggregated move and costs nothing extra, since all candidates are affine in the
+  same encrypted sum;
+\item \emph{reweighted merges} $\thz + (\sum_j \wj g_j\!\odot\!\disp)\oslash(\sum_j \wj g_j)$, where $g_j$ is
+  a public-after-decryption per-coordinate weight (a diagonal Fisher estimate, or a per-class example count
+  applied to the head rows). Each client forms the products $g_j\!\odot\!\disp$ and $g_j$ \emph{before}
+  encryption, the server adds the two ciphertext stacks, and the clients divide the decrypted numerator by
+  the decrypted denominator in plaintext, so the nonlinear division never occurs under encryption;
+\item \emph{leave-one-out} aggregates $\thz + \sum_{i\neq k}\tilde w_i\Delta_i$, one per excluded client $k$,
+  with public renormalised weights $\tilde w_i$, used for robustness (\cref{sec:robust}).
+\end{itemize}
+The server emits the encrypted candidates; a threshold of clients jointly decrypts each one; and every client
+scores the decrypted candidates on a small held-out slice of its own data, the federation releasing the
+sample-weighted plurality choice. Selection is therefore post-decryption and entirely client-side: it adds
+one threshold decryption per candidate and no homomorphic multiplications beyond the depth-one aggregate.
+The candidates differ in what they reveal, and we account for this honestly. The scaling family is collinear,
+$\thstar(\lambda)=(1-\lambda)\thz+\lambda\thstar(1)$, so disclosing the whole grid reveals nothing beyond the
+released model itself; the reweighted numerator and denominator reveal two sums rather than their ratio; and a
+leave-one-out pair isolates a single client's contribution. All three are admissible under the threat model of
+\cref{sec:threat}, in which participants legitimately hold the released model and the server still sees only
+ciphertexts; a deployment unwilling to expose per-client contributions to fellow participants restricts the
+candidate set to the scaling family, which leaks nothing further.
 
 \subsection{Threat Model}
 \label{sec:threat}
@@ -222,9 +265,20 @@ them. A minority of clients may likewise be honest-but-curious and may collude, 
 decryption threshold learns nothing about another client's displacement, since recovering a plaintext
 requires the cooperation of the threshold. This is a stronger position than secure-aggregation protocols,
 where the revealed sum has itself been shown to leak across rounds~\cite{so2023securing,kerkouche2023client},
-because in our one-shot protocol the server never obtains a plaintext sum at all. Robustness to actively
-malicious or Byzantine clients is outside our scope; we discuss it as a direction for future work in
-\cref{sec:scope}.
+because in our one-shot protocol the server never obtains a plaintext sum at all.
+
+We are explicit about one boundary of this model. Every participant obtains the released model $\thstar$ in
+the clear after threshold decryption, by design, since the purpose of the protocol is to hand the parties a
+shared model. Any inference a participant then performs on $\thstar$ against another participant's data is
+therefore not an attack the protocol can prevent but a property of releasing a useful shared model at all,
+and we measure it directly in \cref{sec:mia} under exactly this fellow-participant adversary. The
+cryptographic guarantee concerns the \emph{contributions}: the server and any sub-threshold coalition observe
+only ciphertexts. This is the sense in which the protection target differs from differentially private
+one-shot methods, which perturb the released artifact to protect it against all parties, including
+participants, at a cost to its accuracy. Robustness to actively
+malicious or Byzantine clients is outside the cryptographic guarantee; the multi-candidate mechanism of
+\cref{sec:candidates} provides a lightweight measured defense (\cref{sec:robust}), and stronger guarantees we
+discuss as future work in \cref{sec:scope}.
 
 \subsection{Security}
 \label{sec:security}
