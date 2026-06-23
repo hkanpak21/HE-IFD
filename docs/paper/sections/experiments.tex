@@ -110,6 +110,35 @@ each client barely observes; even there, freezing the adapter's projection and s
 candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-IFD
 produces the model in one round, with no client exposing its data and with encryption that perturbs nothing.
 
+\subsection{Heterogeneity}
+\label{sec:heterogeneity}
+
+How much the released model trails the centralized one is governed by label skew, the axis the single
+linear aggregation is most exposed to. \Cref{tab:het} sweeps the Dirichlet concentration on DBpedia at
+$\Nc=10$. The accuracy degrades gracefully and monotonically, from $0.98$ when the data are near-uniform
+($\alpha=1.0$, within $0.01$ of centralized) to $0.87$ under severe skew ($\alpha=0.05$), while the
+centralized fine-tune barely moves. The gap the one-shot aggregation pays is therefore a property of
+heterogeneity, small when each client sees most of the label space and widening only when each sees a sliver
+of it; this is the same coverage effect that \cref{sec:basin} characterises, and the candidate selection
+contains it rather than letting it collapse the model.
+
+\begin{table}[t]
+\centering
+\caption{HE-IFD accuracy across label heterogeneity (DBpedia, $\Nc=10$, three seeds); centralized
+$\approx 0.99$ throughout.}
+\label{tab:het}
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+$\alpha$ & 0.05 & 0.10 & 0.30 & 1.00 \\
+\midrule
+HE-IFD & 0.87 & 0.93 & 0.96 & 0.98 \\
+gap    & 0.12 & 0.06 & 0.03 & 0.01 \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
 \subsection{Robustness to a Poisoned Client}
 \label{sec:robust}
 
@@ -483,7 +512,9 @@ Matched setup & data, $\Nc$, $\alpha$ & HE-IFD & reported \\
 DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.1   & \textbf{0.96} & 0.50 \\
 DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.3   & \textbf{0.96} & 0.60 \\
 FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.04 & \textbf{0.94} & 0.75$^\ddagger$ \\
+FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.16 & \textbf{0.96} & 0.75$^\ddagger$ \\
 FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.1 & \textbf{0.73} & --- \\
+FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & \textbf{0.73} & --- \\
 \bottomrule
 \end{tabular}
 \normalsize
