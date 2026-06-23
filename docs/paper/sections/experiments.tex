@@ -362,10 +362,36 @@ attacks~\cite{yeom2018privacy,salem2019ml,carlini2022membership}, training the t
 shadow models through the full federated pipeline and attacking the released model both with a loss-threshold
 test and with the likelihood-ratio attack LiRA, under an external adversary and under the
 \emph{fellow-client} adversary that brings its own data as a prior, the strongest the threat model of
-\cref{sec:threat} admits. On the language task the leakage is at the level of random guessing: the LiRA
-attack reaches an AUC of $0.49$--$0.50$ and a true-positive rate of about $1\%$ at a $1\%$ false-positive
-rate, indistinguishable from chance, for both adversaries. A participant therefore learns essentially nothing
-about another's membership from the shared model beyond what any usable classifier of that data would reveal.
+\cref{sec:threat} admits (\cref{tab:mia}). On three of the four tasks the leakage is at the level of random
+guessing: LiRA reaches an AUC of $0.49$--$0.50$ and a true-positive rate of about $1\%$ at a $1\%$
+false-positive rate, indistinguishable from chance. On the 77-class Banking77 it is mildly elevated, to an
+AUC of $0.59$ and a $3.4\%$ true-positive rate, the one task where coverage forces the model to memorise the
+most per class, and exactly the task where the accuracy gap to centralized is largest; even there the signal
+is small, and the fellow-client prior yields no measurable advantage over the external adversary. A
+participant therefore learns little about another's membership from the shared model beyond what any usable
+classifier of that data would reveal.
+
+\begin{table}[t]
+\centering
+\caption{Membership inference against the released model (LiRA, $16$ shadow models, three seeds). AUC and
+the true-positive rate at a $1\%$ false-positive rate, for an external adversary and a fellow client using
+its own data as a prior. $0.50$ AUC and $1\%$ TPR are chance.}
+\label{tab:mia}
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{external} & \multicolumn{2}{c}{fellow client} \\
+\cmidrule(r){2-3}\cmidrule(l){4-5}
+Task ($\Cc$) & AUC & TPR@1\% & AUC & TPR@1\% \\
+\midrule
+AG-News (4)    & 0.50 & 0.9\% & 0.50 & 0.9\% \\
+TREC (6)       & 0.49 & 0.7\% & 0.49 & 0.7\% \\
+DBpedia (14)   & 0.50 & 0.9\% & 0.50 & 0.9\% \\
+Banking77 (77) & 0.59 & 3.4\% & 0.59 & 3.4\% \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
 
 We do not claim the released model leaks nothing. A model that gives every client coverage of classes it
 never observed must carry information about the data that supplied that coverage, and an adversary with
