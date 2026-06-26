@@ -110,7 +110,7 @@ each client barely observes; even there, freezing the adapter's projection and s
 candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-IFD
 produces the model in one round, with no client exposing its data and with encryption that perturbs nothing.
 
-\subsection{Heterogeneity}
+\subsection{Heterogeneity and Client Count}
 \label{sec:heterogeneity}
 
 How much the released model trails the centralized one is governed by label skew, the axis the single
@@ -124,20 +124,26 @@ contains it rather than letting it collapse the model.
 
 \begin{table}[t]
 \centering
-\caption{HE-IFD accuracy across label heterogeneity (DBpedia, $\Nc=10$, three seeds); centralized
-$\approx 0.99$ throughout.}
+\caption{HE-IFD accuracy across label heterogeneity ($\Nc=10$) and client count ($\alpha=0.1$) on DBpedia,
+three seeds; centralized $\approx 0.99$ throughout.}
 \label{tab:het}
 \footnotesize
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccc@{\hskip 1.6em}lccc}
 \toprule
-$\alpha$ & 0.05 & 0.10 & 0.30 & 1.00 \\
+\multicolumn{5}{c}{Heterogeneity $\alpha$} & \multicolumn{4}{c}{Clients $\Nc$} \\
+\cmidrule(r){1-5}\cmidrule(l){6-9}
+& 0.05 & 0.10 & 0.30 & 1.00 & & 10 & 20 & 50 \\
 \midrule
-HE-IFD & 0.87 & 0.93 & 0.96 & 0.98 \\
-gap    & 0.12 & 0.06 & 0.03 & 0.01 \\
+HE-IFD & 0.87 & 0.93 & 0.96 & 0.98 & HE-IFD & 0.93 & 0.90 & 0.93 \\
 \bottomrule
 \end{tabular}
 \normalsize
 \end{table}
+
+The aggregation is also stable as participants are added. Holding $\alpha=0.1$ and scaling the client count
+from $10$ to $50$ (\cref{tab:het}, right), HE-IFD stays at $0.90$--$0.93$ with no downward trend, even as each
+client's shard thins fivefold; the single linear combination neither destabilises nor washes out as $\Nc$
+grows, and the protocol's cost (\cref{sec:fhe-cost}) is the only quantity that scales with it.
 
 \subsection{Robustness to a Poisoned Client}
 \label{sec:robust}
