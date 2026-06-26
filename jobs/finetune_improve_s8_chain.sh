@@ -20,7 +20,11 @@ source /opt/ohpc/pub/compiler/conda3/latest/etc/profile.d/conda.sh
 conda activate he_ofl
 export HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 TRANSFORMERS_OFFLINE=1 TOKENIZERS_PARALLELISM=false
 
-srun python -u jobs/finetune_improve.py --stage s8 || true
+# Cap the compute at 2h40m so the chain logic below ALWAYS runs before the 3h
+# Slurm wall (which would otherwise kill the whole script, resubmit included).
+# Per-cell JSONs make the early exit lossless: a cell interrupted mid-compute is
+# simply redone next slot.
+timeout 9600 srun python -u jobs/finetune_improve.py --stage s8 || true
 
 DONE=$(ls results/finetune_improve/cell_dbpedia_14*a0.05* \
           results/finetune_improve/cell_dbpedia_14*a0.3* \
