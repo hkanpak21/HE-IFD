@@ -1,0 +1,1 @@
+{"task": "dbpedia_14", "backbone": "roberta_base", "N": 10, "alpha": 0.05, "seed": 42, "base_frac": 0.0, "K": 200, "r": 8, "n_trainable": 305678, "A0": 0.063, "Astar": 0.6292, "A_central": 0.986, "increment": 0.5662, "gap": 0.3568, "lambda_curve": [[0.0, 0.063], [0.25, 0.1238], [0.5, 0.3434], [0.75, 0.618], [1.0, 0.6292]], "wall": 1307.6}

@@ -1,0 +1,1 @@
+{"task": "trec", "backbone": "mpnet_st", "N": 10, "alpha": 0.1, "seed": 43, "base_frac": 0.0, "K": 200, "r": 0, "n_trainable": 4614, "A0": 0.158, "Astar": 0.356, "A_central": 0.864, "increment": 0.198, "gap": 0.508, "lambda_curve": [[0.0, 0.158], [0.25, 0.414], [0.5, 0.39], [0.75, 0.374], [1.0, 0.356]], "wall": 556.9}

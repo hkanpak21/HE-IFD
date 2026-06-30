@@ -1,0 +1,1 @@
+{"task": "dbpedia_14", "backbone": "mpnet_st", "N": 10, "alpha": 0.1, "seed": 43, "base_frac": 0.0, "K": 200, "r": 8, "n_trainable": 305678, "A0": 0.0576, "Astar": 0.8296, "A_central": 0.9868, "increment": 0.772, "gap": 0.1572, "lambda_curve": [[0.0, 0.0576], [0.25, 0.4368], [0.5, 0.677], [0.75, 0.7962], [1.0, 0.8296]], "wall": 1397.4}
