@@ -91,3 +91,6 @@ FL_TDSC/archive/
 results/colab_results/bundle/figures/
 REJECTED_PAPER/*.pdf
 .gstack/
+
+# Keep the one-page change summary (source + pdf) tracked, unlike the big rejected PDFs
+!REJECTED_PAPER/changes_summary.pdf
