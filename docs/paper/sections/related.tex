@@ -57,6 +57,23 @@ work on polynomial activations and encryption-friendly networks documents~\cite{
 Our design sidesteps this entirely: the only encrypted operation is linear, so no activation is ever
 evaluated under encryption and the circuit stays at depth one.
 
+Closest to our object, \emph{transfer learning} itself has been placed under encryption, though in settings
+structurally different from ours. HETAL trains a softmax classifier head on a frozen public backbone entirely
+under CKKS, presented as the first practical scheme for encrypted training of such a head~\cite{lee2023hetal};
+a longer line trains linear and logistic models under homomorphic encryption by iterative encrypted gradient
+descent~\cite{kim2018securelr,kim2018logistic}, recently extended to small networks~\cite{chiang2025cnn}. All
+of these run an \emph{optimiser on ciphertexts}: the multiplicative depth grows with the number of steps, the
+softmax and sigmoid nonlinearities must be polynomial-approximated, and bootstrapping is often required; and
+they are single-party --- one data owner outsourcing computation --- rather than a collaboration among
+mutually distrustful parties. A federated variant, Priv-FedTL, encrypts only the fine-tuned last layer of a
+frozen backbone across clients, but aggregates it over many rounds of federated
+training~\cite{privfedtl2026}; a concurrent scheme homomorphically averages encrypted feature tokens for
+encrypted inference under a single decryption key~\cite{alamin2025vit}. We differ from all of these on the
+axis that sets the cost: we perform \emph{no} encrypted training. Each client fine-tunes in plaintext on its
+own data, and the server's only homomorphic operation is a single depth-one weighted sum of the encrypted
+displacements, decrypted by a threshold of clients --- no encrypted optimiser, no polynomial nonlinearity, no
+bootstrapping, and no single party trusted to train or to decrypt.
+
 A separate line federates \emph{parameter-efficient fine-tuning}, communicating only a low-rank adapter
 rather than the full model. FedIT first applied this to instruction tuning by averaging the adapters round
 by round~\cite{zhang2024fedit}, but naive per-factor averaging is biased: a client learns an update
@@ -101,6 +118,19 @@ itself~\cite{sun2021fedmdnfdp}, under the same kind of guarantee. These are the 
 for our method, since they share its one-shot, distillation-based structure, but their privacy is lossy in
 exactly the sense above: the noise needed for a meaningful budget is added to the artifact that is released,
 and accuracy falls as the budget tightens.
+
+This lossy trade-off is most sharply visible in differentially private transfer learning, the lossy
+counterpart of our own setting. A well-established line shows that differential privacy works best precisely
+on \emph{frozen} public features: linear or parameter-efficient models trained with DP-SGD on a pretrained
+backbone reach strong accuracy at moderate privacy
+budgets~\cite{tramer2021features,mehta2022dpfeatures,yu2022dpft,li2022dplearners}, and this extends to
+federated low-rank adaptation under differential privacy~\cite{liu2023dplora,xu2024dpdylora}. These methods
+share our backbone-plus-small-unit structure but pay a budget-dependent accuracy tax, since the noise enters
+the released model, and they are either centralized or run over many federated rounds. Our protocol occupies
+the same structural niche without the tax: the contributions are protected cryptographically rather than by
+perturbation, the released model carries no privacy-induced noise, and the entire exchange is a single round.
+To our knowledge no prior method is simultaneously one-shot, federated, and private --- whether by
+homomorphic encryption or by differential privacy --- in this transfer-learning setting.
 
 The reason privacy is the binding concern here is that the artifacts federated protocols exchange leak.
 Sharing gradients or model updates permits reconstruction of training inputs~\cite{zhu2019deep,dimitrov2024spear,carletti2025sok}

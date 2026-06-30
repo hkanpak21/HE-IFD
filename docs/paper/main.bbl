@@ -102,6 +102,36 @@ A.~Ibarrondo and M.~{\"O}nen, ``{FHE}-compatible batch normalization for
   \url{https://www.eurecom.fr/en/publication/5626}
 \BIBentrySTDinterwordspacing
 
+\bibitem{lee2023hetal}
+S.~Lee, G.~Lee, J.~W. Kim, J.~Shin, and M.-K. Lee, ``{HETAL}: Efficient
+  privacy-preserving transfer learning with homomorphic encryption,'' in
+  \emph{International Conference on Machine Learning (ICML)}, 2023,
+  arXiv:2403.14111.
+
+\bibitem{kim2018securelr}
+M.~Kim, Y.~Song, S.~Wang, Y.~Xia, and X.~Jiang, ``Secure logistic regression
+  based on homomorphic encryption: Design and evaluation,'' \emph{JMIR Medical
+  Informatics}, vol.~6, no.~2, p. e19, 2018.
+
+\bibitem{kim2018logistic}
+A.~Kim, Y.~Song, M.~Kim, K.~Lee, and J.~H. Cheon, ``Logistic regression model
+  training based on the approximate homomorphic encryption,'' \emph{BMC Medical
+  Genomics}, vol.~11, no. Suppl 4, p.~83, 2018.
+
+\bibitem{chiang2025cnn}
+J.~Chiang, ``Privacy-preserving {CNN} training with transfer learning: Two
+  hidden layers,'' \emph{arXiv preprint arXiv:2504.12623}, 2025.
+
+\bibitem{privfedtl2026}
+{Priv-FedTL authors (verify)}, ``Privacy-preserving federated transfer learning
+  for resource-constrained devices,'' \emph{Computer Networks}, 2026, elsevier
+  S1389128626004615.
+
+\bibitem{alamin2025vit}
+M.~Al~Amin, M.~Hasan, S.~Hong, and S.~Ullah, ``Privacy-preserving federated
+  vision transformer learning with lightweight homomorphic encryption in
+  medical {AI},'' \emph{arXiv preprint arXiv:2511.20983}, 2025.
+
 \bibitem{zhang2024fedit}
 J.~Zhang, S.~Vahidian, M.~Kuo, C.~Li, R.~Zhang, T.~Yu, G.~Wang, and Y.~Chen,
   ``Towards building the federated {GPT}: Federated instruction tuning,'' in
@@ -229,6 +259,38 @@ Q.~Li, B.~He, and D.~Song, ``Practical one-shot federated learning for
 \bibitem{sun2021fedmdnfdp}
 L.~Sun and L.~Lyu, ``Federated model distillation with noise-free differential
   privacy,'' in \emph{IJCAI}, 2021, pp. 1563--1569.
+
+\bibitem{tramer2021features}
+F.~Tram{\`e}r and D.~Boneh, ``Differentially private learning needs better
+  features (or much more data),'' in \emph{International Conference on Learning
+  Representations (ICLR)}, 2021, arXiv:2011.11660.
+
+\bibitem{mehta2022dpfeatures}
+H.~Mehta, W.~Krichene, A.~Thakurta, A.~Kurakin, and A.~Cutkosky,
+  ``Differentially private image classification from features,''
+  \emph{Transactions on Machine Learning Research (TMLR)}, 2023,
+  arXiv:2211.13403.
+
+\bibitem{yu2022dpft}
+D.~Yu, S.~Naik, A.~Backurs, S.~Gopi, H.~A. Inan, G.~Kamath, J.~Kulkarni, Y.~T.
+  Lee, A.~Manoel, L.~Wutschitz \emph{et~al.}, ``Differentially private
+  fine-tuning of language models,'' in \emph{International Conference on
+  Learning Representations (ICLR)}, 2022, arXiv:2110.06500.
+
+\bibitem{li2022dplearners}
+X.~Li, F.~Tram{\`e}r, P.~Liang, and T.~Hashimoto, ``Large language models can
+  be strong differentially private learners,'' in \emph{International
+  Conference on Learning Representations (ICLR)}, 2022, arXiv:2110.05679.
+
+\bibitem{liu2023dplora}
+X.-Y. Liu \emph{et~al.}, ``{DP-LoRA}: Differentially private low-rank
+  adaptation of large language models using federated learning,'' \emph{ACM
+  Transactions on Management Information Systems}, 2024, arXiv:2312.17493.
+
+\bibitem{xu2024dpdylora}
+J.~Xu \emph{et~al.}, ``{DP-DyLoRA}: Fine-tuning transformer-based models
+  on-device under differentially private federated learning using dynamic
+  low-rank adaptation,'' \emph{arXiv preprint arXiv:2405.06368}, 2024.
 
 \bibitem{zhu2019deep}
 L.~Zhu, Z.~Liu, and S.~Han, ``Deep leakage from gradients,'' in \emph{NeurIPS},
