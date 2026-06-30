@@ -52,30 +52,35 @@ displacements into a single global model, $\thstar = \thz + \sum_j \wj \disp$, u
 additions and multiplications by public scalars, after which a threshold of clients jointly decrypts the
 result.
 
-\begin{algorithm}[t]
-\caption{One-shot federated fine-tuning with encrypted aggregation. $\mathsf{Enc}(\cdot)$ denotes encryption
-under the clients' collective CKKS key.}
-\label{alg:protocol}
-\begin{algorithmic}[1]
-\Require clients $1,\dots,\Nc$ with data $\Dj$; frozen backbone $\featx$; public init $\thz$; steps $\Ksteps$
-\State clients run distributed key generation, yielding a collective CKKS key
-\Statex \textit{Local fine-tuning (each client $j$ in parallel)}
-\State $\theta_j^{(0)} \gets \thz$
-\For{$k = 1$ to $\Ksteps$}
-  \State $\theta_j^{(k)} \gets \theta_j^{(k-1)} - \eta\,\nabla\,\mathcal{L}\big(\model;\,\Dj\big)$ \Comment{supervised fine-tuning of the trainable unit}
-\EndFor
-\State $\disp \gets \theta_j^{(\Ksteps)} - \thz$;\quad upload $\mathsf{Enc}(\disp)$
-\Statex \textit{Encrypted aggregation (server)}
-\State $\mathsf{Enc}(\thstar) \gets \thz + \sum_j \wj\cdot\mathsf{Enc}(\disp)$ \Comment{PT$\times$CT, CT+CT; depth $1$}
-\State broadcast $\mathsf{Enc}(\thstar)$
-\Statex \textit{Threshold decryption (clients)}
-\State a threshold of clients jointly decrypt $\mathsf{Enc}(\thstar)$ to recover $\thstar$
-\end{algorithmic}
-\end{algorithm}
+The protocol consists of four steps, where $\mathsf{Enc}(\cdot)$ denotes encryption under the clients'
+collective CKKS key. The learning is performed entirely on the clients, and the server's only operation is
+the single encrypted sum of the third step.
 
-What we are after is not a model that beats each client on that client's own dominant classes; a local
-specialist on a narrow slice of the label space is difficult to surpass on that slice, and we do not claim to. We
-are after a common model every party can use, that classifies well across the whole label space including
+\emph{Setup.} The $\Nc$ clients run a distributed key-generation protocol that yields a collective CKKS
+public key, under which any party may encrypt and compute but no party can decrypt alone, decryption
+requiring a threshold of clients (\cref{sec:mhe}).
+
+\emph{Local fine-tuning, performed in parallel by each client $j$.} Beginning from $\theta_j^{(0)} = \thz$,
+client $j$ takes $\Ksteps$ steps of supervised fine-tuning on its own data,
+\[
+\theta_j^{(k)} = \theta_j^{(k-1)} - \eta\,\nabla\mathcal{L}\big(\model;\,\Dj\big), \qquad k = 1,\dots,\Ksteps,
+\]
+and uploads the encryption $\mathsf{Enc}(\disp)$ of its displacement $\disp = \theta_j^{(\Ksteps)} - \thz$.
+
+\emph{Encrypted aggregation, performed by the server.} The server forms
+\[
+\mathsf{Enc}(\thstar) = \thz + \sum_{j=1}^{\Nc} \wj\,\mathsf{Enc}(\disp),
+\]
+using only multiplications of a ciphertext by the public scalar $\wj$ and additions of ciphertexts, with the
+public constant $\thz$ added in the clear; the circuit has multiplicative depth one. The server broadcasts
+$\mathsf{Enc}(\thstar)$.
+
+\emph{Threshold decryption.} A threshold of clients jointly decrypts $\mathsf{Enc}(\thstar)$ by collective
+key-switching to recover the global model $\thstar$. The server never obtains a plaintext.
+
+The objective is not a model that surpasses each client on that client's own dominant classes; a local
+specialist on a narrow slice of the label space is difficult to surpass on that slice, and we do not claim to. The
+objective is a common model every party can use, that classifies well across the whole label space including
 classes a given client never observed locally, and that is produced without any party exposing its data or
 its update in the clear.
 
@@ -208,17 +213,17 @@ server's sum is an associative reduction), so the end-to-end wall-clock is one c
 plus a single aggregation, independent of $\Nc$. We instantiate \cref{eq:aggregate} in a real multiparty
 CKKS implementation and report its measured correctness and cost in \cref{sec:fhe-cost}.
 
-It is worth being precise about why this works, because \cref{eq:aggregate} is easily misread. Since
+We state precisely why this works, since \cref{eq:aggregate} can be misread. Since
 the weights sum to one, the displacement form is algebraically a weighted average of the clients' fine-tuned
 units, $\thstar = \sum_j \wj\, \theta_j^{(\Ksteps)}$, which is exactly task-vector merging~\cite{ilharco2023editing}.
-That linearity is what keeps the operation inexpensive to encrypt, and it is exact rather than approximate
+This linearity is what keeps the operation inexpensive to encrypt, and it is exact rather than approximate
 only because the adapter's down-projection is frozen: were both adapter factors trained, the per-client update
 $B_jA_j$ would be bilinear, the average of the factors would not equal the average of the updates, and the
-quantity the server can cheaply compute would no longer be the one the method needs. But the same average over
-units trained independently, from different starts, to convergence is the
-naive combination that fails above. What makes the average land in a good region here is the protocol around
+quantity the server can compute at depth one would no longer be the one the method requires. The same average over
+units trained independently, from different initialisations, to convergence is the
+naive combination that fails under heterogeneity. The average lies in a usable region here because of the protocol around
 it: every $\theta_j^{(\Ksteps)}$ starts from the shared $\thz$ and moves only a bounded distance, so all of
-them stay in the common frame and their weighted average is itself a sensible model. The contribution is not
+them remain in the common frame and their weighted average is itself a reasonable model. The contribution is not
 a new aggregation rule but a one-shot protocol under which a linear, and therefore inexpensively encryptable,
 aggregation produces a strong shared model.
 
@@ -227,9 +232,9 @@ aggregation produces a strong shared model.
 
 A server computing under encryption is blind: it cannot inspect a value, so it cannot adapt the aggregation
 rule to the data the way a plaintext aggregator could. We recover that adaptivity without giving the server
-any power to read, by moving the choice to the clients after decryption. The key observation is that several
+the ability to read its inputs, by moving the choice to the clients after decryption. The observation we use is that several
 useful aggregation rules are each, on their own, a depth-one linear function of the encrypted displacements,
-so the server can evaluate \emph{all of them} in one pass and let the clients pick. We form a small set of
+so the server can evaluate all of them in one pass and the clients select among the results. We form a small set of
 candidate aggregates:
 \begin{itemize}
 \item a \emph{scaling family} $\thz + \lambda\sum_j\wj\disp$ for a public grid of $\lambda$, which trades the

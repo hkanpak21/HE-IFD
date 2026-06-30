@@ -50,7 +50,7 @@ Our contributions are as follows.
   multiplicative depth one under multiparty CKKS, followed by threshold decryption (\cref{sec:method}). All
   prior homomorphic federated learning is multi-round, and all prior one-shot federated learning is plaintext
   or differentially private.
-\item We identify a co-design that makes one-shot encryption cheap. Fine-tuning a frozen pretrained backbone
+\item We identify a co-design that makes one-shot encryption inexpensive. Fine-tuning a frozen pretrained backbone
   supplies the shared frame a linear aggregation needs at no cost, and freezing the low-rank adapter's
   down-projection (training only the up-projection and head) makes the encrypted aggregate \emph{exact} task
   arithmetic on the weight updates, with no bilinear cross-terms to resolve under encryption. The entire
@@ -59,7 +59,7 @@ Our contributions are as follows.
   depth-one candidate aggregates (scaled, curvature- and coverage-weighted via separate
   numerator/denominator decryption, and leave-one-out), and the clients, after threshold decryption, select
   one by a weighted vote on their local data. This restores data-dependent aggregation choice to a
-  cryptographically blind server at no homomorphic cost, lifts the released model under heterogeneity, and
+  server that cannot read its inputs at no homomorphic cost, improves the released model under heterogeneity, and
   yields a measured robustness defense (\cref{sec:aggregation,sec:robust}).
 \item We give a privacy design in which the contributions are protected by cryptography alone, with no
   perturbation and no differential privacy, so the only quantity exposed in the clear is the final shared

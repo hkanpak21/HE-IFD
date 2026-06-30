@@ -89,13 +89,13 @@ HE-IFD, to our knowledge the first one-shot federated learning protocol whose co
 homomorphic encryption. Each client fine-tunes a small low-rank adapter on a frozen pretrained backbone for a
 bounded number of steps, and the server combines the resulting parameter displacements with a single
 sample-weighted linear operation under multiparty CKKS, at multiplicative depth one. Two design choices make
-this work: a frozen pretrained backbone supplies, for free, the shared frame a one-shot linear aggregation
-needs under heterogeneous data, so there is no alignment phase and nothing data-derived leaves a client
-before encryption; and freezing the adapter's down-projection makes the encrypted aggregate exact task
-arithmetic, halving the encrypted payload and keeping the circuit at depth one. Because a server computing
-under encryption is blind, we let it emit several depth-one candidate aggregates and have the clients select
-among them after decryption, which lifts the released model under heterogeneity and yields a measured defense
-against a poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa and
+this work: a frozen pretrained backbone supplies the shared frame a one-shot linear aggregation
+needs under heterogeneous data at no additional cost, so there is no alignment phase and nothing data-derived
+leaves a client before encryption; and freezing the adapter's down-projection makes the encrypted aggregate
+exact task arithmetic, halving the encrypted payload and keeping the circuit at depth one. Because a server
+computing under encryption cannot read its inputs, the server emits several depth-one candidate aggregates and the
+clients select among them after decryption, which improves the released model under heterogeneity and yields a
+measured defense against a poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa and
 ViT to a billion-parameter language model, the method produces a common model stronger than any client's own
 and, outside the most skewed regimes, close to a centralized one, while membership inference against the
 released model stays at or near chance. A real multiparty CKKS implementation reproduces the plaintext aggregate

@@ -68,8 +68,8 @@ centralized ceiling.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\linewidth]{figures/fig_increment.pdf}
-\caption{HE-IFD lifts the single encrypted aggregation well above the chance start and above the naive
+\includegraphics[width=\linewidth]{figures/fig_increment.pdf}
+\caption{HE-IFD raises the single encrypted aggregation well above the chance start and above the naive
 sample-weighted average; the gap to centralized grows with the size of the label space, and no client data
 is shared.}
 \label{fig:increment}
@@ -97,14 +97,14 @@ CIFAR-100 (100) & 0.47 & $\mathbf{0.78}{\pm}0.01$ & 0.87 & 0.09 \\
 \normalsize
 \end{table}
 
-Two effects compound in \cref{tab:headline}. First, fine-tuning the frozen backbone's own layers with a
-small adapter lifts the model far above the chance start: from a $\thz$ that classifies at chance to between
+Two effects combine in \cref{tab:headline}. First, fine-tuning the frozen backbone's own layers with a
+small adapter raises the model far above the chance start: from a $\thz$ that classifies at chance to between
 $0.72$ and $0.93$ across the four text tasks and $0.78$ on CIFAR-100, with only the small adapter and head
 entering the encrypted combination, so the protocol and its cost do not change across tasks. Second, the
-candidate set with client-side selection (\cref{sec:candidates}) lifts the released model well above the
-naive sample-weighted average, by $+0.24$ on AG-News, $+0.21$ on TREC, $+0.13$ on DBpedia and $+0.38$ on
-Banking77; the naive average is exactly the combination that the heterogeneity makes fragile, and the vote
-recovers the candidate that survives it. The remaining gap to the centralized fine-tune is small at moderate
+candidate set with client-side selection (\cref{sec:candidates}) raises the released model above the
+naive sample-weighted average, by $0.24$ on AG-News, $0.21$ on TREC, $0.13$ on DBpedia and $0.38$ on
+Banking77; the naive average is the combination that heterogeneity makes unstable, and the vote
+selects the candidate that is robust to it. The remaining gap to the centralized fine-tune is small at moderate
 label spaces ($0.06$ on the 14-class DBpedia) and is largest where a single round must cover many classes
 each client barely observes; even there, freezing the adapter's projection and selecting a coverage-weighted
 candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-IFD
@@ -152,9 +152,9 @@ The same multi-candidate mechanism that selects the best aggregation rule also g
 against a misbehaving client, at no homomorphic cost. We add to the candidate set the $\Nc$ leave-one-out
 aggregates (\cref{sec:candidates}) and let one client (the one holding the largest shard, the worst case for
 sample weighting) upload a crafted displacement instead of an honest one: a sign-flipped update, a
-large-norm Gaussian, or one trained on label-flipped data. The honest clients still vote on their local
-holdouts, now over the plain aggregate and the $\Nc$ leave-one-out aggregates; the candidate that excludes
-the attacker wins whenever excluding it helps.
+large-norm Gaussian, or one trained on label-flipped data. The honest clients vote on their local
+holdouts over the plain aggregate and the $\Nc$ leave-one-out aggregates; the candidate that excludes
+the attacker is selected whenever its exclusion improves the held-out accuracy.
 
 \Cref{tab:poison} reports the result on DBpedia and AG-News at $\Nc=10$, three seeds. The undefended plain
 aggregate is pulled down to $0.25$--$0.50$ depending on the attack, while the vote-selected model recovers
@@ -325,7 +325,7 @@ that further separates a one-round protocol from a multi-round one.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.82\linewidth]{figures/fig_comm.pdf}
+\includegraphics[width=\linewidth]{figures/fig_comm.pdf}
 \caption{Total communication on a shared backbone (RoBERTa-base), calculated for CKKS ring $2^{14}$
 ($0.5$\,MiB per ciphertext; $50$ rounds for the iterative schemes). HE-IFD encrypts only the adapter and runs
 once; full-model encrypted schemes move gigabytes per round (BatchCrypt, FedML-HE, FedSHE) to terabytes over

@@ -34,9 +34,9 @@ plt.rcParams.update({
 })
 
 TASKS = [  # slug -> (label, n_classes); plotted in this order if present
-    ("ag_news", "AG-News\n(4)"), ("trec", "TREC\n(6)"),
-    ("dbpedia_14", "DBpedia\n(14)"), ("banking77", "Banking77\n(77)"),
-    ("cifar100", "CIFAR-100\n(100)"),
+    ("ag_news", "AG-News (4)"), ("trec", "TREC (6)"),
+    ("dbpedia_14", "DBpedia (14)"), ("banking77", "Banking77 (77)"),
+    ("cifar100", "CIFAR-100 (100)"),
 ]
 
 
@@ -56,23 +56,36 @@ def mean(rows, **f):
             st.mean(x["A_central"] for x in sel)) if sel else (None, None)
 
 
-def fig_increment(rows):
-    labels, head, heifd, ceil = [], [], [], []
+# Headline numbers, mirroring Table~\ref{tab:headline} (freeze-A, vote-selected,
+# three seeds): per task -> (naive sample-weighted average, HE-IFD, centralized).
+HEADLINE = {
+    "ag_news":    (0.51, 0.75, 0.91),
+    "trec":       (0.51, 0.72, 0.95),
+    "dbpedia_14": (0.80, 0.93, 0.99),
+    "banking77":  (0.39, 0.77, 0.88),
+    "cifar100":   (0.47, 0.78, 0.87),
+}
+
+FIG_W = 3.4  # shared figure width (in): both paper figures use this so that,
+             # included at the same \columnwidth, their text renders at one size.
+
+
+def fig_increment(_rows=None):
+    labels, naive, heifd, ceil = [], [], [], []
     for slug, lab in TASKS:
-        h, _ = mean(rows, task=slug, r=0, N=10, alpha=0.1, K=200)
-        a, c = mean(rows, task=slug, r=8, N=10, alpha=0.1, K=200)
-        if a is None:
+        if slug not in HEADLINE:
             continue
-        labels.append(lab); head.append(h or 0); heifd.append(a); ceil.append(c)
+        n, a, c = HEADLINE[slug]
+        labels.append(lab); naive.append(n); heifd.append(a); ceil.append(c)
 
     x = range(len(labels)); w = 0.38
-    fig, ax = plt.subplots(figsize=(5.2, 2.7))
-    ax.bar([i - w / 2 for i in x], head, w, label="frozen-feature head", color=TAN)
+    fig, ax = plt.subplots(figsize=(FIG_W, 2.6))
+    ax.bar([i - w / 2 for i in x], naive, w, label="naive average", color=TAN)
     ax.bar([i + w / 2 for i in x], heifd, w, label="HE-IFD", color=BLUE)
-    for i, c in enumerate(ceil):  # centralized ceiling as a dashed cap per group
+    for i, c in enumerate(ceil):  # centralized reference as a dashed cap per group
         ax.plot([i - w, i + w], [c, c], ls="--", lw=1.1, color=SAGE,
                 label="centralized" if i == 0 else None)
-    ax.set_xticks(list(x)); ax.set_xticklabels(labels)
+    ax.set_xticks(list(x)); ax.set_xticklabels(labels, rotation=28, ha="right")
     ax.set_ylabel("accuracy"); ax.set_ylim(0, 1.0)
     ax.legend(frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.18))
     ax.grid(axis="y", lw=0.4, alpha=0.4)
@@ -113,24 +126,24 @@ def fig_comm():
     SLOTS, CT, ROUNDS = 8192, 0.5, 50
     def cts(p):
         return -(-p // SLOTS)                        # ceil
-    heifd_ct = cts(305_678)                           # LoRA r=8 + head (RoBERTa)
+    heifd_ct = cts(150_532)                           # freeze-A adapter + head (RoBERTa)
     full_ct = cts(125_000_000)                        # full RoBERTa-base backbone
     Ns = [10, 50, 100]
     heifd = [n * heifd_ct * CT for n in Ns]           # one round (whole protocol)
     fm_round = [n * full_ct * CT for n in Ns]         # full model, per round
     fm_total = [v * ROUNDS for v in fm_round]         # full model, R rounds (training)
     x = range(len(Ns)); w = 0.27
-    fig, ax = plt.subplots(figsize=(3.6, 2.7))
+    fig, ax = plt.subplots(figsize=(FIG_W, 2.6))
     ax.bar([i - w for i in x], fm_total, w, color=TERRA,
-           label="full-model HE, %d rounds (e.g.\\ POSEIDON)" % ROUNDS)
+           label="full model, %d rounds" % ROUNDS)
     ax.bar(list(x), fm_round, w, color=GREY,
-           label="full-model HE, per round\n(BatchCrypt/FedML-HE/FedSHE)")
+           label="full model, per round")
     ax.bar([i + w for i in x], heifd, w, color=BLUE,
-           label="HE-IFD (adapter, one round)")
+           label="HE-IFD, one round")
     ax.set_yscale("log")
     ax.set_xticks(list(x)); ax.set_xticklabels([f"$N={n}$" for n in Ns])
     ax.set_ylabel("total communication (MiB, log)")
-    ax.legend(frameon=False, fontsize=6.2, loc="upper left", ncol=1)
+    ax.legend(frameon=False, loc="upper left", ncol=1)
     ax.grid(axis="y", lw=0.4, alpha=0.4)
     fig.savefig(OUT / "fig_comm.pdf")
     print(f"wrote fig_comm.pdf  HE-IFD={heifd[0]:.0f}-{heifd[-1]:.0f}MiB  "
@@ -139,7 +152,10 @@ def fig_comm():
 
 
 if __name__ == "__main__":
-    rows = load()
-    fig_increment(rows)
-    fig_robust(rows)
+    # The two figures used in the paper. fig_increment uses the committed
+    # headline numbers (HEADLINE, mirroring tab:headline); fig_comm is computed
+    # from the freeze-A ciphertext count. Both share FIG_W so their text renders
+    # at one size when included at the same \columnwidth. (fig_robust is retained
+    # below but no longer included in the paper.)
+    fig_increment()
     fig_comm()
