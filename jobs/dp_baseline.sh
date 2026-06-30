@@ -21,7 +21,12 @@ export HF_DATASETS_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1
 export TOKENIZERS_PARALLELISM=false
 
+# opacus is installed ISOLATED in a scratch target dir (NOT in he_ofl, whose
+# torch must stay 2.3.0 — installing opacus into he_ofl upgrades torch to 2.8
+# and breaks transformers/peft). The job picks opacus up via PYTHONPATH; all
+# else (torch/transformers/peft) comes from he_ofl.
+export PYTHONPATH=/scratch/hkanpak21/dp_deps:${PYTHONPATH:-}
+
 # DP comparator: centralized DP-SGD logistic head on frozen RoBERTa features,
 # eps in {1,2,4,8} + non-private, over the 4 text tasks. Per-task JSON resumable.
-# Needs opacus (he_ofl has it per CLAUDE.md).
 exec srun python -u jobs/dp_baseline.py
