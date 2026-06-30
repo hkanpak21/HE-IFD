@@ -1,0 +1,1 @@
+{"task": "banking77", "backbone": "roberta_base", "n_classes": 77, "delta": 1e-05, "acc_nonprivate": 0.8951, "acc_by_eps": {"1.0": 0.614, "2.0": 0.7545, "4.0": 0.8097, "8.0": 0.8237}, "wall": 95.9}

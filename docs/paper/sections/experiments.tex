@@ -529,35 +529,6 @@ FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & \textbf{0.73} & --- \
 \noindent\footnotesize $^\ddagger$FedAUXfdp at $\varepsilon{=}0.5$ on its CIFAR-10 setup.\normalsize
 \end{table}
 
-% ============================================================================
-% COMMENTED OUT until jobs/dp_baseline.py lands its numbers (PI comment 2026-06).
-% Centralized DP-SGD logistic head on the SAME frozen RoBERTa features, eps grid,
-% as the lossy privacy-utility ceiling our zero-cost crypto point sits above.
-% Fill acc cells from results/dp_baseline/cell_*.json, then uncomment.
-% \begin{table}[t]
-% \centering
-% \caption{Differential privacy is lossy where we are not. A centralized DP-SGD
-% logistic head on the same frozen features (the \emph{best case} for DP) versus
-% HE-IFD's released model, which carries no privacy-induced noise. Accuracy at
-% $\delta=10^{-5}$; HE-IFD column repeats \cref{tab:headline}.}
-% \label{tab:dp}
-% \footnotesize
-% \begin{tabular}{lccccc c}
-% \toprule
-% & \multicolumn{5}{c}{DP-SGD head (centralized)} & HE-IFD \\
-% \cmidrule(lr){2-6}
-% Task & $\varepsilon{=}1$ & $2$ & $4$ & $8$ & non-priv. & (ours) \\
-% \midrule
-% AG-News    & \tbd & \tbd & \tbd & \tbd & \tbd & 0.75 \\
-% TREC       & \tbd & \tbd & \tbd & \tbd & \tbd & 0.72 \\
-% DBpedia    & \tbd & \tbd & \tbd & \tbd & \tbd & 0.93 \\
-% Banking77  & \tbd & \tbd & \tbd & \tbd & \tbd & 0.77 \\
-% \bottomrule
-% \end{tabular}
-% \normalsize
-% \end{table}
-% ============================================================================
-
 The protocol also carries to a billion-parameter-class backbone. On a frozen Qwen2.5-0.5B causal language
 model with a freeze-$A$ adapter, HE-IFD reaches $0.87$--$0.88$ on DBpedia, where the naive average collapses
 to $0.44$, and $0.71$--$0.72$ on AG-News, while the encrypted object stays at $26$ ciphertexts ($13$\,MiB):

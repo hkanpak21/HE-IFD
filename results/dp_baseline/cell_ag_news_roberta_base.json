@@ -1,0 +1,1 @@
+{"task": "ag_news", "backbone": "roberta_base", "n_classes": 4, "delta": 1e-05, "acc_nonprivate": 0.868, "acc_by_eps": {"1.0": 0.8972, "2.0": 0.9088, "4.0": 0.9104, "8.0": 0.915}, "wall": 35.7}

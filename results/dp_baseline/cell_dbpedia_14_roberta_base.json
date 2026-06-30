@@ -1,0 +1,1 @@
+{"task": "dbpedia_14", "backbone": "roberta_base", "n_classes": 14, "delta": 1e-05, "acc_nonprivate": 0.9794, "acc_by_eps": {"1.0": 0.958, "2.0": 0.9684, "4.0": 0.9768, "8.0": 0.9748}, "wall": 183.4}
