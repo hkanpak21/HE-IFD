@@ -3,11 +3,13 @@
 
 We evaluate the protocol's central claim: that encryption protects each client's contribution at no cost to
 the shared model's accuracy, where one-shot differentially private federated learning must trade accuracy for
-the same protection. The evaluation tests that claim and the design choices behind it. We ask, in order: what do fine-tuning the
-pretrained layers and selecting among depth-one candidate aggregates add over the naive one-shot average;
-how the method behaves under a poisoned client and under the trajectory budget; what it reaches at the
-published setups of prior one-shot methods and at billion-parameter scale; and what the cryptographic
-protocol costs in time, communication, and residual leakage. Throughout, the question is not whether the global model attains the highest possible test
+the same protection. The evaluation tests that claim and the design choices behind it. We ask, in order: what
+fine-tuning the pretrained layers and selecting among depth-one candidate aggregates add over the naive
+one-shot average; how the method behaves under heterogeneity, a poisoned client, and the trajectory budget;
+what the cryptographic protocol costs in time and communication, including against encrypted
+transfer-learning peers; how much the one remaining surface, the released model, leaks; and what the method
+reaches at the published setups of prior one-shot methods and at billion-parameter scale. Throughout, the
+question is not whether the global model attains the highest possible test
 accuracy, but whether the clients jointly obtain a single model close to a centrally fine-tuned one, in one
 round, with cryptographic privacy that adds no accuracy cost.
 
@@ -128,7 +130,8 @@ contains it rather than letting it collapse the model.
 three seeds; centralized $\approx 0.99$ throughout.}
 \label{tab:het}
 \footnotesize
-\begin{tabular}{lcccc@{\hskip 1.6em}lccc}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lcccc@{\hskip 1.2em}lccc}
 \toprule
 \multicolumn{5}{c}{Heterogeneity $\alpha$} & \multicolumn{4}{c}{Clients $\Nc$} \\
 \cmidrule(r){1-5}\cmidrule(l){6-9}
@@ -262,6 +265,7 @@ adapter is encrypted, never the backbone.
 A round is one upload and one download; totals scale linearly in $\Nc$ (\cref{fig:comm}).}
 \label{tab:cost-comm}
 \footnotesize
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lcc}
 \toprule
 Trainable unit & ciphertexts & up$=$down per client \\
@@ -357,6 +361,55 @@ Hyb-Agg & multi-key CKKS & update sum & per round & secure sum \\
 The encrypted object stays depth one and the server cost grows only with the ciphertext count, never with the
 size of the frozen backbone the adapter sits in.
 
+\paragraph{Comparison with encrypted transfer learning.} The closest cost comparison outside federated
+learning is HETAL~\cite{lee2023hetal}, which solves the same structural problem --- fine-tuning a small
+unit on frozen pretrained features without revealing the data behind it --- but places the encryption
+around the \emph{optimizer}: the client encrypts its extracted features, and the server trains a softmax
+head on the ciphertexts with an encrypted gradient method, approximated softmax, and bootstrapping.
+\Cref{tab:hetal} sets the two designs and their reported costs side by side. HETAL reports $567$--$3442$\,s
+of encrypted training across its five benchmarks on an NVIDIA A40 GPU with a 64-thread server CPU, with an
+accuracy drop of up to $0.51\%$ against plaintext training on the same features. Our encrypted pipeline
+(encrypt, aggregate, threshold-decrypt) takes about $0.16$\,s at $\Nc{=}10$ and $1.2$\,s at $\Nc{=}100$ on
+one laptop CPU core, and is exact to a relative $\ell_2\approx10^{-9}$, because training happens in
+plaintext on each client and only the finished displacement is ever encrypted. The comparison is indicative
+rather than controlled: HETAL serves a single data owner outsourcing its training, whereas HE-IFD
+aggregates across $\Nc$ mutually distrustful parties under a collective key, a setting HETAL does not
+address, and HETAL trains only a classifier head where we also fine-tune adapters inside the backbone. But
+it quantifies the structural point of \cref{sec:related-crypto}: moving the encryption boundary from the
+optimizer to a one-shot aggregation removes the encrypted nonlinearities, the bootstrapping, and the GPU,
+and replaces roughly hour-scale encrypted training with second-scale encrypted aggregation, three orders of
+magnitude on weaker hardware. On the one benchmark the setups share, CIFAR-10 over a frozen ViT-Base
+backbone, HETAL's encrypted head training reaches $96.57\%$ with all data at one party, and HE-IFD reaches
+$96\%$ with the data split across five clients (\cref{tab:matched}).
+
+\begin{table}[t]
+\centering
+\caption{Encrypted transfer learning against one-shot encrypted aggregation. HETAL figures are its paper's
+own (HEaaN, ring $2^{16}$, NVIDIA A40 GPU $+$ 64-thread CPU); HE-IFD figures are from
+\cref{tab:cost-time,tab:cost-comm} (Lattigo, ring $2^{14}$, one CPU core). The settings differ --- one data
+owner outsourcing training vs.\ $\Nc$ mutually distrustful parties --- so the table contrasts where each
+design pays its encryption cost.}
+\label{tab:hetal}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcc}
+\toprule
+ & HETAL~\cite{lee2023hetal} & HE-IFD (ours) \\
+\midrule
+parties & $1$ owner $+$ server & $\Nc$ clients $+$ server \\
+key & single-key CKKS & multiparty CKKS \\
+encrypted object & features $+$ head & adapter displacement \\
+trained under HE & softmax head & nothing \\
+nonlinearity under HE & approx.\ softmax & none \\
+bootstrapping & yes & no (depth one) \\
+encrypted wall-clock & $567$--$3442$\,s & $0.16$--$1.2$\,s \\
+accuracy vs.\ plaintext & $\le 0.51\%$ drop & exact ($\ell_2\!\approx\!10^{-9}$) \\
+CIFAR-10, frozen ViT & $96.57\%$ (pooled) & $96\%$ (split, $\Nc{=}5$) \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
 \paragraph{Correctness.} The decrypted aggregate matches the plaintext computation to a relative $\ell_2$
 error between $2.7\times10^{-9}$ ($\Nc=10$) and $2.6\times10^{-8}$ ($\Nc=100$). This is the encoding precision
 of CKKS at scale $2^{45}$; it grows mildly with $\Nc$ as ciphertext additions and the key-switch smudging
@@ -370,25 +423,28 @@ that the source paper reports at roughly $1.4$ hours of wall-clock; secure-aggre
 primitives~\cite{kemmaka2025hybagg} sum updates once per round inside an iterative protocol. Our protocol runs
 in a single round whose server computation is milliseconds and whose communication is a few megabytes,
 because the only encrypted object is a bounded fine-tuning displacement of a small adapter, combined at
-multiplicative depth one. The broader method-level comparison is in \cref{tab:positioning}.
+multiplicative depth one. The broader method-level positioning is in \cref{sec:related-positioning}.
 
-\subsection{Residual Leakage}
+\subsection{Residual Leakage: Measuring the Inference-Time Surface}
 \label{sec:mia}
 
-The cryptographic guarantee of \cref{sec:security} covers the contributions, not the final model, which every
-party obtains in the clear after decryption. This is not a gap a stronger mechanism could close: any protocol
-that hands separate parties a shared, useful model must move knowledge between them, and a model that
-classifies categories a client never saw locally necessarily encodes information about the data that taught
-it those categories. The meaningful question is not whether residual leakage is zero, which it cannot be, but
-how large an attack surface a protocol exposes, and our design makes that surface as small as a one-shot
-federated method can. There is no alignment phase, so nothing data-derived is released before encryption, and
-the only object exposed in the clear is the single decrypted model.
+The design goal set in \cref{sec:intro} was to eliminate the training-time attack surface, and the protocol
+achieves it by construction: no gradient, update, or data-derived summary is ever observable in plaintext,
+and there is only one round in which anything is exchanged at all. What the cryptographic guarantee of
+\cref{sec:security} does not cover is the final model, which every party obtains in the clear after
+decryption. This is the \emph{inference-time} surface of \cref{sec:related-leakage}, and it is not a gap a
+stronger mechanism could close: any protocol that hands separate parties a shared, useful model must move
+knowledge between them, and a model that classifies categories a client never saw locally necessarily
+encodes information about the data that taught it those categories. The meaningful question is not whether
+this residual leakage is zero, which it cannot be, but how large it is, and the evidence of
+\cref{sec:related-leakage} is that it is the weakest surface an adversary can be left with. This section
+measures it directly.
 
 Read as attack surfaces, the alternatives differ by orders of magnitude. Multi-round federated learning
-publishes a fresh update every round, so a curious server or peer accumulates a long sequence of views of
-each client over training~\cite{shokri2017membership,nasr2019comprehensive}. One-shot methods that rely on
-differential privacy ship, in a single object, essentially the whole of a client's local knowledge: a
-synthetic copy of its data, or a noised model. HE-IFD exposes only the final aggregate: the per-client
+publishes a fresh update every round, so a curious server or peer accumulates a long sequence of
+training-time views of each client~\cite{shokri2017membership,nasr2019comprehensive}. One-shot methods that
+rely on differential privacy ship, in a single object, essentially the whole of a client's local knowledge:
+a synthetic copy of its data, or a noised model. HE-IFD exposes only the final aggregate: the per-client
 displacements are encrypted and never appear in the clear, and because there is no alignment phase there is
 no prototype channel either.
 
@@ -437,64 +493,12 @@ wholesale as released data), and driving the exposed surface down to that inhere
 promising to remove a leak that cannot be removed when parties set out to build a common model, is the
 privacy goal the design meets.
 
-\subsection{Comparison with Prior Work}
-\label{sec:positioning}
-
-\Cref{tab:positioning} places the method among representative federated-learning approaches along the axes
-that matter here: whether the protocol is genuinely one-shot, what kind of privacy it provides on the
-contributions, how many rounds it needs, and its principal limitation relative to our goal. The one-shot
-distillation methods are either plaintext, and so offer no privacy on the contributions, or differentially
-private, and so pay a utility cost on the released model. The homomorphic-encryption methods either run for
-many rounds, as in encrypted training, or are secure-aggregation primitives that sum updates over an
-iterative protocol. The combination we occupy (a one-shot federated fine-tuning whose aggregation is
-protected by homomorphic encryption that adds no accuracy cost) has, to our knowledge, not been
-demonstrated before.
-
-\begin{table*}[t]
-\centering
-\caption{Comparison with representative federated-learning methods. Reported accuracies are taken verbatim
-from each source paper at \emph{its own} setup, so the column is context, not a like-for-like ranking; the
-protocol axes (one-shot, privacy, rounds) are the controlled comparison. Ours is the only method that is
-simultaneously one-shot, fine-tuning-based, and protected by encryption that adds no accuracy cost.}
-\label{tab:positioning}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccccl}
-\toprule
-Method & One-shot & Privacy & Rounds & Reported acc.\ (own setup) & Principal limitation vs.\ our goal \\
-\midrule
-FedDF~\cite{lin2020feddf}        & no   & none        & $\sim$100 & rounds-to-target (CIFAR-10)        & many rounds; no privacy \\
-FuseFL~\cite{tang2024fusefl}        & no$^\dagger$ & none  & $K$ blocks & 84.3\% (CIFAR-10)                 & $K$ rounds; no privacy \\
-DENSE~\cite{zhang2022dense}         & yes  & none        & 1     & data-free (CIFAR-10)               & no privacy on contributions \\
-FedLPA~\cite{liu2024fedlpa}         & yes  & none        & 1     & 85.8\% (MNIST)                     & no privacy; needs Fisher info \\
-FedKT~\cite{li2021fedkt}            & yes  & DP-capable  & 1     & 90.5\% (MNIST)                     & lossy when private \\
-FedAUXfdp~\cite{hoech2022fedauxfdp} & yes  & DP (lossy)  & 1     & 75.2\% (CIFAR-10, $\varepsilon{=}0.5$) & accuracy falls with budget \\
-FedDiff~\cite{feddiff2024}  & yes  & DP (lossy)  & 1     & 27.8\% (CIFAR-10, $\varepsilon{=}10$)  & accuracy falls with budget \\
-POSEIDON~\cite{sav2021poseidon}     & no   & HE (no noise) & many & 89.9\% (MNIST, $\sim$1.4\,h)       & multi-round; encrypted training \\
-HE secure agg.~\cite{kemmaka2025hybagg} & no & HE      & per round & protocol only                  & aggregation, not fine-tuning \\
-\textbf{HE-IFD (ours)} & \textbf{yes} & \textbf{HE (no noise)} & \textbf{1} & \textbf{0.93/0.77\,(DBpedia/Banking77)} & \textbf{none} \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table*}
-
-Two comparisons are the informative ones. Against POSEIDON, the closest cryptographic peer, the privacy
-guarantee is the same kind (encryption with no noise), but POSEIDON reaches its accuracy through
-multi-round encrypted \emph{training} that the source paper reports at roughly $1.4$ hours, whereas our
-protocol completes in a single round whose server computation is milliseconds and whose communication is
-tens of megabytes (\cref{sec:fhe-cost}). Against the differentially private one-shot methods, the natural utility
-peers, the contrast is the central one: their accuracy is obtained under a privacy budget that perturbs the
-released model, whereas encryption introduces no such perturbation.
-
-\smallskip
-\noindent\footnotesize $^\dagger$FuseFL's communication equals one-shot but it runs in $K$ block-wise
-rounds.\normalsize
-
 \subsection{Matched Setups and Scale}
 \label{sec:matched}
 
-The accuracies in \cref{tab:positioning} are each paper's own, at its own setup, and are context rather than
-a controlled comparison. To make the comparison controlled, we run HE-IFD at the \emph{published partitions}
+The positioning of \cref{sec:related-positioning} separates the methods qualitatively; the accuracies each
+paper reports are obtained at its own setup and do not compare directly. To make the comparison controlled,
+we run HE-IFD at the \emph{published partitions}
 of three one-shot methods, varying the dataset, client count, and Dirichlet $\alpha$ to match theirs while
 keeping our model class (a frozen ViT-B/16 with a freeze-$A$ adapter, which we state). \Cref{tab:matched}
 reports the result. At the data-free DENSE setup (CIFAR-10, $\Nc=5$) HE-IFD reaches $0.96$ against their

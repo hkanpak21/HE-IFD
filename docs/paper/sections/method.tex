@@ -272,9 +272,12 @@ requires the cooperation of the threshold. This is a stronger position than secu
 where the revealed sum has itself been shown to leak across rounds~\cite{so2023securing,kerkouche2023client},
 because in our one-shot protocol the server never obtains a plaintext sum at all.
 
-We are explicit about one boundary of this model. Every participant obtains the released model $\thstar$ in
-the clear after threshold decryption, by design, since the purpose of the protocol is to hand the parties a
-shared model. Any inference a participant then performs on $\thstar$ against another participant's data is
+We are explicit about one boundary of this model, which is the training-time/inference-time split of
+\cref{sec:related-leakage}. The protocol removes the training-time surface entirely: no gradient, update,
+or data-derived summary is ever observable in plaintext, in any round, because there is only one round and
+its single artifact is encrypted. Every participant does obtain the released model $\thstar$ in the clear
+after threshold decryption, by design, since the purpose of the protocol is to hand the parties a shared
+model. Any inference a participant then performs on $\thstar$ against another participant's data is
 therefore not an attack the protocol can prevent but a property of releasing a useful shared model at all,
 and we measure it directly in \cref{sec:mia} under exactly this fellow-participant adversary. The
 cryptographic guarantee concerns the \emph{contributions}: the server and any sub-threshold coalition observe

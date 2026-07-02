@@ -1,22 +1,25 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented HE-IFD, a one-shot federated learning protocol in which the server's only operation on client
-contributions is a linear aggregation computed under multiparty homomorphic encryption at multiplicative
-depth one. The construction gives the contributions cryptographic privacy at no accuracy cost and at the
-communication budget of a single round; because the backbone is frozen and stays outside the encrypted
-combination, the protocol and its cost are independent of the model behind it. What makes a one-shot linear
-aggregation succeed is a co-design: every client begins from the same public pretrained backbone and a
-standard adapter initialization, so the bounded displacements they upload are expressed in a common frame and
-add constructively, and freezing the adapter's down-projection makes that aggregation exact task arithmetic
-rather than an approximation, which is what lets it run at depth one under encryption. Because a blind server
-cannot adapt the aggregation rule to the data, we let the server emit several depth-one candidate aggregates
-and the clients select among them after decryption, which improves the released model under heterogeneity and
-yields a measured defense against a poisoning client, at no homomorphic cost. Across vision and language
-tasks, from a frozen RoBERTa and ViT to a billion-parameter language model, the method yields a common model
-stronger than any client's own and, outside the most skewed regimes, close to a centrally fine-tuned one; a
-multiparty CKKS implementation reproduces the encrypted aggregation within the scheme's approximation bounds
-at a few megabytes per round; and membership inference against the released model stays at or near chance. Extending
-the protocol to colluding or adaptive malicious participants, where verifiable homomorphic
-encryption~\cite{viand2023verifiable,atapoor2024vfhe} could certify that the server computed the aggregation
-honestly, is the natural direction for future work.
+We presented HE-IFD, a one-shot federated fine-tuning protocol built around a single observation about
+where federated learning is vulnerable: the strongest known attacks exploit training-time artifacts, the
+gradients, updates, and summaries a protocol exposes while the model is being built, and these are far more
+damaging than anything an adversary can extract from the released model afterwards. HE-IFD removes that
+training-time surface entirely rather than perturbing it. Each client fine-tunes a small adapter on a
+frozen pretrained backbone in plaintext and uploads one encrypted displacement, and the server's only
+operation is a linear aggregation computed under multiparty homomorphic encryption at multiplicative depth
+one, decrypted jointly by a threshold of clients. Fine-tuning is what makes this affordable: the frozen
+backbone supplies the shared frame a one-shot linear aggregation needs under heterogeneous data, freezing
+the adapter's down-projection makes that aggregation exact task arithmetic rather than an approximation,
+and the encrypted object is a few megabytes whatever the size of the backbone behind it, at no accuracy
+cost. Because a server computing under encryption cannot adapt its rule to data it cannot read, it emits
+several depth-one candidate aggregates and the clients select among them after decryption, which improves
+the released model under heterogeneity and yields a measured defense against a poisoning client, at no
+homomorphic cost. Across vision and language tasks, from a frozen RoBERTa and ViT to a billion-parameter
+language model, the method yields a common model stronger than any client's own and, outside the most
+skewed regimes, close to a centrally fine-tuned one; a multiparty CKKS implementation reproduces the
+encrypted aggregation within the scheme's approximation bounds at a few megabytes per round; and the one
+surface the protocol cannot remove, the released model, shows membership inference at or near chance.
+Extending the protocol to colluding or adaptive malicious participants, where verifiable homomorphic
+encryption~\cite{viand2023verifiable,atapoor2024vfhe} could certify that the server computed the
+aggregation honestly, is the natural direction for future work.

@@ -1,31 +1,85 @@
-# TNSE paper — section skeleton (draft order: §4 → §5 → §3 → §6 → §1/§2 last)
+# TNSE paper — storyline and section plan (2026-07-03 flow pass)
 
-Obeys `notation-and-terms.md`. Bar for every paragraph: preempt a reviewer concern · be clear · deliver the result.
+Supersedes the distillation-era skeleton. Bar for every paragraph (unchanged):
+preempt a reviewer concern · be clear · deliver the result. Written to address the
+PI's flow notes; each note maps to a numbered item below.
 
-1. **Abstract** *(written last)* — gap, claim (crypto-not-DP + shared loss basin + scales to pretrained), headline result, FHE cost.
-2. **Introduction** *(written near-last)*
-   - The gap: one-shot FL needs either lossy DP (utility hit) or impractical HE (the 460 GB problem). No one delivers *lossless* privacy at one upload on modern model scales.
-   - The claim + contributions (numbered).
-3. **Related work**
-   - One-shot / data-free FL (DENSE, Co-Boosting, FuseFL — plaintext ceiling, no head-to-head).
-   - DP one-shot FL (FedAUXfdp, FedDiff, FedKT — the lossy-privacy peer group).
-   - HE in FL (POSEIDON anchor + the 460 GB framing we displace).
-4. **Preliminaries & threat model**
-   - Multiparty CKKS, distributed key generation, threshold decryption (no single party decrypts).
-   - Averaging-variant DP on prototypes. **Notation table here.**
-   - Threat model: server excluded from Phase 0 (P2P channels); honest-but-curious server for aggregation.
-5. **Method**
-   - 5.1 Problem setup & overview (frozen backbone φ, trainable head ψ).
-   - 5.2 **Phase 0 — shared loss basin construction** (interchangeable sources: public probe / DP prototypes / synthetic / no-probe). The basin's job is *alignment*, not accuracy.
-   - 5.3 Local bounded-trajectory distillation → cumulative displacement `Δ_j`.
-   - 5.4 Encrypted linear aggregation — the only server crypto op, depth ≈ 1.
-   - 5.5 Privacy stack (lossless crypto + DP on prototypes) and why it beats lossy-DP utility.
-6. **Experiments**
-   - 6.1 Setup (datasets, backbones, heterogeneity α, metrics — reader-friendly names).
-   - 6.2 **Both ingredients are necessary** — the 2×2: no-alignment baseline diverges; shared basin enables coherent updates. (Establishes the spine.)
-   - 6.3 **Works under FHE guarantee even with a weak/low-leak basin, and a stronger basin lifts it further — up to centralized.** The basin-strength continuum; the no-probe result leads, near-oracle recovery closes. (Your flow steps 1→2.)
-   - 6.4 **Scaling to large pretrained backbones** (ViT on CIFAR-100; strong frozen text encoders on AG-News / DBpedia). (Flow step 3.)
-   - 6.5 **Privacy is nearly free + practical** — DP frontier flat from ε≈2; real-FHE cost (≈5 MiB/round vs 460 GB), correctness L2 ≈ 1e-9, depth = 1.
-   - 6.6 Discussion — incentive (coverage of locally-unseen classes vs the local specialist); comparator table.
-7. **Membership inference** *(placeholder — written after the rest)*.
-8. **Conclusion.**
+## The storyline (one causal chain, every section answers one question)
+
+> Organizations build models by **fine-tuning** pretrained backbones on private
+> data. When several parties want one jointly adapted model, the artifacts they
+> exchange **while training runs** are the dominant leak — training-time attacks
+> (gradient inversion, update-level membership inference) are far stronger than
+> anything an adversary can do with the released model afterwards. HE-IFD
+> **eliminates the training-time surface entirely** instead of perturbing it:
+> the exchange is one-shot (one artifact, not hundreds) and that one artifact is
+> encrypted (zero plaintext exposure). This is affordable precisely **because**
+> the task is fine-tuning: the frozen backbone supplies the shared frame a
+> one-shot linear aggregation needs, and freezing the adapter's down-projection
+> makes the encrypted aggregate exact at multiplicative depth one. What remains
+> exposed is only the released model — the inference-time floor no shared-model
+> protocol can remove — and we measure it at or near chance.
+
+Chain: **why secure fine-tuning as a service** → **the threat is training-time**
+→ **remove it: one-shot × encryption** → **fine-tuning is what makes that
+affordable** → **blind server → multi-candidate vote** → **measure the remaining
+inference-time floor** → **positioning: nobody else occupies the intersection**.
+
+## PI notes → changes
+
+1. *"Plan intro and other sections; simpler, flow-following narration."*
+   → Introduction rebuilt as the 6-paragraph chain above; shorter sentences;
+   every section opens by stating which question of the chain it answers.
+2. *"Prior-work comparison: HETAL et al. experimental, others at least
+   theoretical."* → HETAL added to the encrypted-schemes comparison
+   (tab:hecomm + prose in sec:fhe-cost) with its own reported times/accuracies
+   verbatim beside ours; the structural (theoretical) axes comparison covers
+   the rest (rounds × what-is-encrypted × depth × parties).
+3. *"Simplify; settle on one storyline."* → the chain above; de-duplicate
+   repeated arguments (lossy-vs-lossless appears once, in related work;
+   basin/frame argument once, in method).
+4. *"Explain Table XI in a paragraph; use as related-work motivation."*
+   → tab:positioning (Table XI) deleted from experiments; its content becomes
+   the closing positioning paragraph of related work (the "empty intersection"
+   paragraph, now carrying the table's axes in prose).
+5. *"Why secure fine-tuning as a service — motivation must be well built."*
+   → Intro P1: fine-tuning is the dominant adaptation workflow; parties cannot
+   pool data; the service they need is aggregation of adaptations by a server
+   that learns nothing.
+6. *"State that our focus is training-time attacks."* → named explicitly in
+   intro P2, threat model (sec:threat), and the MIA section opener
+   (released model = the inference-time surface, the one we cannot remove).
+7. *"Show training-time > inference-time via prior work/experiments."*
+   → related-work subsection A with verbatim numbers (DLG/Geiping gradient
+   inversion; Nasr passive/active federated white-box MIA vs black-box final
+   model; malicious-server harvesting), closed by our own Table X (released
+   model at/near chance) as the measured inference-time floor.
+
+## Section skeleton (post-pass)
+
+1. **Abstract** — follows the chain: FTaaS motivation → training-time surface
+   → one-shot × HE → fine-tuning co-design → vote → results + measured floor.
+2. **Introduction** — P1 why secure fine-tuning as a service; P2 the threat is
+   training time (quantitative); P3 remove the surface: one-shot × encryption;
+   P4 why affordable: frozen backbone + freeze-A ⇒ exact depth-one; P5 blind
+   server ⇒ candidates + client vote; P6 what remains + results; contributions.
+3. **Related work** (subsections; was continuous prose)
+   - A. *Leakage in federated learning: training time vs inference time* — the
+     motivation evidence (PI notes 6–7).
+   - B. *Protecting training cryptographically* — SecAgg, encrypted training
+     (POSEIDON), encrypted aggregation (BatchCrypt/FedML-HE/FedSHE, SHE-LoRA),
+     encrypted transfer learning (HETAL line, Priv-FedTL) — all multi-round,
+     single-party, or optimizer-under-encryption.
+   - C. *One-shot federated learning* — plaintext line; DP line; DP transfer
+     learning as the lossy counterpart of our setting.
+   - D. *Federated fine-tuning and task arithmetic* — PEFT aggregation bias,
+     FFA-LoRA freeze, task-vector merging: the plaintext ingredients we
+     compose under encryption.
+   - E. *Positioning* — the former Table XI as one paragraph (PI note 4).
+4. **Method** — unchanged structure; threat model names the training-time /
+   inference-time split explicitly.
+5. **Experiments** — unchanged except: sec:positioning (Table XI) removed,
+   its "two informative comparisons" folded into related-work E and
+   sec:fhe-cost; HETAL row + paragraph in sec:fhe-cost; sec:mia reframed as
+   "the inference-time floor, measured".
+6. **Conclusion** — one-paragraph restatement of the chain.
