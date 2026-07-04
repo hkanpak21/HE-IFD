@@ -479,8 +479,9 @@ FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & $\mathbf{0.73}{\pm}0.
 \end{table}
 
 The protocol also carries to a half-billion-parameter backbone. On a frozen Qwen2.5-0.5B causal language
-model with a freeze-$A$ adapter, HE-OFT reaches $0.87$--$0.88$ on DBpedia, where the naive average collapses
-to $0.44$, and $0.71$--$0.72$ on AG-News, while the encrypted object stays at $26$ ciphertexts ($13$\,MiB):
+model with a freeze-$A$ adapter (three seeds), HE-OFT reaches $0.85$--$0.88$ on DBpedia, where the naive
+average is far lower and swings widely across seeds ($0.44$--$0.63$), and $0.71$--$0.72$ on AG-News, while
+the encrypted object stays at $26$ ciphertexts ($13$\,MiB):
 the cost is set by the adapter, not by the $0.5$B backbone behind it, which is never encrypted.
 
 \iffromscratch
