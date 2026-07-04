@@ -97,9 +97,13 @@ Our contributions are as follows.
   depth-one candidate aggregates, and the clients, after threshold decryption, select one by a weighted
   vote on their local data. This restores data-dependent aggregation choice to a server that cannot read
   its inputs, improves the released model under heterogeneity, and yields a measured robustness defense
-  (\cref{sec:aggregation,sec:robust}).
+  (\cref{sec:candidates,sec:robust}).
 \item We validate both sides of the privacy design: the encrypted aggregation end to end in a real
   multiparty CKKS implementation at a few megabytes per client (\cref{sec:fhe-cost}), and the remaining
   inference-time surface with membership inference against the released model, under external and
   fellow-participant adversaries (\cref{sec:mia}).
 \end{itemize}
+
+Our implementation --- the training and aggregation pipeline, the Lattigo protocol, and every experiment
+configuration in this paper --- is available at \textcolor{red}{\textbf{[TODO: link the anonymized
+repository before submission]}}.

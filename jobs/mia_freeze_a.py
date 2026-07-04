@@ -163,13 +163,15 @@ def run_cell(task, seed, backbone="roberta_base", N=10, alpha=0.1, K=200,
                            for m in range(1, n_models)])
     shadow_in = np.stack([np.load(sdir / f"model_{m:04d}.npz")["in_mask"]
                           for m in range(1, n_models)])
+    shadow_loss = np.stack([np.load(sdir / f"model_{m:04d}.npz")["loss"]
+                            for m in range(1, n_models)])
 
     external = {
         "threshold": A.threshold_attack(d0["loss"], labels),
         "lira": A.lira_attack(d0["phi"], shadow_phi, shadow_in, labels),
     }
     fellow = S.score_fellow(d0["loss"], d0["phi"], shadow_phi, shadow_in,
-                            labels, y_p, C)
+                            labels, y_p, C, shadow_loss=shadow_loss)
 
     def slim(res):                     # drop ROC arrays from the headline dict
         return {k: v for k, v in res.items() if not k.startswith("roc_")}

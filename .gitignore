@@ -94,3 +94,4 @@ REJECTED_PAPER/*.pdf
 
 # Keep the one-page change summary (source + pdf) tracked, unlike the big rejected PDFs
 !REJECTED_PAPER/changes_summary.pdf
+REJECTED_PAPER/*.zip

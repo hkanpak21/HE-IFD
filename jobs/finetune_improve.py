@@ -46,6 +46,9 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 CASE = "finetune_improve"
 OUTDIR = Path("results") / CASE
 OUTDIR.mkdir(parents=True, exist_ok=True)
+# Client-level checkpoints (s9 N=100: one cell exceeds a 3h slot, so the cell
+# itself must resume mid-federation). Gitignored; regenerable from seeds.
+CKPTDIR = Path("cache") / CASE
 
 
 def set_seed(s):
@@ -335,7 +338,8 @@ def _data(task, backbone, seed):
 
 def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
              freeze_a=True, sem_init=False, swa=False, prox_mu=0.0,
-             calib_tau=0.0, lambdas=(0.25, 0.5, 0.75, 1.0), val_frac=0.1):
+             calib_tau=0.0, lambdas=(0.25, 0.5, 0.75, 1.0), val_frac=0.1,
+             client_ckpt=False):
     ids_tr, mask_tr, ytr, ids_te, mask_te, yte, C = _data(task, backbone, seed)
 
     head_init = None
@@ -353,16 +357,32 @@ def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
 
     parts = dirichlet_partition(ytr, N, alpha, C, seed)
     rng = np.random.default_rng(seed + 1)
+    ckdir = None
+    if client_ckpt:
+        stem = cell_name(dict(task=task, backbone=backbone, N=N, alpha=alpha,
+                              seed=seed, K=K, r=r, freeze_a=freeze_a,
+                              sem_init=sem_init, swa=swa, prox_mu=prox_mu,
+                              calib_tau=calib_tau, lr=lr)).replace(".json", "")
+        ckdir = CKPTDIR / stem
+        ckdir.mkdir(parents=True, exist_ok=True)
     deltas, sizes, fishers, counts, vals = [], [], [], [], []
-    for ci in parts:
+    for j, ci in enumerate(parts):
         if len(ci) == 0:
             deltas.append({k: torch.zeros_like(v) for k, v in theta0.items()})
             fishers.append({k: torch.zeros_like(v) for k, v in theta0.items()})
             counts.append(np.zeros(C)); sizes.append(0); vals.append(np.array([], dtype=np.int64))
             continue
-        ci = rng.permutation(ci)
+        ci = rng.permutation(ci)   # NOTE: rng must advance even on a ckpt hit
         nv = int(val_frac * len(ci)) if len(ci) >= 20 else 0
         val_idx, tr_idx = ci[:nv], ci[nv:]
+        ck = (ckdir / f"client_{j:03d}.pt") if ckdir is not None else None
+        if ck is not None and ck.exists():
+            saved = torch.load(ck, map_location="cpu")
+            deltas.append({k: v.to(DEVICE) for k, v in saved["delta"].items()})
+            fishers.append({k: v.to(DEVICE) for k, v in saved["fisher"].items()})
+            counts.append(saved["count"]); sizes.append(saved["size"])
+            vals.append(val_idx)
+            continue
         load_trainable(model, theta0)
         logp = None
         if calib_tau > 0:
@@ -378,6 +398,10 @@ def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
                                    ytr[tr_idx], bs=bs))
         counts.append(np.bincount(ytr[tr_idx], minlength=C).astype(np.float64))
         sizes.append(int(len(tr_idx))); vals.append(val_idx)
+        if ck is not None:
+            torch.save(dict(delta={k: v.cpu() for k, v in deltas[-1].items()},
+                            fisher={k: v.cpu() for k, v in fishers[-1].items()},
+                            count=counts[-1], size=sizes[-1]), ck)
 
     tot = max(sum(sizes), 1); w = [s / tot for s in sizes]
 
@@ -411,11 +435,19 @@ def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
     lam_best = max((nme for nme in test_acc if nme.startswith("plain_l")),
                    key=lambda nme: test_acc[nme])
 
-    ckey = (task, backbone, seed, K, r, freeze_a, sem_init, lr)
+    ckey = (task, backbone, seed, K, r, freeze_a, sem_init, lr, N)
     if ckey not in _CENTRAL:
-        load_trainable(model, theta0)
-        train_steps(model, ids_tr, mask_tr, ytr, steps=max(K, N * K // 4), lr=lr, bs=bs)
-        _CENTRAL[ckey] = evaluate(model, ids_te, mask_te, yte)
+        cfile = CKPTDIR / ("central_%s_%s_s%d_K%d_r%d_fa%d_si%d_lr%s_N%d.json"
+                           % (task, backbone, seed, K, r, int(freeze_a),
+                              int(sem_init), lr, N))
+        if cfile.exists():
+            _CENTRAL[ckey] = json.loads(cfile.read_text())["acc"]
+        else:
+            load_trainable(model, theta0)
+            train_steps(model, ids_tr, mask_tr, ytr, steps=max(K, N * K // 4), lr=lr, bs=bs)
+            _CENTRAL[ckey] = evaluate(model, ids_te, mask_te, yte)
+            cfile.parent.mkdir(parents=True, exist_ok=True)
+            cfile.write_text(json.dumps({"acc": _CENTRAL[ckey]}))
     A_central = _CENTRAL[ckey]
 
     return dict(task=task, backbone=backbone, N=N, alpha=alpha, seed=seed,
@@ -644,6 +676,16 @@ def grid(stage):
         for n in [20, 50, 100]:
             for s in seeds:
                 cells.append({**base, "task": "dbpedia_14", "N": n, "seed": s})
+    elif stage == "s9":          # trainable-unit axis + N=100 (backs tab:setup)
+        # head-only (r=0) and rank-{4,16} at the headline config, DBpedia;
+        # rank-8 is the existing headline cell. N=100 with client-level
+        # checkpoints (the cell alone exceeds one 3h slot).
+        for r_ in [0, 4, 16]:
+            for s in seeds:
+                cells.append({**base, "task": "dbpedia_14", "r": r_, "seed": s})
+        for s in seeds:
+            cells.append({**base, "task": "dbpedia_14", "N": 100, "seed": s,
+                          "client_ckpt": True})
     elif stage == "s7":          # Byzantine-lite LOO robustness (issue fa04)
         for task in ["dbpedia_14", "ag_news"]:
             for attack in ["sign_flip", "gauss", "label_flip"]:
@@ -659,7 +701,7 @@ def grid(stage):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True,
-                    choices=["s1", "s2", "s3", "s4", "s5", "s7", "s8"])
+                    choices=["s1", "s2", "s3", "s4", "s5", "s7", "s8", "s9"])
     ap.add_argument("--bs", type=int, default=32)
     args = ap.parse_args()
 

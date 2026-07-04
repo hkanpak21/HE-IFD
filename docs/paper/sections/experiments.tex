@@ -25,16 +25,17 @@ sum of \cref{eq:aggregate}. No labelled public set is used anywhere in the paper
 without one is where a one-shot encrypted aggregation is actually needed
 (\cref{sec:publicbase} discusses the easier case in which a deployment has one). We evaluate on four text
 classification tasks of increasing label-space size --- AG-News (4 classes), TREC (6), DBpedia (14), and
-Banking77 (77) --- with frozen RoBERTa-base and MPNet encoders, and on CIFAR-100 with a frozen ViT. Data
+Banking77 (77) --- with a frozen RoBERTa-base encoder, and on CIFAR-100 with a frozen ViT. Data
 are partitioned across clients by a Dirichlet distribution over labels with concentration $\alpha$, the
 standard label-skew partition: a smaller $\alpha$ leaves each client a few dominant classes and almost
 none of the rest. Unless stated otherwise there are $\Nc=10$ clients, the adapter has rank $8$, the
 trajectory is $\Ksteps=200$ steps, and every number is the mean over three seeds.
 
-Alongside the accuracy of the HE-OFT global model we report two reference points: a frozen-feature linear
-probe trained under the same protocol, and, as the ceiling, the same adapter and head fine-tuned centrally
-on the pooled private data, what one party would obtain holding all of it. The quantities of interest are
-the \emph{increment} over the probe and the \emph{gap} below the centralized ceiling; the centralized
+Alongside the accuracy of the HE-OFT global model we report two reference points: the \emph{naive
+aggregate}, the plain sample-weighted average of the clients' fine-tuned units with no candidate
+selection, and, as the ceiling, the \emph{centralized} model, the same adapter and head fine-tuned on the
+pooled private data, what one party would obtain holding all of it. The quantities of interest are the
+lift over the naive aggregate and the gap below the centralized ceiling; the centralized
 accuracy itself appears in captions rather than repeated in every row. \Cref{tab:setup} lists the
 evaluation axes.
 
@@ -180,10 +181,11 @@ shows the candidate machinery already absorbs a poisoning client that the blind 
 
 \begin{table}[t]
 \centering
-\caption{Robustness to one poisoned client (DBpedia and AG-News, $\Nc=10$, $\alpha=0.1$, three seeds).
+\caption{Robustness to one poisoned client ($\Nc=10$, $\alpha=0.1$). Each accuracy is the mean over the
+two tasks (DBpedia, AG-News) and three seeds, six runs per attack.
 ``Plain'' is the undefended sample-weighted aggregate that includes the attacker; ``HE-OFT'' is the
-vote-selected leave-one-out candidate; ``oracle'' is the attacker-free aggregate; ``excluded'' counts how
-often the vote dropped the attacker.}
+vote-selected leave-one-out candidate; ``oracle'' is the attacker-free aggregate; ``excluded'' counts the
+runs in which the vote dropped the attacker.}
 \label{tab:poison}
 \footnotesize
 \begin{tabular}{lccccc}
@@ -316,11 +318,11 @@ the same backbone.}
 \toprule
 Method & cryptographic scheme & encrypted object & rounds & communication per client \\
 \midrule
-\textbf{HE-OFT (ours)} & multiparty CKKS & adapter$+$head & \textbf{1} & \textbf{$9.5$ MiB} \\
-SHE-LoRA~\cite{li2025shelora} & CKKS (selective) & adapter subset & many & per round \\
-POSEIDON & multiparty CKKS & full model & many & GiB ($\sim$1.4 h) \\
-BatchCrypt / FedML-HE / FedSHE & CKKS & full model & many & GiB / round \\
-Hyb-Agg & multi-key CKKS & update sum & per round & secure sum \\
+\textbf{HE-OFT (ours)} & multiparty CKKS & adapter$+$head & \textbf{1} & \textbf{$9.5$ MiB, once} \\
+SHE-LoRA~\cite{li2025shelora} & CKKS (selective) & adapter subset & many & adapter-scale, every round \\
+POSEIDON & multiparty CKKS & full model & many & GiB, every round \\
+BatchCrypt / FedML-HE / FedSHE & CKKS & full model & many & GiB, every round \\
+Hyb-Agg & multi-key CKKS & update sum & per round & one transmission per sum \\
 \bottomrule
 \end{tabular}
 \normalsize
@@ -378,23 +380,35 @@ no prototype channel either.
 
 We measure the residual on that one open channel with membership-inference
 attacks~\cite{yeom2018privacy,salem2019ml,carlini2022membership}, training the target and a population of
-shadow models through the full federated pipeline and attacking the released model both with a loss-threshold
-test and with the likelihood-ratio attack LiRA, under an external adversary and under the
+shadow models through the full federated pipeline and attacking the released model with the
+likelihood-ratio attack LiRA, under an external adversary and under the
 \emph{fellow-client} adversary that brings its own data as a prior, the strongest the threat model of
-\cref{sec:threat} admits (\cref{tab:mia}). On three of the four tasks the leakage is at the level of random
+\cref{sec:threat} admits (\cref{tab:mia}). On the text tasks other than Banking77 the leakage is at the
+level of random
 guessing: LiRA reaches an AUC of $0.49$--$0.50$ and a true-positive rate of about $1\%$ at a $1\%$
 false-positive rate, indistinguishable from chance. On the 77-class Banking77 it is mildly elevated, to an
-AUC of $0.59$ and a $3.4\%$ true-positive rate, the one task where coverage forces the model to memorise the
-most per class, and exactly the task where the accuracy gap to centralized is largest; even there the signal
-is small, and the fellow-client prior yields no measurable advantage over the external adversary. A
-participant therefore learns little about another's membership from the shared model beyond what any usable
+AUC of $0.59$ and a $3.4\%$ true-positive rate, the one text task where coverage forces the model to
+memorise the most per class, and exactly the task where the accuracy gap to centralized is largest. On the
+$100$-class CIFAR-100, LiRA is likewise mildly elevated \textcolor{red}{[TODO: vision MIA numbers pending
+the re-run on the freeze-$A$ ViT]}, consistent with the same coverage effect at a large label space.
+
+A finding worth stating explicitly is that the fellow-client prior yields \emph{no} advantage over the
+external adversary: the two columns of \cref{tab:mia} coincide. This is not a coincidence of our data but a
+property of the attack. LiRA already calibrates each example against the empirical distribution of shadow
+models that did and did not train on it, so the per-class knowledge a fellow client could add ---
+essentially a shift of the score's location by class --- is exactly what LiRA has already conditioned away,
+and it cancels in the likelihood ratio. A participant's extra knowledge helps a cruder loss-threshold
+attack, but on the calibrated attack it buys nothing, so being a participant rather than an outsider does
+not increase what one can learn about another's membership from the released model. A participant therefore
+learns little about another's membership from the shared model beyond what any usable
 classifier of that data would reveal.
 
 \begin{table}[t]
 \centering
 \caption{Membership inference against the released model (LiRA, $16$ shadow models, three seeds). AUC and
 the true-positive rate at a $1\%$ false-positive rate, for an external adversary and a fellow client using
-its own data as a prior. $0.50$ AUC and $1\%$ TPR are chance.}
+its own data as a prior. $0.50$ AUC and $1\%$ TPR are chance. The two adversaries coincide because LiRA's
+per-example shadow calibration already absorbs the fellow's class prior (see text).}
 \label{tab:mia}
 \footnotesize
 \begin{tabular}{lcccc}
@@ -403,10 +417,11 @@ its own data as a prior. $0.50$ AUC and $1\%$ TPR are chance.}
 \cmidrule(r){2-3}\cmidrule(l){4-5}
 Task ($\Cc$) & AUC & TPR@1\% & AUC & TPR@1\% \\
 \midrule
-AG-News (4)    & 0.50 & 0.9\% & 0.50 & 0.9\% \\
-TREC (6)       & 0.49 & 0.7\% & 0.49 & 0.7\% \\
-DBpedia (14)   & 0.50 & 0.9\% & 0.50 & 0.9\% \\
-Banking77 (77) & 0.59 & 3.4\% & 0.59 & 3.4\% \\
+AG-News (4)     & 0.50 & 0.9\% & 0.50 & 0.9\% \\
+TREC (6)        & 0.49 & 0.7\% & 0.49 & 0.7\% \\
+DBpedia (14)    & 0.50 & 0.9\% & 0.50 & 0.9\% \\
+Banking77 (77)  & 0.59 & 3.4\% & 0.59 & 3.4\% \\
+CIFAR-100 (100) & \textcolor{red}{??} & \textcolor{red}{??} & \textcolor{red}{??} & \textcolor{red}{??} \\
 \bottomrule
 \end{tabular}
 \normalsize

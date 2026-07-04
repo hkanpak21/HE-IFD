@@ -191,7 +191,7 @@ def main():
     print(f"[llm_scale] device={FI.DEVICE} backbone={args.backbone}", flush=True)
     rows = []
     for task in ["ag_news", "dbpedia_14"]:
-        for seed in [42, 43]:
+        for seed in [42, 43, 44]:
             try:
                 rows.append(run_llm_cell(task, args.backbone, seed=seed,
                                          bs=args.bs))

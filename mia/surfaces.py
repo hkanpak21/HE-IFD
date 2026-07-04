@@ -142,31 +142,49 @@ def score_fellow(
     labels: np.ndarray,
     pool_y: np.ndarray,
     num_classes: int,
+    shadow_loss: np.ndarray = None,
 ) -> Dict:
-    """Honest-but-curious fellow client: θ⋆ + own data + prototypes (stronger prior).
+    """Honest-but-curious fellow client: θ⋆ access plus a class-conditional prior.
 
-    The fellow is a participant: it KNOWS the protocol/Phase-0 configuration and
-    holds its own labelled shard. We model the stronger prior concretely with a
-    *class-conditional* calibration: estimate the per-class OUT-population φ
-    baseline (the prior the fellow reconstructs from public task knowledge) and
-    subtract it before the LiRA test, sharpening the per-example signal. Reuses
-    the same shadow population + LiRA machinery; reported separately so the
-    fellow's advantage over the external adversary is visible.
+    The fellow is a participant: it knows the protocol configuration and holds
+    its own labelled shard, so it can estimate per-class score statistics that
+    an external adversary cannot. Two attacks:
+
+    * ``threshold`` — class-conditionally *standardized* loss threshold: the
+      per-example loss is z-scored against the per-class OUT-population mean
+      and standard deviation (estimated from the shadow OUT losses) before the
+      threshold sweep. Pooling z-scores across classes genuinely changes the
+      ROC relative to the global Yeom threshold, so this is where a fellow's
+      class prior can show an advantage. Falls back to the global threshold
+      when ``shadow_loss`` is unavailable.
+    * ``lira`` — identical to the external LiRA *by construction*: LiRA
+      standardizes each example against its own shadow OUT/IN distributions,
+      so any per-class location shift applied consistently to target and
+      shadows cancels in the likelihood ratio. We report it unchanged rather
+      than pretend a calibration that provably cannot move the statistic is a
+      stronger attack. (An earlier revision subtracted a per-class baseline
+      from target and shadow φ alike; that transformation is a no-op under
+      LiRA, which is why the two surfaces produced bit-identical numbers.)
     """
-    class_baseline = np.zeros(num_classes)
-    out_phi = np.where(~shadow_in, shadow_phi, np.nan)
-    for c in range(num_classes):
-        cols = pool_y == c
-        if cols.any():
-            vals = out_phi[:, cols]
-            if np.isfinite(vals).any():
-                class_baseline[c] = np.nanmean(vals)
-    t_phi_calib = target_phi - class_baseline[pool_y]
-    shadow_phi_calib = shadow_phi - class_baseline[pool_y][None, :]
+    if shadow_loss is not None:
+        out_loss = np.where(~shadow_in, shadow_loss, np.nan)
+        mu = np.zeros(num_classes)
+        sd = np.ones(num_classes)
+        for c in range(num_classes):
+            cols = pool_y == c
+            if cols.any():
+                vals = out_loss[:, cols]
+                if np.isfinite(vals).any():
+                    mu[c] = np.nanmean(vals)
+                    s = np.nanstd(vals)
+                    sd[c] = s if s > 1e-12 else 1.0
+        z = (np.asarray(target_loss, dtype=np.float64) - mu[pool_y]) / sd[pool_y]
+        thr = attacks.threshold_attack(z, labels)
+    else:
+        thr = attacks.threshold_attack(target_loss, labels)
     return {
-        "threshold": attacks.threshold_attack(target_loss, labels),
-        "lira": attacks.lira_attack(
-            t_phi_calib, shadow_phi_calib, shadow_in, labels),
+        "threshold": thr,
+        "lira": attacks.lira_attack(target_phi, shadow_phi, shadow_in, labels),
     }
 
 

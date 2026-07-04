@@ -263,9 +263,9 @@ J.~Chiang, ``Privacy-preserving {CNN} training with transfer learning: Two
   hidden layers,'' \emph{arXiv preprint arXiv:2504.12623}, 2025.
 
 \bibitem{privfedtl2026}
-{Priv-FedTL authors (verify)}, ``Privacy-preserving federated transfer learning
-  for resource-constrained devices,'' \emph{Computer Networks}, 2026, elsevier
-  S1389128626004615.
+A.~M. I.~M. Osmani, T.~Rahman, M.~S. Rahman, and S.~Islam, ``Priv-{FedTL}:
+  Privacy-preserving federated transfer learning for resource constrained
+  devices,'' \emph{Computer Networks}, vol. 286, p. 112449, 2026.
 
 \bibitem{alamin2025vit}
 M.~Al~Amin, M.~Hasan, S.~Hong, and S.~Ullah, ``Privacy-preserving federated
@@ -386,14 +386,15 @@ X.~Li, F.~Tram{\`e}r, P.~Liang, and T.~Hashimoto, ``Large language models can
   Conference on Learning Representations (ICLR)}, 2022, arXiv:2110.05679.
 
 \bibitem{liu2023dplora}
-X.-Y. Liu \emph{et~al.}, ``{DP-LoRA}: Differentially private low-rank
-  adaptation of large language models using federated learning,'' \emph{ACM
-  Transactions on Management Information Systems}, 2024, arXiv:2312.17493.
+X.-Y. Liu, R.~Zhu, D.~Zha, J.~Gao, S.~Zhong, M.~White, and M.~Qiu,
+  ``Differentially private low-rank adaptation of large language model using
+  federated learning,'' \emph{arXiv preprint arXiv:2312.17493}, 2023.
 
 \bibitem{xu2024dpdylora}
-J.~Xu \emph{et~al.}, ``{DP-DyLoRA}: Fine-tuning transformer-based models
-  on-device under differentially private federated learning using dynamic
-  low-rank adaptation,'' \emph{arXiv preprint arXiv:2405.06368}, 2024.
+J.~Xu, K.~Saravanan, R.~van Dalen, H.~Mehmood, D.~Tuckey, and M.~Ozay,
+  ``{DP-DyLoRA}: Fine-tuning transformer-based models on-device under
+  differentially private federated learning using dynamic low-rank
+  adaptation,'' \emph{arXiv preprint arXiv:2405.06368}, 2024.
 
 \bibitem{zhang2024fedit}
 J.~Zhang, S.~Vahidian, M.~Kuo, C.~Li, R.~Zhang, T.~Yu, G.~Wang, and Y.~Chen,
