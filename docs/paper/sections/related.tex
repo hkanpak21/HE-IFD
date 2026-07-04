@@ -43,8 +43,10 @@ high-dimensional views of a specific client's raw data taken repeatedly during o
 released model is a single aggregate that generalization itself pushes away from any one training point.
 This asymmetry sets our design goal. A protocol that eliminates the training-time surface --- no plaintext
 gradient, update, or summary ever observable, and only one round in which anything is exchanged at all ---
-reduces the adversary to the weak inference-time position, which no shared-model protocol can remove and
-which we therefore measure directly (\cref{sec:mia}).
+reduces the adversary to the weak inference-time position. That residual position is not a defect any
+protocol could remove: parties who set out to build a common model accept, by the nature of the
+undertaking, that the model they jointly release encodes something of each of them. What can be asked of a
+protocol is that this be the \emph{only} exposure, and we measure it directly (\cref{sec:mia}).
 
 \subsection{Protecting Training Cryptographically}
 \label{sec:related-crypto}
@@ -81,9 +83,12 @@ owners~\cite{li2024privtuner,frery2025private}. These works share our structural
 --- a frozen public backbone with a small trainable unit --- but they run an \emph{optimizer on
 ciphertexts}: multiplicative depth grows with the step count, softmax and sigmoid must be
 polynomial-approximated, and most are single-party, one data owner outsourcing computation, rather than a
-collaboration of mutually distrustful parties. We place encryption elsewhere. Training stays in plaintext
+collaboration of mutually distrustful parties. They solve a different problem than ours --- outsourcing
+training for a party that cannot train locally, where our parties can train locally but must not reveal
+what they trained --- and we therefore do not compete with them on encrypted-training efficiency; we
+contrast the two cost profiles briefly in \cref{sec:fhe-cost}. In our protocol training stays in plaintext
 on each client's own data, and the only encrypted computation is a single depth-one weighted sum of the
-final displacements; we compare the resulting costs with HETAL's reported figures in \cref{sec:fhe-cost}.
+final displacements.
 
 \subsection{One-Shot Federated Learning and Lossy Privacy}
 \label{sec:related-oneshot}
@@ -107,7 +112,10 @@ extractor~\cite{hoech2022fedauxfdp}; related approaches protect a diffusion-gene
 or teacher-ensemble~\cite{li2021fedkt} surrogate, or add noise-free differential privacy to the
 distillation itself~\cite{sun2021fedmdnfdp}. These are our natural quantitative peers, but their privacy
 is lossy: the noise a meaningful budget requires is added to the very artifact that is released, so
-accuracy falls as the budget tightens. The same trade-off structures differentially private transfer
+accuracy falls as the budget tightens. The guarantee also differs in kind from a cryptographic one.
+Differential privacy proves a statistical bound on how much the released artifact can reveal, and buys
+the bound with accuracy; encryption makes the contribution computationally indistinguishable from random
+to every party without the key, and costs the model nothing. The same trade-off structures differentially private transfer
 learning, where DP-SGD on frozen pretrained features reaches strong accuracy at moderate
 budgets~\cite{tramer2021features,mehta2022dpfeatures,yu2022dpft,li2022dplearners}, extended to federated
 low-rank adaptation~\cite{liu2023dplora,xu2024dpdylora}. These methods share our backbone-plus-adapter
@@ -137,11 +145,11 @@ that one round of fine-tuning suffices for foundation models is itself establish
 plaintext~\cite{malinovsky2024oneround}. What none of this line provides is any protection of the
 contributions, which is our subject.
 
-\subsection{Positioning}
-\label{sec:related-positioning}
-
-Placing the representative methods on three axes --- whether the protocol is one-shot, what protects the
-contributions, and how many rounds pay a cryptographic or communication cost --- locates the gap this
+\medskip
+\noindent\emph{Positioning.}
+Taken together, the four lines place every representative method on three axes --- whether the protocol is
+one-shot, what protects the
+contributions, and how many rounds pay a cryptographic or communication cost --- and locate the gap this
 paper fills. The multi-round lines either protect nothing (FedDF and FuseFL run tens of rounds in
 plaintext~\cite{lin2020feddf,tang2024fusefl}) or protect each round at recurring cost (POSEIDON's encrypted
 training~\cite{sav2021poseidon}; the encrypted aggregation of BatchCrypt, FedML-HE, FedSHE, and
@@ -152,7 +160,11 @@ or noised, with accuracy falling as the budget tightens (FedKT, FedAUXfdp,
 FedDiff~\cite{li2021fedkt,hoech2022fedauxfdp,feddiff2024}). The encrypted transfer-learning line shares our
 frozen backbone but runs its optimizer on ciphertexts and serves a single data
 owner~\cite{lee2023hetal,privfedtl2026}. No prior method is simultaneously one-shot, federated, and
-protected by encryption that adds no noise. That intersection --- the training-time surface removed in one
-round, at multiplicative depth one, with the accuracy of plaintext fine-tuning --- is the position HE-IFD
-occupies, and \cref{sec:experiments} quantifies it head-to-head at the published setups of the closest
-peers (\cref{sec:matched}) and against HETAL's reported encrypted-training costs (\cref{sec:fhe-cost}).
+protected by encryption that leaves the released model unperturbed. That intersection --- the
+training-time surface removed in one
+round, at multiplicative depth one, with the accuracy of plaintext fine-tuning --- is the position HE-OFT
+occupies, and \cref{sec:matched} quantifies it head-to-head at the published setups of the closest
+one-shot peers. We stress that the ingredients are not modular, a federated fine-tuning method with
+encryption added on top: each design choice in \cref{sec:method} --- the frozen backbone, the frozen
+down-projection, the bounded trajectory, the linear rule, the client-side vote --- is forced by the
+constraint that the server computes on ciphertexts.

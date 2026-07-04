@@ -23,7 +23,7 @@ computation on the models themselves, neither of which encryption allows. A \emp
 the frame directly: freezing a public backbone fixes the representation every client sees, so the small part
 each client trains starts from the same place and stays close. Fine-tuning a pretrained model is therefore
 not a convenience but the learning setting this protocol admits, and it removes the need for any alignment
-step before training, the property that most distinguishes HE-IFD from prior one-shot federated learning,
+step before training, the property that most distinguishes HE-OFT from prior one-shot federated learning,
 which spends an extra communication phase, and often a differential-privacy budget, to bring clients into a
 common frame before they begin.
 
@@ -134,6 +134,18 @@ server, can decrypt on its own. This is exactly the property our aggregation nee
 homomorphic computation on encrypted contributions, yet only the clients, acting together, can reveal the
 result.
 
+We stress what the scheme is chosen for, since our circuit uses almost none of its homomorphic power and a
+reader may ask why a fully homomorphic scheme is deployed at depth one. The answer is the key structure
+and the data layout, not the depth. Threshold decryption over a collectively generated key is the property
+the protocol cannot do without, and the mature distributed key generation and collective key-switching of
+multiparty CKKS provide it directly~\cite{mouchet2021multiparty}. CKKS additionally packs thousands of
+real-valued parameters into one ciphertext and multiplies them by public scalars natively, the operations
+the candidate aggregates of \cref{sec:candidates} require; additively homomorphic schemes offer neither
+packed real arithmetic at this width nor comparable multiparty tooling, and masking-based secure
+aggregation reveals the plaintext sum to the server, which our protocol never does. Depth one is therefore
+not an underuse of the scheme but the point of the design: the protocol is engineered so that the
+strongest available tool is needed only at its least expensive setting.
+
 \subsection{The Shared Frame}
 \label{sec:basin}
 
@@ -147,9 +159,9 @@ and add constructively rather than fighting one another.
 A pretrained backbone provides this directly. Because the representation is fixed and shared, the
 trainable unit lives in the same parameter space for every client, and initializing it to a common public
 constant $\thz$ places all clients at the same point in that space before any training. No data is consulted
-to build $\thz$ and nothing is exchanged to agree on it; it is a fixed, public initializer. This is exactly
-the step a from-scratch federation cannot take and must replace with a data-dependent alignment phase, a
-phase that costs an extra round, exposes a per-client summary, and, when that summary is protected, spends a
+to build $\thz$ and nothing is exchanged to agree on it; it is a fixed, public initializer. A from-scratch
+federation cannot take this step. It must first agree on a starting point, in a data-dependent alignment
+phase that costs an extra round and exposes a per-client summary; protecting that summary spends a
 differential-privacy budget. Fine-tuning a pretrained model removes the phase, and with it the only channel
 through which client data would otherwise leave in the clear before encryption. We verify in
 \cref{sec:experiments} that this shared start is what makes the one-shot combination work (averaging
@@ -252,6 +264,10 @@ The server emits the encrypted candidates; a threshold of clients jointly decryp
 scores the decrypted candidates on a small held-out slice of its own data, the federation releasing the
 sample-weighted plurality choice. Selection is therefore post-decryption and entirely client-side: it adds
 one threshold decryption per candidate and no homomorphic multiplications beyond the depth-one aggregate.
+The selection itself could not usefully move under encryption: it is data-dependent --- candidates are
+scored on held-out client data the server does not have --- and homomorphic comparison would require deep
+polynomial approximations of the sign function, exactly the circuit cost the design avoids, for a step the
+clients perform at no cost after decryption.
 The candidates differ in what they reveal, and we account for this honestly. The scaling family is collinear,
 $\thstar(\lambda)=(1-\lambda)\thz+\lambda\thstar(1)$, so disclosing the whole grid reveals nothing beyond the
 released model itself; the reweighted numerator and denominator reveal two sums rather than their ratio; and a

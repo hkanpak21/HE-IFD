@@ -45,7 +45,7 @@
 \draw[arr] (srv.east) -- node[lbl, above]{threshold\\decrypt} (glob.west);
 \end{tikzpicture}%
 }
-\caption{HE-IFD. A frozen public backbone $\varphi$ and a public initialization $\theta_0$ of the small
+\caption{HE-OFT. A frozen public backbone $\varphi$ and a public initialization $\theta_0$ of the small
 trainable unit (low-rank adapter and head) are shared by all clients and carry no data, so there is no
 alignment phase; the backbone is never trained or encrypted. Each client fine-tunes the adapter on its own
 private data $\mathcal{D}_j$ for a bounded number of steps from $\theta_0$ and encrypts the resulting

@@ -1,12 +1,11 @@
 \section{Introduction}
 \label{sec:intro}
 
-Machine learning practice has largely shifted from training models to adapting them. An organization
-today rarely builds a model from scratch; it takes a public pretrained backbone and fine-tunes it on its
-own data~\cite{bommasani2021opportunities,hu2022lora}. Often several organizations hold complementary data
-over the same task --- hospitals with
-different patient populations, banks with different fraud patterns, call centers with different customer
-bases --- and each would obtain a better model from their combined data than from its own. Legal,
+We target the setting that now dominates applied machine learning: organizations that adapt a public
+pretrained backbone to their own data by fine-tuning~\cite{bommasani2021opportunities,hu2022lora}. Often
+several such organizations hold complementary data over the same task --- different patient populations,
+fraud patterns, or customer bases --- and each would obtain a better model from their combined data than
+from its own. Legal,
 competitive, and privacy constraints prevent them from pooling that
 data~\cite{yang2019federated,rieke2020future}, and handing it to whoever operates the fine-tuning
 infrastructure raises the same concern~\cite{xiao2023offsite}. What such parties need is fine-tuning as a
@@ -19,15 +18,19 @@ runs}. Federated learning exchanges model updates instead of data, but the updat
 vulnerability: a gradient permits reconstruction of the training batch that produced
 it~\cite{zhu2019deep,geiping2020inverting}, an observer of the per-round updates mounts membership
 inference far stronger than anything possible against the final model
-alone~\cite{nasr2019comprehensive,melis2019exploiting}, and a server free to choose the weights it sends
+alone~\cite{nasr2019comprehensive,melis2019exploiting,zari2021efficient}, and a server free to choose the
+weights it sends
 can harvest client inputs outright~\cite{boenisch2023curious,fowl2022robbing}. Attacks against the
 released model after training, by contrast, are comparatively weak: on the same model and dataset,
 membership inference that reaches $87\%$ accuracy for a server observing federated updates drops to
-$54.5\%$ against the final model alone~\cite{nasr2019comprehensive}, and we confirm on our own protocol
+$54.5\%$ against the final model alone~\cite{nasr2019comprehensive}, and we confirm on our own protocol,
+with the same loss-threshold and likelihood-ratio attacks~\cite{yeom2018privacy,carlini2022membership},
 that it sits at or near chance (\cref{sec:mia}). The privacy problem of
 federated learning is therefore concentrated at \emph{training time}: in the artifacts clients expose
 while the model is being built, and in how many times they expose them. That concentration sets the
-design goal of this paper: remove the training-time attack surface entirely, rather than perturb it.
+design goal of this paper: remove the training-time attack surface entirely, rather than perturb it. We
+therefore take the one-shot route within federated learning, and ask what it takes to protect its single
+exchange cryptographically.
 
 Two levers, applied together, remove it. Making the protocol \emph{one-shot} --- a single upload and a
 single download per client --- reduces the number of exposed artifacts from hundreds of rounds to one.
@@ -35,12 +38,18 @@ Encrypting that one artifact under \emph{homomorphic encryption} reduces its pla
 Prior work pulls one lever at a time. One-shot federated learning sends its single contribution in
 plaintext or protects it with differential privacy, which injects noise into the released model and
 provides a statistical rather than cryptographic guarantee. Homomorphically encrypted federated learning
-runs many rounds of encrypted training or secure aggregation, at a cost measured in hours and gigabytes.
-We present \textbf{HE-IFD}, to our knowledge the first protocol that pulls both: each client fine-tunes a
+runs many rounds of encrypted training or secure aggregation, at a cost measured in hours and gigabytes;
+the direct route of training under encryption forces polynomial replacements of every activation and a
+deep, repeatedly bootstrapped circuit~\cite{sav2021poseidon}, which is precisely the cost we set out to
+avoid. We present \textbf{HE-OFT} (Homomorphically Encrypted One-shot Fine-Tuning), to our knowledge the
+first one-shot federated learning protocol whose contributions are protected by encryption: each client
+fine-tunes a
 small low-rank adapter and classifier head on a frozen public backbone in plaintext, uploads one encrypted
 parameter displacement, and the server performs a single linear combination,
 $\thstar = \thz + \sum_j \wj \disp$, under multiparty CKKS at multiplicative depth one, after which a
-threshold of clients jointly decrypts the result. The server never holds a plaintext contribution, a
+threshold of clients jointly decrypts the result. We adopt the multiparty scheme for its key structure
+rather than its homomorphic depth: no single party, in particular not the server, can decrypt anything
+(\cref{sec:mhe}). The server never holds a plaintext contribution, a
 secret key, or the decrypted model; nothing data-derived leaves a client unencrypted.
 
 Fine-tuning is not incidental to this design; it is what makes the design work. A one-shot linear
@@ -49,7 +58,8 @@ heterogeneous data: from different starting points, their updates conflict and c
 backbone removes the difficulty at no cost. It fixes the representation every client sees, and every
 client starts its small trainable unit from the same public initialization, so the bounded displacements
 they upload live in one frame and add constructively --- where prior one-shot methods must first buy this
-alignment with an extra exchange of data-derived summaries. Freezing the adapter's down-projection then
+alignment with an extra exchange of data-derived summaries. Freezing the adapter's down-projection, a
+parameterization we adopt from FFA-LoRA~\cite{sun2024ffalora}, then
 makes the aggregation \emph{exact}: the weighted sum of the trained factors equals the weighted sum of the
 weight updates, so the depth-one encrypted combination computes precisely the model the method calls for,
 and the entire encrypted object is a few tens of ciphertexts, a few megabytes, whatever the size of the
@@ -66,8 +76,8 @@ additional homomorphic cost.
 What remains exposed is the released model itself, which every participant holds in the clear because
 producing a shared model is the purpose of the protocol. This inference-time surface no protocol can
 remove, so we measure it: membership inference against the released model, including by a fellow
-participant, stays at or near chance. Across four text classification tasks and one vision task, from
-frozen RoBERTa and ViT backbones to a billion-parameter language model, HE-IFD produces a common model
+participant, stays at or near chance. Across text classification and vision tasks, from
+frozen RoBERTa and ViT backbones to a half-billion-parameter language model, HE-OFT produces a common model
 stronger than any client's own and, outside the most skewed regimes, close to a centrally fine-tuned one;
 a real multiparty CKKS implementation reproduces the plaintext aggregate within the scheme's approximation
 bounds, with server computation in milliseconds and communication of a few megabytes per client.
@@ -81,8 +91,8 @@ Our contributions are as follows.
   federated learning exposes --- rather than perturbing it.
 \item We identify the co-design that makes one-shot encryption affordable. Fine-tuning a frozen pretrained
   backbone supplies the shared frame a one-shot linear aggregation needs at no cost, and freezing the
-  low-rank adapter's down-projection makes the encrypted aggregate exact task arithmetic on the weight
-  updates, with no bilinear cross-terms to resolve under encryption (\cref{sec:method,sec:basin}).
+  low-rank adapter's down-projection makes the encrypted aggregate exactly the weighted average of the
+  clients' weight updates (\cref{sec:method,sec:basin}).
 \item We introduce encrypted multi-candidate release with client-side selection: the server emits several
   depth-one candidate aggregates, and the clients, after threshold decryption, select one by a weighted
   vote on their local data. This restores data-dependent aggregation choice to a server that cannot read

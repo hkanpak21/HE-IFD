@@ -21,24 +21,80 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
-\bibitem{mcmahan2017communication}
-B.~McMahan, E.~Moore, D.~Ramage, S.~Hampson, and B.~A.~y. Arcas,
-  ``Communication-efficient learning of deep networks from decentralized
-  data,'' in \emph{AISTATS}, 2017.
+\bibitem{bommasani2021opportunities}
+R.~Bommasani, D.~A. Hudson, E.~Adeli \emph{et~al.}, ``On the opportunities and
+  risks of foundation models,'' \emph{arXiv preprint arXiv:2108.07258}, 2021.
 
-\bibitem{bonawitz2017practical}
-K.~Bonawitz, V.~Ivanov, B.~Kreuter, A.~Marcedone, H.~B. McMahan, S.~Patel,
-  D.~Ramage, A.~Segal, and K.~Seth, ``Practical secure aggregation for
-  privacy-preserving machine learning,'' in \emph{ACM CCS}, 2017, pp.
-  1175--1191.
+\bibitem{hu2022lora}
+E.~J. Hu, Y.~Shen, P.~Wallis, Z.~Allen-Zhu, Y.~Li, S.~Wang, L.~Wang, and
+  W.~Chen, ``Lo{RA}: Low-rank adaptation of large language models,'' in
+  \emph{International Conference on Learning Representations (ICLR)}, 2022.
 
-\bibitem{abadi2016deep}
+\bibitem{yang2019federated}
+Q.~Yang, Y.~Liu, T.~Chen, and Y.~Tong, ``Federated machine learning: Concept
+  and applications,'' \emph{ACM Transactions on Intelligent Systems and
+  Technology}, vol.~10, no.~2, pp. 12:1--12:19, 2019.
+
+\bibitem{rieke2020future}
+N.~Rieke, J.~Hancox, W.~Li, F.~Milletar{\`i}, H.~R. Roth, S.~Albarqouni,
+  S.~Bakas, M.~N. Galtier, B.~A. Landman, K.~Maier-Hein \emph{et~al.}, ``The
+  future of digital health with federated learning,'' \emph{npj Digital
+  Medicine}, vol.~3, p. 119, 2020.
+
+\bibitem{xiao2023offsite}
+G.~Xiao, J.~Lin, and S.~Han, ``Offsite-tuning: Transfer learning without full
+  model,'' \emph{arXiv preprint arXiv:2302.04870}, 2023.
+
+\bibitem{zhu2019deep}
+L.~Zhu, Z.~Liu, and S.~Han, ``Deep leakage from gradients,'' in \emph{NeurIPS},
+  vol.~32, 2019.
+
+\bibitem{geiping2020inverting}
+J.~Geiping, H.~Bauermeister, H.~Dr{\"o}ge, and M.~Moeller, ``Inverting
+  gradients -- how easy is it to break privacy in federated learning?'' in
+  \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2020.
+
+\bibitem{nasr2019comprehensive}
+M.~Nasr, R.~Shokri, and A.~Houmansadr, ``Comprehensive privacy analysis of deep
+  learning: Passive and active white-box inference attacks against centralized
+  and federated learning,'' in \emph{IEEE S\&P}, 2019, pp. 739--753.
+
+\bibitem{melis2019exploiting}
+L.~Melis, C.~Song, E.~De~Cristofaro, and V.~Shmatikov, ``Exploiting unintended
+  feature leakage in collaborative learning,'' in \emph{2019 IEEE Symposium on
+  Security and Privacy (S\&P)}.\hskip 1em plus 0.5em minus 0.4em\relax IEEE,
+  2019.
+
+\bibitem{zari2021efficient}
+O.~Zari, C.~Xu, and G.~Neglia, ``Efficient passive membership inference attack
+  in federated learning,'' arXiv:2111.00430; poster, NeurIPS Workshop on
+  Privacy in Machine Learning, 2021.
+
+\bibitem{boenisch2023curious}
+F.~Boenisch, A.~Dziedzic, R.~Schuster, A.~S. Shamsabadi, I.~Shumailov, and
+  N.~Papernot, ``When the curious abandon honesty: Federated learning is not
+  private,'' in \emph{2023 IEEE 8th European Symposium on Security and Privacy
+  (EuroS\&P)}.\hskip 1em plus 0.5em minus 0.4em\relax IEEE, 2023, pp. 175--199.
+
+\bibitem{fowl2022robbing}
+L.~Fowl, J.~Geiping, W.~Czaja, M.~Goldblum, and T.~Goldstein, ``Robbing the
+  fed: Directly obtaining private data in federated learning with modified
+  models,'' in \emph{International Conference on Learning Representations
+  (ICLR)}, 2022.
+
+\bibitem{yeom2018privacy}
 \BIBentryALTinterwordspacing
-M.~Abadi, A.~Chu, I.~Goodfellow, H.~B. McMahan, I.~Mironov, K.~Talwar, and
-  L.~Zhang, ``Deep learning with differential privacy,'' in \emph{Proceedings
-  of the 23rd ACM SIGSAC Conference on Computer and Communications Security
-  (CCS)}, 2016, pp. 308--318. [Online]. Available:
-  \url{https://arxiv.org/abs/1607.00133}
+S.~Yeom, I.~Giacomelli, M.~Fredrikson, and S.~Jha, ``Privacy risk in machine
+  learning: Analyzing the connection to overfitting,'' in \emph{31st IEEE
+  Computer Security Foundations Symposium (CSF)}, 2018, pp. 268--282. [Online].
+  Available: \url{https://arxiv.org/abs/1709.01604}
+\BIBentrySTDinterwordspacing
+
+\bibitem{carlini2022membership}
+\BIBentryALTinterwordspacing
+N.~Carlini, S.~Chien, M.~Nasr, S.~Song, A.~Terzis, and F.~Tramer, ``Membership
+  inference attacks from first principles,'' in \emph{IEEE S\&P}, 2022, pp.
+  1897--1914. [Online]. Available: \url{https://arxiv.org/abs/2112.03570}
 \BIBentrySTDinterwordspacing
 
 \bibitem{sav2021poseidon}
@@ -46,31 +102,89 @@ S.~Sav, A.~Pyrgelis, J.~R. Troncoso-Pastoriza, D.~Froelicher, J.-P. Bossuat,
   J.~S{\'a}~Sousa, and J.-P. Hubaux, ``{POSEIDON}: Privacy-preserving federated
   neural network learning,'' in \emph{NDSS}, 2021.
 
-\bibitem{kemmaka2025hybagg}
-Kemmaka and Tran, ``{Hyb-Agg}: Communication-efficient secure aggregation via
-  hybrid multi-key homomorphic encryption and masking,''
-  \emph{arXiv:2511.23252}, 2025.
+\bibitem{sun2024ffalora}
+Y.~Sun, Z.~Li, Y.~Li, and B.~Ding, ``Improving {LoRA} in privacy-preserving
+  federated learning,'' in \emph{International Conference on Learning
+  Representations (ICLR)}, 2024, arXiv:2403.12313.
 
-\bibitem{zhang2020batchcrypt}
-C.~Zhang, S.~Li, J.~Xia, W.~Wang, F.~Yan, and Y.~Liu, ``Batchcrypt: Efficient
-  homomorphic encryption for cross-silo federated learning,'' in \emph{USENIX
-  ATC}.\hskip 1em plus 0.5em minus 0.4em\relax USENIX Association, 2020, pp.
-  493--506.
+\bibitem{mcmahan2017communication}
+B.~McMahan, E.~Moore, D.~Ramage, S.~Hampson, and B.~A.~y. Arcas,
+  ``Communication-efficient learning of deep networks from decentralized
+  data,'' in \emph{AISTATS}, 2017.
 
-\bibitem{jin2023fedml}
-W.~Jin, Y.~Yao, S.~Han, J.~Gu, C.~Joe-Wong, S.~Ravi, S.~Avestimehr, and C.~He,
-  ``Fedml-he: An efficient homomorphic-encryption-based privacy-preserving
-  federated learning system,'' in \emph{NeurIPS}, vol.~36, 2023.
+\bibitem{takahashi2023breaching}
+H.~Takahashi, J.~Liu, and Y.~Liu, ``Breaching {FedMD}: Image recovery via
+  paired-logits inversion attack,'' in \emph{CVPR}, 2023, pp. 12\,198--12\,207.
 
-\bibitem{wei2025fedshe}
-X.~Wei, R.~Huang, L.~Lei, and J.~Wu, ``Fedshe--cq: A communication-efficient
-  homomorphic encryption framework for federated learning,'' \emph{Computer
-  Networks}, vol. 260, p. 111813, 2025.
+\bibitem{yang2023fdleaks}
+Z.~Yang, Y.~Zhao, and J.~Zhang, ``{FD-Leaks}: Membership inference attacks
+  against federated distillation learning,'' in \emph{APWeb-WAIM}, ser. Lecture
+  Notes in Computer Science, vol. 13423.\hskip 1em plus 0.5em minus 0.4em\relax
+  Springer, 2023, pp. 364--378.
 
-\bibitem{li2025shelora}
-J.~Li \emph{et~al.}, ``{SHE-LoRA}: Selective homomorphic encryption for
-  federated tuning with heterogeneous {LoRA},'' \emph{arXiv preprint
-  arXiv:2505.21051}, 2025.
+\bibitem{gu2023ldia}
+\BIBentryALTinterwordspacing
+Y.~Gu and Y.~Bai, ``{LDIA}: Label distribution inference attack against
+  federated learning in edge computing,'' \emph{Journal of Information Security
+  and Applications}, vol.~74, p. 103475, 2023. [Online]. Available:
+  \url{https://dl.acm.org/doi/10.1016/j.jisa.2023.103475}
+\BIBentrySTDinterwordspacing
+
+\bibitem{shi2025unveiling}
+H.~Shi, T.~Ouyang, and A.~Wang, ``Unveiling client privacy leakage from public
+  dataset usage in federated distillation,'' \emph{PoPETs}, vol. 2025, no.~4,
+  pp. 201--215, 2025.
+
+\bibitem{kairouz2021advances}
+P.~Kairouz, H.~B. McMahan, B.~Avent \emph{et~al.}, ``Advances and open problems
+  in federated learning,'' \emph{Foundations and Trends in Machine Learning},
+  vol.~14, no. 1--2, pp. 1--210, 2021.
+
+\bibitem{shokri2017membership}
+\BIBentryALTinterwordspacing
+R.~Shokri, M.~Stronati, C.~Song, and V.~Shmatikov, ``Membership inference
+  attacks against machine learning models,'' in \emph{IEEE S\&P}, 2017, pp.
+  3--18. [Online]. Available: \url{https://arxiv.org/abs/1610.05820}
+\BIBentrySTDinterwordspacing
+
+\bibitem{salem2019ml}
+\BIBentryALTinterwordspacing
+A.~Salem, Y.~Zhang, M.~Humbert, P.~Berrang, M.~Fritz, and M.~Backes,
+  ``{ML-Leaks}: Model and data independent membership inference attacks and
+  defenses on machine learning models,'' in \emph{Network and Distributed
+  System Security Symposium (NDSS)}, 2019. [Online]. Available:
+  \url{https://arxiv.org/abs/1806.01246}
+\BIBentrySTDinterwordspacing
+
+\bibitem{fredrikson2015model}
+\BIBentryALTinterwordspacing
+M.~Fredrikson, S.~Jha, and T.~Ristenpart, ``Model inversion attacks that
+  exploit confidence information and basic countermeasures,'' in
+  \emph{Proceedings of the 22nd ACM SIGSAC Conference on Computer and
+  Communications Security (CCS)}, 2015, pp. 1322--1333. [Online]. Available:
+  \url{https://dl.acm.org/doi/10.1145/2810103.2813677}
+\BIBentrySTDinterwordspacing
+
+\bibitem{hitaj2017deep}
+B.~Hitaj, G.~Ateniese, and F.~P{\'e}rez-Cruz, ``Deep models under the {GAN}:
+  Information leakage from collaborative deep learning,'' in \emph{ACM CCS},
+  2017, pp. 603--618.
+
+\bibitem{bonawitz2017practical}
+K.~Bonawitz, V.~Ivanov, B.~Kreuter, A.~Marcedone, H.~B. McMahan, S.~Patel,
+  D.~Ramage, A.~Segal, and K.~Seth, ``Practical secure aggregation for
+  privacy-preserving machine learning,'' in \emph{ACM CCS}, 2017, pp.
+  1175--1191.
+
+\bibitem{so2023securing}
+J.~So, R.~E. Ali, B.~G{\"u}ler, J.~Jiao, and A.~S. Avestimehr, ``Securing
+  secure aggregation: Mitigating multi-round privacy leakage in federated
+  learning,'' in \emph{AAAI}, vol.~37, no.~8, 2023, pp. 9925--9933.
+
+\bibitem{kerkouche2023client}
+R.~Kerkouche, G.~{\'A}cs, and M.~Fritz, ``Client-specific property inference
+  against secure aggregation in federated learning,'' in \emph{WPES}.\hskip 1em
+  plus 0.5em minus 0.4em\relax ACM, 2023, pp. 15--30.
 
 \bibitem{garimella2021sisyphus}
 K.~Garimella, N.~K. Jha, and B.~Reagen, ``Sisyphus: A cautionary tale of using
@@ -102,6 +216,32 @@ A.~Ibarrondo and M.~{\"O}nen, ``{FHE}-compatible batch normalization for
   \url{https://www.eurecom.fr/en/publication/5626}
 \BIBentrySTDinterwordspacing
 
+\bibitem{zhang2020batchcrypt}
+C.~Zhang, S.~Li, J.~Xia, W.~Wang, F.~Yan, and Y.~Liu, ``Batchcrypt: Efficient
+  homomorphic encryption for cross-silo federated learning,'' in \emph{USENIX
+  ATC}.\hskip 1em plus 0.5em minus 0.4em\relax USENIX Association, 2020, pp.
+  493--506.
+
+\bibitem{jin2023fedml}
+W.~Jin, Y.~Yao, S.~Han, J.~Gu, C.~Joe-Wong, S.~Ravi, S.~Avestimehr, and C.~He,
+  ``Fedml-he: An efficient homomorphic-encryption-based privacy-preserving
+  federated learning system,'' in \emph{NeurIPS}, vol.~36, 2023.
+
+\bibitem{wei2025fedshe}
+X.~Wei, R.~Huang, L.~Lei, and J.~Wu, ``Fedshe--cq: A communication-efficient
+  homomorphic encryption framework for federated learning,'' \emph{Computer
+  Networks}, vol. 260, p. 111813, 2025.
+
+\bibitem{li2025shelora}
+J.~Li \emph{et~al.}, ``{SHE-LoRA}: Selective homomorphic encryption for
+  federated tuning with heterogeneous {LoRA},'' \emph{arXiv preprint
+  arXiv:2505.21051}, 2025.
+
+\bibitem{kemmaka2025hybagg}
+Kemmaka and Tran, ``{Hyb-Agg}: Communication-efficient secure aggregation via
+  hybrid multi-key homomorphic encryption and masking,''
+  \emph{arXiv:2511.23252}, 2025.
+
 \bibitem{lee2023hetal}
 S.~Lee, G.~Lee, J.~W. Kim, J.~Shin, and M.-K. Lee, ``{HETAL}: Efficient
   privacy-preserving transfer learning with homomorphic encryption,'' in
@@ -132,53 +272,16 @@ M.~Al~Amin, M.~Hasan, S.~Hong, and S.~Ullah, ``Privacy-preserving federated
   vision transformer learning with lightweight homomorphic encryption in
   medical {AI},'' \emph{arXiv preprint arXiv:2511.20983}, 2025.
 
-\bibitem{zhang2024fedit}
-J.~Zhang, S.~Vahidian, M.~Kuo, C.~Li, R.~Zhang, T.~Yu, G.~Wang, and Y.~Chen,
-  ``Towards building the federated {GPT}: Federated instruction tuning,'' in
-  \emph{IEEE International Conference on Acoustics, Speech and Signal
-  Processing (ICASSP)}, 2024, arXiv:2305.05644 (FedIT).
+\bibitem{li2024privtuner}
+Y.~Li, W.~Yu, and J.~Zhao, ``Priv{T}uner with homomorphic encryption and
+  lo{RA}: A {P3EFT} scheme for privacy-preserving parameter-efficient
+  fine-tuning of {AI} foundation models,'' \emph{arXiv preprint
+  arXiv:2410.00433}, 2024.
 
-\bibitem{wang2024flora}
-Z.~Wang, Z.~Shen, Y.~He, G.~Sun, H.~Wang, L.~Lyu, and A.~Li, ``{FLoRA}:
-  Federated fine-tuning large language models with heterogeneous low-rank
-  adaptations,'' in \emph{Advances in Neural Information Processing Systems
-  (NeurIPS)}, 2024, arXiv:2409.05976.
-
-\bibitem{bai2024flexlora}
-J.~Bai, D.~Chen, B.~Qian, L.~Yao, and Y.~Li, ``Federated fine-tuning of large
-  language models under heterogeneous tasks and client resources,'' in
-  \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2024,
-  arXiv:2402.11505 (FlexLoRA).
-
-\bibitem{cho2024hetlora}
-Y.~J. Cho, L.~Liu, Z.~Xu, A.~Fahrezi, and G.~Joshi, ``Heterogeneous {LoRA} for
-  federated fine-tuning of on-device foundation models,'' in \emph{Conference
-  on Empirical Methods in Natural Language Processing (EMNLP)}, 2024,
-  arXiv:2401.06432.
-
-\bibitem{guo2025fedsalora}
-P.~Guo, S.~Zeng, Y.~Wang, H.~Fan, F.~Wang, and L.~Qu, ``Selective aggregation
-  for low-rank adaptation in federated learning,'' in \emph{International
-  Conference on Learning Representations (ICLR)}, 2025, arXiv:2410.01463
-  (FedSA-LoRA).
-
-\bibitem{sun2024ffalora}
-Y.~Sun, Z.~Li, Y.~Li, and B.~Ding, ``Improving {LoRA} in privacy-preserving
-  federated learning,'' in \emph{International Conference on Learning
-  Representations (ICLR)}, 2024, arXiv:2403.12313.
-
-\bibitem{ilharco2023editing}
-G.~Ilharco, M.~T. Ribeiro, M.~Wortsman, L.~Schmidt, H.~Hajishirzi, and
-  A.~Farhadi, ``Editing models with task arithmetic,'' in \emph{ICLR}, 2023.
-
-\bibitem{tao2024taskarith}
-Z.~Tao, I.~Mason, S.~Kulkarni, and X.~Boix, ``Task arithmetic through the lens
-  of one-shot federated learning,'' \emph{Transactions on Machine Learning
-  Research (TMLR)}, 2025, arXiv:2411.18607.
-
-\bibitem{malinovsky2024oneround}
-Anonymous, ``Revisiting federated fine-tuning: A single communication round is
-  enough for foundation models,'' \emph{arXiv preprint arXiv:2412.04650}, 2024.
+\bibitem{frery2025private}
+J.~Frery, R.~Bredehoft, J.~Klemsa, A.~Meyre, and A.~Stoian, ``Private lo{RA}
+  fine-tuning of open-source {LLM}s with homomorphic encryption,'' \emph{arXiv
+  preprint arXiv:2505.07329}, 2025.
 
 \bibitem{guha2019oneshot}
 \BIBentryALTinterwordspacing
@@ -292,117 +395,49 @@ J.~Xu \emph{et~al.}, ``{DP-DyLoRA}: Fine-tuning transformer-based models
   on-device under differentially private federated learning using dynamic
   low-rank adaptation,'' \emph{arXiv preprint arXiv:2405.06368}, 2024.
 
-\bibitem{zhu2019deep}
-L.~Zhu, Z.~Liu, and S.~Han, ``Deep leakage from gradients,'' in \emph{NeurIPS},
-  vol.~32, 2019.
+\bibitem{zhang2024fedit}
+J.~Zhang, S.~Vahidian, M.~Kuo, C.~Li, R.~Zhang, T.~Yu, G.~Wang, and Y.~Chen,
+  ``Towards building the federated {GPT}: Federated instruction tuning,'' in
+  \emph{IEEE International Conference on Acoustics, Speech and Signal
+  Processing (ICASSP)}, 2024, arXiv:2305.05644 (FedIT).
 
-\bibitem{dimitrov2024spear}
-\BIBentryALTinterwordspacing
-D.~I. Dimitrov, M.~Baader, and M.~Vechev, ``{SPEAR}: Exact gradient inversion
-  of batches in federated learning,'' in \emph{NeurIPS}, vol.~37, 2024.
-  [Online]. Available:
-  \url{https://proceedings.neurips.cc/paper_files/paper/2024/hash/c13cd7feab4beb1a27981e19e2455916-Abstract-Conference.html}
-\BIBentrySTDinterwordspacing
+\bibitem{wang2024flora}
+Z.~Wang, Z.~Shen, Y.~He, G.~Sun, H.~Wang, L.~Lyu, and A.~Li, ``{FLoRA}:
+  Federated fine-tuning large language models with heterogeneous low-rank
+  adaptations,'' in \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2024, arXiv:2409.05976.
 
-\bibitem{carletti2025sok}
-\BIBentryALTinterwordspacing
-V.~Carletti, P.~Foggia, C.~Mazzocca, G.~Parrella, and M.~Vento, ``{SoK}:
-  Gradient inversion attacks in federated learning,'' in \emph{34th USENIX
-  Security Symposium (USENIX Security 25)}.\hskip 1em plus 0.5em minus
-  0.4em\relax USENIX Association, 2025. [Online]. Available:
-  \url{https://www.usenix.org/conference/usenixsecurity25/presentation/carletti}
-\BIBentrySTDinterwordspacing
+\bibitem{bai2024flexlora}
+J.~Bai, D.~Chen, B.~Qian, L.~Yao, and Y.~Li, ``Federated fine-tuning of large
+  language models under heterogeneous tasks and client resources,'' in
+  \emph{Advances in Neural Information Processing Systems (NeurIPS)}, 2024,
+  arXiv:2402.11505 (FlexLoRA).
 
-\bibitem{shokri2017membership}
-\BIBentryALTinterwordspacing
-R.~Shokri, M.~Stronati, C.~Song, and V.~Shmatikov, ``Membership inference
-  attacks against machine learning models,'' in \emph{IEEE S\&P}, 2017, pp.
-  3--18. [Online]. Available: \url{https://arxiv.org/abs/1610.05820}
-\BIBentrySTDinterwordspacing
+\bibitem{cho2024hetlora}
+Y.~J. Cho, L.~Liu, Z.~Xu, A.~Fahrezi, and G.~Joshi, ``Heterogeneous {LoRA} for
+  federated fine-tuning of on-device foundation models,'' in \emph{Conference
+  on Empirical Methods in Natural Language Processing (EMNLP)}, 2024,
+  arXiv:2401.06432.
 
-\bibitem{nasr2019comprehensive}
-M.~Nasr, R.~Shokri, and A.~Houmansadr, ``Comprehensive privacy analysis of deep
-  learning: Passive and active white-box inference attacks against centralized
-  and federated learning,'' in \emph{IEEE S\&P}, 2019, pp. 739--753.
+\bibitem{guo2025fedsalora}
+P.~Guo, S.~Zeng, Y.~Wang, H.~Fan, F.~Wang, and L.~Qu, ``Selective aggregation
+  for low-rank adaptation in federated learning,'' in \emph{International
+  Conference on Learning Representations (ICLR)}, 2025, arXiv:2410.01463
+  (FedSA-LoRA).
 
-\bibitem{yeom2018privacy}
-\BIBentryALTinterwordspacing
-S.~Yeom, I.~Giacomelli, M.~Fredrikson, and S.~Jha, ``Privacy risk in machine
-  learning: Analyzing the connection to overfitting,'' in \emph{31st IEEE
-  Computer Security Foundations Symposium (CSF)}, 2018, pp. 268--282. [Online].
-  Available: \url{https://arxiv.org/abs/1709.01604}
-\BIBentrySTDinterwordspacing
+\bibitem{ilharco2023editing}
+G.~Ilharco, M.~T. Ribeiro, M.~Wortsman, L.~Schmidt, H.~Hajishirzi, and
+  A.~Farhadi, ``Editing models with task arithmetic,'' in \emph{International
+  Conference on Learning Representations (ICLR)}, 2023.
 
-\bibitem{salem2019ml}
-\BIBentryALTinterwordspacing
-A.~Salem, Y.~Zhang, M.~Humbert, P.~Berrang, M.~Fritz, and M.~Backes,
-  ``{ML-Leaks}: Model and data independent membership inference attacks and
-  defenses on machine learning models,'' in \emph{Network and Distributed
-  System Security Symposium (NDSS)}, 2019. [Online]. Available:
-  \url{https://arxiv.org/abs/1806.01246}
-\BIBentrySTDinterwordspacing
+\bibitem{tao2024taskarith}
+Z.~Tao, I.~Mason, S.~Kulkarni, and X.~Boix, ``Task arithmetic through the lens
+  of one-shot federated learning,'' \emph{Transactions on Machine Learning
+  Research (TMLR)}, 2025, arXiv:2411.18607.
 
-\bibitem{carlini2022membership}
-\BIBentryALTinterwordspacing
-N.~Carlini, S.~Chien, M.~Nasr, S.~Song, A.~Terzis, and F.~Tramer, ``Membership
-  inference attacks from first principles,'' in \emph{IEEE S\&P}, 2022, pp.
-  1897--1914. [Online]. Available: \url{https://arxiv.org/abs/2112.03570}
-\BIBentrySTDinterwordspacing
-
-\bibitem{kerkouche2023property}
-\BIBentryALTinterwordspacing
-R.~Kerkouche, G.~Mema, M.~Fritz, J.~Ramon, and N.~Samarin, ``Client-specific
-  property inference against secure aggregation in federated learning,'' in
-  \emph{IEEE S\&P}, 2023. [Online]. Available:
-  \url{https://arxiv.org/abs/2303.03908}
-\BIBentrySTDinterwordspacing
-
-\bibitem{fredrikson2015model}
-\BIBentryALTinterwordspacing
-M.~Fredrikson, S.~Jha, and T.~Ristenpart, ``Model inversion attacks that
-  exploit confidence information and basic countermeasures,'' in
-  \emph{Proceedings of the 22nd ACM SIGSAC Conference on Computer and
-  Communications Security (CCS)}, 2015, pp. 1322--1333. [Online]. Available:
-  \url{https://dl.acm.org/doi/10.1145/2810103.2813677}
-\BIBentrySTDinterwordspacing
-
-\bibitem{hitaj2017deep}
-B.~Hitaj, G.~Ateniese, and F.~P{\'e}rez-Cruz, ``Deep models under the {GAN}:
-  Information leakage from collaborative deep learning,'' in \emph{ACM CCS},
-  2017, pp. 603--618.
-
-\bibitem{takahashi2023breaching}
-H.~Takahashi, J.~Liu, and Y.~Liu, ``Breaching {FedMD}: Image recovery via
-  paired-logits inversion attack,'' in \emph{CVPR}, 2023, pp. 12\,198--12\,207.
-
-\bibitem{yang2023fdleaks}
-Z.~Yang, Y.~Zhao, and J.~Zhang, ``{FD-Leaks}: Membership inference attacks
-  against federated distillation learning,'' in \emph{APWeb-WAIM}, ser. Lecture
-  Notes in Computer Science, vol. 13423.\hskip 1em plus 0.5em minus 0.4em\relax
-  Springer, 2023, pp. 364--378.
-
-\bibitem{wang2024graddiff}
-X.~Wang, L.~Wu, and Z.~Guan, ``{GradDiff}: Gradient-based membership inference
-  attacks against federated distillation with differential comparison,''
-  \emph{Information Sciences}, vol. 658, p. 120068, 2024.
-
-\bibitem{jagielski2023students}
-M.~Jagielski, M.~Nasr, K.~Lee, C.~Choquette-Choo, N.~Carlini, and
-  F.~Tram{\`e}r, ``Students parrot their teachers: Membership inference on
-  model distillation,'' in \emph{NeurIPS}, vol.~36, 2023.
-
-\bibitem{gu2023ldia}
-\BIBentryALTinterwordspacing
-Y.~Gu and Y.~Bai, ``{LDIA}: Label distribution inference attack against
-  federated learning in edge computing,'' \emph{Journal of Information Security
-  and Applications}, vol.~74, p. 103475, 2023. [Online]. Available:
-  \url{https://dl.acm.org/doi/10.1016/j.jisa.2023.103475}
-\BIBentrySTDinterwordspacing
-
-\bibitem{shi2025unveiling}
-H.~Shi, T.~Ouyang, and A.~Wang, ``Unveiling client privacy leakage from public
-  dataset usage in federated distillation,'' \emph{PoPETs}, vol. 2025, no.~4,
-  pp. 201--215, 2025.
+\bibitem{malinovsky2024oneround}
+Anonymous, ``Revisiting federated fine-tuning: A single communication round is
+  enough for foundation models,'' \emph{arXiv preprint arXiv:2412.04650}, 2024.
 
 \bibitem{cheon2017ckks}
 J.~H. Cheon, A.~Kim, M.~Kim, and Y.~Song, ``Homomorphic encryption for
@@ -426,16 +461,6 @@ J.~H. Cheon, K.~Han, A.~Kim, M.~Kim, and Y.~Song, ``Bootstrapping for
 C.~Mouchet, J.~R. Troncoso-Pastoriza, J.-P. Bossuat, and J.-P. Hubaux,
   ``Multiparty homomorphic encryption from ring-learning-with-errors,''
   \emph{PoPETs}, vol. 2021, no.~4, pp. 291--311, 2021.
-
-\bibitem{so2023securing}
-J.~So, R.~E. Ali, B.~G{\"u}ler, J.~Jiao, and A.~S. Avestimehr, ``Securing
-  secure aggregation: Mitigating multi-round privacy leakage in federated
-  learning,'' in \emph{AAAI}, vol.~37, no.~8, 2023, pp. 9925--9933.
-
-\bibitem{kerkouche2023client}
-R.~Kerkouche, G.~{\'A}cs, and M.~Fritz, ``Client-specific property inference
-  against secure aggregation in federated learning,'' in \emph{WPES}.\hskip 1em
-  plus 0.5em minus 0.4em\relax ACM, 2023, pp. 15--30.
 
 \bibitem{lattigo}
 C.~Mouchet, J.-P. Bossuat, J.~Troncoso-Pastoriza, and J.-P. Hubaux, ``{Lattigo

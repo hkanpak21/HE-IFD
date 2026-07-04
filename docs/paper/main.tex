@@ -61,7 +61,7 @@
 
 \begin{document}
 
-\title{HE-IFD: Privacy-Preserving One-Shot Federated Fine-Tuning of Pretrained Models under Homomorphic Encryption}
+\title{HE-OFT: Privacy-Preserving One-Shot Federated Fine-Tuning of Pretrained Models under Homomorphic Encryption}
 
 \author{
 Halil \.{I}brahim Kanpak\,\orcidlink{0009-0005-0284-5941},
@@ -84,20 +84,27 @@ Organizations adapt pretrained models to private data by fine-tuning, and partie
 over the same task would each gain from a jointly adapted model, yet cannot pool their data to build one.
 Federated learning offers the collaboration but concentrates its privacy risk at training time: gradients and
 per-round updates permit reconstruction of training data and strong membership inference, and these
-training-time attacks are substantially more effective than attacks against the final released model. We
-present HE-IFD, a one-shot federated fine-tuning protocol that eliminates the training-time attack surface
+training-time attacks are substantially more effective than attacks against the final released model.
+Existing protections pull against one another: multi-round cryptographic training is costly, and one-shot
+protocols either expose their single contribution or noise it, degrading the model they release. We
+present HE-OFT (Homomorphically Encrypted One-shot Fine-Tuning), a federated fine-tuning protocol that
+eliminates the training-time attack surface
 rather than perturbing it. Each client fine-tunes a small low-rank adapter on a frozen pretrained backbone
 in plaintext and uploads a single encrypted parameter displacement; the server's only operation is a
-sample-weighted linear combination under multiparty CKKS at multiplicative depth one, decrypted jointly by a
-threshold of clients. Fine-tuning is what makes this affordable: the frozen backbone supplies the shared
+sample-weighted linear combination under multiparty CKKS, a scheme chosen for its threshold decryption and
+packed real-number arithmetic rather than its circuit depth: the combination runs at multiplicative depth
+one and is decrypted jointly by a threshold of clients. Fine-tuning is what makes this affordable: the
+frozen backbone supplies the shared
 frame a one-shot linear aggregation needs under heterogeneous data, and freezing the adapter's
-down-projection makes the encrypted aggregate exact task arithmetic, so the encrypted object is a few
+down-projection makes the encrypted sum of the trained factors exactly the weighted average of the clients'
+weight updates, so the encrypted object is a few
 megabytes regardless of the backbone and the cryptographic layer adds no accuracy cost. Because a server
 computing under encryption cannot read its inputs, it emits several depth-one candidate aggregates and the
 clients select among them after decryption, which improves the released model under heterogeneity and
 neutralizes a poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa
-and ViT to a billion-parameter language model, the method produces a common model stronger than any client's
-own and, outside the most skewed regimes, close to a centralized one. A real multiparty CKKS implementation
+and ViT to a half-billion-parameter language model, the method produces a common model stronger than any
+client's own, within $0.01$ of the same adapter fine-tuned on the pooled data under mild heterogeneity and
+$0.06$--$0.23$ behind it under severe label skew. A real multiparty CKKS implementation
 reproduces the plaintext aggregate within the approximation bounds of CKKS, and the one remaining surface,
 the released model, shows membership inference at or near chance.
 \end{abstract}

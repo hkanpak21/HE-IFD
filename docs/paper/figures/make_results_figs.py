@@ -1,7 +1,7 @@
 """Generate the two results figures from the landed sweep CSV.
 
 Reads results/finetune_increment/results.csv and writes:
-  docs/paper/figures/fig_increment.pdf   (headline: head vs HE-IFD per task)
+  docs/paper/figures/fig_increment.pdf   (headline: head vs HE-OFT per task)
   docs/paper/figures/fig_robust.pdf      (left: A* vs alpha; right: A* vs N)
 
 SANZO palette, no chartjunk, vector PDF for LaTeX. Re-run whenever the CSV
@@ -57,7 +57,7 @@ def mean(rows, **f):
 
 
 # Headline numbers, mirroring Table~\ref{tab:headline} (freeze-A, vote-selected,
-# three seeds): per task -> (naive sample-weighted average, HE-IFD, centralized).
+# three seeds): per task -> (naive sample-weighted average, HE-OFT, centralized).
 HEADLINE = {
     "ag_news":    (0.51, 0.75, 0.91),
     "trec":       (0.51, 0.72, 0.95),
@@ -81,7 +81,7 @@ def fig_increment(_rows=None):
     x = range(len(labels)); w = 0.38
     fig, ax = plt.subplots(figsize=(FIG_W, 2.6))
     ax.bar([i - w / 2 for i in x], naive, w, label="naive average", color=TAN)
-    ax.bar([i + w / 2 for i in x], heifd, w, label="HE-IFD", color=BLUE)
+    ax.bar([i + w / 2 for i in x], heifd, w, label="HE-OFT", color=BLUE)
     for i, c in enumerate(ceil):  # centralized reference as a dashed cap per group
         ax.plot([i - w, i + w], [c, c], ls="--", lw=1.1, color=SAGE,
                 label="centralized" if i == 0 else None)
@@ -100,7 +100,7 @@ def fig_robust(rows):
                      if r["task"] == "dbpedia_14" and r["r"] == 8 and r["N"] == 10})
     ya = [mean(rows, task="dbpedia_14", r=8, N=10, alpha=a)[0] for a in alphas]
     ca = mean(rows, task="dbpedia_14", r=8, N=10, alpha=alphas[-1])[1]
-    axL.plot(alphas, ya, "-o", color=BLUE, label="HE-IFD")
+    axL.plot(alphas, ya, "-o", color=BLUE, label="HE-OFT")
     axL.axhline(ca, ls="--", lw=1.1, color=SAGE, label="centralized")
     axL.set_xscale("log"); axL.set_xlabel(r"heterogeneity $\alpha$")
     axL.set_ylabel("accuracy"); axL.set_ylim(0.4, 1.0)
@@ -110,7 +110,7 @@ def fig_robust(rows):
                  if r["task"] == "dbpedia_14" and r["r"] == 8 and r["alpha"] == 0.1})
     yn = [mean(rows, task="dbpedia_14", r=8, N=N, alpha=0.1)[0] for N in Ns]
     cn = mean(rows, task="dbpedia_14", r=8, N=10, alpha=0.1)[1]
-    axR.plot(Ns, yn, "-o", color=BLUE, label="HE-IFD")
+    axR.plot(Ns, yn, "-o", color=BLUE, label="HE-OFT")
     axR.axhline(cn, ls="--", lw=1.1, color=SAGE, label="centralized")
     axR.set_xscale("log"); axR.set_xticks(Ns); axR.set_xticklabels(Ns)
     axR.set_xlabel(r"clients $N$"); axR.set_ylim(0.4, 1.0)
@@ -139,14 +139,16 @@ def fig_comm():
     ax.bar(list(x), fm_round, w, color=GREY,
            label="full model, per round")
     ax.bar([i + w for i in x], heifd, w, color=BLUE,
-           label="HE-IFD, one round")
+           label="HE-OFT, one round")
     ax.set_yscale("log")
     ax.set_xticks(list(x)); ax.set_xticklabels([f"$N={n}$" for n in Ns])
     ax.set_ylabel("total communication (MiB, log)")
-    ax.legend(frameon=False, loc="upper left", ncol=1)
+    # legend above the axes (matches fig_increment); inside placement overlaps
+    # the tall log-scale bars.
+    ax.legend(frameon=False, ncol=2, loc="upper center", bbox_to_anchor=(0.5, 1.30))
     ax.grid(axis="y", lw=0.4, alpha=0.4)
     fig.savefig(OUT / "fig_comm.pdf")
-    print(f"wrote fig_comm.pdf  HE-IFD={heifd[0]:.0f}-{heifd[-1]:.0f}MiB  "
+    print(f"wrote fig_comm.pdf  HE-OFT={heifd[0]:.0f}-{heifd[-1]:.0f}MiB  "
           f"fm/round={fm_round[0]/1024:.0f}-{fm_round[-1]/1024:.0f}GiB  "
           f"fm/{ROUNDS}r={fm_total[0]/1024/1024:.1f}-{fm_total[-1]/1024/1024:.1f}TiB")
 

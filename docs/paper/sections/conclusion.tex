@@ -1,10 +1,10 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented HE-IFD, a one-shot federated fine-tuning protocol built around a single observation about
+We presented HE-OFT, a one-shot federated fine-tuning protocol built around a single observation about
 where federated learning is vulnerable: the strongest known attacks exploit training-time artifacts, the
 gradients, updates, and summaries a protocol exposes while the model is being built, and these are far more
-damaging than anything an adversary can extract from the released model afterwards. HE-IFD removes that
+damaging than anything an adversary can extract from the released model afterwards. HE-OFT removes that
 training-time surface entirely rather than perturbing it. Each client fine-tunes a small adapter on a
 frozen pretrained backbone in plaintext and uploads one encrypted displacement, and the server's only
 operation is a linear aggregation computed under multiparty homomorphic encryption at multiplicative depth
@@ -15,7 +15,7 @@ and the encrypted object is a few megabytes whatever the size of the backbone be
 cost. Because a server computing under encryption cannot adapt its rule to data it cannot read, it emits
 several depth-one candidate aggregates and the clients select among them after decryption, which improves
 the released model under heterogeneity and yields a measured defense against a poisoning client, at no
-homomorphic cost. Across vision and language tasks, from a frozen RoBERTa and ViT to a billion-parameter
+homomorphic cost. Across vision and language tasks, from a frozen RoBERTa and ViT to a half-billion-parameter
 language model, the method yields a common model stronger than any client's own and, outside the most
 skewed regimes, close to a centrally fine-tuned one; a multiparty CKKS implementation reproduces the
 encrypted aggregation within the scheme's approximation bounds at a few megabytes per round; and the one

@@ -1,4 +1,4 @@
-# HE-IFD → IEEE TNSE: submission TODO
+# HE-OFT → IEEE TNSE: submission TODO
 
 Ordered by "could get it rejected" first, not by effort. Reviewers may overlap
 with the TDSC pool, so every prior-rejection concern (R*) is live.

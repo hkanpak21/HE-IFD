@@ -6,9 +6,10 @@ the shared model's accuracy, where one-shot differentially private federated lea
 the same protection. The evaluation tests that claim and the design choices behind it. We ask, in order: what
 fine-tuning the pretrained layers and selecting among depth-one candidate aggregates add over the naive
 one-shot average; how the method behaves under heterogeneity, a poisoned client, and the trajectory budget;
-what the cryptographic protocol costs in time and communication, including against encrypted
-transfer-learning peers; how much the one remaining surface, the released model, leaks; and what the method
-reaches at the published setups of prior one-shot methods and at billion-parameter scale. Throughout, the
+what the cryptographic protocol costs in time and communication; how much the one remaining surface, the
+released model, leaks; and what the method
+reaches at the published setups of prior one-shot methods and on a half-billion-parameter backbone.
+Throughout, the
 question is not whether the global model attains the highest possible test
 accuracy, but whether the clients jointly obtain a single model close to a centrally fine-tuned one, in one
 round, with cryptographic privacy that adds no accuracy cost.
@@ -16,28 +17,26 @@ round, with cryptographic privacy that adds no accuracy cost.
 \subsection{Setup}
 \label{sec:setup}
 
-\paragraph{No public data.} Every client starts from the \emph{same} public pretrained backbone with a
-zero-initialized low-rank adapter and a freshly initialized head, the standard adapter initialization
-$\thz$, which carries no client data and classifies at chance. Each client fine-tunes the adapter and head
-on its own private data for a bounded $\Ksteps$ steps and uploads the encrypted displacement; the server
-forms the depth-one weighted sum of \cref{eq:aggregate}. No labelled public set is used anywhere;
-\cref{sec:publicbase} discusses the easier case in which a deployment does have one.
+Every client starts from the \emph{same} public pretrained backbone with a zero-initialized low-rank
+adapter and a freshly initialized head --- the standard adapter initialization $\thz$, which carries no
+client data and classifies at chance --- fine-tunes the adapter and head on its own private data for a
+bounded $\Ksteps$ steps, and uploads the encrypted displacement; the server forms the depth-one weighted
+sum of \cref{eq:aggregate}. No labelled public set is used anywhere in the paper, since the setting
+without one is where a one-shot encrypted aggregation is actually needed
+(\cref{sec:publicbase} discusses the easier case in which a deployment has one). We evaluate on four text
+classification tasks of increasing label-space size --- AG-News (4 classes), TREC (6), DBpedia (14), and
+Banking77 (77) --- with frozen RoBERTa-base and MPNet encoders, and on CIFAR-100 with a frozen ViT. Data
+are partitioned across clients by a Dirichlet distribution over labels with concentration $\alpha$, the
+standard label-skew partition: a smaller $\alpha$ leaves each client a few dominant classes and almost
+none of the rest. Unless stated otherwise there are $\Nc=10$ clients, the adapter has rank $8$, the
+trajectory is $\Ksteps=200$ steps, and every number is the mean over three seeds.
 
-\paragraph{Tasks and backbones.} We evaluate on four text classification tasks of increasing label-space
-size: AG-News (4 classes), TREC (6), DBpedia (14), and Banking77 (77), with two frozen encoders,
-RoBERTa-base and MPNet, and on CIFAR-100 with a ViT vision backbone. Data are partitioned across clients by
-a Dirichlet distribution over labels with concentration $\alpha$ (the standard label-skew partition: a
-smaller $\alpha$ leaves each client a few dominant classes and almost none of the rest). Unless stated
-otherwise there are $\Nc=10$ clients, the adapter is rank $8$, the trajectory is $\Ksteps=200$ steps, and
-every number is averaged over three seeds.
-
-\paragraph{What we report.} We report the test accuracy of the HE-IFD global model; the shared start $\thz$
-classifies at chance, since it carries no task head. Two reference points frame it: a frozen-feature head
-(a linear probe trained under the same protocol) and, as the ceiling, the same model fine-tuned centrally
-on the pooled private data, what one party would obtain holding all of it. The two quantities of interest are
-the \emph{increment} of HE-IFD over the frozen-feature head and the \emph{gap} below the centralized ceiling;
-the centralized accuracy itself we give in the relevant captions rather than repeat in every row.
-\Cref{tab:setup} lists the axes.
+Alongside the accuracy of the HE-OFT global model we report two reference points: a frozen-feature linear
+probe trained under the same protocol, and, as the ceiling, the same adapter and head fine-tuned centrally
+on the pooled private data, what one party would obtain holding all of it. The quantities of interest are
+the \emph{increment} over the probe and the \emph{gap} below the centralized ceiling; the centralized
+accuracy itself appears in captions rather than repeated in every row. \Cref{tab:setup} lists the
+evaluation axes.
 
 \begin{table}[t]
 \centering
@@ -71,7 +70,7 @@ centralized ceiling.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_increment.pdf}
-\caption{HE-IFD raises the single encrypted aggregation well above the chance start and above the naive
+\caption{HE-OFT raises the single encrypted aggregation well above the chance start and above the naive
 sample-weighted average; the gap to centralized grows with the size of the label space, and no client data
 is shared.}
 \label{fig:increment}
@@ -79,15 +78,15 @@ is shared.}
 
 \begin{table}[t]
 \centering
-\caption{HE-IFD against the naive one-shot aggregation and the centralized ceiling ($\Nc=10$, $\alpha=0.1$,
+\caption{HE-OFT against the naive one-shot aggregation and the centralized ceiling ($\Nc=10$, $\alpha=0.1$,
 rank-$8$ frozen-projection adapter, three seeds). ``Naive'' is the plain sample-weighted average
-($\lambda{=}1$, no candidate selection); HE-IFD is the client-selected candidate; $\pm$ is the seed standard
-deviation; the gap is HE-IFD to centralized. Text tasks use frozen RoBERTa, CIFAR-100 a frozen ViT-B/16.}
+($\lambda{=}1$, no candidate selection); HE-OFT is the client-selected candidate; $\pm$ is the seed standard
+deviation; the gap is HE-OFT to centralized. Text tasks use frozen RoBERTa, CIFAR-100 a frozen ViT-B/16.}
 \label{tab:headline}
 \footnotesize
 \begin{tabular}{lcccc}
 \toprule
-Task ($\Cc$) & naive avg & HE-IFD & centralized & gap \\
+Task ($\Cc$) & naive avg & HE-OFT & centralized & gap \\
 \midrule
 AG-News (4)     & 0.51 & $\mathbf{0.75}{\pm}0.09$ & 0.91 & 0.16 \\
 TREC (6)        & 0.51 & $\mathbf{0.72}{\pm}0.05$ & 0.95 & 0.23 \\
@@ -109,15 +108,16 @@ Banking77; the naive average is the combination that heterogeneity makes unstabl
 selects the candidate that is robust to it. The remaining gap to the centralized fine-tune is small at moderate
 label spaces ($0.06$ on the 14-class DBpedia) and is largest where a single round must cover many classes
 each client barely observes; even there, freezing the adapter's projection and selecting a coverage-weighted
-candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-IFD
+candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-OFT
 produces the model in one round, with no client exposing its data and with encryption that perturbs nothing.
 
-\subsection{Heterogeneity and Client Count}
+\subsection{Sensitivity: Heterogeneity, Client Count, Trajectory Length}
 \label{sec:heterogeneity}
 
 How much the released model trails the centralized one is governed by label skew, the axis the single
-linear aggregation is most exposed to. \Cref{tab:het} sweeps the Dirichlet concentration on DBpedia at
-$\Nc=10$. The accuracy degrades gracefully and monotonically, from $0.98$ when the data are near-uniform
+linear aggregation is most exposed to. \Cref{tab:sens} sweeps the three protocol axes on DBpedia. Under
+the Dirichlet concentration at $\Nc=10$, the accuracy degrades gracefully and monotonically, from $0.98$
+when the data are near-uniform
 ($\alpha=1.0$, within $0.01$ of centralized) to $0.87$ under severe skew ($\alpha=0.05$), while the
 centralized fine-tune barely moves. The gap the one-shot aggregation pays is therefore a property of
 heterogeneity, small when each client sees most of the label space and widening only when each sees a sliver
@@ -126,27 +126,38 @@ contains it rather than letting it collapse the model.
 
 \begin{table}[t]
 \centering
-\caption{HE-IFD accuracy across label heterogeneity ($\Nc=10$) and client count ($\alpha=0.1$) on DBpedia,
-three seeds; centralized $\approx 0.99$ throughout.}
-\label{tab:het}
+\caption{Sensitivity of HE-OFT on DBpedia along the three protocol axes, each varied around the default
+($\Nc=10$, $\alpha=0.1$, $\Ksteps=200$); centralized $\approx 0.99$ throughout. $\pm$ is the standard
+deviation over three seeds; the $\Ksteps$ sweep is a single seed.}
+\label{tab:sens}
 \footnotesize
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{lcccc@{\hskip 1.2em}lccc}
+\begin{tabular}{lcccc}
 \toprule
-\multicolumn{5}{c}{Heterogeneity $\alpha$} & \multicolumn{4}{c}{Clients $\Nc$} \\
-\cmidrule(r){1-5}\cmidrule(l){6-9}
-& 0.05 & 0.10 & 0.30 & 1.00 & & 10 & 20 & 50 \\
+\multicolumn{5}{@{}l}{\emph{Heterogeneity} $\alpha$ \quad ($\Nc=10$, $\Ksteps=200$)} \\
+ & $0.05$ & $0.10$ & $0.30$ & $1.00$ \\
+HE-OFT & $0.87{\pm}0.05$ & $0.93{\pm}0.01$ & $0.96{\pm}0.02$ & $0.98{\pm}0.00$ \\
 \midrule
-HE-IFD & 0.87 & 0.93 & 0.96 & 0.98 & HE-IFD & 0.93 & 0.90 & 0.93 \\
+\multicolumn{5}{@{}l}{\emph{Clients} $\Nc$ \quad ($\alpha=0.1$, $\Ksteps=200$)} \\
+ & $10$ & $20$ & $50$ & \\
+HE-OFT & $0.93{\pm}0.01$ & $0.90{\pm}0.02$ & $0.93{\pm}0.00$ & \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Trajectory} $\Ksteps$ \quad ($\Nc=10$, $\alpha=0.1$)} \\
+ & $100$ & $200$ & $400$ & \\
+HE-OFT & $0.91$ & $0.93$ & $0.94$ & \\
 \bottomrule
 \end{tabular}
 \normalsize
 \end{table}
 
 The aggregation is also stable as participants are added. Holding $\alpha=0.1$ and scaling the client count
-from $10$ to $50$ (\cref{tab:het}, right), HE-IFD stays at $0.90$--$0.93$ with no downward trend, even as each
+from $10$ to $50$ (\cref{tab:sens}, middle), HE-OFT stays at $0.90$--$0.93$ with no downward trend, even as
+each
 client's shard thins fivefold; the single linear combination neither destabilises nor washes out as $\Nc$
-grows, and the protocol's cost (\cref{sec:fhe-cost}) is the only quantity that scales with it.
+grows, and the protocol's cost (\cref{sec:fhe-cost}) is the only quantity that scales with it. The
+trajectory budget behaves the same way (\cref{tab:sens}, bottom): within the swept range a longer
+trajectory helps monotonically, from $0.91$ at $\Ksteps=100$ to $0.94$ at $\Ksteps=400$, narrowing the gap
+to centralized to $0.05$, the frozen backbone keeping even the longest trajectory's displacements coherent
+enough to sum.
 
 \subsection{Robustness to a Poisoned Client}
 \label{sec:robust}
@@ -170,45 +181,18 @@ shows the candidate machinery already absorbs a poisoning client that the blind 
 \begin{table}[t]
 \centering
 \caption{Robustness to one poisoned client (DBpedia and AG-News, $\Nc=10$, $\alpha=0.1$, three seeds).
-``Plain'' is the undefended sample-weighted aggregate that includes the attacker; ``HE-IFD'' is the
+``Plain'' is the undefended sample-weighted aggregate that includes the attacker; ``HE-OFT'' is the
 vote-selected leave-one-out candidate; ``oracle'' is the attacker-free aggregate; ``excluded'' counts how
 often the vote dropped the attacker.}
 \label{tab:poison}
 \footnotesize
 \begin{tabular}{lccccc}
 \toprule
-Attack & plain & HE-IFD & oracle & excluded \\
+Attack & plain & HE-OFT & oracle & excluded \\
 \midrule
 sign-flip   & 0.25 & $\mathbf{0.65}$ & 0.65 & 6/6 \\
 large-Gauss & 0.50 & $\mathbf{0.67}$ & 0.65 & 5/6 \\
 label-flip  & 0.48 & $\mathbf{0.65}$ & 0.65 & 6/6 \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table}
-
-\subsection{Trajectory Length}
-\label{sec:trajectory}
-
-The trajectory length sets how far each client moves from the shared start before its displacement is
-aggregated. \Cref{tab:traj} varies the step budget $\Ksteps$ on DBpedia: within the swept range a longer
-trajectory helps monotonically, lifting HE-IFD from $0.91$ at $\Ksteps=100$ to $0.94$ at $\Ksteps=400$ and
-narrowing the gap to centralized to $0.05$, the frozen backbone keeping even the longest trajectory's
-displacements coherent enough to sum.
-
-\begin{table}[t]
-\centering
-\caption{Trajectory length: HE-IFD accuracy (DBpedia, $\Nc=10$, $\alpha=0.1$);
-centralized $\approx 0.99$.}
-\label{tab:traj}
-\footnotesize
-\begin{tabular}{lcc}
-\toprule
-$\Ksteps$ & HE-IFD & gap \\
-\midrule
-100 & 0.91 & 0.08 \\
-200 & 0.93 & 0.06 \\
-400 & 0.94 & 0.05 \\
 \bottomrule
 \end{tabular}
 \normalsize
@@ -252,66 +236,50 @@ round. The per-client traffic is fixed by the trainable-parameter count: a unit 
 is a single $0.5$\,MiB ciphertext. The headline configuration, a freeze-$A$ rank-$8$ adapter with a
 classifier head (about $1.5\times10^5$ trainable parameters), occupies $19$ ciphertexts, or $9.5$\,MiB per
 client; freezing the down-projection is what halves this relative to training both factors. Total traffic
-scales linearly in the number of clients (\cref{tab:cost-comm}). The contrast with encrypted full-model
+scales linearly in the number of clients (\cref{tab:cost}). The contrast with encrypted full-model
 schemes is structural: on the same backbone, encrypting the full RoBERTa-base ($1.25\times10^8$ parameters)
-would move about $7.5$\,GiB per client \emph{per round}, and such schemes run for many rounds, where HE-IFD
-encrypts only the adapter and runs once (\cref{fig:comm}). The object stays small even on a billion-parameter
+would move about $7.5$\,GiB per client \emph{per round}, and such schemes run for many rounds, where HE-OFT
+encrypts only the adapter and runs once (\cref{fig:comm}). The object stays small even on a
+half-billion-parameter
 backbone: a freeze-$A$ adapter on the $0.5$B Qwen2.5 model is $26$ ciphertexts ($13$\,MiB), because only the
 adapter is encrypted, never the backbone.
 
-\begin{table}[t]
-\centering
-\caption{Per-client communication per round (multiparty CKKS, ring $2^{14}$, $0.5$\,MiB per ciphertext).
-A round is one upload and one download; totals scale linearly in $\Nc$ (\cref{fig:comm}).}
-\label{tab:cost-comm}
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{lcc}
-\toprule
-Trainable unit & ciphertexts & up$=$down per client \\
-\midrule
-\textbf{freeze-$A$ adapter$+$head (RoBERTa)} & \textbf{19} & \textbf{$9.5$ MiB} \\
-freeze-$A$ adapter$+$head (Qwen2.5-0.5B) & 26 & $13$ MiB \\
-text head (4-class)   & 1  & $0.50$ MiB \\
-vision head (100-class) & 10 & $5.0$ MiB \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table}
-
 \paragraph{Computation.} The server's homomorphic work is tens of milliseconds at deployment scale and stays
-sub-second even at $\Nc=100$ (\cref{tab:cost-time}). The measured operations follow simple
+sub-second even at $\Nc=100$ (\cref{tab:cost}). The measured operations follow simple
 laws: a client encrypts in about $2.1$\,ms per ciphertext (in parallel across clients), while the server
 aggregation and the threshold decryption scale linearly in $\Nc\times(\text{ciphertexts/client})$, and the
 one-time distributed key generation grows linearly in $\Nc$ at about $1$\,ms per party. From these rates the
 freeze-$A$ adapter ($19$ ciphertexts) costs about $40$\,ms to encrypt per client and, at $\Nc=100$, about
-$0.72$\,s to aggregate and $0.43$\,s to decrypt (\cref{tab:cost-time}). Emitting $k$ candidate aggregates
+$0.72$\,s to aggregate and $0.43$\,s to decrypt (\cref{tab:cost}). Emitting $k$ candidate aggregates
 (\cref{sec:candidates}) costs $k$ threshold decryptions, so a dozen candidates add about half a second; there
 is no bootstrapping anywhere in the protocol.
 
 \begin{table}[t]
 \centering
-\caption{Computation time (ms, one CPU core, Apple M4). DKG is a one-time setup; the encrypt figure is per
-client (clients encrypt in parallel); aggregation and decryption scale linearly in $\Nc\times$ciphertexts.}
-\label{tab:cost-time}
+\caption{Cryptographic cost per trainable unit (multiparty CKKS, ring $2^{14}$, $0.5$\,MiB per ciphertext;
+times in ms on one CPU core, Apple M4). The MiB column is the per-client upload, equal to the download;
+the protocol completes in one round, and total traffic scales linearly in $\Nc$ (\cref{fig:comm}). Clients
+encrypt in parallel; aggregation and threshold decryption scale linearly in $\Nc\times$ciphertexts; the
+one-time distributed key generation costs $\approx 11$\,ms at $\Nc{=}10$ and $\approx 96$\,ms at
+$\Nc{=}100$.}
+\label{tab:cost}
 \footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llcccc}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lccccc}
 \toprule
-Trainable unit & $\Nc$ & DKG & encrypt/client & aggregate & decrypt \\
+ & & & & \multicolumn{2}{c}{aggregate / decrypt (ms)} \\
+\cmidrule(l){5-6}
+Trainable unit & ct.\ & MiB & enc.\ (ms) & $\Nc{=}10$ & $\Nc{=}100$ \\
 \midrule
-\textbf{freeze-$A$ adapter} & 10  & $11$ & $40$ & $76$  & $44$ \\
-\textbf{freeze-$A$ adapter} & 100 & $96$ & $40$ & $717$ & $430$ \\
-text head    & 10  & $13$ & $2.3$  & $3.9$   & $2.4$ \\
-text head    & 100 & $96$ & $2.2$  & $38.9$  & $23.2$ \\
-vision head  & 10  & $11$ & $21.5$ & $39.0$  & $24.6$ \\
-vision head  & 100 & $98$ & $21.7$ & $382.2$ & $216.5$ \\
+freeze-$A$ adapter & 19 & $9.5$ & $40$ & $76$ / $44$ & $717$ / $430$ \\
+text head (4) & 1 & $0.5$ & $2.3$ & $3.9$ / $2.4$ & $38.9$ / $23.2$ \\
+vision head (100) & 10 & $5.0$ & $21.5$ & $39.0$ / $24.6$ & $382.2$ / $216.5$ \\
 \bottomrule
 \end{tabular}
 \normalsize
 \end{table}
 
-\paragraph{Comparison with other encrypted schemes.} \Cref{tab:hecomm} places HE-IFD against the encrypted
+\paragraph{Comparison with other encrypted schemes.} \Cref{tab:hecomm} places HE-OFT against the encrypted
 federated-learning approaches. Two properties separate it from all of them. First, it is one-shot: it
 encrypts a single contribution and runs one round, where encrypted-training schemes such as
 POSEIDON~\cite{sav2021poseidon} run multiparty CKKS for many rounds, hours of wall-clock even on small
@@ -331,7 +299,7 @@ that further separates a one-round protocol from a multi-round one.
 \centering
 \includegraphics[width=\linewidth]{figures/fig_comm.pdf}
 \caption{Total communication on a shared backbone (RoBERTa-base), calculated for CKKS ring $2^{14}$
-($0.5$\,MiB per ciphertext; $50$ rounds for the iterative schemes). HE-IFD encrypts only the adapter and runs
+($0.5$\,MiB per ciphertext; $50$ rounds for the iterative schemes). HE-OFT encrypts only the adapter and runs
 once; full-model encrypted schemes move gigabytes per round (BatchCrypt, FedML-HE, FedSHE) to terabytes over
 training (POSEIDON-style encrypted training).}
 \label{fig:comm}
@@ -339,16 +307,16 @@ training (POSEIDON-style encrypted training).}
 
 \begin{table*}[t]
 \centering
-\caption{HE-IFD against encrypted federated-learning schemes. Communication is per client; HE-IFD's is
+\caption{HE-OFT against encrypted federated-learning schemes. Communication is per client; HE-OFT's is
 calculated for a freeze-$A$ adapter (RoBERTa-base, $19$ ciphertexts), the full-model figure for encrypting
 the same backbone.}
 \label{tab:hecomm}
 \footnotesize
 \begin{tabular}{lcccc}
 \toprule
-Method & crypto & encrypted object & rounds & comm/client \\
+Method & cryptographic scheme & encrypted object & rounds & communication per client \\
 \midrule
-\textbf{HE-IFD (ours)} & multiparty CKKS & adapter$+$head & \textbf{1} & \textbf{$9.5$ MiB} \\
+\textbf{HE-OFT (ours)} & multiparty CKKS & adapter$+$head & \textbf{1} & \textbf{$9.5$ MiB} \\
 SHE-LoRA~\cite{li2025shelora} & CKKS (selective) & adapter subset & many & per round \\
 POSEIDON & multiparty CKKS & full model & many & GiB ($\sim$1.4 h) \\
 BatchCrypt / FedML-HE / FedSHE & CKKS & full model & many & GiB / round \\
@@ -361,54 +329,14 @@ Hyb-Agg & multi-key CKKS & update sum & per round & secure sum \\
 The encrypted object stays depth one and the server cost grows only with the ciphertext count, never with the
 size of the frozen backbone the adapter sits in.
 
-\paragraph{Comparison with encrypted transfer learning.} The closest cost comparison outside federated
-learning is HETAL~\cite{lee2023hetal}, which solves the same structural problem --- fine-tuning a small
-unit on frozen pretrained features without revealing the data behind it --- but places the encryption
-around the \emph{optimizer}: the client encrypts its extracted features, and the server trains a softmax
-head on the ciphertexts with an encrypted gradient method, approximated softmax, and bootstrapping.
-\Cref{tab:hetal} sets the two designs and their reported costs side by side. HETAL reports $567$--$3442$\,s
-of encrypted training across its five benchmarks on an NVIDIA A40 GPU with a 64-thread server CPU, with an
-accuracy drop of up to $0.51\%$ against plaintext training on the same features. Our encrypted pipeline
-(encrypt, aggregate, threshold-decrypt) takes about $0.16$\,s at $\Nc{=}10$ and $1.2$\,s at $\Nc{=}100$ on
-one laptop CPU core, and is exact to a relative $\ell_2\approx10^{-9}$, because training happens in
-plaintext on each client and only the finished displacement is ever encrypted. The comparison is indicative
-rather than controlled: HETAL serves a single data owner outsourcing its training, whereas HE-IFD
-aggregates across $\Nc$ mutually distrustful parties under a collective key, a setting HETAL does not
-address, and HETAL trains only a classifier head where we also fine-tune adapters inside the backbone. But
-it quantifies the structural point of \cref{sec:related-crypto}: moving the encryption boundary from the
-optimizer to a one-shot aggregation removes the encrypted nonlinearities, the bootstrapping, and the GPU,
-and replaces roughly hour-scale encrypted training with second-scale encrypted aggregation, three orders of
-magnitude on weaker hardware. On the one benchmark the setups share, CIFAR-10 over a frozen ViT-Base
-backbone, HETAL's encrypted head training reaches $96.57\%$ with all data at one party, and HE-IFD reaches
-$96\%$ with the data split across five clients (\cref{tab:matched}).
-
-\begin{table}[t]
-\centering
-\caption{Encrypted transfer learning against one-shot encrypted aggregation. HETAL figures are its paper's
-own (HEaaN, ring $2^{16}$, NVIDIA A40 GPU $+$ 64-thread CPU); HE-IFD figures are from
-\cref{tab:cost-time,tab:cost-comm} (Lattigo, ring $2^{14}$, one CPU core). The settings differ --- one data
-owner outsourcing training vs.\ $\Nc$ mutually distrustful parties --- so the table contrasts where each
-design pays its encryption cost.}
-\label{tab:hetal}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcc}
-\toprule
- & HETAL~\cite{lee2023hetal} & HE-IFD (ours) \\
-\midrule
-parties & $1$ owner $+$ server & $\Nc$ clients $+$ server \\
-key & single-key CKKS & multiparty CKKS \\
-encrypted object & features $+$ head & adapter displacement \\
-trained under HE & softmax head & nothing \\
-nonlinearity under HE & approx.\ softmax & none \\
-bootstrapping & yes & no (depth one) \\
-encrypted wall-clock & $567$--$3442$\,s & $0.16$--$1.2$\,s \\
-accuracy vs.\ plaintext & $\le 0.51\%$ drop & exact ($\ell_2\!\approx\!10^{-9}$) \\
-CIFAR-10, frozen ViT & $96.57\%$ (pooled) & $96\%$ (split, $\Nc{=}5$) \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table}
+\paragraph{Comparison with encrypted transfer learning.} HETAL~\cite{lee2023hetal} solves a neighbouring
+but different problem: a single data owner outsources training, so the optimizer itself must run on
+ciphertexts --- an encrypted gradient method with approximated softmax and bootstrapping, at a reported
+$567$--$3442$\,s of encrypted training per benchmark on an NVIDIA A40 GPU. Our parties can train locally
+and must only hide what they trained, so the optimizer never touches a ciphertext, and the entire
+encrypted pipeline (encrypt, aggregate, threshold-decrypt) is $0.16$--$1.2$\,s on one laptop CPU core,
+exact to a relative $\ell_2\approx10^{-9}$. The two designs are complementary rather than competing; the
+contrast quantifies what moving the encryption boundary from the optimizer to a one-shot aggregation buys.
 
 \paragraph{Correctness.} The decrypted aggregate matches the plaintext computation to a relative $\ell_2$
 error between $2.7\times10^{-9}$ ($\Nc=10$) and $2.6\times10^{-8}$ ($\Nc=100$). This is the encoding precision
@@ -423,7 +351,7 @@ that the source paper reports at roughly $1.4$ hours of wall-clock; secure-aggre
 primitives~\cite{kemmaka2025hybagg} sum updates once per round inside an iterative protocol. Our protocol runs
 in a single round whose server computation is milliseconds and whose communication is a few megabytes,
 because the only encrypted object is a bounded fine-tuning displacement of a small adapter, combined at
-multiplicative depth one. The broader method-level positioning is in \cref{sec:related-positioning}.
+multiplicative depth one. The broader method-level positioning closes \cref{sec:related}.
 
 \subsection{Residual Leakage: Measuring the Inference-Time Surface}
 \label{sec:mia}
@@ -444,7 +372,7 @@ Read as attack surfaces, the alternatives differ by orders of magnitude. Multi-r
 publishes a fresh update every round, so a curious server or peer accumulates a long sequence of
 training-time views of each client~\cite{shokri2017membership,nasr2019comprehensive}. One-shot methods that
 rely on differential privacy ship, in a single object, essentially the whole of a client's local knowledge:
-a synthetic copy of its data, or a noised model. HE-IFD exposes only the final aggregate: the per-client
+a synthetic copy of its data, or a noised model. HE-OFT exposes only the final aggregate: the per-client
 displacements are encrypted and never appear in the clear, and because there is no alignment phase there is
 no prototype channel either.
 
@@ -496,35 +424,37 @@ privacy goal the design meets.
 \subsection{Matched Setups and Scale}
 \label{sec:matched}
 
-The positioning of \cref{sec:related-positioning} separates the methods qualitatively; the accuracies each
+The positioning paragraph closing \cref{sec:related} separates the methods qualitatively; the accuracies each
 paper reports are obtained at its own setup and do not compare directly. To make the comparison controlled,
-we run HE-IFD at the \emph{published partitions}
+we run HE-OFT at the \emph{published partitions}
 of three one-shot methods, varying the dataset, client count, and Dirichlet $\alpha$ to match theirs while
 keeping our model class (a frozen ViT-B/16 with a freeze-$A$ adapter, which we state). \Cref{tab:matched}
-reports the result. At the data-free DENSE setup (CIFAR-10, $\Nc=5$) HE-IFD reaches $0.96$ against their
+reports the result. At the data-free DENSE setup (CIFAR-10, $\Nc=5$) HE-OFT reaches $0.96$ against their
 reported $0.50$/$0.60$; at the differentially private FedAUXfdp setup (CIFAR-10, $\Nc=20$, severe skew)
 $0.94$ against $0.75$ at $\varepsilon{=}0.5$; and at the FedSD2C setup (Tiny-ImageNet, $\Nc=10$) $0.73$. The
 gains owe much to the stronger frozen backbone, which is the point: the protocol's cryptographic and
 communication structure carries unchanged onto a backbone that makes the task easy, where prior data-free and
 differentially private one-shot methods cannot reach the same accuracy and, in the DP case, pay an explicit
-budget for a weaker guarantee than encryption gives.
+budget for a weaker guarantee than encryption gives. The same backbone is also why the CIFAR-10 cells
+cluster in a narrow $0.94$--$0.96$ band across partitions: the frozen representation, not the partition,
+sets the ceiling, and the seed spread within each cell stays between $0.002$ and $0.02$.
 
 \begin{table}[t]
 \centering
-\caption{HE-IFD at the published partitions of prior one-shot methods (frozen ViT-B/16 $+$ freeze-$A$
+\caption{HE-OFT at the published partitions of prior one-shot methods (frozen ViT-B/16 $+$ freeze-$A$
 adapter, three seeds). Comparator numbers are paper-verbatim at the cited setup.}
 \label{tab:matched}
 \footnotesize
 \begin{tabular}{llcc}
 \toprule
-Matched setup & data, $\Nc$, $\alpha$ & HE-IFD & reported \\
+Matched setup & data, $\Nc$, $\alpha$ & HE-OFT & reported \\
 \midrule
-DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.1   & \textbf{0.96} & 0.50 \\
-DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.3   & \textbf{0.96} & 0.60 \\
-FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.04 & \textbf{0.94} & 0.75$^\ddagger$ \\
-FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.16 & \textbf{0.96} & 0.75$^\ddagger$ \\
-FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.1 & \textbf{0.73} & --- \\
-FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & \textbf{0.73} & --- \\
+DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.1   & $\mathbf{0.96}{\pm}0.00$ & 0.50 \\
+DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.3   & $\mathbf{0.96}{\pm}0.00$ & 0.60 \\
+FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.04 & $\mathbf{0.94}{\pm}0.01$ & 0.75$^\ddagger$ \\
+FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.16 & $\mathbf{0.96}{\pm}0.01$ & 0.75$^\ddagger$ \\
+FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.1 & $\mathbf{0.73}{\pm}0.01$ & --- \\
+FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & $\mathbf{0.73}{\pm}0.02$ & --- \\
 \bottomrule
 \end{tabular}
 \normalsize
@@ -533,8 +463,8 @@ FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & \textbf{0.73} & --- \
 \noindent\footnotesize $^\ddagger$FedAUXfdp at $\varepsilon{=}0.5$ on its CIFAR-10 setup.\normalsize
 \end{table}
 
-The protocol also carries to a billion-parameter-class backbone. On a frozen Qwen2.5-0.5B causal language
-model with a freeze-$A$ adapter, HE-IFD reaches $0.87$--$0.88$ on DBpedia, where the naive average collapses
+The protocol also carries to a half-billion-parameter backbone. On a frozen Qwen2.5-0.5B causal language
+model with a freeze-$A$ adapter, HE-OFT reaches $0.87$--$0.88$ on DBpedia, where the naive average collapses
 to $0.44$, and $0.71$--$0.72$ on AG-News, while the encrypted object stays at $26$ ciphertexts ($13$\,MiB):
 the cost is set by the adapter, not by the $0.5$B backbone behind it, which is never encrypted.
 

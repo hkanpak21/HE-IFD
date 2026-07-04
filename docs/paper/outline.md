@@ -10,7 +10,7 @@ PI's flow notes; each note maps to a numbered item below.
 > data. When several parties want one jointly adapted model, the artifacts they
 > exchange **while training runs** are the dominant leak — training-time attacks
 > (gradient inversion, update-level membership inference) are far stronger than
-> anything an adversary can do with the released model afterwards. HE-IFD
+> anything an adversary can do with the released model afterwards. HE-OFT
 > **eliminates the training-time surface entirely** instead of perturbing it:
 > the exchange is one-shot (one artifact, not hundreds) and that one artifact is
 > encrypted (zero plaintext exposure). This is affordable precisely **because**
