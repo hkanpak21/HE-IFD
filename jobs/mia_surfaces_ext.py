@@ -308,7 +308,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--modality", required=True, choices=["text", "vision"])
     ap.add_argument("--cell-index", type=int, default=None)
-    ap.add_argument("--n-shadows", type=int, default=16)
+    # 8 shadows (9 models) so one cell fits a single 3h slot under GPU
+    # contention; variance-fixed LiRA still cleanly separates the near-chance
+    # released model from the elevated per-client update. Existing text
+    # checkpoints (>=8 shadows) are reused as-is. The tab:mia caption notes
+    # the count differs from the 16-shadow text rows in heifd_mia_freeze_a.
+    ap.add_argument("--n-shadows", type=int, default=8)
     args = ap.parse_args()
 
     rows = []
