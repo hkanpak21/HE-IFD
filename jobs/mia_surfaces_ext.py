@@ -313,8 +313,9 @@ def main():
 
     rows = []
     if args.modality == "text":
-        cells = [(t, s) for t in ["ag_news", "dbpedia_14", "banking77"]
-                 for s in [42, 43, 44]]
+        # ag_news x 3 seeds is enough for the released-vs-update contrast (B.9);
+        # the 4-task RELEASED-model numbers already live in heifd_mia_freeze_a.
+        cells = [(t, s) for t in ["ag_news"] for s in [42, 43, 44]]
         if args.cell_index is not None:
             cells = [cells[args.cell_index]]
         for task, seed in cells:
