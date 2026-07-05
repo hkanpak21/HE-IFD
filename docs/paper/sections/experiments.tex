@@ -112,6 +112,35 @@ each client barely observes; even there, freezing the adapter's projection and s
 candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-OFT
 produces the model in one round, with no client exposing its data and with encryption that perturbs nothing.
 
+The lift comes from the adapter, not its rank. \Cref{tab:unit} varies the trainable unit on DBpedia: a
+head alone on the frozen features reaches $0.78$, and its own centralized ceiling is only $0.93$, because a
+linear probe cannot adapt the representation. Adding a rank-$4$ adapter, which fine-tunes the backbone's own
+layers, lifts the released model to $0.93$ and raises the centralized ceiling to $0.99$; rank $8$ matches it
+and rank $16$ does not improve on either, while tripling the encrypted object. The adapter is therefore what
+makes fine-tuning worthwhile, and a small rank captures all of it, which is also what keeps the ciphertext
+count low; we fix rank $8$ elsewhere as a mid-point.
+
+\begin{table}[t]
+\centering
+\caption{Trainable unit on DBpedia ($\Nc{=}10$, $\alpha{=}0.1$, three seeds): a head alone on the frozen
+features versus a freeze-$A$ rank-$r$ adapter plus head. ``params'' is the trainable count, which sets the
+encrypted object's size; HE-OFT is the vote-selected accuracy; ``centralized'' is the same unit trained on
+the pooled data.}
+\label{tab:unit}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Trainable unit & params & HE-OFT & centralized \\
+\midrule
+head only            & $11$k  & $0.78{\pm}0.01$ & $0.93$ \\
+$+$ rank-$4$ adapter  & $84$k  & $\mathbf{0.93}{\pm}0.01$ & $0.99$ \\
+$+$ rank-$8$ adapter  & $158$k & $\mathbf{0.93}{\pm}0.01$ & $0.99$ \\
+$+$ rank-$16$ adapter & $306$k & $0.91{\pm}0.04$ & $0.99$ \\
+\bottomrule
+\end{tabular}
+\normalsize
+\end{table}
+
 \subsection{Sensitivity: Heterogeneity, Client Count, Trajectory Length}
 \label{sec:heterogeneity}
 
