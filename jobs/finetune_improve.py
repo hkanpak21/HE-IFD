@@ -417,6 +417,18 @@ def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
         load_trainable(model, st)
         test_acc[name] = evaluate(model, ids_te, mask_te, yte)
 
+    # per-client standalone accuracy on the GLOBAL test set (θ₀+Δ_j): backs the
+    # "stronger than any single client trains alone" claim. Free — N forward passes.
+    local_accs = []
+    for i in range(len(deltas)):
+        if sizes[i] == 0:
+            continue
+        st_i = {k: theta0[k] + deltas[i][k] for k in theta0}
+        load_trainable(model, st_i)
+        local_accs.append(evaluate(model, ids_te, mask_te, yte))
+    best_local = round(max(local_accs), 4) if local_accs else 0.0
+    mean_local = round(float(np.mean(local_accs)), 4) if local_accs else 0.0
+
     # --- client-vote selection on local holdouts (post-decryption, free) ---
     votes = {name: 0.0 for name in cands}
     vtot = 0.0
@@ -454,6 +466,7 @@ def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
                 K=K, r=r, freeze_a=int(freeze_a), sem_init=int(sem_init),
                 swa=int(swa), prox_mu=prox_mu, calib_tau=calib_tau,
                 n_trainable=ntrain, A0=round(A0, 4),
+                best_local=best_local, mean_local=mean_local,
                 Astar=round(Astar, 4),
                 acc_fisher=round(test_acc["fisher"], 4),
                 acc_counthead=round(test_acc["count_head"], 4),
@@ -469,6 +482,7 @@ def run_cell(task, backbone, N, alpha, seed, K=200, lr=5e-4, bs=32, r=8,
 
 CSV_COLS = ["task", "backbone", "N", "alpha", "seed", "K", "r", "freeze_a",
             "sem_init", "swa", "prox_mu", "calib_tau", "n_trainable", "A0",
+            "best_local", "mean_local",
             "Astar", "acc_fisher", "acc_counthead", "lam_best", "acc_lam_best",
             "selected", "acc_selected", "A_central", "increment", "gap"]
 
@@ -481,14 +495,20 @@ def cell_name(c):
                c.get("calib_tau", 0.0), c.get("lr", 5e-4)))
 
 
-def run_resumable(rows, **c):
-    """Run one cell with per-cell JSON resume; append the row to ``rows``."""
+def run_resumable(rows, force=False, **c):
+    """Run one cell with per-cell JSON resume; append the row to ``rows``.
+
+    ``force`` recomputes a cell that predates a schema field (e.g. best_local);
+    a cell that already carries best_local is still skipped, so a --force backfill
+    is idempotent and self-chain-safe.
+    """
     f = OUTDIR / cell_name(c)
     if f.exists():
         row = json.loads(f.read_text())
-        rows.append(row)
-        print(f"skip (done): {f.name}", flush=True)
-        return row
+        if not force or "best_local" in row:
+            rows.append(row)
+            print(f"skip (done): {f.name}", flush=True)
+            return row
     t = time.time()
     row = run_cell(**c)
     row["wall"] = round(time.time() - t, 1)
@@ -506,7 +526,7 @@ def print_csv(rows):
     """Paste-ready CSV block: one header line, one row per cell, nothing else."""
     print(",".join(CSV_COLS))
     for r in rows:
-        print(",".join(str(r[c]) for c in CSV_COLS))
+        print(",".join(str(r.get(c, "")) for c in CSV_COLS))
 
 
 # --------------------------------------------------------------------------
@@ -607,10 +627,10 @@ CSV_COLS_ROBUST = ["task", "backbone", "N", "alpha", "seed", "K", "r", "freeze_a
                    "acc_selected", "selected", "attacker_excluded", "acc_oracle"]
 
 
-def run_robust_resumable(rows, **c):
+def run_robust_resumable(rows, force=False, **c):
     f = OUTDIR / ("robust_" + cell_name(c).replace(".json", "") +
                   "_atk%s.json" % c.get("attack", "sign_flip"))
-    if f.exists():
+    if f.exists() and not force:
         rows.append(json.loads(f.read_text()))
         print(f"skip (done): {f.name}", flush=True)
         return rows[-1]
@@ -686,6 +706,12 @@ def grid(stage):
         for s in seeds:
             cells.append({**base, "task": "dbpedia_14", "N": 100, "seed": s,
                           "client_ckpt": True})
+    elif stage == "headline":    # tab:headline configs — re-run with --force to add
+        # best_local/mean_local (per-client standalone acc on the global test set).
+        # The local phase is deterministic, so every other number reproduces exactly.
+        for task in ["ag_news", "trec", "dbpedia_14", "banking77"]:
+            for s in seeds:
+                cells.append({**base, "task": task, "seed": s})
     elif stage == "s7":          # Byzantine-lite LOO robustness (issue fa04)
         for task in ["dbpedia_14", "ag_news"]:
             for attack in ["sign_flip", "gauss", "label_flip"]:
@@ -701,8 +727,11 @@ def grid(stage):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True,
-                    choices=["s1", "s2", "s3", "s4", "s5", "s7", "s8", "s9"])
+                    choices=["s1", "s2", "s3", "s4", "s5", "s7", "s8", "s9", "headline"])
     ap.add_argument("--bs", type=int, default=32)
+    ap.add_argument("--force", action="store_true",
+                    help="recompute and overwrite cells even if their JSON exists "
+                         "(backfills best_local; the local phase is deterministic)")
     args = ap.parse_args()
 
     robust = args.stage == "s7"
@@ -712,7 +741,7 @@ def main():
     rows = []
     for c in cells:
         try:
-            runner(rows, bs=args.bs, **c)
+            runner(rows, force=args.force, bs=args.bs, **c)
         except Exception as e:  # noqa: BLE001 — keep the stage alive on a bad cell
             import traceback
             (OUTDIR / (cell_name(c).replace(".json", ".FAIL"))).write_text(
