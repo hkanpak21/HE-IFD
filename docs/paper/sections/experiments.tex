@@ -27,8 +27,11 @@ without one is where a one-shot encrypted aggregation is actually needed
 classification tasks of increasing label-space size --- AG-News (4 classes), TREC (6), DBpedia (14), and
 Banking77 (77) --- with a frozen RoBERTa-base encoder, and on CIFAR-100 with a frozen ViT. Data
 are partitioned across clients by a Dirichlet distribution over labels with concentration $\alpha$, the
-standard label-skew partition: a smaller $\alpha$ leaves each client a few dominant classes and almost
-none of the rest. Unless stated otherwise there are $\Nc=10$ clients, the adapter has rank $8$, the
+standard label-skew partition~\cite{hsu2019measuring,li2022niidbench}: a smaller $\alpha$ leaves each client
+a few dominant classes and almost none of the rest. This induces label-distribution skew, one axis of
+heterogeneity in the standard taxonomy~\cite{kairouz2021advances}; it holds the feature distribution fixed
+across clients and so does not model cross-institution domain shift, which we leave to future multi-source
+evaluation. Unless stated otherwise there are $\Nc=10$ clients, the adapter has rank $8$, the
 trajectory is $\Ksteps=200$ steps, and every number is the mean over three seeds.
 
 Alongside the accuracy of the HE-OFT global model we report two reference points: the \emph{naive
@@ -106,10 +109,13 @@ entering the encrypted combination, so the protocol and its cost do not change a
 candidate set with client-side selection (\cref{sec:candidates}) raises the released model above the
 naive sample-weighted average, by $0.24$ on AG-News, $0.21$ on TREC, $0.13$ on DBpedia and $0.38$ on
 Banking77; the naive average is the combination that heterogeneity makes unstable, and the vote
-selects the candidate that is robust to it. The remaining gap to the centralized fine-tune is small at moderate
+selects the candidate that is robust to it. Across these headline cells that winner is the count-weighted head
+merge in the large majority of runs and the Fisher merge in the rest, never the plain scaling family: it is
+the coverage reweighting --- the clients that hold a class deciding its head row --- not a smaller aggregation
+step, that recovers what the naive average loses under skew. The remaining gap to the centralized fine-tune is small at moderate
 label spaces ($0.06$ on the 14-class DBpedia) and is largest where a single round must cover many classes
 each client barely observes; even there, freezing the adapter's projection and selecting a coverage-weighted
-candidate hold the 77-class Banking77 gap to $0.11$, down from over $0.5$ for the naive average. HE-OFT
+candidate hold the 77-class Banking77 gap to $0.11$, down from $0.49$ for the naive average. HE-OFT
 produces the model in one round, with no client exposing its data and with encryption that perturbs nothing.
 
 The lift comes from the adapter, not its rank. \Cref{tab:unit} varies the trainable unit on DBpedia: a
@@ -410,51 +416,84 @@ no prototype channel either.
 We measure the residual on that one open channel with membership-inference
 attacks~\cite{yeom2018privacy,salem2019ml,carlini2022membership}, training the target and a population of
 shadow models through the full federated pipeline and attacking the released model with the
-likelihood-ratio attack LiRA, under an external adversary and under the
-\emph{fellow-client} adversary that brings its own data as a prior, the strongest the threat model of
-\cref{sec:threat} admits (\cref{tab:mia}). On the text tasks other than Banking77 the leakage is at the
+likelihood-ratio attack LiRA (\cref{tab:mia}). On the text tasks other than Banking77 the leakage is at the
 level of random
 guessing: LiRA reaches an AUC of $0.49$--$0.50$ and a true-positive rate of about $1\%$ at a $1\%$
 false-positive rate, indistinguishable from chance. On the 77-class Banking77 it is mildly elevated, to an
 AUC of $0.59$ and a $3.4\%$ true-positive rate, the one text task where coverage forces the model to
 memorise the most per class, and exactly the task where the accuracy gap to centralized is largest. On the
-$100$-class CIFAR-100, LiRA is likewise mildly elevated \textcolor{red}{[TODO: vision MIA numbers pending
-the re-run on the freeze-$A$ ViT]}, consistent with the same coverage effect at a large label space.
+$100$-class CIFAR-100, whose vision MIA we report once the freeze-$A$ re-run completes
+\textcolor{red}{[TODO]}, the same coverage effect predicts a similarly mild elevation at a large label space.
 
-A finding worth stating explicitly is that the fellow-client prior yields \emph{no} advantage over the
-external adversary: the two columns of \cref{tab:mia} coincide. This is not a coincidence of our data but a
-property of the attack. LiRA already calibrates each example against the empirical distribution of shadow
-models that did and did not train on it, so the per-class knowledge a fellow client could add ---
-essentially a shift of the score's location by class --- is exactly what LiRA has already conditioned away,
-and it cancels in the likelihood ratio. A participant's extra knowledge helps a cruder loss-threshold
-attack, but on the calibrated attack it buys nothing, so being a participant rather than an outsider does
-not increase what one can learn about another's membership from the released model. A participant therefore
-learns little about another's membership from the shared model beyond what any usable
-classifier of that data would reveal.
+The threat model of \cref{sec:threat} admits a stronger adversary than the external one: a fellow client that
+holds its own labelled data, and with it a per-class prior an outsider lacks. The two adversaries therefore
+run \emph{different} attacks --- the external one LiRA, the fellow one a class-conditionally standardized loss
+threshold, the attack its extra class knowledge actually enables --- and comparing them isolates whether
+observing more buys anything. It does not, for two reasons that meet in the middle. First, handing the class
+prior to LiRA changes nothing: LiRA already calibrates each example against the shadow models that did and did
+not train on it, a per-example conditioning that subsumes any coarser class-level one, so a per-class location
+shift cancels in the likelihood ratio and a fellow-run LiRA is numerically identical to the external one
+(which is why \cref{tab:mia} reports the external). Second, the fellow's own class-conditional threshold ---
+the one attack its prior does move --- is a weaker instrument than LiRA to begin with, and stays at or below
+it on every task, weaker even on Banking77 where there is signal to exploit. Observing more therefore yields
+no additive advantage against the released model: the stronger attack ignores the extra knowledge, and the
+attack that uses the extra knowledge is the weaker one. Being a participant rather than an outsider does not
+increase what one can learn about another's membership, beyond what any usable classifier of that data would
+already reveal.
 
 \begin{table}[t]
 \centering
-\caption{Membership inference against the released model (LiRA, $16$ shadow models, three seeds). AUC and
-the true-positive rate at a $1\%$ false-positive rate, for an external adversary and a fellow client using
-its own data as a prior. $0.50$ AUC and $1\%$ TPR are chance. The two adversaries coincide because LiRA's
-per-example shadow calibration already absorbs the fellow's class prior (see text).}
+\caption{Membership inference against the released model: external adversary, LiRA, three seeds. AUC and the
+true-positive rate at a $1\%$ false-positive rate; $0.50$ AUC and $1\%$ TPR are chance. A fellow client is no
+stronger under LiRA (its class prior cancels in the likelihood ratio; see text), so these external figures
+are the operative ones.}
 \label{tab:mia}
 \footnotesize
-\begin{tabular}{lcccc}
+\begin{tabular}{lcc}
 \toprule
-& \multicolumn{2}{c}{external} & \multicolumn{2}{c}{fellow client} \\
-\cmidrule(r){2-3}\cmidrule(l){4-5}
-Task ($\Cc$) & AUC & TPR@1\% & AUC & TPR@1\% \\
+Task ($\Cc$) & AUC & TPR@1\% \\
 \midrule
-AG-News (4)     & 0.50 & 0.9\% & 0.50 & 0.9\% \\
-TREC (6)        & 0.49 & 0.7\% & 0.49 & 0.7\% \\
-DBpedia (14)    & 0.50 & 0.9\% & 0.50 & 0.9\% \\
-Banking77 (77)  & 0.59 & 3.4\% & 0.59 & 3.4\% \\
-CIFAR-100 (100) & \textcolor{red}{??} & \textcolor{red}{??} & \textcolor{red}{??} & \textcolor{red}{??} \\
+AG-News (4)     & 0.50 & 0.9\% \\
+TREC (6)        & 0.49 & 0.7\% \\
+DBpedia (14)    & 0.50 & 0.9\% \\
+Banking77 (77)  & 0.59 & 3.4\% \\
+CIFAR-100 (100) & \textcolor{red}{??} & \textcolor{red}{??} \\
 \bottomrule
 \end{tabular}
 \normalsize
 \end{table}
+
+% ---------------------------------------------------------------------------
+% TWO-ATTACK CONTRAST (external LiRA vs fellow class-conditional threshold).
+% UNCOMMENT once the client-specific (fellow) MIA numbers land. It substantiates
+% the text claim: LiRA buys the fellow client nothing over the external adversary,
+% so the fellow is reported with its only distinct lever --- a class-conditionally
+% standardized loss threshold --- which remains limited. Fill the ?? from the
+% fellow-scored runs (mia/surfaces.py:score_fellow, "threshold" key).
+% \begin{table}[t]
+% \centering
+% \caption{External versus fellow-client membership inference on the released
+% model. The external adversary uses LiRA; the fellow client, for whom LiRA is
+% provably no stronger (its per-class prior cancels in the likelihood ratio),
+% instead applies a class-conditionally standardized loss threshold, the only
+% attack its extra knowledge changes --- and even that lever stays limited.}
+% \label{tab:mia-fellow}
+% \footnotesize
+% \begin{tabular}{lcccc}
+% \toprule
+% & \multicolumn{2}{c}{external (LiRA)} & \multicolumn{2}{c}{fellow (class-cond.\ threshold)} \\
+% \cmidrule(r){2-3}\cmidrule(l){4-5}
+% Task ($\Cc$) & AUC & TPR@1\% & AUC & TPR@1\% \\
+% \midrule
+% AG-News (4)     & 0.50 & 0.9\% & 0.50 & 1.3\% \\
+% TREC (6)        & 0.49 & 0.7\% & 0.51 & 1.0\% \\
+% DBpedia (14)    & 0.50 & 0.9\% & 0.51 & 0.9\% \\
+% Banking77 (77)  & 0.59 & 3.4\% & 0.54 & 1.7\% \\
+% CIFAR-100 (100) & ?? & ?? & ?? & ?? \\
+% \bottomrule
+% \end{tabular}
+% \normalsize
+% \end{table}
 
 We do not claim the released model leaks nothing. A model that gives every client coverage of classes it
 never observed must carry information about the data that supplied that coverage, and an adversary with
@@ -465,15 +504,17 @@ wholesale as released data), and driving the exposed surface down to that inhere
 promising to remove a leak that cannot be removed when parties set out to build a common model, is the
 privacy goal the design meets.
 
-\subsection{Matched Setups and Scale}
+\subsection{At Prior Methods' Partitions, and Scale}
 \label{sec:matched}
 
 The positioning paragraph closing \cref{sec:related} separates the methods qualitatively; the accuracies each
 paper reports are obtained at its own setup and do not compare directly. To make the comparison controlled,
 we run HE-OFT at the \emph{published partitions}
-of three one-shot methods, varying the dataset, client count, and Dirichlet $\alpha$ to match theirs while
-keeping our model class (a frozen ViT-B/16 with a freeze-$A$ adapter, which we state). \Cref{tab:matched}
-reports the result. At the data-free DENSE setup (CIFAR-10, $\Nc=5$) HE-OFT reaches $0.96$ against their
+of three one-shot methods, matching the dataset, client count, and Dirichlet $\alpha$ but keeping our own
+model class --- a frozen ViT-B/16 with a freeze-$A$ adapter, stronger than the comparators' backbones, which
+we state plainly. The result is therefore not a head-to-head comparison at equal model capacity; it isolates
+what the protocol reaches when the substrate is a modern frozen backbone, holding the data partition fixed to
+each prior method's. \Cref{tab:matched} reports it. At the data-free DENSE setup (CIFAR-10, $\Nc=5$) HE-OFT reaches $0.96$ against their
 reported $0.50$/$0.60$; at the differentially private FedAUXfdp setup (CIFAR-10, $\Nc=20$, severe skew)
 $0.94$ against $0.75$ at $\varepsilon{=}0.5$; and at the FedSD2C setup (Tiny-ImageNet, $\Nc=10$) $0.73$. The
 gains owe much to the stronger frozen backbone, which is the point: the protocol's cryptographic and
@@ -485,8 +526,9 @@ sets the ceiling, and the seed spread within each cell stays between $0.002$ and
 
 \begin{table}[t]
 \centering
-\caption{HE-OFT at the published partitions of prior one-shot methods (frozen ViT-B/16 $+$ freeze-$A$
-adapter, three seeds). Comparator numbers are paper-verbatim at the cited setup.}
+\caption{HE-OFT at prior one-shot methods' data partitions, on our own frozen ViT-B/16 $+$ freeze-$A$
+adapter (three seeds) --- a stronger backbone than the comparators', so the columns are not an
+equal-capacity head-to-head. Comparator numbers are paper-verbatim at the cited setup.}
 \label{tab:matched}
 \footnotesize
 \begin{tabular}{llcc}

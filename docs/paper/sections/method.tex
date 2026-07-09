@@ -13,19 +13,52 @@ exchange. And privacy is \emph{cryptographic}: a client's contribution is never 
 we are unwilling to accept the accuracy loss that differential privacy incurs when it is the
 only line of defence.
 
-These two constraints largely determine the design. Under encryption the server is blind: it operates on
-ciphertexts that are by construction indistinguishable from random, so it cannot read a value, compare two
-values, or branch on the data, and every multiplication it performs spends part of a finite noise budget.
-The only computation it can afford at scale is a shallow, fixed, linear one (a weighted sum), and a
-weighted sum of independently trained models is meaningful only when those models already share a frame. A
-from-scratch federation has no such frame, and building one would take either several rounds or server-side
-computation on the models themselves, neither of which encryption allows. A \emph{pretrained} model supplies
-the frame directly: freezing a public backbone fixes the representation every client sees, so the small part
-each client trains starts from the same place and stays close. Fine-tuning a pretrained model is therefore
-not a convenience but the learning setting this protocol admits, and it removes the need for any alignment
-step before training, the property that most distinguishes HE-OFT from prior one-shot federated learning,
-which spends an extra communication phase, and often a differential-privacy budget, to bring clients into a
-common frame before they begin.
+These two constraints, together with the untrusted setting, do not merely shape the design; they determine
+it. The protocol is not an assembly of independent techniques but the forced solution to a small set of
+constraints that secure collaborative training imposes, and we arrived at it by discarding alternatives that
+violate one or another --- a sequential or split-training scheme, for example, hands each party the
+intermediate state its predecessors trained, exactly the exposure \textbf{C5} below forbids. The
+constraints, and the choice each forces, are:
+
+\begin{itemize}
+\item[\textbf{C1}] \emph{Sophisticated learning cannot run under encryption.} Nonlinear optimisation ---
+  gradient steps, softmax, adaptive curvature --- needs deep, repeatedly bootstrapped homomorphic circuits.
+  \emph{So} the learning happens in plaintext on the clients, which pre-compute everything the aggregation
+  will consume: the local fine-tune, the per-coordinate importance estimate, and the single displacement each
+  client chooses to upload. The server performs no learning.
+\item[\textbf{C2}] \emph{The server cannot be adaptive.} Blind to the values it holds, it cannot inspect,
+  compare, or branch, and so cannot pick a data-dependent aggregation rule. \emph{So} it emits several
+  candidate aggregates and defers the choice to the clients, who select among them after decryption
+  (\cref{sec:candidates}).
+\item[\textbf{C3}] \emph{The parties must share a frame before they begin.} In the open-ended landscape of
+  deep-network parameters, independently trained models occupy incomparable regions and their linear
+  combination is meaningless. \emph{So} the parties fix a common geometry in advance: a frozen public
+  pretrained backbone fixes the representation, and a common public initialisation places every client at one
+  point (\cref{sec:basin}).
+\item[\textbf{C4}] \emph{The server's operation must be shallow.} Homomorphic cost is dominated by
+  multiplicative depth. \emph{So} the one server operation is a depth-one linear combine, and the design is
+  arranged so this cheapest operation is \emph{exactly} the one the method needs --- freezing the adapter's
+  down-projection makes the linear sum of the trained factors equal the sum of the weight updates
+  (\cref{sec:aggregation}).
+\item[\textbf{C5}] \emph{Intermediate training signals are the strongest attack surface.} Each exposed round
+  is a fresh training-time artifact, far more revealing than the released model (\cref{sec:related-leakage}).
+  \emph{So} the protocol is one-shot: a single encrypted exchange, one artifact, never in the clear.
+\item[\textbf{C6}] \emph{No single party may be trusted to decrypt.} The parties are mutually distrustful and
+  the server is untrusted; a single decryption key would let its holder reveal every contribution. \emph{So}
+  the key is generated and held distributively --- multiparty CKKS with threshold decryption, under which no
+  party, the server included, can decrypt alone (\cref{sec:mhe}).
+\end{itemize}
+
+\noindent The six form a chain rather than a list: \textbf{C1} pushes the work onto the clients, which raises
+\textbf{C2} (a blind server) and \textbf{C3} (their returns must be comparable); \textbf{C4} and \textbf{C6}
+shape the single operation the server may perform; \textbf{C5} fixes how many times it happens. The protocol
+below is one instance of their joint solution, and each constraint can be relaxed only at a stated price:
+abandon one-shot encryption and the intermediate snapshots leak (\textbf{C5}); abandon encryption altogether
+and the guarantee weakens from cryptographic to statistical --- the differentially private route whose
+accuracy cost \cref{sec:experiments} measures. Fine-tuning a pretrained model is thus not a convenience but
+the learning setting these constraints admit, and it removes the alignment phase that most distinguishes
+HE-OFT from prior one-shot federated learning, which spends an extra communication round, and often a
+differential-privacy budget, to bring clients into a common frame before they begin.
 
 Concretely, every client uses a frozen public backbone $\featx$ followed by a small trainable unit:
 low-rank adapters together with a classifier head, with parameters $\headp$. A low-rank adapter writes the
@@ -236,44 +269,64 @@ naive combination that fails under heterogeneity. The average lies in a usable r
 it: every $\theta_j^{(\Ksteps)}$ starts from the shared $\thz$ and moves only a bounded distance, so all of
 them remain in the common frame and their weighted average is itself a reasonable model. The contribution is not
 a new aggregation rule but a one-shot protocol under which a linear, and therefore inexpensively encryptable,
-aggregation produces a strong shared model.
+aggregation produces a strong shared model. One distinction matters throughout: this depth-one linear family
+\emph{is} task-vector merging, and the plain sample-weighted sum ($\lambda{=}1$) is a single point in it ---
+the ``naive'' aggregate that heterogeneity destabilises. The client-side selection of \cref{sec:candidates}
+does not swap in a different rule; it picks the point in the same family (a softer $\lambda$, or a coverage-
+or curvature-reweighted merge) that generalises best, so the linearity, and with it the depth-one encryption,
+holds for every candidate.
 
 \subsection{Multi-Candidate Release and Client-Side Selection}
 \label{sec:candidates}
 
 A server computing under encryption is blind: it cannot inspect a value, so it cannot adapt the aggregation
 rule to the data the way a plaintext aggregator could. We recover that adaptivity without giving the server
-the ability to read its inputs, by moving the choice to the clients after decryption. The observation we use is that several
-useful aggregation rules are each, on their own, a depth-one linear function of the encrypted displacements,
-so the server can evaluate all of them in one pass and the clients select among the results. We form a small set of
-candidate aggregates:
+the ability to read its inputs, by moving the choice to the clients after decryption. The observation we use
+is that several useful aggregation rules are each, on their own, a depth-one function of the encrypted
+displacements, so the server evaluates all of them in one pass and the clients select among the results. We
+form a small set of candidates, in three tiers:
 \begin{itemize}
-\item a \emph{scaling family} $\thz + \lambda\sum_j\wj\disp$ for a public grid of $\lambda$, which trades the
-  shared start against the aggregated move and costs nothing extra, since all candidates are affine in the
-  same encrypted sum;
-\item \emph{reweighted merges} $\thz + (\sum_j \wj g_j\!\odot\!\disp)\oslash(\sum_j \wj g_j)$, where $g_j$ is
-  a public-after-decryption per-coordinate weight (a diagonal Fisher estimate, or a per-class example count
-  applied to the head rows). Each client forms the products $g_j\!\odot\!\disp$ and $g_j$ \emph{before}
-  encryption, the server adds the two ciphertext stacks, and the clients divide the decrypted numerator by
-  the decrypted denominator in plaintext, so the nonlinear division never occurs under encryption;
+\item \emph{Reweighted merges} $\thz + (\sum_j \wj g_j\!\odot\!\disp)\oslash(\sum_j \wj g_j)$, where $g_j$ is
+  a per-coordinate weight each client forms from its own data: a diagonal Fisher estimate, or --- the variant
+  that carries most of our accuracy under skew --- a per-class example count applied to the head rows, so that
+  the clients which actually hold a class decide its classifier row and rows no client covers stay at $\thz$.
+  This is the merge the client vote most often selects (\cref{sec:superior}). Each client forms the products
+  $g_j\!\odot\!\disp$ and $g_j$ \emph{before} encryption; the server adds the two ciphertext stacks; and the
+  clients divide the decrypted numerator by the decrypted denominator in plaintext, so the nonlinear division
+  never occurs under encryption and the server operation stays a depth-one sum.
+\item a \emph{scaling family} $\thz + \lambda\sum_j\wj\disp$ for a public grid of $\lambda$ --- the plain
+  weighted aggregate ($\lambda{=}1$) and softer steps toward it --- which trades the shared start against the
+  aggregated move and costs nothing extra, since all candidates are affine in the same encrypted sum. This is
+  the conservative baseline tier: it discloses nothing beyond the released model (below), and when the data are
+  near-uniform it already suffices; under skew it is the reweighted merges that lift the model above it.
 \item \emph{leave-one-out} aggregates $\thz + \sum_{i\neq k}\tilde w_i\Delta_i$, one per excluded client $k$,
   with public renormalised weights $\tilde w_i$, used for robustness (\cref{sec:robust}).
 \end{itemize}
-The server emits the encrypted candidates; a threshold of clients jointly decrypts each one; and every client
-scores the decrypted candidates on a small held-out slice of its own data, the federation releasing the
-sample-weighted plurality choice. Selection is therefore post-decryption and entirely client-side: it adds
-one threshold decryption per candidate and no homomorphic multiplications beyond the depth-one aggregate.
-The selection itself could not usefully move under encryption: it is data-dependent --- candidates are
-scored on held-out client data the server does not have --- and homomorphic comparison would require deep
-polynomial approximations of the sign function, exactly the circuit cost the design avoids, for a step the
-clients perform at no cost after decryption.
-The candidates differ in what they reveal, and we account for this honestly. The scaling family is collinear,
-$\thstar(\lambda)=(1-\lambda)\thz+\lambda\thstar(1)$, so disclosing the whole grid reveals nothing beyond the
-released model itself; the reweighted numerator and denominator reveal two sums rather than their ratio; and a
-leave-one-out pair isolates a single client's contribution. All three are admissible under the threat model of
-\cref{sec:threat}, in which participants legitimately hold the released model and the server still sees only
-ciphertexts; a deployment unwilling to expose per-client contributions to fellow participants restricts the
-candidate set to the scaling family, which leaks nothing further.
+The server emits the encrypted candidates; a threshold of clients jointly decrypts each one; every client
+scores the decrypted candidates on a small held-out slice of its own data; and the federation releases the
+candidate with the highest sample-weighted mean held-out accuracy across clients. Selection is therefore
+post-decryption and entirely client-side: it adds one threshold decryption per candidate and no homomorphic
+multiplications beyond the depth-one aggregate. It could not usefully move under encryption --- it is
+data-dependent, scored on held-out client data the server does not have, and homomorphic comparison would
+need deep polynomial approximations of the sign function, exactly the circuit cost the design avoids, for a
+step the clients perform for free after decryption.
+
+\paragraph{What each candidate reveals.} The candidates differ in what they disclose to the decrypting
+clients, and we account for it plainly. The scaling family is collinear,
+$\thstar(\lambda)=(1-\lambda)\thz+\lambda\thstar(1)$, so releasing the whole grid reveals nothing beyond the
+released model itself. A reweighted merge decrypts its numerator and denominator separately, so it
+additionally reveals two \emph{aggregate} sums --- for the count-weighted head, the federation-wide per-class
+example totals $\sum_j n_{j,c}$ and the count-weighted head displacement. This is more than the scaling
+family discloses, but it is consistent with the threat model of \cref{sec:threat}: both are sums over all
+clients, they isolate no individual client, and the server, which never decrypts, learns nothing from them.
+A leave-one-out pair, by contrast, does isolate a single client's contribution, and is therefore admitted
+only when its robustness use (\cref{sec:robust}) is wanted. Two knobs follow. A deployment content to disclose
+nothing beyond the released model restricts the set to the scaling family, forgoing the accuracy the
+reweighted merges would have bought; a deployment that wants the merges but not even the aggregate counts
+computes the head ratio through a lightweight post-decryption secure division --- one secure reciprocal per
+class and a rescale of each head row, negligible beside the homomorphic aggregation --- so that only the
+final head rows, and neither sum, are ever revealed. Both prices are small, and neither touches the server's
+depth-one operation.
 
 \subsection{Threat Model}
 \label{sec:threat}

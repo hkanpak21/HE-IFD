@@ -159,11 +159,14 @@ single contribution unprotected (DENSE, FedLPA, FedSD2C~\cite{zhang2022dense,liu
 or noised, with accuracy falling as the budget tightens (FedKT, FedAUXfdp,
 FedDiff~\cite{li2021fedkt,hoech2022fedauxfdp,feddiff2024}). The encrypted transfer-learning line shares our
 frozen backbone but runs its optimizer on ciphertexts and serves a single data
-owner~\cite{lee2023hetal,privfedtl2026}. No prior method is simultaneously one-shot, federated, and
-protected by encryption that leaves the released model unperturbed. That intersection --- the
+owner~\cite{lee2023hetal,privfedtl2026}. A single prior scheme is at once one-shot, federated, and encrypted,
+but only for a single-layer closed-form learner that cannot adapt a deep representation~\cite{fedheonn2023};
+none brings that combination --- protection that, unlike differential privacy, leaves the released model
+unperturbed, under a threshold key no single party can open --- to the deep, foundation-scale fine-tuning
+deployment now requires. That intersection --- the
 training-time surface removed in one
 round, at multiplicative depth one, with the accuracy of plaintext fine-tuning --- is the position HE-OFT
-occupies, and \cref{sec:matched} quantifies it head-to-head at the published setups of the closest
+occupies, and \cref{sec:matched} quantifies it at the published setups of the closest
 one-shot peers. We stress that the ingredients are not modular, a federated fine-tuning method with
 encryption added on top: each design choice in \cref{sec:method} --- the frozen backbone, the frozen
 down-projection, the bounded trajectory, the linear rule, the client-side vote --- is forced by the

@@ -42,8 +42,11 @@ runs many rounds of encrypted training or secure aggregation, at a cost measured
 the direct route of training under encryption forces polynomial replacements of every activation and a
 deep, repeatedly bootstrapped circuit~\cite{sav2021poseidon}, which is precisely the cost we set out to
 avoid. We present \textbf{HE-OFT} (Homomorphically Encrypted One-shot Fine-Tuning), to our knowledge the
-first one-shot federated learning protocol whose contributions are protected by encryption: each client
-fine-tunes a
+first one-shot federated learning protocol to protect \emph{deep-model} fine-tuning contributions under
+homomorphic encryption; the sole prior one-shot encrypted federation we are aware of is confined to a
+single-layer, closed-form learner~\cite{fedheonn2023}, whereas HE-OFT protects the gradient-trained low-rank
+adaptation of a pretrained deep backbone --- the regime the foundation models now in deployment occupy. Each
+client fine-tunes a
 small low-rank adapter and classifier head on a frozen public backbone in plaintext, uploads one encrypted
 parameter displacement, and the server performs a single linear combination,
 $\thstar = \thz + \sum_j \wj \disp$, under multiparty CKKS at multiplicative depth one, after which a
@@ -55,7 +58,7 @@ secret key, or the decrypted model; nothing data-derived leaves a client unencry
 Fine-tuning is not incidental to this design; it is what makes the design work. A one-shot linear
 aggregation must overcome the fact that independently trained models do not average well under
 heterogeneous data: from different starting points, their updates conflict and cancel. A frozen pretrained
-backbone removes the difficulty at no cost. It fixes the representation every client sees, and every
+backbone removes the difficulty without an extra exchange. It fixes the representation every client sees, and every
 client starts its small trainable unit from the same public initialization, so the bounded displacements
 they upload live in one frame and add constructively --- where prior one-shot methods must first buy this
 alignment with an extra exchange of data-derived summaries. Freezing the adapter's down-projection, a
@@ -76,16 +79,18 @@ additional homomorphic cost.
 What remains exposed is the released model itself, which every participant holds in the clear because
 producing a shared model is the purpose of the protocol. This inference-time surface no protocol can
 remove, so we measure it: membership inference against the released model, including by a fellow
-participant, stays at or near chance. Across text classification and vision tasks, from
+participant, stays at or near chance, rising only on the largest label space. Across text classification and vision tasks, from
 frozen RoBERTa and ViT backbones to a half-billion-parameter language model, HE-OFT produces a common model
-stronger than any client's own and, outside the most skewed regimes, close to a centrally fine-tuned one;
+stronger than any single client trains alone and, outside the most skewed regimes, close to a centrally fine-tuned one;
 a real multiparty CKKS implementation reproduces the plaintext aggregate within the scheme's approximation
-bounds, with server computation in milliseconds and communication of a few megabytes per client.
+bounds, with server computation in well under a second and about ten megabytes of communication per client.
 
 Our contributions are as follows.
 \begin{itemize}
-\item We introduce, to our knowledge, the first one-shot federated learning protocol whose contributions
-  are protected by homomorphic encryption: a single round whose only server operation is a linear
+\item We introduce, to our knowledge, the first one-shot federated learning protocol to protect
+  \emph{deep-model} fine-tuning contributions under homomorphic encryption (prior one-shot encrypted
+  federation being limited to a single-layer, closed-form learner~\cite{fedheonn2023}): a single round whose
+  only server operation is a linear
   aggregation of multiplicative depth one under multiparty CKKS, followed by threshold decryption
   (\cref{sec:method}). The protocol eliminates the training-time attack surface --- the strongest one
   federated learning exposes --- rather than perturbing it.

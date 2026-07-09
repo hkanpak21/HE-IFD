@@ -101,12 +101,13 @@ weight updates, so the encrypted object is a few
 megabytes regardless of the backbone and the cryptographic layer adds no accuracy cost. Because a server
 computing under encryption cannot read its inputs, it emits several depth-one candidate aggregates and the
 clients select among them after decryption, which improves the released model under heterogeneity and
-neutralizes a poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa
+neutralizes a single poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa
 and ViT to a half-billion-parameter language model, the method produces a common model stronger than any
-client's own, within $0.01$ of the same adapter fine-tuned on the pooled data under mild heterogeneity and
-$0.06$--$0.23$ behind it under severe label skew. A real multiparty CKKS implementation
+single client trains alone, within $0.01$ of the same adapter fine-tuned on the pooled data when the data are
+near-uniform and $0.06$--$0.23$ behind it at moderate label skew ($\alpha{=}0.1$). A real multiparty CKKS implementation
 reproduces the plaintext aggregate within the approximation bounds of CKKS, and the one remaining surface,
-the released model, shows membership inference at or near chance.
+the released model, shows membership inference at or near chance on all but the largest label spaces, where it
+is mildly elevated and still far below the training-time attacks the protocol removes.
 \end{abstract}
 
 \begin{IEEEkeywords}
