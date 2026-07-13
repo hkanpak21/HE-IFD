@@ -1,7 +1,8 @@
 #!/bin/bash
-#SBATCH --partition=ai
+#SBATCH --partition=t4_ai
 #SBATCH --account=comx29
 #SBATCH --qos=comx29
+#SBATCH --gres=gpu:tesla_t4:1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --time=01:00:00
