@@ -91,12 +91,21 @@ func check(err error) {
 
 func main() {
 	var (
-		dFlag    = flag.Int("d", 0, "single-scenario head dimension (0 = run default suite)")
-		nFlag    = flag.Int("n", 0, "single-scenario client count")
-		logNFlag = flag.Int("logn", 14, "log2 ring degree")
-		jsonOut  = flag.String("json", "", "optional path to write results JSON")
+		dFlag     = flag.Int("d", 0, "single-scenario head dimension (0 = run default suite)")
+		nFlag     = flag.Int("n", 0, "single-scenario client count")
+		logNFlag  = flag.Int("logn", 14, "log2 ring degree")
+		jsonOut   = flag.String("json", "", "optional path to write results JSON")
+		serveFlag = flag.Bool("serve", false, "run the Serve-mode encrypted-inference cost benchmark (collective refresh + threshold decrypt) instead of the Release-mode aggregation suite")
 	)
 	flag.Parse()
+
+	// Serve mode (encrypted inference): measure the per-query cost atoms Release
+	// mode does not pay — the collective refresh (multiparty bootstrap) and the
+	// threshold decrypt. See serve.go.
+	if *serveFlag {
+		runServeSuite(*jsonOut)
+		return
+	}
 
 	var scenarios []config
 	if *dFlag > 0 && *nFlag > 0 {

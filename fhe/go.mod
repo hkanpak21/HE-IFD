@@ -1,8 +1,8 @@
 module github.com/hkanpak21/HE-IFD/fhe
 
-go 1.26.3
+go 1.24
 
-require github.com/tuneinsight/lattigo/v6 v6.2.0
+require github.com/tuneinsight/lattigo/v6 v6.1.0
 
 require (
 	github.com/ALTree/bigfloat v0.2.0 // indirect
