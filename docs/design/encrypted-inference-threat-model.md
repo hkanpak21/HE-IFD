@@ -96,6 +96,35 @@ polynomially, and noise large enough to block extraction also corrupts the answe
    so no new accuracy runs — but the systems profile shifts from *one-shot* to *persistent
    nonlinear inference service*, which the current cost section does not model.
 
+## Benchmark progress (2026-07-13)
+
+**Job 1 DONE** — collective-refresh (multiparty bootstrap) unit + threshold decrypt, the
+per-query atoms Release doesn't pay. [fhe/serve.go](../../fhe/serve.go) (`-serve` flag), Lattigo
+v6.1.0, multiparty CKKS logN=15 / 12 levels, VALAR `t4_ai` job 1354585 (16 s, exact to ~1e-10).
+Results in [results/fhe_serve/](../../results/fhe_serve/):
+
+| N | collective refresh | threshold decrypt |
+|---|---|---|
+| 5 | 586 ms | 135 ms |
+| 10 | 1057 ms | 192 ms |
+| 20 | 2047 ms | 361 ms |
+
+Refresh ~linear in N (~100 ms/party). **Implication:** the encrypted argmax over C classes costs
+*several* refreshes (minimax sign stages × C-way max-tree), so per-query Serve latency is
+dominated by the refresh COUNT — at ~1 s/refresh (N=10) an argmax over 100 classes plausibly runs
+tens of seconds. That order-of-magnitude *is* the "price of Serve" the paper must report honestly.
+
+**Job 2 TODO** — full encrypted argmax. Wire `mpckks.RefreshProtocol` as the
+`bootstrapping.Bootstrapper` the `minimax`/`comparison` evaluator requires; run argmax over
+C∈{4,6,14,77,100}; report refresh count + total per-query latency vs Release's amortized-zero.
+The API is confirmed: `comparison.NewEvaluator(params, minimaxEval, signPoly)` → `.Max/.Sign`;
+`minimax.GenMinimaxCompositePolynomialForSign(prec, logalpha, logerr, deg)`.
+
+**Ops notes:** comx29 QOS is only permitted on `t4_ai` (a GPU partition) — so FHE (CPU-only) jobs
+compete with training for the 1-GPU/user slot; jobs are short so it's fine, but a CPU partition
+binding for comx29 would be cleaner. go.sum reconciled to v6.1.0 on the VALAR working tree (build
+works); committing the v6.1.0 go.sum to the branch is a pending cleanup.
+
 ## Paper integration (decided 2026-07-13)
 
 **Strategic fork: ONE paper, both methods** (user chose fork (a) over a follow-up). Flow
