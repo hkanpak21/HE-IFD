@@ -7,7 +7,12 @@ several such organizations hold complementary data over the same task --- differ
 fraud patterns, or customer bases --- and each would obtain a better model from their combined data than
 from its own. Legal,
 competitive, and privacy constraints prevent them from pooling that
-data~\cite{yang2019federated,rieke2020future}, and handing it to whoever operates the fine-tuning
+data~\cite{yang2019federated,rieke2020future}: data-protection law strictly restricts sharing confidential
+records across institutions --- imposing data-minimisation and cross-border-transfer limits, and for health
+data a de-identification bar before any disclosure --- under regimes from the EU GDPR and U.S.\ HIPAA to
+Turkey's KVKK and a widening set worldwide~\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}, and in
+high-risk domains such as health, biometrics, and credit the trained model is itself a regulated
+artifact~\cite{euaiact2024}. Handing the data, or the model, to whoever operates the fine-tuning
 infrastructure raises the same concern~\cite{xiao2023offsite}. What such parties need is fine-tuning as a
 service with a guarantee: a server that combines their local adaptations into one shared
 model while provably learning nothing about the data behind them. Providing that service securely is the
