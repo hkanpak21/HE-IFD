@@ -95,7 +95,8 @@ func main() {
 		nFlag     = flag.Int("n", 0, "single-scenario client count")
 		logNFlag  = flag.Int("logn", 14, "log2 ring degree")
 		jsonOut   = flag.String("json", "", "optional path to write results JSON")
-		serveFlag = flag.Bool("serve", false, "run the Serve-mode encrypted-inference cost benchmark (collective refresh + threshold decrypt) instead of the Release-mode aggregation suite")
+		serveFlag       = flag.Bool("serve", false, "run the Serve-mode encrypted-inference cost benchmark (collective refresh + threshold decrypt) instead of the Release-mode aggregation suite")
+		serveArgmaxFlag = flag.Bool("serve-argmax", false, "run the Serve-mode encrypted-argmax cost benchmark over C classes (collective-refresh-backed sign circuit)")
 	)
 	flag.Parse()
 
@@ -104,6 +105,12 @@ func main() {
 	// threshold decrypt. See serve.go.
 	if *serveFlag {
 		runServeSuite(*jsonOut)
+		return
+	}
+	// Serve-mode ARGMAX (Job 2): full encrypted argmax over C classes, its
+	// bootstraps wired to collective refreshes. See serve_argmax.go.
+	if *serveArgmaxFlag {
+		runArgmaxSuite(*jsonOut)
 		return
 	}
 
