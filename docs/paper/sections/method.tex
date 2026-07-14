@@ -370,9 +370,9 @@ $\Cc-1$ pairwise comparisons, it costs on the order of minutes for the larger la
 minutes at $\Cc{=}77$ in our CPU implementation. This is a loose upper bound, not a floor: the $\arg\max$ is
 ordinary homomorphic computation, and the standard optimisation applies. Packing the $\Cc$ logits into one
 ciphertext and reducing them with a log-depth SIMD tournament cuts the sequential comparisons from $\Cc-1$ to
-$\lceil\log_2\Cc\rceil$ --- a fourteen-fold reduction at $\Cc{=}100$ --- and secure-transformer systems built
-on exactly this reduction report a full-vocabulary $\arg\max$ in well under a second on a
-GPU~\cite{zhang2025nexus}. None of this is specific to the threshold setting: homomorphic evaluation under a
+$\lceil\log_2\Cc\rceil$; our multiparty implementation measures this at under two minutes for a hundred
+classes, a fourteenfold reduction and exact, and single-key GPU systems built on the same reduction report a
+full-vocabulary $\arg\max$ in well under a second~\cite{zhang2025nexus}. None of this is specific to the threshold setting: homomorphic evaluation under a
 collectively generated key is identical to the single-key case, so these results carry over directly, the
 multiparty scheme differing only in its distributed key generation and its threshold decryption of the final
 label. The per-query cost is therefore minutes at worst and sub-second at best, which is why Serve suits

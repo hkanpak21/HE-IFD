@@ -178,6 +178,16 @@ serves": naive ≈ 20 min at C=77 in our CPU impl (loose upper bound) → log-de
 sub-second GPU (NEXUS), transfers to threshold since only keygen+decrypt differ. Added cites
 `zhang2025nexus`, `cheon2020comparison`; fixed the sec:threat cross-ref (fhe-cost → sec:serve). Committed.
 
+**Tournament MEASURED (Job 3, 2026-07-14):** implemented the log-depth SIMD tournament in Lattigo
+([serve_tournament.go](../../fhe/serve_tournament.go), `-serve-tournament`) — pack C logits in one ciphertext,
+⌈log₂C⌉-round rotate-and-Max (power-of-2 Galois rotations). **Exact**, and confirms the estimate:
+C=100 = **113 s (1.88 min), 7 rounds, 34 refreshes** vs naive 494 → **14.0×**; C=77 = 112 s (10.9×). One bug
+found+fixed: padding empty slots with −10 left the sign circuit's valid range [−0.5,0.5] → ~1e137 garbage
+(all-false); fixed by padding −0.5 with logits in [−0.4,0.5). Paper sec:serve **upgraded estimate → measured**
+("under two minutes for a hundred classes, a fourteenfold reduction and exact"). Results in
+`results/fhe_serve/argmax_tournament.csv`. So the tournament is no longer an "option" — it's implemented,
+measured, and in the paper.
+
 **Ops notes:** comx29 QOS is only permitted on `t4_ai` (a GPU partition) — so FHE (CPU-only) jobs
 compete with training for the 1-GPU/user slot; jobs are short so it's fine, but a CPU partition
 binding for comx29 would be cleaner. go.sum reconciled to v6.1.0 on the VALAR working tree (build

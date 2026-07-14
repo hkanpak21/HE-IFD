@@ -46,3 +46,21 @@ rotations use one-time collective Galois keys, no bootstrap):
 
 Threshold CKKS changes **only** keygen + decrypt (evaluation is identical), so these single-key results
 transfer. Paper: textual only (no table) in `sec:serve` "Cost, and who serves".
+
+## Job 3 — encrypted argmax via log-depth SIMD tournament (QuickMax), MEASURED
+
+The optimized alternative ([serve_tournament.go](../../fhe/serve_tournament.go), `-serve-tournament`): pack
+the C logits into one ciphertext and reduce with a ⌈log₂C⌉-round rotate-and-Max tournament (power-of-2
+Galois rotations, collective-refresh-backed sign). Same N=10, logN=15, **exact**. Data in
+[argmax_tournament.csv](argmax_tournament.csv).
+
+| C (task) | rounds | refreshes | latency | vs naive fold |
+|----------|--------|-----------|---------|---------------|
+| 4 (AG-News)     | 2 | 9  | 31.2 s   | 1.5× |
+| 6 (TREC)        | 3 | 14 | 47.3 s   | 1.7× |
+| 14 (DBpedia)    | 4 | 19 | 63.7 s   | 3.3× |
+| 77 (Banking77)  | 7 | 34 | 1.87 min | **10.9×** |
+| 100 (CIFAR-100) | 7 | 34 | **1.88 min** | **14.0×** |
+
+Measured **14.0× at C=100** (494 → 34 collective refreshes), exact — confirms the estimate. This is the
+multiparty-CKKS realization of NEXUS QuickMax; single-key GPU (NEXUS) is sub-second.
