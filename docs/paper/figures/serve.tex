@@ -24,7 +24,7 @@
 \node[clb]    (td)    at (12.5,0)   {threshold decrypt\\{\tiny label only, $t$-of-$\Nc$}};
 \node[outb]   (out)   at (15.0,0)   {label\\{\tiny to querier}};
 \node[encd]   (theta) at (5.8,-2.4) {$\mathsf{Enc}(\theta^\star)$\\{\tiny never decrypted}};
-\node[relb]   (rel)   at (1.4,-2.4) {\textbf{Release}\\{\tiny decrypt $\theta^\star$ once;\\clients hold\\the plaintext model}};
+\node[relb]   (rel)   at (1.4,-2.4) {\textbf{Release}\\{\tiny decrypt $\theta^\star$ once;}\\{\tiny clients hold}\\{\tiny the plaintext model}};
 \draw[arr]    (q)    -- (phi);
 \draw[arr]    (phi)  -- (head);
 \draw[encarr] (head) -- (am);
