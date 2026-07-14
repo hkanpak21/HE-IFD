@@ -81,10 +81,13 @@ the clients select among them by a weighted vote on their local data. The vote i
 under heterogeneity and, with the leave-one-out candidates, neutralizes a poisoning client --- at no
 additional homomorphic cost.
 
-What remains exposed is the released model itself, which every participant holds in the clear because
-producing a shared model is the purpose of the protocol. This inference-time surface no protocol can
-remove, so we measure it: membership inference against the released model, including by a fellow
-participant, stays at or near chance, rising only on the largest label space. Across text classification and vision tasks, from
+What remains exposed is the released model itself, which every participant holds in the clear when the
+protocol's purpose is to hand out a shared model. This surface is intrinsic to releasing such a model, so we
+measure it: membership inference against the released model, including by a fellow participant, stays at or
+near chance, rising only on the largest label space. Where a deployment cannot release the model at all ---
+when the model, fine-tuned on confidential data, is itself a regulated or proprietary asset --- the same
+one-shot aggregate is instead kept encrypted and answers queries under encryption, exposing only the labels
+a participant asks for (\cref{sec:serve}). Across text classification and vision tasks, from
 frozen RoBERTa and ViT backbones to a half-billion-parameter language model, HE-OFT produces a common model
 stronger than any single client trains alone and, outside the most skewed regimes, close to a centrally fine-tuned one;
 a real multiparty CKKS implementation reproduces the plaintext aggregate within the scheme's approximation
