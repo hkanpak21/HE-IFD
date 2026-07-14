@@ -421,9 +421,10 @@ level of random
 guessing: LiRA reaches an AUC of $0.49$--$0.50$ and a true-positive rate of about $1\%$ at a $1\%$
 false-positive rate, indistinguishable from chance. On the 77-class Banking77 it is mildly elevated, to an
 AUC of $0.59$ and a $3.4\%$ true-positive rate, the one text task where coverage forces the model to
-memorise the most per class, and exactly the task where the accuracy gap to centralized is largest. On the
-$100$-class CIFAR-100, whose vision MIA we report once the freeze-$A$ re-run completes
-\textcolor{red}{[TODO]}, the same coverage effect predicts a similarly mild elevation at a large label space.
+memorise the most per class, and exactly the task where the accuracy gap to centralized is largest. The same
+coverage effect produces a similarly mild elevation on the $100$-class CIFAR-100 --- an AUC of $0.62$ and a
+$3.7\%$ true-positive rate --- so the two largest label spaces are precisely where the residual appears, and
+even there it stays modest.
 
 The threat model of \cref{sec:threat} admits a stronger adversary than the external one: a fellow client that
 holds its own labelled data, and with it a per-class prior an outsider lacks. The two adversaries therefore
@@ -457,7 +458,7 @@ AG-News (4)     & 0.50 & 0.9\% \\
 TREC (6)        & 0.49 & 0.7\% \\
 DBpedia (14)    & 0.50 & 0.9\% \\
 Banking77 (77)  & 0.59 & 3.4\% \\
-CIFAR-100 (100) & \textcolor{red}{??} & \textcolor{red}{??} \\
+CIFAR-100 (100) & 0.62 & 3.7\% \\
 \bottomrule
 \end{tabular}
 \normalsize
@@ -489,7 +490,7 @@ CIFAR-100 (100) & \textcolor{red}{??} & \textcolor{red}{??} \\
 % TREC (6)        & 0.49 & 0.7\% & 0.51 & 1.0\% \\
 % DBpedia (14)    & 0.50 & 0.9\% & 0.51 & 0.9\% \\
 % Banking77 (77)  & 0.59 & 3.4\% & 0.54 & 1.7\% \\
-% CIFAR-100 (100) & ?? & ?? & ?? & ?? \\
+% CIFAR-100 (100) & 0.62 & 3.7\% & 0.59 & 2.5\% \\
 % \bottomrule
 % \end{tabular}
 % \normalsize
