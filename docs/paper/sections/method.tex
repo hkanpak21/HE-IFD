@@ -364,15 +364,24 @@ differential-privacy bound on cumulative leakage. This is a query-budget bound, 
 aggregate remains recoverable in principle, only expensively.
 
 \paragraph{Cost, and who serves.} Serving carries one price the rest of the protocol avoids: the encrypted
-$\arg\max$ is a minimax sign circuit, the one operation in the method that is not depth-one, and it is paid
-per query rather than once. In the multiparty setting its bootstraps are collective refreshes, and
-\cref{sec:fhe-cost} reports the measured per-query latency --- which is why Serve suits low-throughput or
-governance deployments and Release the rest. The party that answers queries is not thereby trusted with
-anything: holding only the public key, the evaluation keys, and the ciphertext, it computes but cannot
-decrypt, and so learns neither the model nor any client's data. It is trusted only for availability and,
-where honest computation must be certified, through verifiable homomorphic encryption~\cite{viand2023verifiable};
-the decryption threshold is unchanged, since the aggregate becomes plaintext only to a quorum, exactly as
-under Release.
+$\arg\max$ is a homomorphic comparison circuit~\cite{cheon2020comparison}, the one operation in the method
+that is not depth-one, and it is paid per query rather than once. Evaluated naively, as a sequential fold of
+$\Cc-1$ pairwise comparisons, it costs on the order of minutes for the larger label spaces --- roughly twenty
+minutes at $\Cc{=}77$ in our CPU implementation. This is a loose upper bound, not a floor: the $\arg\max$ is
+ordinary homomorphic computation, and the standard optimisation applies. Packing the $\Cc$ logits into one
+ciphertext and reducing them with a log-depth SIMD tournament cuts the sequential comparisons from $\Cc-1$ to
+$\lceil\log_2\Cc\rceil$ --- a fourteen-fold reduction at $\Cc{=}100$ --- and secure-transformer systems built
+on exactly this reduction report a full-vocabulary $\arg\max$ in well under a second on a
+GPU~\cite{zhang2025nexus}. None of this is specific to the threshold setting: homomorphic evaluation under a
+collectively generated key is identical to the single-key case, so these results carry over directly, the
+multiparty scheme differing only in its distributed key generation and its threshold decryption of the final
+label. The per-query cost is therefore minutes at worst and sub-second at best, which is why Serve suits
+low-throughput or governance deployments and Release the rest. The party that answers queries is not thereby
+trusted with anything: holding only the public key, the evaluation keys, and the ciphertext, it computes but
+cannot decrypt, and so learns neither the model nor any client's data. It is trusted only for availability
+and, where honest computation must be certified, through verifiable homomorphic
+encryption~\cite{viand2023verifiable}; the decryption threshold is unchanged, since the aggregate becomes
+plaintext only to a quorum, exactly as under Release.
 
 \subsection{Threat Model}
 \label{sec:threat}
@@ -395,8 +404,8 @@ model. Any inference a participant then performs on $\thstar$ against another pa
 therefore not an attack the protocol can prevent but a property of releasing a useful shared model at all,
 and we measure it directly in \cref{sec:mia} under exactly this fellow-participant adversary. Where a
 deployment may not expose even the released model, the Serve setting of \cref{sec:serve} withholds $\thstar$
-altogether, leaving a participant only the labels of its own queries, at the per-query cost
-\cref{sec:fhe-cost} measures; the contribution-level guarantee stated next is identical in both settings. The
+altogether, leaving a participant only the labels of its own queries, at the per-query serving cost discussed
+there; the contribution-level guarantee stated next is identical in both settings. The
 cryptographic guarantee concerns the \emph{contributions}: the server and any sub-threshold coalition observe
 only ciphertexts. This is the sense in which the protection target differs from differentially private
 one-shot methods, which perturb the released artifact to protect it against all parties, including

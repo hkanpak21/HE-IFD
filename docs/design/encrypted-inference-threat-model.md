@@ -114,11 +114,69 @@ Refresh ~linear in N (~100 ms/party). **Implication:** the encrypted argmax over
 dominated by the refresh COUNT — at ~1 s/refresh (N=10) an argmax over 100 classes plausibly runs
 tens of seconds. That order-of-magnitude *is* the "price of Serve" the paper must report honestly.
 
-**Job 2 TODO** — full encrypted argmax. Wire `mpckks.RefreshProtocol` as the
-`bootstrapping.Bootstrapper` the `minimax`/`comparison` evaluator requires; run argmax over
-C∈{4,6,14,77,100}; report refresh count + total per-query latency vs Release's amortized-zero.
-The API is confirmed: `comparison.NewEvaluator(params, minimaxEval, signPoly)` → `.Max/.Sign`;
-`minimax.GenMinimaxCompositePolynomialForSign(prec, logalpha, logerr, deg)`.
+**Job 2 DONE (partial, landing)** — full encrypted argmax, [fhe/serve_argmax.go](../../fhe/serve_argmax.go)
+(`-serve-argmax`). `mpckks.RefreshProtocol` wrapped as the `bootstrapping.Bootstrapper` the
+`comparison`/`minimax` evaluator needs; sign poly = `comparison.DefaultCompositePolynomialForSign`
+(no coeff generation); argmax = fold `comparison.Max` over C logits. Confirmed numbers (N=10, logN=15,
+14 levels, exact max):
+
+| C | comparisons | refreshes | argmax latency |
+|---|---|---|---|
+| 4 | 3 | 14 | 47.0 s |
+| 6 | 5 | 24 | 78.5 s |
+
+**Cost is linear at ~15.7 s per pairwise comparison → argmax ≈ 16·(C−1) s.** Extrapolated per-query:
+DBpedia (C=14) ~3.5 min, Banking77 (C=77) ~20 min, CIFAR-100 (C=100) ~26 min. This **empirically nails
+the two-regime story**: Serve is viable only at very low QPS / governance scale, and worst for large label
+spaces. (Sequential fold = honest upper bound; a parallel/SIMD-batched max-reduction is the obvious
+optimization to note.)
+
+**Level bug fixed (829d29c):** the running-max accumulator drifts ~1–2 levels per `Max`, driving the sign
+circuit's internal refresh below the secure minimum after a few comparisons (C≥6 failed with "level not
+large enough for refresh"). Fix: refresh the accumulator to full level before each comparison (one extra
+collective refresh/comparison; honest upper bound). C=4 was already exact.
+
+**Efficient argmax (2026-07-14) — our naive fold is a LOOSE upper bound.** The COMP390 project
+(`~/Documents/COURSES/SPRING2026/Comp390`, extends NEXUS, NDSS 2025) uses **QuickMax = NEXUS Algorithm 2**,
+a **SIMD-packed tournament** (log-step) argmax: the C logits sit in one ciphertext's slots and a log₂(C)-round
+tournament compares them via rotations, ~1 bootstrap/round. Cost structure:
+- QuickMax: **~log₂(C) bootstrap rounds** (vocab=8 → 3 rounds, 848 ms single-key on H100 GPU; vocab=30,522
+  → 2,480 ms on A100, needs *multi-cipher* when vocab > slots).
+- Our naive fold: **C−1 sequential comparisons × ~5 refreshes each** (C=77 measured 379 refreshes).
+- **Win: O(C) → O(log C).** For C=100: ~99 comparisons/~485 refreshes → ~7 tournament rounds. ~14× fewer
+  stages. Est. multiparty-CKKS C=100: ~7 rounds × (sign-eval + one ~1.3 s collective refresh) ≈ **~15–120 s**
+  vs the naive **~26 min**; single-key GPU (NEXUS) is sub-second.
+- **Applies cleanly to HE-OFT:** all our label spaces (C≤100) are ≪ slots (16,384 at logN=15), so
+  *single-ciphertext* QuickMax suffices — the "multi-cipher, out of scope" caveat only bites at 30k+ vocab
+  (generative LMs), not classification.
+- **Caveat:** QuickMax is single-key CKKS on GPU; a multiparty port replaces each bootstrap with a collective
+  refresh (log₂C of them) — still log-depth, just slower per-bootstrap on CPU.
+
+**Recommendation:** report the measured naive fold as a *conservative upper bound*, and cite the optimized
+tournament argmax (NEXUS QuickMax + the COMP390 project + comparison-primitive literature) with the log-depth
+estimate. Implementing a packed tournament in Lattigo for an exact multiparty number is an option, not a
+blocker — the Serve = low-QPS conclusion holds either way, and the optimization *strengthens* it (~1–2 min,
+not 26 min).
+
+**Literature pass landed (2026-07-14):** ranked — (1) **log-depth SIMD tournament** (= QuickMax; ~14×,
+multiparty-native, rotations use one-time collective Galois keys); (2) **+ minimax-composite sign**
+(Cheon ASIACRYPT'20 / Lee TDSC'22; ~0.55×/comparison → ~25× combined); (3) **cutmax** (arXiv 2509.08383,
+comparison-free iterative, cost ~independent of C, ~3–5 s vocab-argmax single-key — approximation to validate);
+**NOT PEGASUS/TFHE** (leaves multiparty CKKS, O(C) single-key programmable bootstraps → regression). Citation
+fix: the ASIACRYPT'19 comparison paper is Cheon–D.Kim–D.Kim–Lee–Lee, **not** "…Song" (Song is on the 2017
+CKKS paper).
+
+**Threshold-CKKS transfer (user question, resolved):** homomorphic evaluation — incl. the whole argmax —
+is **identical** under a collective vs single key; threshold CKKS differs ONLY in (i) distributed keygen and
+(ii) threshold decryption. Bootstrap has a choice: local non-interactive (collectively-generated bootstrap
+keys → **same cost as single-key**, so NEXUS's numbers transfer directly) vs interactive collective refresh
+(cheaper compute, +1 comm round/bootstrap, min-level constraint — what our benchmark used). ⇒ NEXUS's
+single-key QuickMax numbers cite legitimately for our setting.
+
+**Paper decision (DONE):** NO table for the argmax cost — textual paragraph in sec:serve "Cost, and who
+serves": naive ≈ 20 min at C=77 in our CPU impl (loose upper bound) → log-depth tournament ~14× →
+sub-second GPU (NEXUS), transfers to threshold since only keygen+decrypt differ. Added cites
+`zhang2025nexus`, `cheon2020comparison`; fixed the sec:threat cross-ref (fhe-cost → sec:serve). Committed.
 
 **Ops notes:** comx29 QOS is only permitted on `t4_ai` (a GPU partition) — so FHE (CPU-only) jobs
 compete with training for the 1-GPU/user slot; jobs are short so it's fine, but a CPU partition
@@ -181,8 +239,26 @@ restrictions," NOT "forbids." (Flagged by research pass; a reviewer will pounce 
   server") — companion to **EDPS TechDispatch #1/2025 on Federated Learning** (direct page 403; quote
   the AEPD mirror). Healthcare peer-reviewed: *Eurosurveillance* (ECDC), "potential of federated
   learning for public health … GDPR compliance," PMC11484284.
-- Three provision-tied motivation sentences drafted (in research output) — ready to adapt once
-  story is signed off. **Do not add .bib/.tex until user approves storytelling (HITL).**
+- Three provision-tied motivation sentences drafted (in research output) — ready to adapt.
+
+**Broadened citations (research pass 2026-07-14):**
+- **HIPAA (US)** — verified against primary CFR text (govinfo.gov, 2023 ed., unchanged in current eCFR):
+  minimum-necessary **45 CFR § 164.502(b)**; de-identification **§ 164.514(a)–(b)** (Expert Determination
+  (b)(1) + Safe Harbor (b)(2), 18 identifiers); cross-entity disclosure needs authorization **§ 164.508**
+  or a business-associate agreement **§ 164.502(e)**. The US healthcare anchor; pairs with GDPR Art 9.
+  (hhs.gov 403'd → used govinfo CFR, more authoritative.)
+- **EU AI Act** — **Regulation (EU) 2024/1689**, in force 2024-08-01, risk-tiered; **Article 10** "Data and
+  data governance" for high-risk systems; Annex III high-risk incl. **biometrics (pt 1)**, **creditworthiness
+  (pt 5(b))**; medical AI is high-risk via **Art 6(1) + Annex I** (medical-device Regs 2017/745, 2017/746).
+  Backs "the model itself is a regulated asset" → Serve. **CAVEAT:** eur-lex direct fetch mis-extracted the
+  Art 10 title (returned Art 5 text); confirmed via artificialintelligenceact.eu mirror + multi-source
+  consensus — re-verify the Art 10 title off eur-lex before committing to .tex.
+- **Breadth (one sentence, secondary aggregators except PIPEDA):** China PIPL (2021), Brazil LGPD (2018/eff.
+  2020), India DPDP Act (2023), Canada PIPEDA (2000, official priv.gc.ca), California CCPA/CPRA (2018/2023).
+- Two more provision-tied motivation sentences drafted (HIPAA; AI Act). Recommended paper set: **GDPR + KVKK
+  + HIPAA anchors, one AI-Act clause (model-as-regulated-asset), one global-breadth sentence** — not a legal
+  survey. Verb discipline: "strictly restricts / heightened conditions / de-identification," never "forbids."
+  Stage for the intro-motivation draft (paper integration, pending).
 
 **Status:** storytelling + structure = PROPOSED, awaiting user sign-off before any `.tex` edits
 (paper writing = HITL). Open: (a) confirm spine + Release/Serve naming; (b) OK to foreground the
