@@ -111,6 +111,10 @@ Our contributions are as follows.
   vote on their local data. This restores data-dependent aggregation choice to a server that cannot read
   its inputs, improves the released model under heterogeneity, and yields a measured robustness defense
   (\cref{sec:candidates,sec:robust}).
+\item We add a second disclosure setting: rather than releasing the aggregate, the protocol can keep it
+  encrypted and answer queries at multiplicative depth one, so the model itself is never revealed and a
+  participant obtains only labels --- a confidential-model serving mode we are not aware of in prior one-shot
+  or federated encrypted learning (\cref{sec:serve}).
 \item We validate both sides of the privacy design: the encrypted aggregation end to end in a real
   multiparty CKKS implementation at a few megabytes per client (\cref{sec:fhe-cost}), and the remaining
   inference-time surface with membership inference against the released model, under external and

@@ -167,7 +167,17 @@ deployment now requires. That intersection --- the
 training-time surface removed in one
 round, at multiplicative depth one, with the accuracy of plaintext fine-tuning --- is the position HE-OFT
 occupies, and \cref{sec:matched} quantifies it at the published setups of the closest
-one-shot peers. We stress that the ingredients are not modular, a federated fine-tuning method with
+one-shot peers.
+
+A further axis is unique to HE-OFT: the prior methods that yield a usable model deliver it to the
+participants in the clear --- the plaintext and differentially private one-shot schemes release it directly,
+while the encrypted-training line keeps a model encrypted only at the recurring cost of homomorphic
+nonlinearity across many rounds. HE-OFT can instead withhold the model altogether, keeping the one-shot
+aggregate encrypted and querying it at multiplicative depth one (\cref{sec:serve}), so the model itself stays
+confidential and a participant obtains only labels; serving a one-shot, depth-one aggregate that is never
+released is, to our knowledge, new to federated learning.
+
+We stress that the ingredients are not modular, a federated fine-tuning method with
 encryption added on top: each design choice in \cref{sec:method} --- the frozen backbone, the frozen
 down-projection, the bounded trajectory, the linear rule, the client-side vote --- is forced by the
 constraint that the server computes on ciphertexts.

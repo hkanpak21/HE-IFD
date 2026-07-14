@@ -111,6 +111,26 @@ $\mathsf{Enc}(\thstar)$.
 \emph{Threshold decryption.} A threshold of clients jointly decrypts $\mathsf{Enc}(\thstar)$ by collective
 key-switching to recover the global model $\thstar$. The server never obtains a plaintext.
 
+\begin{algorithm}[t]
+\caption{HE-OFT: one-shot federated fine-tuning under multiparty CKKS, with the two disclosure settings.}
+\label{alg:heoft}
+\small
+\begin{algorithmic}[1]
+\Statex \textbf{Public, shared, data-free:} frozen backbone $\featx$; initializer $\thz$ of the trainable unit (freeze-$A$ adapter $+$ head)
+\State clients run distributed key generation $\to$ collective CKKS key \Comment{secret-shared; no party decrypts alone}
+\For{client $j=1,\dots,\Nc$ \textbf{in parallel}}
+  \State $\theta_j \gets \textsc{FineTune}(\thz,\Dj,\Ksteps)$ \Comment{plaintext, on the client}
+  \State send $\mathsf{Enc}(\disp)$ to the server, \; $\disp=\theta_j-\thz$
+\EndFor
+\State \textbf{server} forms depth-one candidates $\{\mathsf{Enc}(\theta^{(m)})\}$ from $\{\mathsf{Enc}(\disp)\}$: scaling $\thz+\lambda\!\sum_j\wj\disp$, count-/Fisher-reweighted, leave-one-out \Comment{$+$ and public-scalar $\times$ only}
+\State clients threshold-decrypt the candidates and select $\thstar\!\gets\!\theta^{(m^\star)}$, $m^\star=\arg\max_m \overline{\mathrm{acc}}_m$ on local holdouts
+\Statex \rule{\linewidth}{0.4pt}
+\Statex \textbf{Disclosure of $\thstar$} (\cref{sec:serve}):
+\State \textbf{Release:} threshold-decrypt $\thstar$ $\to$ every client holds the plaintext model
+\State \textbf{Serve:} keep $\mathsf{Enc}(\thstar)$; on query $x$: $\mathsf{Enc}(\ell)\!\gets\!\mathsf{Enc}(\thstar)\,\featx(x)$ (depth $1$); $\hat y\!\gets\!\arg\max_c \ell_c$ under encryption; threshold-decrypt $\hat y$ only
+\end{algorithmic}
+\end{algorithm}
+
 The objective is not a model that surpasses each client on that client's own dominant classes; a local
 specialist on a narrow slice of the label space is difficult to surpass on that slice, and we do not claim to. The
 objective is a common model every party can use, that classifies well across the whole label space including
@@ -346,10 +366,19 @@ so that no party --- client or server --- ever holds the model in the clear, and
 labels it requests. This fits deployments in which the fine-tuned model is itself a regulated or proprietary
 asset that may not be released even to its builders. It is affordable for the same reason the aggregation is:
 the trainable unit is \emph{linear in the frozen features}. For a query $x$ the public backbone runs in
-plaintext to features $\featx(x)$; the encrypted head maps them to encrypted logits by the very operation the
-aggregation uses --- a plaintext vector against ciphertext weights, at multiplicative depth one --- so no
-nonlinearity ever meets the encrypted head. The predicted label is the $\arg\max$ of those logits, and a
-threshold of clients decrypts that label alone.
+plaintext to features $\featx(x)$, and the encrypted head produces encrypted logits by the very operation the
+aggregation uses,
+\begin{equation}
+\label{eq:serve}
+\mathsf{Enc}(\ell) \;=\; \mathsf{Enc}(\thstar)\,\featx(x),
+\qquad
+\hat{y} \;=\; \arg\max_{c\in\{1,\dots,\Cc\}}\ell_c ,
+\end{equation}
+a plaintext vector against ciphertext weights at multiplicative depth one, so no nonlinearity ever meets the
+encrypted head. The $\arg\max$ is taken \emph{under encryption} by a homomorphic comparison
+circuit~\cite{cheon2020comparison}, and a threshold of clients decrypts the predicted label $\hat{y}$ alone.
+
+\input{figures/serve}
 
 \paragraph{Why the label and not the logits.} Returning logits would defeat the purpose. The head is a linear
 map on features the client already holds, so a client that reads logits for feature vectors of its choosing
