@@ -139,7 +139,11 @@ func runTournament(c argmaxConfig) tournamentResult {
 	minimaxEvl := minimax.NewEvaluator(params, eval, btp)
 	cmp := comparison.NewEvaluator(params, minimaxEvl, minimax.NewPolynomial(comparison.DefaultCompositePolynomialForSign))
 
-	// ---- pack C logits into slots 0..C-1; pad the rest with -10 (below all) ----
+	// ---- pack C logits into slots 0..C-1; pad the rest just below the logits ----
+	// The comparison circuit is only accurate for inputs in [-0.5, 0.5] (|a-b| <= 1),
+	// so the padding must lie INSIDE that range yet strictly below every logit. A
+	// far-out sentinel (e.g. -10) leaves the sign polynomial's valid domain and makes
+	// it diverge (the earlier all-false, ~1e137 run). Logits in [-0.4, 0.5), pad -0.5.
 	encoder := ckks.NewEncoder(params)
 	encryptor := rlwe.NewEncryptor(params, pk)
 	slots := params.MaxSlots()
@@ -147,10 +151,10 @@ func runTournament(c argmaxConfig) tournamentResult {
 	logits := make([]float64, c.C)
 	vec := make([]float64, slots)
 	for i := range vec {
-		vec[i] = -10.0
+		vec[i] = -0.5
 	}
 	for j := 0; j < c.C; j++ {
-		logits[j] = rng.Float64() - 0.5
+		logits[j] = rng.Float64()*0.9 - 0.4
 		vec[j] = logits[j]
 	}
 	pt := ckks.NewPlaintext(params, params.MaxLevel())
