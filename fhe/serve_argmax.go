@@ -220,6 +220,16 @@ func runArgmax(c argmaxConfig) argmaxResult {
 	tArg := time.Now()
 	m := cts[0]
 	for i := 1; i < c.C; i++ {
+		// Keep the running max at full level before each comparison. The Max circuit
+		// leaves its output a level or two down, and that drift accumulates over the
+		// fold; left unchecked it drives the sign circuit's internal refresh below the
+		// secure minimum level after a few comparisons (the C>=6 GenShare failure).
+		// Refreshing the accumulator resets it, at one extra collective refresh per
+		// comparison — an honest, reproducible upper bound on the argmax cost.
+		if m.Level() < params.MaxLevel() {
+			m, err = btp.Bootstrap(m)
+			check(err)
+		}
 		m, err = cmp.Max(m, cts[i])
 		check(err)
 	}
