@@ -96,7 +96,8 @@ func main() {
 		logNFlag  = flag.Int("logn", 14, "log2 ring degree")
 		jsonOut   = flag.String("json", "", "optional path to write results JSON")
 		serveFlag       = flag.Bool("serve", false, "run the Serve-mode encrypted-inference cost benchmark (collective refresh + threshold decrypt) instead of the Release-mode aggregation suite")
-		serveArgmaxFlag = flag.Bool("serve-argmax", false, "run the Serve-mode encrypted-argmax cost benchmark over C classes (collective-refresh-backed sign circuit)")
+		serveArgmaxFlag     = flag.Bool("serve-argmax", false, "run the Serve-mode encrypted-argmax cost benchmark over C classes (collective-refresh-backed sign circuit)")
+		serveTournamentFlag = flag.Bool("serve-tournament", false, "run the Serve-mode LOG-DEPTH tournament argmax (SIMD-packed rotate-and-Max; the QuickMax optimization)")
 	)
 	flag.Parse()
 
@@ -111,6 +112,12 @@ func main() {
 	// bootstraps wired to collective refreshes. See serve_argmax.go.
 	if *serveArgmaxFlag {
 		runArgmaxSuite(*jsonOut)
+		return
+	}
+	// Serve-mode TOURNAMENT argmax (Job 3): log-depth SIMD-packed rotate-and-Max,
+	// the QuickMax optimization. See serve_tournament.go.
+	if *serveTournamentFlag {
+		runTournamentSuite(*jsonOut)
 		return
 	}
 
