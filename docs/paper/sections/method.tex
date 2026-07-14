@@ -328,6 +328,52 @@ class and a rescale of each head row, negligible beside the homomorphic aggregat
 final head rows, and neither sum, are ever revealed. Both prices are small, and neither touches the server's
 depth-one operation.
 
+\subsection{Releasing versus Serving the Aggregate}
+\label{sec:serve}
+
+The protocol so far produces a single object, the selected aggregate $\thstar$, held under encryption. One
+step remains --- making it usable --- and it admits two settings that trade disclosure against cost. The
+results of this paper concern the first; the second is available where a deployment may not expose the model
+at all.
+
+\emph{Release.} A threshold of clients jointly decrypts $\thstar$, and every party holds the shared model in
+the clear. This is the natural output of a federation whose purpose is a common model, and it is the setting
+the accuracy, robustness, and membership-inference results below assume. Its only residual surface is the
+released model itself (\cref{sec:security,sec:mia}).
+
+\emph{Serve.} The aggregate is never decrypted. It stays in ciphertext and answers queries under encryption,
+so that no party --- client or server --- ever holds the model in the clear, and a client learns only the
+labels it requests. This fits deployments in which the fine-tuned model is itself a regulated or proprietary
+asset that may not be released even to its builders. It is affordable for the same reason the aggregation is:
+the trainable unit is \emph{linear in the frozen features}. For a query $x$ the public backbone runs in
+plaintext to features $\featx(x)$; the encrypted head maps them to encrypted logits by the very operation the
+aggregation uses --- a plaintext vector against ciphertext weights, at multiplicative depth one --- so no
+nonlinearity ever meets the encrypted head. The predicted label is the $\arg\max$ of those logits, and a
+threshold of clients decrypts that label alone.
+
+\paragraph{Why the label and not the logits.} Returning logits would defeat the purpose. The head is a linear
+map on features the client already holds, so a client that reads logits for feature vectors of its choosing
+recovers the head exactly, by solving a linear system in as many queries as the feature
+dimension~\cite{tramer2016stealing}. Releasing only the $\arg\max$ denies this: it reduces an adversary to
+label-only boundary search~\cite{lowdmeek2005,choquettechoo2021labelonly}, which recovers decision boundaries
+but never the head's coordinates, and at far greater query cost. Where honest use is intrinsically
+high-volume, so that no per-client budget separates it from extraction, the returned labels can additionally
+carry calibrated noise --- report-noisy-max~\cite{mcsherry2007mechanism}, folded into the smudging the
+threshold decryption already performs so that no sub-threshold coalition can remove it --- yielding a
+differential-privacy bound on cumulative leakage. This is a query-budget bound, not a cryptographic one: the
+aggregate remains recoverable in principle, only expensively.
+
+\paragraph{Cost, and who serves.} Serving carries one price the rest of the protocol avoids: the encrypted
+$\arg\max$ is a minimax sign circuit, the one operation in the method that is not depth-one, and it is paid
+per query rather than once. In the multiparty setting its bootstraps are collective refreshes, and
+\cref{sec:fhe-cost} reports the measured per-query latency --- which is why Serve suits low-throughput or
+governance deployments and Release the rest. The party that answers queries is not thereby trusted with
+anything: holding only the public key, the evaluation keys, and the ciphertext, it computes but cannot
+decrypt, and so learns neither the model nor any client's data. It is trusted only for availability and,
+where honest computation must be certified, through verifiable homomorphic encryption~\cite{viand2023verifiable};
+the decryption threshold is unchanged, since the aggregate becomes plaintext only to a quorum, exactly as
+under Release.
+
 \subsection{Threat Model}
 \label{sec:threat}
 
@@ -347,7 +393,10 @@ its single artifact is encrypted. Every participant does obtain the released mod
 after threshold decryption, by design, since the purpose of the protocol is to hand the parties a shared
 model. Any inference a participant then performs on $\thstar$ against another participant's data is
 therefore not an attack the protocol can prevent but a property of releasing a useful shared model at all,
-and we measure it directly in \cref{sec:mia} under exactly this fellow-participant adversary. The
+and we measure it directly in \cref{sec:mia} under exactly this fellow-participant adversary. Where a
+deployment may not expose even the released model, the Serve setting of \cref{sec:serve} withholds $\thstar$
+altogether, leaving a participant only the labels of its own queries, at the per-query cost
+\cref{sec:fhe-cost} measures; the contribution-level guarantee stated next is identical in both settings. The
 cryptographic guarantee concerns the \emph{contributions}: the server and any sub-threshold coalition observe
 only ciphertexts. This is the sense in which the protection target differs from differentially private
 one-shot methods, which perturb the released artifact to protect it against all parties, including
