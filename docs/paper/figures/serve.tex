@@ -21,12 +21,12 @@
 \node[qb]     (q)     at (0,0)      {client\\query $x$};
 \node[plainb] (phi)   at (2.6,0)    {frozen backbone $\varphi$\\\textit{plaintext}};
 \node[encb]   (head)  at (5.8,0)    {encrypted head\\$\mathsf{Enc}(\theta^\star)\!\cdot\!\varphi(x)$\\depth $1$};
-\node[encb]   (am)    at (9.2,0)    {encrypted $\arg\max$\\log-depth tournament\\{\tiny QuickMax~\cite{zhang2025nexus}}};
+\node[encb]   (am)    at (9.2,0)    {encrypted $\arg\max$\\log-depth tournament\\{\tiny (QuickMax)}};
 \node[clb]    (td)    at (12.5,0)   {threshold decrypt\\{\tiny label only, $t$-of-$\Nc$}};
 \node[outb]   (out)   at (15.0,0)   {label\\{\tiny to querier}};
 % shared encrypted aggregate + the Release fork
 \node[encd]   (theta) at (5.8,-2.4) {$\mathsf{Enc}(\theta^\star)$\\{\tiny never decrypted}};
-\node[relb]   (rel)   at (1.4,-2.4) {\textbf{Release} (\cref{fig:protocol})\\{\tiny decrypt $\theta^\star$ once;\\every client holds\\the plaintext model}};
+\node[relb]   (rel)   at (1.4,-2.4) {\textbf{Release}\\{\tiny decrypt $\theta^\star$ once;\\every client holds\\the plaintext model}};
 
 % flow: plaintext neutral arrows, ciphertext blue arrows
 \draw[arr]    (q)    -- (phi);
@@ -40,7 +40,7 @@
 % serving party: untrusted evaluator, cannot decrypt
 \begin{scope}[on background layer]
   \node[draw=paperblue, dashed, rounded corners, fit=(phi)(head)(am), inner sep=3mm,
-    label={[enclbl]above:serving party (untrusted evaluator): public $+$ evaluation keys only, computes but cannot decrypt}] {};
+    label={[enclbl]above:serving party (untrusted evaluator) --- public $+$ evaluation keys only, computes but cannot decrypt}] {};
 \end{scope}
 \end{tikzpicture}%
 }
