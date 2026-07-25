@@ -33,8 +33,9 @@ MODES (all evaluated on the GLOBAL test set)
   B_personal   adapter_j + agg_head        <-- the proposed design
   current      agg_adapter + agg_head      current HE-OFT (not servable)
   A_headonly   no adapter + agg_head       floor: clients train r=0, head only
+  selected     per-client vote A vs B       each client picks on its own holdout
 
-Usage:  python -m jobs.personal_adapter_test [task ...]
+Usage:  python jobs/personal_adapter_test.py [task ...] [seed ...]
 """
 import json
 import sys
@@ -51,12 +52,27 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 
 TASKS = ["ag_news", "dbpedia_14", "banking77"]
 BACKBONE = "roberta_base"
-N, ALPHA, SEED, K, LR, BS, R = 10, 0.1, 42, 200, 5e-4, 32, 8
+N, ALPHA, K, LR, BS, R = 10, 0.1, 200, 5e-4, 32, 8
+SEEDS = [42, 43, 44]
+VAL_FRAC = 0.1        # per-client holdout used for the client-side A-vs-B vote
 HEAD_KEYS = ("head.weight", "head.bias")
 
 
 def is_head(k):
     return k in HEAD_KEYS
+
+
+def split_parts(parts, seed):
+    """Carve a per-client holdout out of each client's shard (for the vote)."""
+    rng = np.random.default_rng(seed + 7)
+    tr, va = [], []
+    for idx in parts:
+        idx = np.asarray(idx)
+        perm = rng.permutation(len(idx))
+        nv = max(1, int(round(VAL_FRAC * len(idx))))
+        va.append(idx[perm[:nv]])
+        tr.append(idx[perm[nv:]] if len(idx) - nv > 0 else idx[perm[:nv]])
+    return tr, va
 
 
 def train_clients(model, theta0, parts, ids_tr, mask_tr, ytr, C):
@@ -75,84 +91,92 @@ def train_clients(model, theta0, parts, ids_tr, mask_tr, ytr, C):
     return states, ws / ws.sum(), counts
 
 
-def record(rows, task, C, mode, accs, note=""):
+def record(rows, task, C, seed, mode, accs, note=""):
     a = np.asarray(accs, dtype=float)
-    rows.append(dict(task=task, C=C, mode=mode, n=len(a),
+    rows.append(dict(task=task, C=C, seed=seed, mode=mode, n=len(a),
                      acc_mean=round(a.mean(), 4), acc_min=round(a.min(), 4),
                      acc_max=round(a.max(), 4), note=note))
     print(f"  >> {mode:<12} mean={a.mean():.4f} "
-          f"[{a.min():.4f}, {a.max():.4f}]  n={len(a)}", flush=True)
+          f"[{a.min():.4f}, {a.max():.4f}]  n={len(a)}  {note}", flush=True)
 
 
-def run_task(task, rows):
-    print(f"\n=== {task} ===", flush=True)
-    ids_tr, mask_tr, ytr, ids_te, mask_te, yte, C = fi._data(task, BACKBONE, SEED)
-    parts = fi.dirichlet_partition(ytr, N, ALPHA, C, SEED)
+def run_task(task, seed, rows):
+    print(f"\n=== {task} seed={seed} ===", flush=True)
+    ids_tr, mask_tr, ytr, ids_te, mask_te, yte, C = fi._data(task, BACKBONE, seed)
+    parts = fi.dirichlet_partition(ytr, N, ALPHA, C, seed)
+    tr_parts, va_parts = split_parts(parts, seed)
+    y = np.asarray(ytr)
 
-    # ---------- pass 1: r=8, clients train their own adapter + head ----------
-    fi.set_seed(SEED)
+    def on_val(model, j):
+        v = torch.as_tensor(va_parts[j], dtype=torch.long)
+        return fi.evaluate(model, ids_tr[v], mask_tr[v], y[v.numpy()])
+
+    # ---------- pass 1: r=8, each client trains its OWN adapter + head ----------
+    fi.set_seed(seed)
     model = fi.TextLoRA(BACKBONE, C, r=R, freeze_a=True).to(fi.DEVICE)
     theta0 = fi.trainable_state(model)
-    states, w, counts = train_clients(model, theta0, parts, ids_tr, mask_tr, ytr, C)
+    states, w, counts = train_clients(model, theta0, tr_parts, ids_tr, mask_tr, ytr, C)
 
     deltas = [{k: s[k] - theta0[k] for k in s} for s in states]
-    agg = fi.agg_count_head(theta0, deltas, w, counts)   # current HE-OFT
+    agg = fi.agg_count_head(theta0, deltas, w, counts)
 
-    # current HE-OFT: everything aggregated (not servable, reference only)
-    fi.load_trainable(model, agg)
-    record(rows, task, C, "current", [fi.evaluate(model, ids_te, mask_te, yte)],
-           "agg adapter + agg head")
+    fi.load_trainable(model, agg)          # not servable — reference only
+    record(rows, task, C, seed, "current",
+           [fi.evaluate(model, ids_te, mask_te, yte)], "agg adapter + agg head")
 
-    # local: client j alone
     accs = []
-    for s in states:
+    for s in states:                        # client alone
         fi.load_trainable(model, s)
         accs.append(fi.evaluate(model, ids_te, mask_te, yte))
-    record(rows, task, C, "local", accs, "own adapter + own head")
+    record(rows, task, C, seed, "local", accs, "own adapter + own head")
 
-    # B: client j's own adapter + the federated head
-    accs = []
-    for s in states:
-        mixed = {k: (agg[k] if is_head(k) else s[k]) for k in s}
-        fi.load_trainable(model, mixed)
-        accs.append(fi.evaluate(model, ids_te, mask_te, yte))
-    record(rows, task, C, "B_personal", accs, "own adapter + agg head")
-
-    # adapter switched off, federated head kept (head trained WITH an adapter)
-    accs = []
-    mixed = {k: (agg[k] if is_head(k) else theta0[k]) for k in theta0}
-    fi.load_trainable(model, mixed)
-    record(rows, task, C, "no_adapter", [fi.evaluate(model, ids_te, mask_te, yte)],
-           "theta0 adapter + agg head")
+    B_test, B_val = [], []                  # B: own adapter + federated head
+    for j, s in enumerate(states):
+        fi.load_trainable(model, {k: (agg[k] if is_head(k) else s[k]) for k in s})
+        B_test.append(fi.evaluate(model, ids_te, mask_te, yte))
+        B_val.append(on_val(model, j))
+    record(rows, task, C, seed, "B_personal", B_test, "own adapter + agg head")
 
     del model, states, deltas
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
     # ---------- pass 2: r=0 floor — clients train a head only ----------
-    fi.set_seed(SEED)
+    fi.set_seed(seed)
     m0 = fi.TextLoRA(BACKBONE, C, r=0, freeze_a=True).to(fi.DEVICE)
     t0 = fi.trainable_state(m0)
-    s0, w0, c0 = train_clients(m0, t0, parts, ids_tr, mask_tr, ytr, C)
+    s0, w0, c0 = train_clients(m0, t0, tr_parts, ids_tr, mask_tr, ytr, C)
     d0 = [{k: s[k] - t0[k] for k in s} for s in s0]
     fi.load_trainable(m0, fi.agg_count_head(t0, d0, w0, c0))
-    record(rows, task, C, "A_headonly", [fi.evaluate(m0, ids_te, mask_te, yte)],
-           "r=0, head only, federated")
+    A_test = fi.evaluate(m0, ids_te, mask_te, yte)
+    A_val = [on_val(m0, j) for j in range(len(parts))]
+    record(rows, task, C, seed, "A_headonly", [A_test], "r=0, head only, federated")
+
+    # ---------- client-side vote: each client picks A or B on its own holdout ----
+    sel = [B_test[j] if B_val[j] >= A_val[j] else A_test for j in range(len(parts))]
+    n_B = sum(1 for j in range(len(parts)) if B_val[j] >= A_val[j])
+    record(rows, task, C, seed, "selected", sel, f"client vote, {n_B}/{len(parts)} chose B")
+
     del m0, s0, d0
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
 
 def main():
+    args = sys.argv[1:]
+    tasks = [a for a in args if not a.isdigit()] or TASKS
+    seeds = [int(a) for a in args if a.isdigit()] or SEEDS
     rows = []
-    for t in (sys.argv[1:] or TASKS):
-        try:
-            run_task(t, rows)
-        except Exception as e:
-            print(f"[FAIL] {t}: {type(e).__name__}: {e}", flush=True)
-        (OUTDIR / "personal_adapter.json").write_text(json.dumps(rows, indent=2))
+    for t in tasks:
+        for sd in seeds:
+            try:
+                run_task(t, sd, rows)
+            except Exception as e:
+                print(f"[FAIL] {t} s{sd}: {type(e).__name__}: {e}", flush=True)
+            (OUTDIR / f"personal_adapter_{'_'.join(tasks)}.json").write_text(
+                json.dumps(rows, indent=2))
 
-    cols = ["task", "C", "mode", "n", "acc_mean", "acc_min", "acc_max", "note"]
+    cols = ["task", "C", "seed", "mode", "n", "acc_mean", "acc_min", "acc_max", "note"]
     print("\n" + ",".join(cols))
     for r in rows:
         print(",".join(str(r[c]) for c in cols))
