@@ -15,7 +15,14 @@ MODES (all evaluated on the GLOBAL test set)
   local        adapter_j + head_j         client alone
   B_personal   adapter_j + agg head       <-- the proposed design
   A_headonly   r=0, head only, federated  the floor
-  selected     per-client vote A vs B     each client picks on its own holdout
+  sel_perclient    per-client vote        BIASED (local holdout follows local skew)
+  sel_federated    federation-wide vote   one winner for all, sample-weighted
+  sel_fed_balanced federation-wide vote   + per-class balanced holdout scoring
+
+Also writes results/personal_adapter_vision/artifacts/<ds>_s<seed>.pt with
+theta0, per-client states (r=8/r=0), counts, weights, holdout indices, and the
+LOGITS of every candidate on the global test set and each client's holdout, so
+blind/HE selection rules can be developed offline with no GPU.
 
 Usage:  python jobs/personal_adapter_vision.py [dataset ...] [seed ...]
 """
@@ -32,7 +39,9 @@ import finetune_improve as fi           # noqa: E402
 import vision_matched as vm             # noqa: E402
 
 OUTDIR = REPO / "results" / "personal_adapter_vision"
+ARTDIR = OUTDIR / "artifacts"
 OUTDIR.mkdir(parents=True, exist_ok=True)
+ARTDIR.mkdir(parents=True, exist_ok=True)
 
 DATASETS = ["cifar100"]
 N, ALPHA, K, LR, BS, R = 10, 0.1, 200, 5e-4, 32, 8
@@ -71,6 +80,26 @@ def train_clients(model, theta0, parts, X, y, C):
     return states, ws / ws.sum(), counts
 
 
+@torch.no_grad()
+def logits_of(model, X, bs=64):
+    model.eval()
+    out = []
+    for s in range(0, len(X), bs):
+        out.append(model(vm.prep(X[s:s + bs])).float().cpu())
+    return torch.cat(out)
+
+
+def acc_of(logits, y):
+    return float((logits.argmax(1).numpy() == np.asarray(y)).mean())
+
+
+def balanced_acc_of(logits, y, C):
+    """Per-class accuracy averaged over classes present; removes the local prior."""
+    p = logits.argmax(1).numpy(); y = np.asarray(y)
+    per = [(p[y == c] == c).mean() for c in range(C) if (y == c).sum() > 0]
+    return float(np.mean(per)) if per else 0.0
+
+
 def record(rows, ds, C, seed, mode, accs, note=""):
     a = np.asarray(accs, dtype=float)
     rows.append(dict(dataset=ds, C=C, seed=seed, mode=mode, n=len(a),
@@ -86,9 +115,12 @@ def run_ds(ds, seed, rows):
     parts = fi.dirichlet_partition(ytr, N, ALPHA, C, seed)
     tr_parts, va_parts = split_parts(parts, seed)
 
-    def on_val(model, j):
+    def val_of(j):
         v = np.asarray(va_parts[j])
-        return vm.v_eval(model, Xtr[v], ytr[v])
+        return Xtr[v], ytr[v]
+
+    art = dict(dataset=ds, seed=seed, C=C, N=N, alpha=ALPHA, K=K, r=R,
+               va_parts=[np.asarray(v) for v in va_parts], yte=np.asarray(yte))
 
     # ---------- pass 1: r=8, each client trains its OWN adapter + head -------
     fi.set_seed(seed)
@@ -98,22 +130,32 @@ def run_ds(ds, seed, rows):
 
     deltas = [{k: s[k] - theta0[k] for k in s} for s in states]
     agg = fi.agg_count_head(theta0, deltas, w, counts)
+    art.update(theta0_r8={k: v.cpu() for k, v in theta0.items()},
+               states_r8=[{k: v.cpu() for k, v in st.items()} for st in states],
+               w=w, counts=np.stack(counts))
 
     fi.load_trainable(model, agg)                       # reference only
-    record(rows, ds, C, seed, "current", [vm.v_eval(model, Xte, yte)],
-           "agg adapter + agg head")
+    art["logits_current_test"] = logits_of(model, Xte)
+    record(rows, ds, C, seed, "current",
+           [acc_of(art["logits_current_test"], yte)], "agg adapter + agg head")
 
     accs = []
-    for s in states:
-        fi.load_trainable(model, s)
+    for st in states:
+        fi.load_trainable(model, st)
         accs.append(vm.v_eval(model, Xte, yte))
     record(rows, ds, C, seed, "local", accs, "own adapter + own head")
 
-    B_test, B_val = [], []
-    for j, s in enumerate(states):
-        fi.load_trainable(model, {k: (agg[k] if is_head(k) else s[k]) for k in s})
-        B_test.append(vm.v_eval(model, Xte, yte))
-        B_val.append(on_val(model, j))
+    B_test, B_val, B_bal = [], [], []
+    art["logits_B_test"], art["logits_B_val"] = [], []
+    for j, st in enumerate(states):
+        fi.load_trainable(model, {k: (agg[k] if is_head(k) else st[k]) for k in st})
+        lt = logits_of(model, Xte)
+        vX, vy = val_of(j)
+        lv = logits_of(model, vX)
+        art["logits_B_test"].append(lt); art["logits_B_val"].append(lv)
+        B_test.append(acc_of(lt, yte))
+        B_val.append(acc_of(lv, vy))
+        B_bal.append(balanced_acc_of(lv, vy, C))
     record(rows, ds, C, seed, "B_personal", B_test, "own adapter + agg head")
 
     del model, states, deltas
@@ -125,16 +167,41 @@ def run_ds(ds, seed, rows):
     m0 = vm.ViTLoRA(C, r=0, freeze_a=True).to(fi.DEVICE)
     t0 = fi.trainable_state(m0)
     s0, w0, c0 = train_clients(m0, t0, tr_parts, Xtr, ytr, C)
-    d0 = [{k: s[k] - t0[k] for k in s} for s in s0]
+    d0 = [{k: st[k] - t0[k] for k in st} for st in s0]
     fi.load_trainable(m0, fi.agg_count_head(t0, d0, w0, c0))
-    A_test = vm.v_eval(m0, Xte, yte)
-    A_val = [on_val(m0, j) for j in range(len(parts))]
+    art.update(theta0_r0={k: v.cpu() for k, v in t0.items()},
+               states_r0=[{k: v.cpu() for k, v in st.items()} for st in s0])
+
+    art["logits_A_test"] = logits_of(m0, Xte)
+    A_test = acc_of(art["logits_A_test"], yte)
+    A_val, A_bal, art["logits_A_val"] = [], [], []
+    for j in range(len(parts)):
+        vX, vy = val_of(j)
+        lv = logits_of(m0, vX)
+        art["logits_A_val"].append(lv)
+        A_val.append(acc_of(lv, vy))
+        A_bal.append(balanced_acc_of(lv, vy, C))
     record(rows, ds, C, seed, "A_headonly", [A_test], "r=0, head only, federated")
 
+    # ---------- selection variants ------------------------------------------
     sel = [B_test[j] if B_val[j] >= A_val[j] else A_test for j in range(len(parts))]
     n_B = sum(1 for j in range(len(parts)) if B_val[j] >= A_val[j])
-    record(rows, ds, C, seed, "selected", sel,
-           f"client vote, {n_B}/{len(parts)} chose B")
+    record(rows, ds, C, seed, "sel_perclient", sel,
+           f"per-client vote (biased), {n_B}/{len(parts)} chose B")
+
+    for tag, vB, vA in (("sel_federated", B_val, A_val),
+                        ("sel_fed_balanced", B_bal, A_bal)):
+        sB = float(np.dot(w, vB)); sA = float(np.dot(w, vA))
+        pick_B = sB >= sA
+        out = B_test if pick_B else [A_test] * len(parts)
+        record(rows, ds, C, seed, tag, out,
+               f"federation picked {'B' if pick_B else 'A'} (B={sB:.4f} A={sA:.4f})")
+
+    art.update(B_test=B_test, B_val=B_val, B_bal=B_bal,
+               A_test=A_test, A_val=A_val, A_bal=A_bal)
+    ap = ARTDIR / f"{ds}_s{seed}.pt"
+    torch.save(art, ap)
+    print(f"  artifacts -> {ap} ({ap.stat().st_size/1e6:.1f} MB)", flush=True)
 
     del m0, s0, d0
     if torch.cuda.is_available():

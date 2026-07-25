@@ -33,7 +33,15 @@ MODES (all evaluated on the GLOBAL test set)
   B_personal   adapter_j + agg_head        <-- the proposed design
   current      agg_adapter + agg_head      current HE-OFT (not servable)
   A_headonly   no adapter + agg_head       floor: clients train r=0, head only
-  selected     per-client vote A vs B       each client picks on its own holdout
+  sel_perclient    per-client vote          BIASED (local holdout follows local skew)
+  sel_federated    federation-wide vote     one winner for all, sample-weighted
+  sel_fed_balanced federation-wide vote     + per-class balanced holdout scoring
+
+Every run also writes results/personal_adapter/artifacts/<task>_s<seed>.pt with
+theta0, per-client trainable states (r=8 and r=0), class counts, sample weights,
+holdout indices, and the LOGITS of every candidate on both the global test set
+and each client's holdout -- so new (blind / HE) selection rules can be
+developed and scored offline with no GPU.
 
 Usage:  python jobs/personal_adapter_test.py [task ...] [seed ...]
 """
@@ -48,7 +56,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import finetune_improve as fi  # noqa: E402
 
 OUTDIR = Path("results") / "personal_adapter"
+ARTDIR = OUTDIR / "artifacts"          # heads/states/logits for offline selection work
 OUTDIR.mkdir(parents=True, exist_ok=True)
+ARTDIR.mkdir(parents=True, exist_ok=True)
 
 TASKS = ["ag_news", "dbpedia_14", "banking77"]
 BACKBONE = "roberta_base"
@@ -91,6 +101,33 @@ def train_clients(model, theta0, parts, ids_tr, mask_tr, ytr, C):
     return states, ws / ws.sum(), counts
 
 
+@torch.no_grad()
+def logits_of(model, ids, mask, bs=256):
+    model.eval()
+    out = []
+    for s in range(0, len(ids), bs):
+        out.append(model(ids[s:s + bs].to(fi.DEVICE),
+                         mask[s:s + bs].to(fi.DEVICE)).float().cpu())
+    return torch.cat(out)
+
+
+def acc_of(logits, y):
+    return float((logits.argmax(1).numpy() == np.asarray(y)).mean())
+
+
+def balanced_acc_of(logits, y, C):
+    """Per-class accuracy averaged over the classes actually present.
+
+    A client's holdout follows its own skewed distribution, so plain accuracy
+    on it is a biased estimate of GLOBAL accuracy -- it rewards a model tuned
+    to that client's dominant classes. Averaging per-class removes the prior.
+    """
+    p = logits.argmax(1).numpy()
+    y = np.asarray(y)
+    per = [(p[y == c] == c).mean() for c in range(C) if (y == c).sum() > 0]
+    return float(np.mean(per)) if per else 0.0
+
+
 def record(rows, task, C, seed, mode, accs, note=""):
     a = np.asarray(accs, dtype=float)
     rows.append(dict(task=task, C=C, seed=seed, mode=mode, n=len(a),
@@ -107,9 +144,12 @@ def run_task(task, seed, rows):
     tr_parts, va_parts = split_parts(parts, seed)
     y = np.asarray(ytr)
 
-    def on_val(model, j):
+    def val_ids(j):
         v = torch.as_tensor(va_parts[j], dtype=torch.long)
-        return fi.evaluate(model, ids_tr[v], mask_tr[v], y[v.numpy()])
+        return ids_tr[v], mask_tr[v], y[v.numpy()]
+
+    art = dict(task=task, seed=seed, C=C, N=N, alpha=ALPHA, K=K, r=R,
+               va_parts=[np.asarray(v) for v in va_parts], yte=np.asarray(yte))
 
     # ---------- pass 1: r=8, each client trains its OWN adapter + head ----------
     fi.set_seed(seed)
@@ -119,10 +159,14 @@ def run_task(task, seed, rows):
 
     deltas = [{k: s[k] - theta0[k] for k in s} for s in states]
     agg = fi.agg_count_head(theta0, deltas, w, counts)
+    art.update(theta0_r8={k: v.cpu() for k, v in theta0.items()},
+               states_r8=[{k: v.cpu() for k, v in s.items()} for s in states],
+               w=w, counts=np.stack(counts))
 
     fi.load_trainable(model, agg)          # not servable — reference only
-    record(rows, task, C, seed, "current",
-           [fi.evaluate(model, ids_te, mask_te, yte)], "agg adapter + agg head")
+    art["logits_current_test"] = logits_of(model, ids_te, mask_te)
+    record(rows, task, C, seed, "current", [acc_of(art["logits_current_test"], yte)],
+           "agg adapter + agg head")
 
     accs = []
     for s in states:                        # client alone
@@ -130,11 +174,17 @@ def run_task(task, seed, rows):
         accs.append(fi.evaluate(model, ids_te, mask_te, yte))
     record(rows, task, C, seed, "local", accs, "own adapter + own head")
 
-    B_test, B_val = [], []                  # B: own adapter + federated head
+    B_test, B_val, B_bal = [], [], []       # B: own adapter + federated head
+    art["logits_B_test"], art["logits_B_val"] = [], []
     for j, s in enumerate(states):
         fi.load_trainable(model, {k: (agg[k] if is_head(k) else s[k]) for k in s})
-        B_test.append(fi.evaluate(model, ids_te, mask_te, yte))
-        B_val.append(on_val(model, j))
+        lt = logits_of(model, ids_te, mask_te)
+        vi, vm_, vy = val_ids(j)
+        lv = logits_of(model, vi, vm_)
+        art["logits_B_test"].append(lt); art["logits_B_val"].append(lv)
+        B_test.append(acc_of(lt, yte))
+        B_val.append(acc_of(lv, vy))
+        B_bal.append(balanced_acc_of(lv, vy, C))
     record(rows, task, C, seed, "B_personal", B_test, "own adapter + agg head")
 
     del model, states, deltas
@@ -148,14 +198,42 @@ def run_task(task, seed, rows):
     s0, w0, c0 = train_clients(m0, t0, tr_parts, ids_tr, mask_tr, ytr, C)
     d0 = [{k: s[k] - t0[k] for k in s} for s in s0]
     fi.load_trainable(m0, fi.agg_count_head(t0, d0, w0, c0))
-    A_test = fi.evaluate(m0, ids_te, mask_te, yte)
-    A_val = [on_val(m0, j) for j in range(len(parts))]
+    art.update(theta0_r0={k: v.cpu() for k, v in t0.items()},
+               states_r0=[{k: v.cpu() for k, v in s.items()} for s in s0])
+
+    art["logits_A_test"] = logits_of(m0, ids_te, mask_te)
+    A_test = acc_of(art["logits_A_test"], yte)
+    A_val, A_bal, art["logits_A_val"] = [], [], []
+    for j in range(len(parts)):
+        vi, vm_, vy = val_ids(j)
+        lv = logits_of(m0, vi, vm_)
+        art["logits_A_val"].append(lv)
+        A_val.append(acc_of(lv, vy))
+        A_bal.append(balanced_acc_of(lv, vy, C))
     record(rows, task, C, seed, "A_headonly", [A_test], "r=0, head only, federated")
 
-    # ---------- client-side vote: each client picks A or B on its own holdout ----
+    # ---------- selection variants -------------------------------------------
+    # (i) per-client, plain holdout accuracy -- BIASED: a client's holdout follows
+    #     its own skew, so it over-rewards the personalised model.
     sel = [B_test[j] if B_val[j] >= A_val[j] else A_test for j in range(len(parts))]
     n_B = sum(1 for j in range(len(parts)) if B_val[j] >= A_val[j])
-    record(rows, task, C, seed, "selected", sel, f"client vote, {n_B}/{len(parts)} chose B")
+    record(rows, task, C, seed, "sel_perclient", sel,
+           f"per-client vote (biased), {n_B}/{len(parts)} chose B")
+
+    # (ii) federation-wide, sample-weighted -- one winner for everyone (sec:candidates)
+    for tag, vB, vA in (("sel_federated", B_val, A_val),
+                        ("sel_fed_balanced", B_bal, A_bal)):
+        sB = float(np.dot(w, vB)); sA = float(np.dot(w, vA))
+        pick_B = sB >= sA
+        out = B_test if pick_B else [A_test] * len(parts)
+        record(rows, task, C, seed, tag, out,
+               f"federation picked {'B' if pick_B else 'A'} (B={sB:.4f} A={sA:.4f})")
+
+    art.update(B_test=B_test, B_val=B_val, B_bal=B_bal,
+               A_test=A_test, A_val=A_val, A_bal=A_bal)
+    ap = ARTDIR / f"{task}_s{seed}.pt"
+    torch.save(art, ap)
+    print(f"  artifacts -> {ap} ({ap.stat().st_size/1e6:.1f} MB)", flush=True)
 
     del m0, s0, d0
     if torch.cuda.is_available():
