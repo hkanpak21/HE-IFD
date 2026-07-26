@@ -46,7 +46,11 @@ OUTDIR.mkdir(parents=True, exist_ok=True)
 ARTDIR.mkdir(parents=True, exist_ok=True)
 
 DATASETS = ["cifar100"]
-N, ALPHA, K, LR, BS, R = 10, 0.1, 200, 5e-4, 32, 8
+import os as _os
+N     = int(_os.environ.get("PA_N", 10))
+ALPHA = float(_os.environ.get("PA_ALPHA", 0.1))
+K     = int(_os.environ.get("PA_K", 200))
+LR, BS, R = 5e-4, 32, 8
 SEEDS = [42, 43, 44]
 VAL_FRAC = 0.1
 STRAT_PER_CLASS = 1   # holdout examples reserved from EVERY class a client holds
@@ -307,7 +311,7 @@ def run_ds(ds, seed, rows):
                val_y=[np.asarray(v) for v in val_y])
     art.update(B_test=B_test, B_val=B_val, B_bal=B_bal,
                A_test=A_test, A_val=A_val, A_bal=A_bal)
-    ap = ARTDIR / f"{ds}_s{seed}.pt"
+    ap = ARTDIR / f"{ds}_N{N}_a{ALPHA}_K{K}_s{seed}.pt"
     torch.save(art, ap)
     print(f"  artifacts -> {ap} ({ap.stat().st_size/1e6:.1f} MB)", flush=True)
 
