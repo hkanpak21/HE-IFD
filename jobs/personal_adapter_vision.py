@@ -54,6 +54,25 @@ def is_head(k):
     return k in HEAD_KEYS
 
 
+MIN_SHARD = 20        # a client needs enough data to split into train + holdout
+
+
+def usable(parts):
+    """Drop clients whose Dirichlet shard is too small to train on.
+
+    At small alpha on a small dataset the partition can hand a client zero (or
+    a handful of) samples, which crashes the sampler. Such a client cannot
+    meaningfully participate anyway, so we drop it and report the effective N
+    rather than silently reshaping the partition.
+    """
+    keep = [p for p in parts if len(p) >= MIN_SHARD]
+    if len(keep) != len(parts):
+        print(f"  [partition] dropped {len(parts) - len(keep)}/{len(parts)} "
+              f"clients with <{MIN_SHARD} samples -> effective N={len(keep)}",
+              flush=True)
+    return keep
+
+
 def split_parts(parts, seed):
     rng = np.random.default_rng(seed + 7)
     tr, va = [], []
@@ -112,7 +131,7 @@ def record(rows, ds, C, seed, mode, accs, note=""):
 def run_ds(ds, seed, rows):
     print(f"\n=== {ds} seed={seed} ===", flush=True)
     Xtr, ytr, Xte, yte, C = vm.load_vision(ds, seed=seed)
-    parts = fi.dirichlet_partition(ytr, N, ALPHA, C, seed)
+    parts = usable(fi.dirichlet_partition(ytr, N, ALPHA, C, seed))
     tr_parts, va_parts = split_parts(parts, seed)
 
     def val_of(j):
