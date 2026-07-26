@@ -152,7 +152,6 @@ func measureProtocol(n, logN int) protoResult {
 	evk := rlwe.NewMemEvaluationKeySet(rlk, gks...)
 
 	enc := rlwe.NewEncryptor(params, pk)
-	dec := rlwe.NewDecryptor(params, idealSk)
 	ecd := ckks.NewEncoder(params)
 	eval := ckks.NewEvaluator(params, evk)
 
