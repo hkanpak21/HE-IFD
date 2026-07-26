@@ -1,146 +1,75 @@
 \section{Method}
 \label{sec:method}
 
-\subsection{Overview}
+\subsection{Setting}
 \label{sec:setting}
 
-We consider $\Nc$ clients that hold private labelled data over a common label space of $\Cc$ classes and
-want a shared classifier without pooling their data. Client $j$ holds $\Dj$ of size $\nj$; the data are
-heterogeneous, with each client's class proportions drawn from a Dirichlet distribution of concentration
-$\alpha$ (smaller $\alpha$ means more skew). Two constraints separate our setting from ordinary federated
-learning. The protocol is \emph{one-shot}: one upload and one download per client, with no iterative
-exchange. And privacy is \emph{cryptographic}: a client's contribution is never revealed in the clear, and
-we are unwilling to accept the accuracy loss that differential privacy incurs when it is the
-only line of defence.
+We consider $\Nc$ clients holding private labelled data over a common label space
+of $\Cc$ classes. Client $j$ holds $\Dj$ of size $\nj$, and the data are
+heterogeneous: each client's class proportions are drawn from a Dirichlet
+distribution of concentration $\alpha$, so a smaller $\alpha$ leaves each client a
+few dominant classes and almost none of the rest. The clients want a classifier
+that works across the whole label space, and they cannot pool their data to build
+one.
 
-These two constraints, together with the untrusted setting, do not merely shape the design; they determine
-it. The protocol is not an assembly of independent techniques but the forced solution to a small set of
-constraints that secure collaborative training imposes, and we arrived at it by discarding alternatives that
-violate one or another --- a sequential or split-training scheme, for example, hands each party the
-intermediate state its predecessors trained, exactly the exposure \textbf{C5} below forbids. The
-constraints, and the choice each forces, are:
+Three requirements separate this setting from ordinary federated learning. The
+protocol is \emph{one-shot}: each client uploads once, and there is no iterative
+exchange. Privacy is \emph{cryptographic}: a client's contribution is never
+available in plaintext to any other party, and we do not accept the accuracy loss
+that differential privacy incurs when it is the only protection. And the model is
+\emph{never disclosed}: no party, client or server, ever holds the trained
+classifier in plaintext. The third requirement is the one that shapes everything
+below, and \cref{sec:threat} states precisely what it buys.
+
+These requirements are not a wish list. Each one forecloses a family of designs,
+and what remains is close to forced. We record the chain here so that the choices
+in the rest of this section read as consequences rather than preferences.
 
 \begin{itemize}
-\item[\textbf{C1}] \emph{Sophisticated learning cannot run under encryption.} Nonlinear optimisation ---
-  gradient steps, softmax, adaptive curvature --- needs deep, repeatedly bootstrapped homomorphic circuits.
-  \emph{So} the learning happens in plaintext on the clients, which pre-compute everything the aggregation
-  will consume: the local fine-tune, the per-coordinate importance estimate, and the single displacement each
-  client chooses to upload. The server performs no learning.
-\item[\textbf{C2}] \emph{The server cannot be adaptive.} Blind to the values it holds, it cannot inspect,
-  compare, or branch, and so cannot pick a data-dependent aggregation rule. \emph{So} it emits several
-  candidate aggregates and defers the choice to the clients, who select among them after decryption
-  (\cref{sec:candidates}).
-\item[\textbf{C3}] \emph{The parties must share a frame before they begin.} In the open-ended landscape of
-  deep-network parameters, independently trained models occupy incomparable regions and their linear
-  combination is meaningless. \emph{So} the parties fix a common geometry in advance: a frozen public
-  pretrained backbone fixes the representation, and a common public initialisation places every client at one
-  point (\cref{sec:basin}).
-\item[\textbf{C4}] \emph{The server's operation must be shallow.} Homomorphic cost is dominated by
-  multiplicative depth. \emph{So} the one server operation is a depth-one linear combine, and the design is
-  arranged so this cheapest operation is \emph{exactly} the one the method needs --- freezing the adapter's
-  down-projection makes the linear sum of the trained factors equal the sum of the weight updates
-  (\cref{sec:aggregation}).
-\item[\textbf{C5}] \emph{Intermediate training signals are the strongest attack surface.} Each exposed round
-  is a fresh training-time artifact, far more revealing than the released model (\cref{sec:related-leakage}).
-  \emph{So} the protocol is one-shot: a single encrypted exchange, one artifact, never in the clear.
-\item[\textbf{C6}] \emph{No single party may be trusted to decrypt.} The parties are mutually distrustful and
-  the server is untrusted; a single decryption key would let its holder reveal every contribution. \emph{So}
-  the key is generated and held distributively --- multiparty CKKS with threshold decryption, under which no
-  party, the server included, can decrypt alone (\cref{sec:mhe}).
+\item[\textbf{C1}] \emph{Optimisation cannot run under encryption at acceptable
+  cost.} Gradient steps, softmax, and adaptive curvature require deep, repeatedly
+  bootstrapped homomorphic circuits. \emph{Therefore} all learning happens in
+  plaintext on the clients, and the server performs no learning.
+\item[\textbf{C2}] \emph{A server computing on ciphertexts cannot read its
+  inputs.} It cannot inspect, compare, or branch, so it cannot select a
+  data-dependent aggregation rule. \emph{Therefore} the choice is deferred to the
+  clients, who make it without decrypting anything (\cref{sec:selection}).
+\item[\textbf{C3}] \emph{Independently trained models do not combine linearly.}
+  In the parameter space of a deep network, models trained from different
+  starting points occupy incomparable regions. \emph{Therefore} every client
+  starts its trainable unit from one public initialiser on one frozen public
+  backbone.
+\item[\textbf{C4}] \emph{Multiplicative depth dominates homomorphic cost.}
+  \emph{Therefore} the aggregation is a linear combination, and the design is
+  arranged so that this cheapest operation is exactly the one the method needs.
+\item[\textbf{C5}] \emph{Intermediate training signals are the strongest attack
+  surface.} Each exposed round is a fresh training-time artifact, far more
+  revealing than a finished model (\cref{sec:related-leakage}). \emph{Therefore}
+  the protocol is one-shot, and its single artifact is a ciphertext.
+\item[\textbf{C6}] \emph{No single party may be able to decrypt.} The parties are
+  mutually distrustful and the server is untrusted. \emph{Therefore} the secret
+  key is generated and held distributively, under multiparty CKKS
+  (\cref{sec:mhe}).
+\item[\textbf{C7}] \emph{The model is never disclosed, yet it must answer
+  queries.} A query is formed from features, and the client that asks must be able
+  to compute those features itself. \emph{Therefore} everything the client runs is
+  public, and the trained quantity that is shared cannot sit inside the backbone.
+  This is the requirement that separates the present design from the one a
+  released model would permit, and \cref{sec:split} works out what it forces.
 \end{itemize}
 
-\noindent The six form a chain rather than a list: \textbf{C1} pushes the work onto the clients, which raises
-\textbf{C2} (a blind server) and \textbf{C3} (their returns must be comparable); \textbf{C4} and \textbf{C6}
-shape the single operation the server may perform; \textbf{C5} fixes how many times it happens. The protocol
-below is one instance of their joint solution, and each constraint can be relaxed only at a stated price:
-abandon one-shot encryption and the intermediate snapshots leak (\textbf{C5}); abandon encryption altogether
-and the guarantee weakens from cryptographic to statistical --- the differentially private route whose
-accuracy cost \cref{sec:experiments} measures. Fine-tuning a pretrained model is thus not a convenience but
-the learning setting these constraints admit, and it removes the alignment phase that most distinguishes
-HE-OFT from prior one-shot federated learning, which spends an extra communication round, and often a
-differential-privacy budget, to bring clients into a common frame before they begin.
-
-Concretely, every client uses a frozen public backbone $\featx$ followed by a small trainable unit:
-low-rank adapters together with a classifier head, with parameters $\headp$. A low-rank adapter writes the
-update to a weight matrix as a product $\Delta W = BA$ of two small factors; we freeze the down-projection
-$A$ at its shared public initialisation and train only the up-projection $B$ and the head. This single
-choice is what makes the encrypted aggregation \emph{exact}: with $A$ fixed and common to all clients, a
-weighted sum of the trained factors reconstructs the weighted sum of the updates,
-$\big(\sum_j \wj B_j\big)A = \sum_j \wj B_jA$, whereas training both factors would make the update bilinear
-and the per-factor average a different, and worse, quantity. The backbone never changes, is
-never transmitted, and is never encrypted; only the trainable unit is fine-tuned, communicated, and operated
-on under encryption. Keeping that unit small is what makes the encrypted step inexpensive: it is a tiny fraction of the backbone
-(a low-rank adapter and head, on the order of $10^5$ parameters against a backbone of $10^8$), so a client's
-entire encrypted contribution is a few tens of ciphertexts rather than the model itself. Every client
-initializes the trainable unit to the \emph{same} public constant $\thz$, the standard adapter
-initialization, agreed in advance and carrying no client data. There is no prototype exchange and no
-peer-to-peer phase; nothing data-derived ever leaves a client before encryption.
-
-\input{figures/protocol}
-
-The protocol is two steps, shown in \cref{fig:protocol}. Starting from the shared initialization $\thz$,
-each client fine-tunes its trainable unit on its own data for a bounded number of steps and records the
-displacement it travelled, $\disp = \theta_j^{(\Ksteps)} - \thz$. The server then combines the encrypted
-displacements into a single global model, $\thstar = \thz + \sum_j \wj \disp$, using only homomorphic
-additions and multiplications by public scalars, after which a threshold of clients jointly decrypts the
-result.
-
-The protocol consists of four steps, where $\mathsf{Enc}(\cdot)$ denotes encryption under the clients'
-collective CKKS key. The learning is performed entirely on the clients, and the server's only operation is
-the single encrypted sum of the third step.
-
-\emph{Setup.} The $\Nc$ clients run a distributed key-generation protocol that yields a collective CKKS
-public key, under which any party may encrypt and compute but no party can decrypt alone, decryption
-requiring a threshold of clients (\cref{sec:mhe}).
-
-\emph{Local fine-tuning, performed in parallel by each client $j$.} Beginning from $\theta_j^{(0)} = \thz$,
-client $j$ takes $\Ksteps$ steps of supervised fine-tuning on its own data,
-\[
-\theta_j^{(k)} = \theta_j^{(k-1)} - \eta\,\nabla\mathcal{L}\big(\model;\,\Dj\big), \qquad k = 1,\dots,\Ksteps,
-\]
-and uploads the encryption $\mathsf{Enc}(\disp)$ of its displacement $\disp = \theta_j^{(\Ksteps)} - \thz$.
-
-\emph{Encrypted aggregation, performed by the server.} The server forms
-\[
-\mathsf{Enc}(\thstar) = \thz + \sum_{j=1}^{\Nc} \wj\,\mathsf{Enc}(\disp),
-\]
-using only multiplications of a ciphertext by the public scalar $\wj$ and additions of ciphertexts, with the
-public constant $\thz$ added in the clear; the circuit has multiplicative depth one. The server broadcasts
-$\mathsf{Enc}(\thstar)$.
-
-\emph{Threshold decryption.} A threshold of clients jointly decrypts $\mathsf{Enc}(\thstar)$ by collective
-key-switching to recover the global model $\thstar$. The server never obtains a plaintext.
-
-\begin{algorithm}[t]
-\caption{HE-OFT: one-shot federated fine-tuning under multiparty CKKS, with the two disclosure settings.}
-\label{alg:heoft}
-\small
-\begin{algorithmic}[1]
-\Statex \textbf{Public, shared, data-free:} frozen backbone $\featx$; initializer $\thz$ of the trainable unit (freeze-$A$ adapter $+$ head)
-\State clients run distributed key generation $\to$ collective CKKS key \Comment{secret-shared; no party decrypts alone}
-\For{client $j=1,\dots,\Nc$ \textbf{in parallel}}
-  \State $\theta_j \gets \textsc{FineTune}(\thz,\Dj,\Ksteps)$ \Comment{plaintext, on the client}
-  \State send $\mathsf{Enc}(\disp)$ to the server, \; $\disp=\theta_j-\thz$
-\EndFor
-\State \textbf{server} forms depth-one candidates $\{\mathsf{Enc}(\theta^{(m)})\}$ from $\{\mathsf{Enc}(\disp)\}$: scaling $\thz+\lambda\!\sum_j\wj\disp$, count-/Fisher-reweighted, leave-one-out \Comment{$+$ and public-scalar $\times$ only}
-\State clients threshold-decrypt the candidates and select $\thstar\!\gets\!\theta^{(m^\star)}$, $m^\star=\arg\max_m \overline{\mathrm{acc}}_m$ on local holdouts
-\Statex \rule{\linewidth}{0.4pt}
-\Statex \textbf{Disclosure of $\thstar$} (\cref{sec:serve}):
-\State \textbf{Release:} threshold-decrypt $\thstar$ $\to$ every client holds the plaintext model
-\State \textbf{Serve:} keep $\mathsf{Enc}(\thstar)$; on query $x$: $\mathsf{Enc}(\ell)\!\gets\!\mathsf{Enc}(\thstar)\,\featx(x)$ (depth $1$); $\hat y\!\gets\!\arg\max_c \ell_c$ under encryption; threshold-decrypt $\hat y$ only
-\end{algorithmic}
-\end{algorithm}
-
-The objective is not a model that surpasses each client on that client's own dominant classes; a local
-specialist on a narrow slice of the label space is difficult to surpass on that slice, and we do not claim to. The
-objective is a common model every party can use, that classifies well across the whole label space including
-classes a given client never observed locally, and that is produced without any party exposing its data or
-its update in the clear.
+\noindent Constraints \textbf{C1} through \textbf{C6} are shared with any
+one-shot encrypted federation. \textbf{C7} is particular to never disclosing the
+model, and the three contributions of this paper are its consequences: a split
+between what stays local and what is shared (\cref{sec:split}), a way to answer
+queries without decrypting the model (\cref{sec:serving}), and a way for the
+federation to choose between candidate models it cannot see (\cref{sec:selection}).
 
 \subsection{Notation}
 \label{sec:notation}
 
-\Cref{tab:notation} collects the symbols used throughout. Client indices are $j\in\{1,\dots,\Nc\}$.
+\Cref{tab:notation} collects the symbols. Client indices are
+$j\in\{1,\dots,\Nc\}$ and class indices are $c\in\{1,\dots,\Cc\}$.
 
 \begin{table}[t]
 \centering
@@ -151,17 +80,19 @@ its update in the clear.
 Symbol & Meaning \\
 \midrule
 $\Nc$ & number of participating clients \\
-$\Dj,\ \nj$ & client $j$'s local dataset and its size $\nj=|\Dj|$ \\
+$\Dj,\ \nj$ & client $j$'s dataset and its size $\nj=|\Dj|$ \\
 $\Cc$ & number of classes \\
-$\alpha$ & Dirichlet concentration (label heterogeneity) \\
-$\featx$ & frozen public backbone (never trained or encrypted) \\
-$\headp$ & parameters of the trainable unit (adapter $+$ head) \\
-$\model$ & model on the frozen features, parameters $\theta$ \\
-$\thz$ & shared public initialization of the trainable unit \\
-$\Ksteps$ & local fine-tuning steps \\
-$\disp$ & displacement $\theta_j^{(\Ksteps)}-\thz$ \\
+$n_{j,c}$ & examples of class $c$ held by client $j$ \\
+$\alpha$ & Dirichlet concentration, the label-skew parameter \\
+$\featx$ & frozen public backbone, never trained or encrypted \\
+$A_j$ & client $j$'s adapter, trained locally and never transmitted \\
+$\varphi_j$ & client $j$'s feature map, the backbone composed with $A_j$ \\
+$\thz$ & public initialiser of the classifier head \\
+$h_j$ & client $j$'s trained head \\
+$\disp$ & head displacement $h_j-\thz$ \\
 $\wj$ & sample weight $\nj/\sum_i n_i$ \\
-$\thstar$ & aggregated global model $\thz+\sum_j\wj\disp$ \\
+$\thstar$ & shared head, held only as a ciphertext \\
+$\mathsf{Enc}(\cdot)$ & encryption under the collective public key \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -169,319 +100,382 @@ $\thstar$ & aggregated global model $\thz+\sum_j\wj\disp$ \\
 \subsection{Multiparty Homomorphic Encryption}
 \label{sec:mhe}
 
-We build on the CKKS scheme~\cite{cheon2017ckks}, a ring-learning-with-errors
-construction~\cite{lyubashevsky2010ideal} that performs approximate arithmetic on vectors of real numbers
-under encryption. CKKS packs many real slots into one ciphertext and supports two homomorphic operations of
-interest here: addition of two ciphertexts, and multiplication of a ciphertext by a plaintext. It is a
-levelled scheme, meaning each multiplication consumes one level of a finite budget; our protocol uses only
-additions and multiplications by public plaintext scalars, so it consumes a single level and never requires
-the expensive bootstrapping step~\cite{cheon2018bootstrapping} that refreshes a depleted budget.
+We build on CKKS~\cite{cheon2017ckks}, a ring-learning-with-errors
+construction~\cite{lyubashevsky2010ideal} that performs approximate arithmetic on
+vectors of real numbers under encryption. CKKS packs many real slots into one
+ciphertext and supports addition of ciphertexts, multiplication of a ciphertext by
+a plaintext, and multiplication of two ciphertexts. It is a levelled scheme, so
+each multiplication consumes one level of a finite budget, and a depleted budget
+is restored by bootstrapping~\cite{cheon2018bootstrapping}.
 
-A single-key scheme would require one party to hold the secret key and therefore be trusted with decryption.
-We instead use the multiparty variant of CKKS~\cite{mouchet2021multiparty}, in which the secret key is
-shared among the clients through a distributed key-generation protocol that produces a collective public key
-without ever materialising the secret in one place. Any party, including the server, may compute on
-ciphertexts under the collective public key, but decryption requires the cooperation of a threshold of
-clients, carried out as a collective key-switching protocol. No single party, and in particular not the
-server, can decrypt on its own. This is exactly the property our aggregation needs: the server performs the
-homomorphic computation on encrypted contributions, yet only the clients, acting together, can reveal the
-result.
+A single-key scheme would require one party to hold the secret key and therefore
+to be trusted with decryption. We use the multiparty variant of
+CKKS~\cite{mouchet2021multiparty}, in which the secret key is shared among the
+clients through a distributed key-generation protocol that produces a collective
+public key without ever assembling the secret in one place. Any party, the server
+included, may compute on ciphertexts under the collective public key, but
+decryption requires the cooperation of a quorum of clients and is carried out as a
+collective key-switching protocol. Two further protocols of the same family are
+used below: a key switch to a designated public key, which re-encrypts a result so
+that one chosen party can read it, and a collective refresh, which restores a
+depleted level budget and plays the role bootstrapping plays in the single-key
+setting.
 
-We stress what the scheme is chosen for, since our circuit uses almost none of its homomorphic power and a
-reader may ask why a fully homomorphic scheme is deployed at depth one. The answer is the key structure
-and the data layout, not the depth. Threshold decryption over a collectively generated key is the property
-the protocol cannot do without, and the mature distributed key generation and collective key-switching of
-multiparty CKKS provide it directly~\cite{mouchet2021multiparty}. CKKS additionally packs thousands of
-real-valued parameters into one ciphertext and multiplies them by public scalars natively, the operations
-the candidate aggregates of \cref{sec:candidates} require; additively homomorphic schemes offer neither
-packed real arithmetic at this width nor comparable multiparty tooling, and masking-based secure
-aggregation reveals the plaintext sum to the server, which our protocol never does. Depth one is therefore
-not an underuse of the scheme but the point of the design: the protocol is engineered so that the
-strongest available tool is needed only at its least expensive setting.
+We state plainly what the scheme is chosen for. The aggregation of
+\cref{sec:split} uses only additions and multiplications by public scalars, so it
+consumes one level. What we need from the scheme is not depth but key structure:
+threshold decryption over a collectively generated key is the property the
+protocol cannot do without, and mature distributed key generation and collective
+key switching provide it directly. CKKS additionally packs thousands of real
+values into one ciphertext and multiplies them by public scalars natively.
+Additively homomorphic schemes offer neither packed real arithmetic at this width
+nor comparable multiparty tooling, and masking-based secure aggregation reveals
+the plaintext sum to the server, which this protocol never does.
 
-\subsection{The Shared Frame}
-\label{sec:basin}
+\subsection{What Is Shared and What Stays Local}
+\label{sec:split}
 
-The natural one-shot recipe (let each client train independently and have the server average the
-results) fails under heterogeneity. When clients begin from different initializations and fit different
-skewed distributions, their trained parameters occupy different regions of parameter space and their average
-lies in none of them: the updates point in conflicting directions and cancel when summed. The remedy is for
-every client to begin from the same point and move only a little, so their displacements live in one frame
-and add constructively rather than fighting one another.
+\input{figures/training}
 
-A pretrained backbone provides this directly. Because the representation is fixed and shared, the
-trainable unit lives in the same parameter space for every client, and initializing it to a common public
-constant $\thz$ places all clients at the same point in that space before any training. No data is consulted
-to build $\thz$ and nothing is exchanged to agree on it; it is a fixed, public initializer. A from-scratch
-federation cannot take this step. It must first agree on a starting point, in a data-dependent alignment
-phase that costs an extra round and exposes a per-client summary; protecting that summary spends a
-differential-privacy budget. Fine-tuning a pretrained model removes the phase, and with it the only channel
-through which client data would otherwise leave in the clear before encryption. We verify in
-\cref{sec:experiments} that this shared start is what makes the one-shot combination work (averaging
-independently trained units without it collapses), and that the frozen backbone supplies the start with no
-alignment phase.
+\paragraph{The construction.} Every client uses the same frozen public backbone
+$\featx$, and trains two things on its own data: a low-rank adapter $A_j$ that
+adjusts the representation, and a classifier head $h_j$ on top of it. Only the
+head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
+head from the public initialiser and uploads it once. The server combines the
+encrypted displacements into a single shared head and never decrypts the result.
+The adapter is trained locally and never transmitted. \Cref{fig:training} shows
+the arrangement.
 
-The frame the backbone supplies is the representation, not the classifier. The shared initializer $\thz$ is
-an untrained head: it places every client at the same point in parameter space but encodes nothing about any
-class. A client therefore contributes a useful displacement for a class only when it holds examples of that
-class, so the global model's accuracy on a class is bounded by how many clients cover it. This is the one
-accuracy cost of dropping alignment, and it is a property of \emph{coverage} rather than of the frame. It is
-most visible when the label space is large and the skew extreme, so that each client sees only a sliver of
-the classes, and it narrows as each client sees more of the label space, closing well before the data become
-uniform. We characterize this gap directly in \cref{sec:experiments}, measured against an alignment-based
-reference that closes it only by exposing per-client class summaries in the clear, the exposure the
-cryptographic design exists to remove.
+\paragraph{Why the split is forced.} The client that asks a question must compute
+the features of that question itself, by \textbf{C7}. If the shared trained
+quantity were an adapter placed inside the backbone, the features would depend on
+it, and computing them would require evaluating the backbone with encrypted
+weights. Every nonlinearity of the network would then have to be evaluated
+homomorphically, which is the cost this design exists to avoid. The trained
+quantity that is shared must therefore attach after the last nonlinearity, and in
+a transformer the only such point is the final linear map. That is the head.
 
-\subsection{Local Fine-Tuning}
-\label{sec:distill}
+The adapter is not discarded, it is relocated. Each client keeps its own, so the
+representation still adapts to local data, and the federation shares the part
+where sharing is actually necessary. The distinction is one of coverage: a client
+can improve its own representation alone, but it cannot learn to recognise a class
+it has never observed. Coverage is a property of the head, which is exactly what
+the federation supplies. \Cref{sec:exp-split} measures both halves of this claim.
 
-Starting from $\thz$, client $j$ fine-tunes its trainable unit on its own data for $\Ksteps$ steps of
-ordinary supervised training, producing parameters $\theta_j^{(\Ksteps)}$. The step budget $\Ksteps$ is
-deliberately small. This is not an optimisation shortcut but part of the method: a short trajectory keeps
-the trainable unit close to $\thz$, and therefore inside the shared frame, so the displacement it produces
-is still expressed in the common coordinates. Allowed to train to convergence, each client would drift to
-its own local optimum and reintroduce exactly the conflict the shared start was meant to avoid.
+Keeping the adapter local has a second consequence, and it is a security one. No
+aggregate of the adapters is ever formed. A coalition of $\Nc-1$ clients therefore
+has no adapter sum from which to subtract its own contributions, and cannot
+recover the remaining client's adapter by arithmetic. \Cref{sec:threat} states
+this precisely.
 
-At the end of its trajectory the client transmits not its parameters but the displacement
-\begin{equation}
-\label{eq:displacement}
-\disp \;=\; \theta_j^{(\Ksteps)} - \thz ,
-\end{equation}
-the distance it travelled from the shared start. Because every client departs from the same $\thz$, these
-displacements are directly comparable across clients, which is what makes the linear combination that
-follows meaningful.
-
-\subsection{Encrypted Linear Aggregation}
-\label{sec:aggregation}
-
-The clients hold a joint encryption key produced by distributed key generation, so no single party, and in
-particular not the server, ever holds the secret key. Each client encrypts its displacement $\disp$; since
-the trainable unit is small relative to the backbone, this is a few tens of ciphertexts. The server fuses the
-per-client displacements into a single update of the shared model by the sample-weighted combination
+\paragraph{The aggregation.} Let $g_{j}\in\mathbb{R}^{\Cc}$ collect client $j$'s
+per-class example counts, $g_{j,c}=n_{j,c}$. The shared head is the
+coverage-weighted combination
 \begin{equation}
 \label{eq:aggregate}
-\thstar \;=\; \thz + \sum_{j=1}^{\Nc} \wj \, \disp ,
-\qquad \wj = \frac{\nj}{\sum_{i} n_i},
+\thstar \;=\; \thz \;+\; \frac{\sum_{j=1}^{\Nc} g_j \odot \disp}
+                              {\sum_{j=1}^{\Nc} g_j},
 \end{equation}
-in which each client contributes in proportion to the data $\nj$ behind it. Only the displacements are
-encrypted; the weights $\wj$ and the initializer $\thz$ are public and stay in plaintext. Forming
-\cref{eq:aggregate} therefore requires only multiplying each ciphertext by the public scalar $\wj$ and
-adding the results, with $\thz$ added in plaintext: there is no ciphertext-by-ciphertext multiplication, no
-encrypted optimizer state, and no bootstrapping, so the circuit has multiplicative depth one. A threshold of clients
-then jointly decrypts $\thstar$ by collective key-switching, and the server never observes a plaintext
-update. This is the central design choice: casting aggregation as an operation that is
-\emph{linear in the encrypted quantities} yields a server computation that maps onto the least costly operations
-a levelled scheme provides, without the encrypted nonlinearities that make encrypted training expensive. The
-operations are also fully parallel (the clients fine-tune and encrypt independently, and the
-server's sum is an associative reduction), so the end-to-end wall-clock is one client's local computation
-plus a single aggregation, independent of $\Nc$. We instantiate \cref{eq:aggregate} in a real multiparty
-CKKS implementation and report its measured correctness and cost in \cref{sec:fhe-cost}.
+in which row $c$ of the shared head is the count-weighted average of the clients'
+row-$c$ displacements. Clients holding a class decide its row, and rows that no
+client covers remain at the public initialiser. Each client forms the products
+$g_j\odot\disp$ locally, before encryption, so the server only adds ciphertexts.
 
-We state precisely why this works, since \cref{eq:aggregate} can be misread. Since
-the weights sum to one, the displacement form is algebraically a weighted average of the clients' fine-tuned
-units, $\thstar = \sum_j \wj\, \theta_j^{(\Ksteps)}$, which is exactly task-vector merging~\cite{ilharco2023editing}.
-This linearity is what keeps the operation inexpensive to encrypt, and it is exact rather than approximate
-only because the adapter's down-projection is frozen: were both adapter factors trained, the per-client update
-$B_jA_j$ would be bilinear, the average of the factors would not equal the average of the updates, and the
-quantity the server can compute at depth one would no longer be the one the method requires. The same average over
-units trained independently, from different initialisations, to convergence is the
-naive combination that fails under heterogeneity. The average lies in a usable region here because of the protocol around
-it: every $\theta_j^{(\Ksteps)}$ starts from the shared $\thz$ and moves only a bounded distance, so all of
-them remain in the common frame and their weighted average is itself a reasonable model. The contribution is not
-a new aggregation rule but a one-shot protocol under which a linear, and therefore inexpensively encryptable,
-aggregation produces a strong shared model. One distinction matters throughout: this depth-one linear family
-\emph{is} task-vector merging, and the plain sample-weighted sum ($\lambda{=}1$) is a single point in it ---
-the ``naive'' aggregate that heterogeneity destabilises. The client-side selection of \cref{sec:candidates}
-does not swap in a different rule; it picks the point in the same family (a softer $\lambda$, or a coverage-
-or curvature-reweighted merge) that generalises best, so the linearity, and with it the depth-one encryption,
-holds for every candidate.
+\paragraph{The division.} The denominator of \cref{eq:aggregate} is the vector of
+federation-wide per-class totals. It cannot be decrypted. Every client knows its
+own counts, so a coalition of $\Nc-1$ clients that learned the totals would
+subtract its own and read the remaining client's class histogram exactly, which
+for an institutional participant is a description of its case mix. The reciprocal
+is therefore evaluated under encryption, using an inversion circuit over the
+positive domain whose refreshes are collective. This is the one deep operation in
+the construction of the shared head, and it is paid once, at aggregation, never per
+query. \Cref{sec:exp-cost} reports its measured cost.
 
-\subsection{Multi-Candidate Release and Client-Side Selection}
-\label{sec:candidates}
+\begin{algorithm}[t]
+\caption{Building the shared head. All clients hold the same frozen public
+backbone $\featx$ and the same public head initialiser $\thz$.}
+\label{alg:train}
+\small
+\begin{algorithmic}[1]
+\State clients run distributed key generation, obtaining a collective public key
+\For{client $j=1,\dots,\Nc$ \textbf{in parallel}}
+  \State train adapter $A_j$ and head $h_j$ on $\Dj$ \Comment{plaintext, local}
+  \State \textbf{keep} $A_j$; it is never transmitted
+  \State send $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$,
+         where $\disp=h_j-\thz$
+\EndFor
+\State \textbf{server} adds the ciphertexts to form the numerator and the
+       denominator of \cref{eq:aggregate} \Comment{additions only}
+\State \textbf{server} evaluates the reciprocal of the denominator under
+       encryption and multiplies \Comment{once, not per query}
+\State \Return $\mathsf{Enc}(\thstar)$, which no party decrypts
+\end{algorithmic}
+\end{algorithm}
 
-A server computing under encryption is blind: it cannot inspect a value, so it cannot adapt the aggregation
-rule to the data the way a plaintext aggregator could. We recover that adaptivity without giving the server
-the ability to read its inputs, by moving the choice to the clients after decryption. The observation we use
-is that several useful aggregation rules are each, on their own, a depth-one function of the encrypted
-displacements, so the server evaluates all of them in one pass and the clients select among the results. We
-form a small set of candidates, in three tiers:
-\begin{itemize}
-\item \emph{Reweighted merges} $\thz + (\sum_j \wj g_j\!\odot\!\disp)\oslash(\sum_j \wj g_j)$, where $g_j$ is
-  a per-coordinate weight each client forms from its own data: a diagonal Fisher estimate, or --- the variant
-  that carries most of our accuracy under skew --- a per-class example count applied to the head rows, so that
-  the clients which actually hold a class decide its classifier row and rows no client covers stay at $\thz$.
-  This is the merge the client vote most often selects (\cref{sec:superior}). Each client forms the products
-  $g_j\!\odot\!\disp$ and $g_j$ \emph{before} encryption; the server adds the two ciphertext stacks; and the
-  clients divide the decrypted numerator by the decrypted denominator in plaintext, so the nonlinear division
-  never occurs under encryption and the server operation stays a depth-one sum.
-\item a \emph{scaling family} $\thz + \lambda\sum_j\wj\disp$ for a public grid of $\lambda$ --- the plain
-  weighted aggregate ($\lambda{=}1$) and softer steps toward it --- which trades the shared start against the
-  aggregated move and costs nothing extra, since all candidates are affine in the same encrypted sum. This is
-  the conservative baseline tier: it discloses nothing beyond the released model (below), and when the data are
-  near-uniform it already suffices; under skew it is the reweighted merges that lift the model above it.
-\item \emph{leave-one-out} aggregates $\thz + \sum_{i\neq k}\tilde w_i\Delta_i$, one per excluded client $k$,
-  with public renormalised weights $\tilde w_i$, used for robustness (\cref{sec:robust}).
-\end{itemize}
-The server emits the encrypted candidates; a threshold of clients jointly decrypts each one; every client
-scores the decrypted candidates on a small held-out slice of its own data; and the federation releases the
-candidate with the highest sample-weighted mean held-out accuracy across clients. Selection is therefore
-post-decryption and entirely client-side: it adds one threshold decryption per candidate and no homomorphic
-multiplications beyond the depth-one aggregate. It could not usefully move under encryption --- it is
-data-dependent, scored on held-out client data the server does not have, and homomorphic comparison would
-need deep polynomial approximations of the sign function, exactly the circuit cost the design avoids, for a
-step the clients perform for free after decryption.
+\paragraph{Cost.} The server performs one ciphertext addition per client per
+ciphertext, one encrypted reciprocal, and one multiplication. The encrypted object
+is the head alone, whose size is set by the number of classes and the feature
+dimension and not by the backbone behind it. Communication is one upload per
+client and no download of model parameters at all, since no client ever receives
+the shared head.
 
-\paragraph{What each candidate reveals.} The candidates differ in what they disclose to the decrypting
-clients, and we account for it plainly. The scaling family is collinear,
-$\thstar(\lambda)=(1-\lambda)\thz+\lambda\thstar(1)$, so releasing the whole grid reveals nothing beyond the
-released model itself. A reweighted merge decrypts its numerator and denominator separately, so it
-additionally reveals two \emph{aggregate} sums --- for the count-weighted head, the federation-wide per-class
-example totals $\sum_j n_{j,c}$ and the count-weighted head displacement. This is more than the scaling
-family discloses, but it is consistent with the threat model of \cref{sec:threat}: both are sums over all
-clients, they isolate no individual client, and the server, which never decrypts, learns nothing from them.
-A leave-one-out pair, by contrast, does isolate a single client's contribution, and is therefore admitted
-only when its robustness use (\cref{sec:robust}) is wanted. Two knobs follow. A deployment content to disclose
-nothing beyond the released model restricts the set to the scaling family, forgoing the accuracy the
-reweighted merges would have bought; a deployment that wants the merges but not even the aggregate counts
-computes the head ratio through a lightweight post-decryption secure division --- one secure reciprocal per
-class and a rescale of each head row, negligible beside the homomorphic aggregation --- so that only the
-final head rows, and neither sum, are ever revealed. Both prices are small, and neither touches the server's
-depth-one operation.
+\subsection{Answering Queries Without Decrypting the Model}
+\label{sec:serving}
 
-\subsection{Releasing versus Serving the Aggregate}
-\label{sec:serve}
+\input{figures/serving}
 
-The protocol so far produces a single object, the selected aggregate $\thstar$, held under encryption. One
-step remains --- making it usable --- and it admits two settings that trade disclosure against cost. The
-results of this paper concern the first; the second is available where a deployment may not expose the model
-at all.
+\paragraph{The construction.} A client that wants a prediction computes the
+features of its query with its own backbone and adapter, encrypts them, and sends
+the ciphertext to a serving party. The serving party applies the encrypted shared
+head to the encrypted features, obtains encrypted logits, and reduces them to the
+index of the largest entry under encryption. A quorum of clients then key-switches
+that index to the querying client, which decrypts one label.
+\Cref{fig:serving} shows the path, and \cref{alg:serve} states it.
 
-\emph{Release.} A threshold of clients jointly decrypts $\thstar$, and every party holds the shared model in
-the clear. This is the natural output of a federation whose purpose is a common model, and it is the setting
-the accuracy, robustness, and membership-inference results below assume. Its only residual surface is the
-released model itself (\cref{sec:security,sec:mia}).
+\paragraph{Why the query is encrypted.} The serving party could be given the
+features in plaintext, which would make the head application cheaper. We encrypt
+them because features are invertible: a party holding $\varphi_j(x)$ and the public
+backbone can reconstruct an approximation of $x$. Sending features in plaintext
+would therefore hand the serving party the client's input, which is the thing the
+protocol exists to protect. The price is that the head is applied ciphertext by
+ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
+what that costs.
 
-\emph{Serve.} The aggregate is never decrypted. It stays in ciphertext and answers queries under encryption,
-so that no party --- client or server --- ever holds the model in the clear, and a client learns only the
-labels it requests. This fits deployments in which the fine-tuned model is itself a regulated or proprietary
-asset that may not be released even to its builders. It is affordable for the same reason the aggregation is:
-the trainable unit is \emph{linear in the frozen features}. For a query $x$ the public backbone runs in
-plaintext to features $\featx(x)$, and the encrypted head produces encrypted logits by the very operation the
-aggregation uses,
+\paragraph{Why only the label is returned.} Returning logits would defeat the
+construction. The head is a linear map on features the client computes itself, so a
+client that reads logits for feature vectors of its choosing recovers the head by
+solving a linear system in as many queries as the feature
+dimension~\cite{tramer2016stealing}. Returning only the index of the largest entry
+denies this and reduces an adversary to label-only boundary
+search~\cite{lowdmeek2005,choquettechoo2021labelonly}, which is far more
+expensive. It does not make extraction impossible, and \cref{sec:threat} states
+the resulting bound honestly, as a bound on queries rather than a cryptographic
+hardness claim.
+
+\paragraph{Why the label reaches only the querier.} Decryption needs a quorum, so
+other clients necessarily participate in producing an answer to a question they did
+not ask. Rather than decrypt the label collectively, which would reveal it to
+every participant, the quorum key-switches the ciphertext to the querying client's
+public key. The other clients contribute shares and learn nothing.
+
+\begin{algorithm}[t]
+\caption{Answering one query. The shared head remains a ciphertext throughout.}
+\label{alg:serve}
+\small
+\begin{algorithmic}[1]
+\Require query $x$ at client $j$; $\mathsf{Enc}(\thstar)$ held by the serving party
+\State client $j$ computes $\varphi_j(x)$ with its own backbone and adapter
+       \Comment{plaintext, local}
+\State client $j$ sends $\mathsf{Enc}(\varphi_j(x))$
+\State \textbf{serving party} computes
+       $\mathsf{Enc}(\ell) \gets \mathsf{Enc}(\thstar)\,\mathsf{Enc}(\varphi_j(x))$
+       \Comment{ciphertext by ciphertext}
+\State \textbf{serving party} reduces $\mathsf{Enc}(\ell)$ to
+       $\mathsf{Enc}(\hat{y})$, $\hat y=\arg\max_c \ell_c$, by a tournament of
+       homomorphic comparisons~\cite{cheon2020comparison}
+\State a quorum of clients key-switches $\mathsf{Enc}(\hat y)$ to client $j$'s
+       public key
+\State \Return $\hat y$, readable by client $j$ alone
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Cost, and who serves.} The argmax is the one operation in the protocol
+that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
+minutes for a large label space. Packing the logits into one ciphertext and
+reducing them by a tournament lowers the number of sequential comparisons from
+$\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
+result. None of this is particular to the multiparty setting: homomorphic
+evaluation under a collectively generated key is identical to evaluation under a
+single key, and the schemes differ only in key generation and in decryption, so
+single-key results carry over. The serving party is not trusted with anything. It
+holds the collective public key, the evaluation keys, and ciphertexts, so it
+computes but cannot decrypt, and it learns neither the model nor any client's
+data. It is trusted only for availability, and where honest computation must be
+certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.
+
+\paragraph{Scope.} This construction serves a trained quantity that is linear in
+the features. Serving a trained quantity that sits inside the backbone is the
+problem that secure transformer inference addresses, and an encrypted shared
+adapter composes with any such system at that literature's cost. We do not
+re-solve it. One difference is worth stating: those systems evaluate a plaintext
+model on encrypted inputs, whereas here the shared weights are encrypted as well,
+so each adapter site would carry a ciphertext-by-ciphertext product. The dominant
+cost in that literature is the nonlinearities, which are unchanged, so the added
+cost is the low-rank product per site rather than a different order of magnitude.
+
+\subsection{Choosing Between Models Nobody Can See}
+\label{sec:selection}
+
+\input{figures/selection}
+
+\paragraph{The construction.} Two arrangements are servable at the same cost: the
+shared head over each client's own adapter, and the shared head over the bare
+public backbone with no adapter at all. Which is better depends on the task, and
+the federation must choose without decrypting either. Each client evaluates both
+on data it holds back from its own training, entirely under encryption, and
+reports encrypted per-class counts. The counts are combined into one encrypted
+score per arrangement, the two scores are compared under encryption, and exactly
+one value is decrypted: which arrangement the federation adopts.
+\Cref{fig:selection} shows this, and \cref{alg:select} states it.
+
+\paragraph{Why the obvious rule fails.} The natural procedure is for each client to
+measure the accuracy of both arrangements on its held-out data and vote. This is
+not merely noisy, it estimates the wrong quantity. The arrangement without an
+adapter is a single model, and the union of the clients' data is the whole training
+set, so pooled held-out measurements estimate its accuracy on the global
+distribution closely. The arrangement with personal adapters is $\Nc$ different
+models, and client $j$'s held-out data can only measure client $j$'s own model. How
+client $j$'s model performs on the other clients' distributions is not observable
+locally, and that is precisely where it fails. A client's held-out set also
+contains only the classes that client holds, so it cannot measure performance on
+classes the client has never seen. The measurement is systematically optimistic for
+the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
+chooses wrongly whenever the two differ.
+
+\paragraph{The correction.} Score both arrangements as the expected accuracy of a
+prediction on an example drawn from the federation's own class distribution,
 \begin{equation}
-\label{eq:serve}
-\mathsf{Enc}(\ell) \;=\; \mathsf{Enc}(\thstar)\,\featx(x),
+\label{eq:estimator}
+E \;=\; \sum_{c=1}^{\Cc} p_c\,a_c,
 \qquad
-\hat{y} \;=\; \arg\max_{c\in\{1,\dots,\Cc\}}\ell_c ,
+p_c \;=\; \frac{\sum_j n_{j,c}}{\sum_j \nj},
 \end{equation}
-a plaintext vector against ciphertext weights at multiplicative depth one, so no nonlinearity ever meets the
-encrypted head. The $\arg\max$ is taken \emph{under encryption} by a homomorphic comparison
-circuit~\cite{cheon2020comparison}, and a threshold of clients decrypts the predicted label $\hat{y}$ alone.
+where $a_c$ is the accuracy on class $c$ and $p_c$ is that class's share of the
+federation's examples, taken from the per-class counts already used in
+\cref{eq:aggregate}. Two asymmetries follow from the setting rather than from
+choice. For the shared arrangement there is one model, so per-class evidence from
+different clients concerns the same object and combines, and every class is covered
+by some client. For the personal arrangement each client's evidence concerns only
+its own model, and classes it does not hold contribute no evidence at all. Scoring
+those classes at zero makes $E$ a lower bound for the personal arrangement, so the
+federation adopts it only when even a pessimistic estimate exceeds the accurately
+measured alternative. There is no fitted threshold anywhere: the rule compares two
+numbers on the same absolute scale.
 
-\input{figures/serve}
+\begin{algorithm}[t]
+\caption{Choosing an arrangement without decrypting either. Nothing is revealed
+except the index of the winner.}
+\label{alg:select}
+\small
+\begin{algorithmic}[1]
+\For{each arrangement $m$ and each client $j$}
+  \For{each held-out example $(x,y)$ of client $j$}
+    \State obtain $\mathsf{Enc}(\ell)$ and $\mathsf{Enc}(\max_c \ell_c)$ as in
+           \cref{alg:serve}
+    \State select $\mathsf{Enc}(\ell_{y})$ with a plaintext mask
+           \Comment{the client knows $y$, so the mask is public}
+    \State add $\mathsf{Enc}\big(\mathbf{1}[\ell_y = \max_c \ell_c]\big)$ to the
+           class-$y$ accumulator
+  \EndFor
+\EndFor
+\State combine the accumulators into $\mathsf{Enc}(E_m)$ by \cref{eq:estimator},
+       using public scalars \Comment{depth one}
+\State compare the two encrypted scores
+\State \Return the decrypted index of the larger \Comment{one value}
+\end{algorithmic}
+\end{algorithm}
 
-\paragraph{Why the label and not the logits.} Returning logits would defeat the purpose. The head is a linear
-map on features the client already holds, so a client that reads logits for feature vectors of its choosing
-recovers the head exactly, by solving a linear system in as many queries as the feature
-dimension~\cite{tramer2016stealing}. Releasing only the $\arg\max$ denies this: it reduces an adversary to
-label-only boundary search~\cite{lowdmeek2005,choquettechoo2021labelonly}, which recovers decision boundaries
-but never the head's coordinates, and at far greater query cost. Where honest use is intrinsically
-high-volume, so that no per-client budget separates it from extraction, the returned labels can additionally
-carry calibrated noise --- report-noisy-max~\cite{mcsherry2007mechanism}, folded into the smudging the
-threshold decryption already performs so that no sub-threshold coalition can remove it --- yielding a
-differential-privacy bound on cumulative leakage. This is a query-budget bound, not a cryptographic one: the
-aggregate remains recoverable in principle, only expensively.
+\paragraph{What the clients must hold back.} The estimator needs an estimate of
+accuracy on classes a client has not seen, and its only local proxy is accuracy on
+classes it has barely seen. A held-out set carved uniformly almost never contains a
+class the client holds one or two examples of, so that proxy is unmeasurable. Each
+client therefore reserves at least one held-out example from every class it holds
+before carving the remainder at random. A client holding a single example of a
+class donates it, so its adapter never trains on that class, which is exactly the
+probe the estimator needs. This costs a negligible amount of training data and
+requires no change to the cryptography.
 
-\paragraph{Cost, and who serves.} Serving carries one price the rest of the protocol avoids: the encrypted
-$\arg\max$ is a homomorphic comparison circuit~\cite{cheon2020comparison}, the one operation in the method
-that is not depth-one, and it is paid per query rather than once. Evaluated naively, as a sequential fold of
-$\Cc-1$ pairwise comparisons, it costs on the order of minutes for the larger label spaces --- roughly twenty
-minutes at $\Cc{=}77$ in our CPU implementation. This is a loose upper bound, not a floor: the $\arg\max$ is
-ordinary homomorphic computation, and the standard optimisation applies. Packing the $\Cc$ logits into one
-ciphertext and reducing them with a log-depth SIMD tournament cuts the sequential comparisons from $\Cc-1$ to
-$\lceil\log_2\Cc\rceil$; our multiparty implementation measures this at under two minutes for a hundred
-classes, a fourteenfold reduction and exact, and single-key GPU systems built on the same reduction report a
-full-vocabulary $\arg\max$ in well under a second~\cite{zhang2025nexus}. None of this is specific to the threshold setting: homomorphic evaluation under a
-collectively generated key is identical to the single-key case, so these results carry over directly, the
-multiparty scheme differing only in its distributed key generation and its threshold decryption of the final
-label. The per-query cost is therefore minutes at worst and sub-second at best, which is why Serve suits
-low-throughput or governance deployments and Release the rest. The party that answers queries is not thereby
-trusted with anything: holding only the public key, the evaluation keys, and the ciphertext, it computes but
-cannot decrypt, and so learns neither the model nor any client's data. It is trusted only for availability
-and, where honest computation must be certified, through verifiable homomorphic
-encryption~\cite{viand2023verifiable}; the decryption threshold is unchanged, since the aggregate becomes
-plaintext only to a quorum, exactly as under Release.
+\paragraph{Cost and disclosure.} Every step is depth one except the comparisons,
+which are the same circuit already used for the argmax. The client knows its own
+labels, so the mask that selects the true class is a public plaintext, and the
+per-class totals are the same aggregate already used in \cref{eq:aggregate}, so the
+weighting is by public scalars. One value is decrypted for the whole federation.
+The per-client per-class accuracies are not decrypted, and must not be: together
+with the count matrix they would describe each client's label distribution
+alongside its model quality.
 
 \subsection{Threat Model}
 \label{sec:threat}
 
-The participants are $\Nc$ clients and a single aggregation server. The server is honest-but-curious: it
-follows the protocol but may try to infer private information from anything it observes. During aggregation
-it sees only ciphertexts under the collective key, and as established in \cref{sec:mhe} it cannot decrypt
-them. A minority of clients may likewise be honest-but-curious and may collude, but any coalition below the
-decryption threshold learns nothing about another client's displacement, since recovering a plaintext
-requires the cooperation of the threshold. This is a stronger position than secure-aggregation protocols,
-where the revealed sum has itself been shown to leak across rounds~\cite{so2023securing,kerkouche2023client},
-because in our one-shot protocol the server never obtains a plaintext sum at all.
+The participants are $\Nc$ clients, an aggregation server, and a serving party,
+the last of which may be the server. The server and the serving party are
+honest-but-curious: they follow the protocol and may try to infer private
+information from what they observe. Clients may likewise be honest-but-curious and
+may collude.
 
-We are explicit about one boundary of this model, which is the training-time/inference-time split of
-\cref{sec:related-leakage}. The protocol removes the training-time surface entirely: no gradient, update,
-or data-derived summary is ever observable in plaintext, in any round, because there is only one round and
-its single artifact is encrypted. Every participant does obtain the released model $\thstar$ in the clear
-after threshold decryption, by design, since the purpose of the protocol is to hand the parties a shared
-model. Any inference a participant then performs on $\thstar$ against another participant's data is
-therefore not an attack the protocol can prevent but a property of releasing a useful shared model at all,
-and we measure it directly in \cref{sec:mia} under exactly this fellow-participant adversary. Where a
-deployment may not expose even the released model, the Serve setting of \cref{sec:serve} withholds $\thstar$
-altogether, leaving a participant only the labels of its own queries, at the per-query serving cost discussed
-there; the contribution-level guarantee stated next is identical in both settings. The
-cryptographic guarantee concerns the \emph{contributions}: the server and any sub-threshold coalition observe
-only ciphertexts. This is the sense in which the protection target differs from differentially private
-one-shot methods, which perturb the released artifact to protect it against all parties, including
-participants, at a cost to its accuracy. Robustness to actively
-malicious or Byzantine clients is outside the cryptographic guarantee; the multi-candidate mechanism of
-\cref{sec:candidates} provides a lightweight measured defense (\cref{sec:robust}), and stronger guarantees we
-discuss as future work in \cref{sec:scope}.
+\paragraph{What the server and the serving party see.} Ciphertexts under the
+collective public key, the public per-client sample counts, and the evaluation
+keys. Neither holds a decryption key, and by \cref{sec:mhe} neither can decrypt.
+The serving party additionally sees encrypted query features, which it cannot read
+and therefore cannot invert.
+
+\paragraph{What a coalition of clients learns.} Decryption is $\Nc$-out-of-$\Nc$,
+so any coalition short of all clients, including a coalition of $\Nc-1$ clients
+acting together with the server, cannot decrypt. This is the strongest collusion
+resistance the threshold structure admits, and the design is arranged so that no
+arithmetic shortcut evades it. No aggregate of the adapters exists, so there is no
+sum from which a coalition can subtract its own contributions. The shared head is
+never decrypted, so it cannot be inverted the same way. The per-class totals are
+never decrypted, so a coalition cannot recover the remaining client's class
+histogram.
+
+\paragraph{What a participant can extract by querying.} A client can query the
+served model and receive labels, and enough such queries reconstruct a functional
+copy of the shared head by boundary search. This is a bound on queries, not a
+cryptographic guarantee, and we state it as such. The relevant coalition is again
+of size $\Nc-1$, since a larger one can decrypt outright, so a per-client query
+allowance $Q$ constrains the coalition to $(\Nc-1)Q$ queries and must be set below
+the extraction cost of the deployment's label space. A deployment that cannot
+enforce such an allowance can add calibrated noise to the returned labels, which
+composes with the protocol without modification and which we discuss in
+\cref{sec:scope}; we do not evaluate it, and the accuracy figures we report assume
+it is not used.
+
+\paragraph{What the protocol does not cover.} Robustness to actively malicious
+clients is outside the cryptographic guarantee. A client that uploads a crafted
+displacement can bias the shared head, and because contributions are encrypted the
+server cannot inspect them. \Cref{sec:scope} discusses this.
 
 \subsection{Security}
 \label{sec:security}
 
-The model updates are protected cryptographically: the aggregation of \cref{eq:aggregate} runs entirely
-under multiparty CKKS with threshold decryption, so the displacements $\disp$ are never exposed to the
-server or to any minority of clients, and they are protected without any perturbation. The cryptographic
-layer adds no accuracy cost. This is the central privacy claim, and the point on which the method departs
-from differentially private one-shot federated learning, which injects noise into the updates it ultimately
-releases and so pays a utility tax on the very thing it ships.
+The contributions are protected cryptographically rather than by perturbation. The
+aggregation of \cref{eq:aggregate} runs entirely under multiparty CKKS, so the
+displacements are never available in plaintext to the server or to any coalition
+short of all clients, and they are protected without noise. The cryptographic layer
+therefore costs no accuracy, which is the point on which this design departs from
+differentially private one-shot federated learning.
 
-We make this precise. Let the view of the honest-but-curious server be everything it receives: the public
-collective key, the public weights $\{\wj\}$ and initializer $\thz$, the client ciphertexts
-$\{\mathsf{Enc}(\disp)\}_{j=1}^{\Nc}$, and the homomorphically computed $\mathsf{Enc}(\thstar)$. We write
-$\mathsf{view}_{\mathrm{srv}}(\{\Dj\})$ for this view as a function of the private datasets.
+Let the view of the honest-but-curious server be everything it receives: the
+collective public key, the public weights and the public initialiser, the client
+ciphertexts, and the homomorphically computed result. Write
+$\mathsf{view}_{\mathrm{srv}}(\{\Dj\})$ for this view as a function of the private
+datasets.
 
 \begin{proposition}
 \label{prop:server}
-Under the IND-CPA security of the multiparty CKKS scheme and its $t$-out-of-$\Nc$ threshold decryption, for
-any honest-but-curious server colluding with up to $t-1$ clients there is a probabilistic polynomial-time
+Under the IND-CPA security of the multiparty CKKS scheme and its
+$\Nc$-out-of-$\Nc$ threshold decryption, for any honest-but-curious server
+colluding with up to $\Nc-1$ clients there is a probabilistic polynomial-time
 simulator $\mathcal{S}$, given only the public parameters, such that
-$\mathsf{view}_{\mathrm{srv}}(\{\Dj\}) \stackrel{c}{\approx} \mathcal{S}$. In particular the server's view is
-computationally independent of the private datasets $\{\Dj\}$ and the displacements $\{\disp\}$, and the
-server cannot recover any plaintext, including $\thstar$, without a decryption quorum.
+$\mathsf{view}_{\mathrm{srv}}(\{\Dj\}) \stackrel{c}{\approx} \mathcal{S}$. In
+particular the view is computationally independent of the private datasets and of
+the displacements, and no plaintext, including $\thstar$, can be recovered without
+the participation of every client.
 \end{proposition}
 
 \begin{proof}[Proof sketch]
-The simulator outputs the public parameters together with $\Nc$ encryptions of zero under the collective
-key. By IND-CPA each genuine $\mathsf{Enc}(\disp)$ is computationally indistinguishable from
-$\mathsf{Enc}(0)$; a hybrid over the $\Nc$ ciphertexts replaces them one at a time, so the whole collection
-is indistinguishable from the simulated one and carries no information about $\{\disp\}$ or the data they
-derive from. The aggregate $\mathsf{Enc}(\thstar)$ is a deterministic function of those ciphertexts and the
-public $\{\wj\},\thz$, so it adds nothing. Decryption needs $t$ shares of a secret key that is never
-reconstructed in one place; the server with at most $t-1$ clients holds too few shares to decrypt.
+The simulator outputs the public parameters together with encryptions of zero
+under the collective public key. By IND-CPA each genuine ciphertext is
+computationally indistinguishable from an encryption of zero, and a hybrid over
+the client ciphertexts replaces them one at a time, so the collection carries no
+information about the displacements or the data behind them. Every value the
+server computes is a deterministic function of those ciphertexts and of public
+quantities, so it adds nothing. Decryption requires a share from every client, and
+a coalition of at most $\Nc-1$ holds too few.
 \end{proof}
 
-\Cref{prop:server} pins down where information can flow. Because there is no alignment phase, no data-derived
-quantity leaves a client before encryption, so the protocol exposes private information through exactly one
-channel, intrinsic to the task rather than an artifact of our construction: the released model itself. After
-threshold decryption every client holds $\thstar$ in the clear, and white-box access to the jointly built
-model is unavoidable in any protocol whose purpose is to hand the parties a shared model. The residual
-information that model carries about training data is what we quantify with membership inference in
-\cref{sec:mia}.
+\Cref{prop:server} bounds what is learned from the protocol's messages. It says
+nothing about what is learned from the answers the served model gives, which is the
+channel \cref{sec:threat} bounds by query allowance and \cref{sec:exp-leak}
+measures.

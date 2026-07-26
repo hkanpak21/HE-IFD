@@ -1,0 +1,6 @@
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_selection.pdf}
+\caption{Choosing between two arrangements without decrypting either. Each client scores both on data held back from its own training, selecting the logit of the true class with a plaintext mask, which is public because the client knows its own labels. The per-class counts are weighted by each class's share of the federation's examples, taken from the count matrix already used for the aggregation. The shared arrangement pools evidence across clients because it is one model; the personal arrangement cannot, and classes a client does not hold contribute nothing, which makes its score a lower bound. Exactly one value is decrypted.}
+\label{fig:selection}
+\end{figure*}
