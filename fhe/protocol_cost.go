@@ -424,8 +424,6 @@ func measureComm(n, logN int) commResult {
 		LogDefaultScale: 45,
 	})
 	check(err)
-	crs, err := sampling.NewKeyedPRNG([]byte("he-oft-comm"))
-	check(err)
 	kgen := rlwe.NewKeyGenerator(params)
 	sk := kgen.GenSecretKeyNew()
 
