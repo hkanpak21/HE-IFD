@@ -359,3 +359,113 @@ func measureReciprocal(n, logN int) (float64, int, float64) {
 	}
 	return elapsed, btp.count, math.Sqrt(num) / math.Sqrt(dnm)
 }
+
+// ---------------------------------------------------------------------------
+// Communication accounting.
+//
+// "One-shot" here means that no intermediate training artifact is ever exposed:
+// there is a single training exchange and no per-round snapshot for anyone to
+// observe. It does not mean the parties never speak again. Key generation
+// precedes the protocol, selection costs a bounded exchange, and serving costs
+// traffic per query. A reviewer is entitled to that accounting, so we measure it
+// rather than assert it.
+//
+// The per-query key-switching share is the quantity to watch, because it is the
+// only cost that recurs. Its size follows the level of the ciphertext being
+// switched, and the label leaving the argmax sits near the bottom of the chain,
+// so we report the share at both ends of the range.
+type commResult struct {
+	N            int `json:"n_parties"`
+	LogN         int `json:"log_n"`
+	PubKeyShare  int `json:"public_key_share_bytes"`
+	RelinShare   int `json:"relin_key_share_bytes_two_rounds"`
+	GaloisShare  int `json:"galois_key_share_bytes_per_rotation"`
+	CtFullLevel  int `json:"ciphertext_bytes_full_level"`
+	CtLowLevel   int `json:"ciphertext_bytes_level_1"`
+	KSShareFull  int `json:"key_switch_share_bytes_full_level"`
+	KSShareLow   int `json:"key_switch_share_bytes_level_1"`
+	RefreshShare int `json:"collective_refresh_share_bytes"`
+}
+
+func runCommCost(jsonPath string) {
+	fmt.Println("=== encrypted-serving protocol: communication ===")
+	fmt.Println()
+	var out []commResult
+	for _, n := range []int{5, 10, 20} {
+		r := measureComm(n, 14)
+		out = append(out, r)
+		fmt.Printf("N=%d  (ring 2^%d)\n", r.N, r.LogN)
+		fmt.Printf("  setup, per client: public key share %s, relinearization %s, one rotation key %s\n",
+			human(r.PubKeyShare), human(r.RelinShare), human(r.GaloisShare))
+		fmt.Printf("  one ciphertext   : %s at full level, %s near the bottom of the chain\n",
+			human(r.CtFullLevel), human(r.CtLowLevel))
+		fmt.Printf("  key-switch share : %s at full level, %s near the bottom\n",
+			human(r.KSShareFull), human(r.KSShareLow))
+		fmt.Printf("  refresh share    : %s\n\n", human(r.RefreshShare))
+	}
+	fmt.Println("n_parties,log_n,pubkey_share_B,relin_share_B,galois_share_B,ct_full_B,ct_low_B,ks_share_full_B,ks_share_low_B,refresh_share_B")
+	for _, r := range out {
+		fmt.Printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", r.N, r.LogN, r.PubKeyShare,
+			r.RelinShare, r.GaloisShare, r.CtFullLevel, r.CtLowLevel,
+			r.KSShareFull, r.KSShareLow, r.RefreshShare)
+	}
+	if jsonPath != "" {
+		b, _ := json.MarshalIndent(out, "", "  ")
+		check(os.WriteFile(jsonPath, b, 0o644))
+		fmt.Printf("\nwrote %s\n", jsonPath)
+	}
+}
+
+func measureComm(n, logN int) commResult {
+	params, err := ckks.NewParametersFromLiteral(ckks.ParametersLiteral{
+		LogN:            logN,
+		LogQ:            []int{55, 45, 45, 45, 45, 45, 45, 45},
+		LogP:            []int{61},
+		LogDefaultScale: 45,
+	})
+	check(err)
+	crs, err := sampling.NewKeyedPRNG([]byte("he-oft-comm"))
+	check(err)
+	kgen := rlwe.NewKeyGenerator(params)
+	sk := kgen.GenSecretKeyNew()
+
+	ckg := multiparty.NewPublicKeyGenProtocol(params)
+	pkShare := ckg.AllocateShare()
+
+	ekg := multiparty.NewRelinearizationKeyGenProtocol(params)
+	_, r1, r2 := ekg.AllocateShare()
+
+	gkg := multiparty.NewGaloisKeyGenProtocol(params)
+	gkShare := gkg.AllocateShare()
+
+	ctFull := ckks.NewCiphertext(params, 1, params.MaxLevel())
+	ctLow := ckks.NewCiphertext(params, 1, 1)
+
+	cks, err := multiparty.NewKeySwitchProtocol(params,
+		ring.DiscreteGaussian{Sigma: 8 * rlwe.DefaultNoise, Bound: 48 * rlwe.DefaultNoise})
+	check(err)
+	ksFull := cks.AllocateShare(params.MaxLevel())
+	ksLow := cks.AllocateShare(1)
+
+	minLevel, _, ok := mpckks.GetMinimumLevelForRefresh(128, params.DefaultScale(), n, params.Q())
+	refreshBytes := 0
+	if ok {
+		rfp, err := mpckks.NewRefreshProtocol(params, uint(params.LogDefaultScale()), params.Xe())
+		check(err)
+		rs := rfp.AllocateShare(minLevel, params.MaxLevel())
+		refreshBytes = rs.BinarySize()
+	}
+	_ = sk
+
+	return commResult{
+		N: n, LogN: logN,
+		PubKeyShare:  pkShare.BinarySize(),
+		RelinShare:   r1.BinarySize() + r2.BinarySize(),
+		GaloisShare:  gkShare.BinarySize(),
+		CtFullLevel:  ctFull.BinarySize(),
+		CtLowLevel:   ctLow.BinarySize(),
+		KSShareFull:  ksFull.BinarySize(),
+		KSShareLow:   ksLow.BinarySize(),
+		RefreshShare: refreshBytes,
+	}
+}
