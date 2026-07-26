@@ -1,4 +1,26 @@
-# Design note — encrypted-inference threat-model upgrade
+# Design note — encrypted inference
+
+> **Status: superseded in its conclusion, kept for its reasoning.**
+>
+> This note records the grilling session of 2026-07-13 that worked out whether the
+> aggregate could stay encrypted. Its *analysis* is still the best record of why
+> the design is what it is. Its *conclusion* is out of date: it proposes carrying
+> two disclosure settings in one paper.
+>
+> **What was decided.** At the PI meeting of **2026-07-15** the paper became a
+> single method: the model is never disclosed. Release is not a second setting.
+> It appears once, as a reference point, so that the price of never disclosing a
+> model can be read off, and it is described as a different threat model rather
+> than a different operating point.
+>
+> **What this note could not have known.** It assumed that never disclosing the
+> model was free. It is not. Keeping the model encrypted forces the shared trained
+> quantity out of the backbone and into the head, and that costs **0.03 to 0.14**
+> accuracy depending on the label space. See `docs/plan/paper-rewrite.md` and
+> Section 4 of the paper.
+>
+> Current design: `docs/paper/sections/method.tex`. Current plan:
+> `docs/plan/paper-rewrite.md`.
 
 Branch: `threat-model-encrypted-inference` · opened 2026-07-13 · status: **in grilling, not locked**
 

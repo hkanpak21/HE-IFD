@@ -6,47 +6,82 @@ Read this first when you (Claude) attach to this repo. It tells you how the user
 
 You have no conversation history. Your ground truth, in order:
 
-1. **`docs/prd/he-ifd-tnse-resubmission.md`** — the plan: problem, solution, user stories, module decomposition, testing decisions, scope. Read it fully.
-2. **`docs/issues/<your-issue>.md`** — your specific task, with acceptance criteria. Each issue points back here and to the PRD.
-3. **This file** — operations: how to run compute, where things live, what not to touch.
-4. **`results/colab_results/results_notebook.ipynb`** — the authoritative implementation and the numbers to reproduce.
+1. **`docs/plan/paper-rewrite.md`** — the current plan: the paper's flow, the
+   figure and table standard, the voice rules, and the experiments still
+   outstanding. Read it fully.
+2. **`docs/paper/sections/method.tex`** — the method as it actually stands. This
+   is authoritative for the protocol.
+3. **This file** — operations: how to run compute, where things live, what not to
+   touch.
+4. **`docs/issues/<your-issue>.md`** — your task, if one was assigned.
 
-If a file's content disagrees with the notebook or with an explicit user instruction, the file is stale, not the notebook. Ask (or, if AFK, follow the notebook + PRD and note the discrepancy in your output).
+If a document disagrees with `method.tex`, the document is stale. Anything under
+`docs/archive/` is superseded by definition and must not be mined for
+methodology.
 
-## Source of truth (updated 2026-05-27)
+## Source of truth (updated 2026-07-26)
 
-- **Method / protocol / numbers** → **`results/colab_results/results_notebook.ipynb`**. The user ran it and trusts its results. `results/colab_results/methodology.md` is directionally correct but theoretically loose (see the method note below) and is being rewritten to match the notebook.
-- **Results convention** → `results/<case>/` (see Repo layout).
+- **Method and protocol** -> **`docs/paper/sections/method.tex`**.
+- **Plan, standards, outstanding experiments** -> **`docs/plan/paper-rewrite.md`**.
+- **Numbers** -> `results/<case>/`. The accuracy table the paper reports comes
+  from `results/personal_adapter*/stratified/results.csv`; the cryptographic costs
+  come from `results/fhe_serve/`.
 
-**Deprecated — do NOT mine for methodology, equations, threat model, or build on as code:**
-- `src/v1/`, `src/v2/` — earlier simulations. Being consolidated into a single flat `src/` package (the first M1 issue). Until that lands, read the notebook, not these.
-- **`FL_TDSC/` — REJECTED TDSC SUBMISSION, METHOD + EXPERIMENTS ARE DEPRECATED.** Future LLM / agent: do NOT use `FL_TDSC/*.tex` (`main.tex`, `methodology.tex`, `experiments.tex`, `background.tex`, `introduction.tex`, `archive/*.tex`) as a reference for the current method, equations, threat model, hyperparameters, or experiment design. The protocol there (encrypted intermediate-feature distillation, polynomial activations à la PILON/POSEIDON, server-side encrypted SGD, β/λ confidence-boost, ~460 GB uploads, ViT/LeNet polynomial-activation stack) is **NOT** the current method — it is the rejected one. The current method is the bounded-trajectory cumulative-displacement aggregation described below + faithfully implemented in `src/`. The TNSE rewrite will overwrite these files in a separate intentional pass after the experiments land; until then, treat the entire `FL_TDSC/` directory as historical/audit-only.
-- `comparators/` — vendored upstream code for citation/audit; many vendors have stale APIs and are not runnable. Numbers we cite come from `comparators/REPORTED_RESULTS.md` (paper-verbatim).
+**Deprecated. Do NOT mine for methodology, equations, or threat model:**
+- `docs/archive/` — superseded notes and issue briefs, kept only for provenance.
+- `src/v1/`, `src/v2/`, `archive/` — earlier simulations.
+- **`FL_TDSC/` — REJECTED TDSC SUBMISSION.** The protocol there (encrypted
+  intermediate-feature distillation, polynomial activations, server-side encrypted
+  SGD) is not the current method. Historical and audit-only.
+- `comparators/` — vendored upstream code for citation and audit; many vendors
+  have stale APIs and are not runnable. Cite `comparators/REPORTED_RESULTS.md`.
 
 ## The current method (what we are actually doing)
 
-One-shot federated distillation under **multiparty CKKS**, resubmitting to **IEEE TNSE** (rejected from TDSC; shared reviewer pool, so every TDSC concern is live — reviews in `REJECTED_PAPER/`).
+One-shot federated fine-tuning under **multiparty CKKS** in which **the model is
+never disclosed**. Resubmitting to **IEEE TNSE** (rejected from TDSC; shared
+reviewer pool, so every TDSC concern is live). Decided with the PIs on
+**2026-07-15**: one method throughout the paper, with release discussed only as a
+reference point.
 
-- Each client trains a local **teacher** (frozen pretrained backbone + head, or a small from-scratch net).
-- **Phase 0 alignment** over **P2P secure channels** (server excluded): clients exchange per-class feature prototypes — raw or under **averaging-variant DP** — to form a shared, aligned initialization `θ₀`.
-- **Local distillation:** each client runs a **bounded K-step KL-distillation trajectory** (K is a swept hyperparameter; the notebook default is 300) starting from `θ₀`, against its own teacher, and produces a **cumulative trainable-parameter displacement `Δᵢ = θᵢ⁽ᴷ⁾ − θ₀`**.
-- **Encrypted aggregation (the only server crypto op):** the server computes the **sample-weighted linear combination `θ₀ + Σᵢ wᵢ·Δᵢ`** (`wᵢ = nᵢ/Σnⱼ`) under the joint CKKS key — plaintext-scalar × ciphertext + ciphertext additions only, multiplicative depth ≈ 1. A threshold of clients jointly decrypts the final student. One upload, one download.
+- Every client fine-tunes on the **same frozen public backbone**: a low-rank
+  adapter with its down-projection frozen, plus a classifier head.
+- **The adapter is trained locally and never transmitted.** Only the **head
+  displacement** is encrypted and uploaded, once. Because no aggregate of the
+  adapters is ever formed, a coalition of N-1 clients has no sum to invert.
+- The server forms a **coverage-weighted head merge**: clients holding a class
+  decide its row. The denominator is the vector of per-class totals and is
+  **inverted under encryption**, never decrypted, since a coalition that learned
+  it would recover the remaining client's class histogram.
+- **The result is never decrypted.** Queries are answered under encryption: the
+  client computes its own features and encrypts them, the serving party applies
+  the encrypted head and takes the argmax under encryption, and a quorum
+  key-switches the label to the querier alone.
+- Two arrangements are servable, the shared head with and without each client's
+  own adapter. The federation chooses between them **without decrypting either**,
+  using a global-prior estimator that decrypts one value.
 
-**Describe it faithfully:** it is *bounded-trajectory cumulative-displacement aggregation from a shared aligned init*, **not** "encrypt and average final weights." The displacement telescopes to a weighted average of finals, but the method works because bounded steps + shared `θ₀` + Phase 0 keep every client in one loss basin; naive averaging of independently-converged / full-FT / different-init students diverges. Do not flatten this to "weight averaging" — that framing is what `methodology.md` §6.1 got loosely, and a reviewer will pounce on it.
+**"One-shot" means no intermediate training artifact is ever exposed.** It is not
+a claim that the parties stop communicating. Key generation precedes the protocol
+and serving costs traffic per query; both are accounted for in the paper. Never
+say the protocol is silent after training.
 
-**The aggregation is task arithmetic (reframe locked 2026-05-30).** θ₀ + Σᵢ wᵢ·Δᵢ with Δᵢ = θᵢ⁽ᴷ⁾ − θ₀ is exactly **task-vector merging** (Ilharco 2023). Name it that — it owns the "too simple" reflex with a respected framework. The one HE-legal optimization knob is the **scaling coefficient λ** (θ₀ + λ·Σwᵢ·Δᵢ; λ=1 currently); it's a public scalar → depth-1, and sweeping it is eval-only since θ⋆(λ) = (1−λ)θ₀ + λθ⋆(1). The deep conflict-resolution merges (TIES sign-election, FedFisher curvature-weighting) are **provably unnecessary here** because the shared basin pre-aligns the deltas (no conflict to resolve) — and they cost deep HE. Empirically confirmed: probes 023/024/025 show **no one-shot non-linear combine beats the depth-1 weighted average**; momentum already lives client-side in the bounded trajectory. See [PRD Phase III] + memory `aggregation-framing`.
+**Describe it faithfully.** The shared object is the *head*, not the model. Never
+write that clients receive a model, and never write that they learn "nothing at
+all": they learn the labels they ask for, bounded by a query allowance, which is
+an economic bound and not cryptographic hardness.
 
-**Current experimental state (2026-05-30):** M1.5 done; M2 rooting underway. FHE PoC (020) ✅ (CKKS within bounds, MiB/round). MIA (021) ✅ on MNIST (released θ⋆ near-chance; prototype channel DP ε≤8 → chance). Aggregation verdict reached (025). **026/027/028 landed (2026-05-30, run on Colab):** 026 (λ) — λ⋆<1 helps under heterogeneity (ViT α=0.05: the basin θ₀ beats the aggregate), λ=1 optimal near-IID; full grid gated. 027 — DP-MERF generator made **DP-sound** (Mode A drops at ε=2, the 0.97 artifact is gone), but the honest numbers **invert 022** (`raw_union > Mode A > Mode B`), so DP-MERF is **not** a competitive basin → open PI decision (tune Mode-B vs reframe/drop the synthetic-basin angle). 028 — MIA on ViT/CIFAR-100 + RoBERTa/AG-News: **language holds** the near-chance released-model story, **vision deviates under LiRA (AUC 0.85)**, prototype-channel DP-collapse universal. Paper writing (M3) is HITL.
+**Current state (2026-07-26).** Paper rewritten end to end for this design and
+compiling. Accuracy landed on five tasks. Selection landed. Cryptographic
+per-operation and communication costs landed. Outstanding: the sensitivity sweep,
+matched partitions, the encrypted reciprocal timing, the bootstrapping key size,
+and a label-only leakage measurement. See `docs/plan/paper-rewrite.md`.
 
-## The plan (milestones)
+## The plan
 
-Full detail in `docs/prd/he-ifd-tnse-resubmission.md`. Named by phase (no v1/v2/Mode-A proliferation):
-
-- **Foundation + headline** (AFK; do first, then STOP for user review): consolidate notebook → flat `src/`; fix GPT-2 feature extraction (left-pad + last-token, not mean-pool); seed-keyed teacher cache; aggregation-coherence ablation; headline grid from-scratch {MNIST, FMNIST, CIFAR-10} + pretrained {ViT/ResNet on CIFAR-10, DistilBERT/GPT-2 on AG News}; N∈{10,20,5,50}, α∈{0.01,0.05,0.1,0.3,1.0}, K-sweep; report IID acc + M3 (per-client teacher-vs-aggregate gap) + M4 (OOD-class acc) + no-alignment baseline + standalone `θ₀` accuracy.
-- **Rooting** (AFK; after review): one end-to-end multiparty CKKS run in Lattigo on the MLP (L2 ≤ ~1e-3 vs plaintext + timing + comm bytes); MIA suite over 3 surfaces.
-- **Paper** (HITL with the user; parallel): rewrite methodology + experiments from notebook reality; fix TDSC structure complaints; comparator table.
-
-Work split: **paper writing = HITL with the user; all compute (sweeps, FHE, MIA) = AFK.**
+Full detail in `docs/plan/paper-rewrite.md`. In short: the paper is drafted, and
+what remains is measurement. Paper writing is done with the user (HITL); all
+compute is AFK.
 
 ## The workflow
 
@@ -169,8 +204,14 @@ mia/                                 # membership-inference attack suite (M2)
 
 jobs/                                # sbatch wrappers — the ONLY entrypoints that run python
 docs/
-  prd/he-ifd-tnse-resubmission.md      the plan
-  issues/                              per-task agent briefs (file-based tracker)
+  README.md                            what lives where
+  paper/                               the manuscript (main.tex, sections/, figures/)
+    figures/drawio/                    editable figure sources
+  plan/paper-rewrite.md                THE PLAN: flow, standards, voice, experiments
+  design/                              why a decision was made
+  issues/                              per-task agent briefs
+  notes/                               walkthroughs and session records
+  archive/                             superseded, provenance only
 comparators/
   REPORTED_RESULTS.md                  per-paper extracted tables, paper-verbatim
   fedmd/ feddf/ dense/ coboosting/ feddiff/ fedkt/ poseidon/   audit-only
@@ -217,7 +258,12 @@ results/colab_results/               # the authoritative notebook + exported tab
 - **Never re-download cached datasets.** Use `download=False`.
 - **Never commit big binaries.** Datasets, checkpoints, slurm logs are gitignored. Add new heavy artefacts to `.gitignore` before committing.
 - **Never invent numbers from prior papers.** Use `tools/pdf_extract.py` and quote verbatim. The old `REPORTED_RESULTS.md` was full of LLM-recollection errors that the user caught.
-- **Never describe the method as "averaging final weights."** It is bounded-trajectory cumulative-displacement aggregation (see the method note).
+- **Never describe the shared object as a model.** The federation shares a
+  classifier *head*. The adapter never leaves the client.
+- **Never say the model is released or decrypted.** It is not, at any point.
+- **Never say clients learn "nothing at all."** They learn the labels they query.
+- **Never commit LaTeX build artifacts.** `.aux`, `.log`, `.out`, `.blg`, `.bbl`
+  are gitignored; `main.pdf` stays tracked.
 - **Never edit `FL_TDSC/*.tex` or the paper without explicit user direction.** Paper writing is HITL.
 
 ## Common operations cheatsheet
