@@ -36,6 +36,8 @@ MODES (all evaluated on the GLOBAL test set)
   sel_perclient    per-client vote          BIASED (local holdout follows local skew)
   sel_federated    federation-wide vote     one winner for all, sample-weighted
   sel_fed_balanced federation-wide vote     + per-class balanced holdout scoring
+  sel_globalprior  GLOBAL-prior estimator   A pools evidence, B's unseen classes -> 0
+  sel_gp_rarefill  same, unseen filled from the client's <=2-example classes
 
 Every run also writes results/personal_adapter/artifacts/<task>_s<seed>.pt with
 theta0, per-client trainable states (r=8 and r=0), class counts, sample weights,
@@ -65,6 +67,8 @@ BACKBONE = "roberta_base"
 N, ALPHA, K, LR, BS, R = 10, 0.1, 200, 5e-4, 32, 8
 SEEDS = [42, 43, 44]
 VAL_FRAC = 0.1        # per-client holdout used for the client-side A-vs-B vote
+STRAT_PER_CLASS = 1   # holdout examples reserved from EVERY class a client holds
+RARE_Q = 2            # 'rare' = <=q TRAINING examples (absolute, not relative)
 HEAD_KEYS = ("head.weight", "head.bias")
 
 
@@ -91,17 +95,84 @@ def usable(parts):
     return keep
 
 
-def split_parts(parts, seed):
-    """Carve a per-client holdout out of each client's shard (for the vote)."""
+def split_parts(parts, seed, y=None):
+    """Coverage-STRATIFIED holdout carve.
+
+    A uniform 10% carve almost never lands a class with 1-2 training examples in
+    the holdout, so the client can never measure how it does on classes it barely
+    knows -- which is the only local proxy for classes it has never seen, and the
+    exact quantity that decides A vs B.
+
+    So: reserve >=STRAT_PER_CLASS example from EVERY class the client holds, then
+    top up to VAL_FRAC at random. A client holding a single example of class c
+    donates it, so its adapter never trains on c -- precisely the
+    leave-one-class-out probe the selector needs, at negligible training cost.
+    """
     rng = np.random.default_rng(seed + 7)
     tr, va = [], []
     for idx in parts:
         idx = np.asarray(idx)
-        perm = rng.permutation(len(idx))
-        nv = max(1, int(round(VAL_FRAC * len(idx))))
-        va.append(idx[perm[:nv]])
-        tr.append(idx[perm[nv:]] if len(idx) - nv > 0 else idx[perm[:nv]])
+        keep = np.zeros(len(idx), dtype=bool)
+        if y is not None:
+            lab = np.asarray(y)[idx]
+            for c in np.unique(lab):
+                pos = np.where(lab == c)[0]
+                keep[rng.choice(pos, min(STRAT_PER_CLASS, len(pos)),
+                                replace=False)] = True
+        deficit = max(1, int(round(VAL_FRAC * len(idx)))) - int(keep.sum())
+        if deficit > 0:
+            rest = np.where(~keep)[0]
+            if len(rest):
+                keep[rng.choice(rest, min(deficit, len(rest)), replace=False)] = True
+        if (~keep).sum() == 0:          # degenerate: keep at least something to train on
+            keep[rng.choice(np.where(keep)[0], 1, replace=False)] = False
+        va.append(idx[keep])
+        tr.append(idx[~keep])
     return tr, va
+
+
+def global_prior(counts):
+    """p(c) over the federation, from the already-disclosed count matrix."""
+    tot = np.asarray(counts).sum(0).astype(float)
+    return tot / max(tot.sum(), 1e-12)
+
+
+def per_class_nk(logits, y, C):
+    """(#holdout examples, #correct) per class -- the only thing a client reports."""
+    p = logits.argmax(1).numpy()
+    y = np.asarray(y)
+    n = np.array([(y == c).sum() for c in range(C)], dtype=float)
+    k = np.array([((y == c) & (p == c)).sum() for c in range(C)], dtype=float)
+    return n, k
+
+
+def rare_fill(train_counts_j, n, k, q=RARE_Q):
+    """Accuracy on classes with <=q TRAINING examples: the local stand-in for
+    'classes I have never seen'. Rarity must be ABSOLUTE, not relative -- at C=4
+    a client's relatively-rarest class still has hundreds of examples."""
+    rare = (np.asarray(train_counts_j) <= q) & (n > 0)
+    return float(k[rare].sum() / max(n[rare].sum(), 1.0)) if rare.any() else 0.0
+
+
+def estimate(pg, nk_list, w, counts, pooled, fill="zero"):
+    """Expected accuracy on a GLOBAL-prior example.
+
+    pooled=True (A): one shared model, so per-class evidence combines across
+    clients and every class is covered by someone.
+    pooled=False (B): N models; client j only has evidence for its own classes,
+    and the rest take a fill. fill='zero' makes the estimate a LOWER BOUND.
+    """
+    if pooled:
+        n = sum(nk[0] for nk in nk_list)
+        k = sum(nk[1] for nk in nk_list)
+        acc = np.where(n > 0, k / np.maximum(n, 1.0), 0.0)
+        return float(np.dot(pg, acc))
+    per = []
+    for j, (n, k) in enumerate(nk_list):
+        f = 0.0 if fill == "zero" else rare_fill(counts[j], n, k)
+        acc = np.where(n > 0, k / np.maximum(n, 1.0), f)
+        per.append(float(np.dot(pg, acc)))
+    return float(np.dot(w, per))
 
 
 def train_clients(model, theta0, parts, ids_tr, mask_tr, ytr, C):
@@ -160,7 +231,7 @@ def run_task(task, seed, rows):
     print(f"\n=== {task} seed={seed} ===", flush=True)
     ids_tr, mask_tr, ytr, ids_te, mask_te, yte, C = fi._data(task, BACKBONE, seed)
     parts = usable(fi.dirichlet_partition(ytr, N, ALPHA, C, seed))
-    tr_parts, va_parts = split_parts(parts, seed)
+    tr_parts, va_parts = split_parts(parts, seed, ytr)
     y = np.asarray(ytr)
 
     def val_ids(j):
@@ -193,7 +264,7 @@ def run_task(task, seed, rows):
         accs.append(fi.evaluate(model, ids_te, mask_te, yte))
     record(rows, task, C, seed, "local", accs, "own adapter + own head")
 
-    B_test, B_val, B_bal = [], [], []       # B: own adapter + federated head
+    B_test, B_val, B_bal, val_y = [], [], [], []   # B: own adapter + federated head
     art["logits_B_test"], art["logits_B_val"] = [], []
     for j, s in enumerate(states):
         fi.load_trainable(model, {k: (agg[k] if is_head(k) else s[k]) for k in s})
@@ -201,6 +272,7 @@ def run_task(task, seed, rows):
         vi, vm_, vy = val_ids(j)
         lv = logits_of(model, vi, vm_)
         art["logits_B_test"].append(lt); art["logits_B_val"].append(lv)
+        val_y.append(vy)
         B_test.append(acc_of(lt, yte))
         B_val.append(acc_of(lv, vy))
         B_bal.append(balanced_acc_of(lv, vy, C))
@@ -248,6 +320,26 @@ def run_task(task, seed, rows):
         record(rows, task, C, seed, tag, out,
                f"federation picked {'B' if pick_B else 'A'} (B={sB:.4f} A={sA:.4f})")
 
+    # (iii) global-prior estimators: score BOTH candidates as expected accuracy on
+    #       a global-prior example. A pools its per-class evidence across clients
+    #       (one shared model); B cannot (N models), so its unseen classes take a
+    #       fill. Reported on the same absolute accuracy scale -- no fitted threshold.
+    pg = global_prior(counts)
+    nkA = [per_class_nk(art["logits_A_val"][j], val_y[j], C) for j in range(len(parts))]
+    nkB = [per_class_nk(art["logits_B_val"][j], val_y[j], C) for j in range(len(parts))]
+    eA = estimate(pg, nkA, w, counts, pooled=True)
+    for tag, fill in (("sel_globalprior", "zero"), ("sel_gp_rarefill", "rare")):
+        eB = estimate(pg, nkB, w, counts, pooled=False, fill=fill)
+        pick_B = eB >= eA
+        out = B_test if pick_B else [A_test] * len(parts)
+        record(rows, task, C, seed, tag, out,
+               f"picked {'B' if pick_B else 'A'} (E_B={eB:.4f} E_A={eA:.4f}; "
+               f"true B={np.mean(B_test):.4f} A={A_test:.4f})")
+    art.update(pg=pg, E_A=eA,
+               E_B_zero=estimate(pg, nkB, w, counts, pooled=False, fill="zero"),
+               E_B_rare=estimate(pg, nkB, w, counts, pooled=False, fill="rare"),
+               nkA=np.array(nkA), nkB=np.array(nkB),
+               val_y=[np.asarray(v) for v in val_y])
     art.update(B_test=B_test, B_val=B_val, B_bal=B_bal,
                A_test=A_test, A_val=A_val, A_bal=A_bal)
     ap = ARTDIR / f"{task}_s{seed}.pt"
