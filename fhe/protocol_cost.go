@@ -36,6 +36,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/tuneinsight/lattigo/v6/circuits/ckks/bootstrapping"
 	"github.com/tuneinsight/lattigo/v6/circuits/ckks/inverse"
 	"github.com/tuneinsight/lattigo/v6/circuits/ckks/minimax"
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
@@ -466,4 +467,83 @@ func measureComm(n, logN int) commResult {
 		KSShareLow:   ksLow.BinarySize(),
 		RefreshShare: refreshBytes,
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Bootstrapping keys.
+//
+// The argmax spends most of its levels, so it needs its budget restored several
+// times per query. There are two ways to do that, and the choice decides whether
+// serving is practical.
+//
+// A COLLECTIVE REFRESH needs a share from every client for every refresh. At a
+// hundred classes the tournament refreshes tens of times per query, so the
+// traffic would run to hundreds of megabytes for a single label. That is not a
+// service anyone would operate.
+//
+// The alternative is to generate bootstrapping keys ONCE, collectively, and let
+// the serving party bootstrap on its own afterwards. Homomorphic evaluation under
+// a collectively generated key is identical to evaluation under a single key, so
+// this is sound, and it moves the entire cost into setup: the refreshes then cost
+// no communication at all and the recurring per-query traffic is just the query,
+// the label, and one key-switching share per client.
+//
+// This function measures the size of that one-time key material.
+func runBootstrapKeys(jsonPath string) {
+	fmt.Println("=== bootstrapping keys: the one-time price of local refreshes ===")
+	fmt.Println()
+
+	residual, err := ckks.NewParametersFromLiteral(ckks.ParametersLiteral{
+		LogN:            16,
+		LogQ:            append([]int{55}, repeat(45, 10)...),
+		LogP:            []int{61, 61, 61},
+		LogDefaultScale: 45,
+	})
+	check(err)
+
+	btpParams, err := bootstrapping.NewParametersFromLiteral(residual,
+		bootstrapping.ParametersLiteral{})
+	check(err)
+
+	kgen := rlwe.NewKeyGenerator(btpParams.BootstrappingParameters)
+	sk := kgen.GenSecretKeyNew()
+
+	t0 := time.Now()
+	_, evk, err := btpParams.GenEvaluationKeys(sk)
+	check(err)
+	genMs := ms(time.Since(t0))
+
+	size := evk.BinarySize()
+	fmt.Printf("  residual ring          : 2^%d\n", residual.LogN())
+	fmt.Printf("  bootstrapping ring     : 2^%d\n", btpParams.BootstrappingParameters.LogN())
+	fmt.Printf("  key material           : %s\n", human(size))
+	fmt.Printf("  generation             : %.1f s\n", genMs/1000)
+	fmt.Println()
+	fmt.Println("  Generated once, collectively. Refreshes afterwards are local to the")
+	fmt.Println("  serving party and cost no communication per query.")
+	fmt.Println()
+	fmt.Println("metric,value")
+	fmt.Printf("bootstrapping_key_bytes,%d\n", size)
+	fmt.Printf("bootstrapping_key_gen_ms,%.1f\n", genMs)
+	fmt.Printf("residual_log_n,%d\n", residual.LogN())
+	fmt.Printf("bootstrapping_log_n,%d\n", btpParams.BootstrappingParameters.LogN())
+
+	if jsonPath != "" {
+		b, _ := json.MarshalIndent(map[string]any{
+			"bootstrapping_key_bytes":  size,
+			"bootstrapping_key_gen_ms": genMs,
+			"residual_log_n":           residual.LogN(),
+			"bootstrapping_log_n":      btpParams.BootstrappingParameters.LogN(),
+		}, "", "  ")
+		check(os.WriteFile(jsonPath, b, 0o644))
+		fmt.Printf("\nwrote %s\n", jsonPath)
+	}
+}
+
+func repeat(v, n int) []int {
+	out := make([]int, n)
+	for i := range out {
+		out[i] = v
+	}
+	return out
 }

@@ -98,6 +98,7 @@ func main() {
 		serveFlag           = flag.Bool("serve", false, "run the Serve-mode encrypted-inference cost benchmark (collective refresh + threshold decrypt) instead of the Release-mode aggregation suite")
 		serveArgmaxFlag     = flag.Bool("serve-argmax", false, "run the Serve-mode encrypted-argmax cost benchmark over C classes (collective-refresh-backed sign circuit)")
 		serveTournamentFlag = flag.Bool("serve-tournament", false, "run the Serve-mode LOG-DEPTH tournament argmax (SIMD-packed rotate-and-Max; the QuickMax optimization)")
+		btpKeyFlag          = flag.Bool("btp-keys", false, "measure the one-time bootstrapping key material that lets the serving party refresh locally")
 		commCostFlag        = flag.Bool("comm-cost", false, "measure the communication the protocol needs: key-generation shares, ciphertexts, key-switching shares, and refresh shares")
 		protocolCostFlag    = flag.Bool("protocol-cost", false, "measure the operations the encrypted-serving protocol adds: ciphertext-by-ciphertext head application, encrypted reciprocal for the head merge, key switch to the querier, and selection scoring")
 	)
@@ -131,6 +132,10 @@ func main() {
 	// Communication accounting, so that "one-shot" can be stated precisely.
 	if *commCostFlag {
 		runCommCost(*jsonOut)
+		return
+	}
+	if *btpKeyFlag {
+		runBootstrapKeys(*jsonOut)
 		return
 	}
 
