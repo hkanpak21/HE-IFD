@@ -41,6 +41,38 @@ N.~Rieke, J.~Hancox, W.~Li, F.~Milletar{\`i}, H.~R. Roth, S.~Albarqouni,
   future of digital health with federated learning,'' \emph{npj Digital
   Medicine}, vol.~3, p. 119, 2020.
 
+\bibitem{gdpr2016}
+{European Parliament and Council of the European Union}, ``Regulation (eu)
+  2016/679 (general data protection regulation),'' Official Journal of the
+  European Union, L 119, pp.\ 1--88, 2016, art.\ 5(1)(b--c) purpose limitation
+  and data minimisation; Art.\ 9 special categories; Chapter V transfers to
+  third countries.
+
+\bibitem{hipaa}
+{U.S. Department of Health and Human Services}, ``{HIPAA} privacy rule,'' 45
+  C.F.R. Parts 160 and 164, 2013, \S\,164.502(b) minimum necessary;
+  \S\,164.514(a--b) de-identification (Expert Determination and Safe Harbor);
+  \S\,164.508 authorization; \S\,164.502(e) business-associate agreements.
+
+\bibitem{kvkk2016}
+{Republic of T\"urkiye}, ``Law on the protection of personal data (ki\c{s}isel
+  verilerin korunmas{\i} kanunu), law no.\ 6698,'' 2016, art.\ 6 special
+  categories of personal data; Art.\ 5 processing conditions; Art.\ 9 transfer
+  abroad (as amended by Law No.\ 7499, 2024).
+
+\bibitem{pipl2021}
+{Standing Committee of the National People's Congress}, ``Personal information
+  protection law of the people's republic of china,'' 2021.
+
+\bibitem{dpdp2023}
+{Parliament of India}, ``Digital personal data protection act,'' 2023.
+
+\bibitem{euaiact2024}
+{European Parliament and Council of the European Union}, ``Regulation (eu)
+  2024/1689 (artificial intelligence act),'' Official Journal of the European
+  Union, L, 2024/1689, 2024, art.\ 10 data and data governance for high-risk AI
+  systems; Annex III; Art.\ 6(1) with Annex I.
+
 \bibitem{xiao2023offsite}
 G.~Xiao, J.~Lin, and S.~Han, ``Offsite-tuning: Transfer learning without full
   model,'' \emph{arXiv preprint arXiv:2302.04870}, 2023.
@@ -101,6 +133,12 @@ N.~Carlini, S.~Chien, M.~Nasr, S.~Song, A.~Terzis, and F.~Tramer, ``Membership
 S.~Sav, A.~Pyrgelis, J.~R. Troncoso-Pastoriza, D.~Froelicher, J.-P. Bossuat,
   J.~S{\'a}~Sousa, and J.-P. Hubaux, ``{POSEIDON}: Privacy-preserving federated
   neural network learning,'' in \emph{NDSS}, 2021.
+
+\bibitem{fedheonn2023}
+O.~Fontenla-Romero, B.~Guijarro-Berdi{\~n}as, E.~Hern{\'a}ndez-Pereira, and
+  B.~P{\'e}rez-S{\'a}nchez, ``{FedHEONN}: Federated and homomorphically
+  encrypted learning method for one-layer neural networks,'' \emph{Future
+  Generation Computer Systems}, vol. 149, pp. 200--211, 2023.
 
 \bibitem{sun2024ffalora}
 Y.~Sun, Z.~Li, Y.~Li, and B.~Ding, ``Improving {LoRA} in privacy-preserving
@@ -463,10 +501,37 @@ C.~Mouchet, J.~R. Troncoso-Pastoriza, J.-P. Bossuat, and J.-P. Hubaux,
   ``Multiparty homomorphic encryption from ring-learning-with-errors,''
   \emph{PoPETs}, vol. 2021, no.~4, pp. 291--311, 2021.
 
-\bibitem{lattigo}
-C.~Mouchet, J.-P. Bossuat, J.~Troncoso-Pastoriza, and J.-P. Hubaux, ``{Lattigo
-  v5}: A multiparty homomorphic encryption library in {Go},'' in \emph{WAHC},
-  2021.
+\bibitem{cheon2020comparison}
+J.~H. Cheon, D.~Kim, and D.~Kim, ``Efficient homomorphic comparison methods
+  with optimal complexity,'' in \emph{Advances in Cryptology -- ASIACRYPT
+  2020}, ser. Lecture Notes in Computer Science, vol. 12492, 2020, pp.
+  221--256.
+
+\bibitem{zhang2025nexus}
+J.~Zhang, J.~Liu, X.~Yang, Y.~Wang, K.~Chen, X.~Hou, K.~Ren, and X.~Yang,
+  ``Secure transformer inference made non-interactive,'' in \emph{Network and
+  Distributed System Security Symposium (NDSS)}, 2025, cryptology ePrint
+  Archive, Paper 2024/136.
+
+\bibitem{tramer2016stealing}
+F.~Tram{\`e}r, F.~Zhang, A.~Juels, M.~K. Reiter, and T.~Ristenpart, ``Stealing
+  machine learning models via prediction {APIs},'' in \emph{25th USENIX
+  Security Symposium (USENIX Security 16)}, 2016, pp. 601--618.
+
+\bibitem{lowdmeek2005}
+D.~Lowd and C.~Meek, ``Adversarial learning,'' in \emph{Proceedings of the 11th
+  ACM SIGKDD International Conference on Knowledge Discovery in Data Mining
+  (KDD)}, 2005, pp. 641--647.
+
+\bibitem{choquettechoo2021labelonly}
+C.~A. Choquette-Choo, F.~Tram{\`e}r, N.~Carlini, and N.~Papernot, ``Label-only
+  membership inference attacks,'' in \emph{International Conference on Machine
+  Learning (ICML)}, 2021, pp. 1964--1974.
+
+\bibitem{mcsherry2007mechanism}
+F.~McSherry and K.~Talwar, ``Mechanism design via differential privacy,'' in
+  \emph{48th Annual IEEE Symposium on Foundations of Computer Science (FOCS)},
+  2007, pp. 94--103.
 
 \bibitem{viand2023verifiable}
 \BIBentryALTinterwordspacing
@@ -474,6 +539,22 @@ A.~Viand, C.~Knabenhans, and A.~Hithnawi, ``{SoK}: Fully homomorphic encryption
   compilers and verifiable computation,'' in \emph{IEEE S\&P}, 2023. [Online].
   Available: \url{https://arxiv.org/abs/2301.07041}
 \BIBentrySTDinterwordspacing
+
+\bibitem{hsu2019measuring}
+T.-M.~H. Hsu, H.~Qi, and M.~Brown, ``Measuring the effects of non-identical
+  data distribution for federated visual classification,'' \emph{arXiv preprint
+  arXiv:1909.06335}, 2019.
+
+\bibitem{li2022niidbench}
+Q.~Li, Y.~Diao, Q.~Chen, and B.~He, ``Federated learning on non-{IID} data
+  silos: An experimental study,'' in \emph{2022 IEEE 38th International
+  Conference on Data Engineering (ICDE)}.\hskip 1em plus 0.5em minus
+  0.4em\relax IEEE, 2022, pp. 965--978.
+
+\bibitem{lattigo}
+C.~Mouchet, J.-P. Bossuat, J.~Troncoso-Pastoriza, and J.-P. Hubaux, ``{Lattigo
+  v5}: A multiparty homomorphic encryption library in {Go},'' in \emph{WAHC},
+  2021.
 
 \bibitem{atapoor2024vfhe}
 \BIBentryALTinterwordspacing
