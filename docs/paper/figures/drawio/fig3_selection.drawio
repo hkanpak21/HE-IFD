@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="selection">
+    <mxGraphModel dx="1032" dy="560" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1032" pageHeight="560" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="hA" value="Each client scores both candidates on its own held-out data" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=15;fontStyle=2;fontColor=#5B7B6E;" vertex="1" parent="1">
+          <mxGeometry x="20" y="12" width="420" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="hB" value="Combined and compared under encryption" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=15;fontStyle=2;fontColor=#5B7FA6;" vertex="1" parent="1">
+          <mxGeometry x="470" y="12" width="360" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cand" value="Two candidate settings, both servable at the same cost" style="swimlane;startSize=26;html=1;rounded=1;fillColor=#FBF7EF;strokeColor=#C6A87D;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;swimlaneFillColor=#FBF7EF;" vertex="1" parent="1">
+          <mxGeometry x="20" y="48" width="420" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="candA" value="shared head, no adapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4C5A9;strokeColor=#A8905F;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="cand">
+          <mxGeometry x="20" y="40" width="182" height="46" as="geometry" />
+        </mxCell>
+        <mxCell id="candB" value="shared head, over the&#xa;client's own adapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4C5A9;strokeColor=#A8905F;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="cand">
+          <mxGeometry x="218" y="40" width="182" height="46" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cli" value="Client j" style="swimlane;startSize=26;html=1;rounded=1;fillColor=#FBF7EF;strokeColor=#C6A87D;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;swimlaneFillColor=#FBF7EF;" vertex="1" parent="1">
+          <mxGeometry x="20" y="184" width="420" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="cli1" value="run each candidate on the held-out examples,&#xa;obtaining encrypted logits" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="cli">
+          <mxGeometry x="22" y="38" width="376" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="cli2" value="select the logit of the true class with a plaintext mask&#xa;the client knows its own labels, so the mask is public" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="cli">
+          <mxGeometry x="22" y="92" width="376" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="cli3" value="compare against the encrypted maximum and&#xa;accumulate the encrypted counts, one per class" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="cli">
+          <mxGeometry x="22" y="148" width="376" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="clii1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;" edge="1" parent="cli" source="cli1" target="cli2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="clii2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;" edge="1" parent="cli" source="cli2" target="cli3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="clin" value="No client ever sees a candidate model, and no per-example&#xa;label is decrypted." style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=14;fontStyle=2;fontColor=#A8905F;" vertex="1" parent="1">
+          <mxGeometry x="20" y="394" width="420" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="agg" value="Aggregation of the encrypted scores" style="swimlane;startSize=26;html=1;rounded=1;fillColor=#EDF1F3;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;swimlaneFillColor=#EDF1F3;" vertex="1" parent="1">
+          <mxGeometry x="490" y="120" width="340" height="228" as="geometry" />
+        </mxCell>
+        <mxCell id="agg1" value="weight each class by its share of the&#xa;federation's examples, taken from the&#xa;public count matrix" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C7D0D6;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="agg">
+          <mxGeometry x="20" y="38" width="300" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="agg2" value="the shared candidate pools evidence&#xa;across clients; the personal candidate&#xa;cannot, and its unseen classes score zero" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C7D0D6;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="agg">
+          <mxGeometry x="20" y="104" width="300" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="agg3" value="one encrypted comparison of the two" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="agg">
+          <mxGeometry x="20" y="172" width="300" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="aggi1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8B9EA8;" edge="1" parent="agg" source="agg1" target="agg2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="aggi2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8B9EA8;" edge="1" parent="agg" source="agg2" target="agg3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="out" value="one decrypted value:&#xa;which candidate the federation adopts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D3DEEA;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;" vertex="1" parent="1">
+          <mxGeometry x="512" y="394" width="296" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="outn" value="The two scores themselves are never revealed, so no client's&#xa;accuracy on its own data is disclosed to the others." style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=14;fontStyle=2;fontColor=#5B7FA6;" vertex="1" parent="1">
+          <mxGeometry x="470" y="456" width="380" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#A8905F;strokeWidth=1.6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="cand" target="cli">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="encrypted&#xa;counts" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;strokeWidth=1.6;fontFamily=Times New Roman;fontSize=14;fontColor=#5B7FA6;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="cli" target="agg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;strokeWidth=1.6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="agg" target="out">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

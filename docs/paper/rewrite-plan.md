@@ -26,6 +26,10 @@ Decisions locked with the user:
 - Say the number, then say what it means. Do not stack adjectives before a result.
 - One claim per paragraph. The first sentence of a paragraph states the claim.
 - Never write "adds no noise" or "learns nothing at all". Both are false as stated.
+- **Use the cryptographic terms, not paraphrases.** Write *plaintext* and
+  *ciphertext*, never "in the clear" or "unencrypted". Write *collective public
+  key*, *threshold decryption*, *key switching*, *evaluation keys*, *multiplicative
+  depth*. The audience is a security venue and expects the vocabulary.
 
 ## 2. Flow
 
