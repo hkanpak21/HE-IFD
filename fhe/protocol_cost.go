@@ -127,7 +127,7 @@ func measureProtocol(n, logN int) protoResult {
 		if i == 0 {
 			combined = share
 		} else {
-			check(ckg.AggregateShares(share, combined, &combined))
+			ckg.AggregateShares(share, combined, &combined)
 		}
 	}
 	pk := rlwe.NewPublicKey(params)
