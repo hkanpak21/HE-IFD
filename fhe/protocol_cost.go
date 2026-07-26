@@ -10,9 +10,9 @@
 //  2. RECIPROCAL under encryption. The count-weighted head merge divides by the
 //     per-class totals. Decrypting that denominator would let a coalition of N-1
 //     clients subtract its own counts and recover the honest client's class
-//     histogram exactly, so the division has to happen under encryption. Newton
-//     iteration, y <- y(2 - x y), two levels per step. Paid once at aggregation,
-//     never per query.
+//     histogram exactly, so the division has to happen under encryption. Lattigo's
+//     inversion circuit over the positive domain, with its bootstraps served by
+//     collective refreshes. Paid once at aggregation, never per query.
 //
 //  3. KEY SWITCH TO THE QUERIER. The label must reach the client that asked and
 //     nobody else. Switching to the querier's public key lets the other clients
@@ -36,8 +36,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/tuneinsight/lattigo/v6/circuits/ckks/inverse"
+	"github.com/tuneinsight/lattigo/v6/circuits/ckks/minimax"
 	"github.com/tuneinsight/lattigo/v6/core/rlwe"
 	"github.com/tuneinsight/lattigo/v6/multiparty"
+	"github.com/tuneinsight/lattigo/v6/multiparty/mpckks"
 	"github.com/tuneinsight/lattigo/v6/ring"
 	"github.com/tuneinsight/lattigo/v6/schemes/ckks"
 	"github.com/tuneinsight/lattigo/v6/utils/sampling"
@@ -50,7 +53,7 @@ type protoResult struct {
 	CtxCtMs     float64 `json:"ct_x_ct_mul_relin_rescale_ms"`
 	PtxCtMs     float64 `json:"pt_x_ct_mul_rescale_ms"`
 	RecipMs     float64 `json:"encrypted_reciprocal_ms"`
-	RecipIters  int     `json:"reciprocal_iterations"`
+	RecipIters  int     `json:"reciprocal_refreshes"`
 	RecipRelErr float64 `json:"reciprocal_rel_err"`
 	PCKSMs      float64 `json:"key_switch_to_querier_ms"`
 	PCKSBytes   int     `json:"key_switch_share_bytes_total"`
@@ -67,12 +70,14 @@ func runProtocolCost(jsonPath string) {
 	var out []protoResult
 	for _, n := range []int{5, 10, 20} {
 		r := measureProtocol(n, 14)
+		fmt.Printf("  measuring the encrypted reciprocal at N=%d ...\n", n)
+		r.RecipMs, r.RecipIters, r.RecipRelErr = measureReciprocal(n, 15)
 		out = append(out, r)
 		printProto(r)
 	}
 
 	fmt.Println()
-	fmt.Println("n_parties,log_n,slots,ct_x_ct_ms,pt_x_ct_ms,reciprocal_ms,reciprocal_iters,reciprocal_rel_err,key_switch_querier_ms,key_switch_bytes,selection_mask_ms,add_ms,rotation_ms")
+	fmt.Println("n_parties,log_n,slots,ct_x_ct_ms,pt_x_ct_ms,reciprocal_ms,reciprocal_refreshes,reciprocal_rel_err,key_switch_querier_ms,key_switch_bytes,selection_mask_ms,add_ms,rotation_ms")
 	for _, r := range out {
 		fmt.Printf("%d,%d,%d,%.3f,%.3f,%.2f,%d,%.3e,%.2f,%d,%.3f,%.4f,%.3f\n",
 			r.N, r.LogN, r.Slots, r.CtxCtMs, r.PtxCtMs, r.RecipMs, r.RecipIters,
@@ -89,7 +94,7 @@ func printProto(r protoResult) {
 	fmt.Printf("N=%d  (ring 2^%d, %d slots)\n", r.N, r.LogN, r.Slots)
 	fmt.Printf("  head applied to an encrypted query : %.3f ms   (ct x ct, relin + rescale)\n", r.CtxCtMs)
 	fmt.Printf("  head applied to a plaintext query  : %.3f ms   (pt x ct, for contrast)\n", r.PtxCtMs)
-	fmt.Printf("  reciprocal under encryption        : %.2f ms   (%d Newton steps, rel err %.2e)\n",
+	fmt.Printf("  reciprocal under encryption        : %.2f ms   (%d collective refreshes, rel err %.2e)\n",
 		r.RecipMs, r.RecipIters, r.RecipRelErr)
 	fmt.Printf("  key switch to the querier          : %.2f ms   (%s of shares)\n", r.PCKSMs, human(r.PCKSBytes))
 	fmt.Printf("  selection mask + accumulate        : %.3f ms\n", r.MaskMs)
@@ -202,34 +207,6 @@ func measureProtocol(n, logN int) protoResult {
 	}
 	rotMs := ms(time.Since(t0)) / reps
 
-	// --- 2. reciprocal under encryption (the count-head denominator) ----------
-	// The denominator is a sum of per-class counts. Its total is public, since the
-	// per-client sample counts are public, so it can be scaled into a range where
-	// Newton converges without revealing any per-class value.
-	den := make([]float64, slots)
-	for i := range den {
-		den[i] = 0.35 + 0.6*rng.Float64() // scaled per-class totals, in (0.35, 0.95)
-	}
-	ptD := ckks.NewPlaintext(params, params.MaxLevel())
-	check(ecd.Encode(den, ptD))
-	ctD, err := enc.EncryptNew(ptD)
-	check(err)
-
-	const newtonIters = 4
-	t0 = time.Now()
-	inv := newtonReciprocal(eval, params, ecd, ctD, newtonIters)
-	recipMs := ms(time.Since(t0))
-
-	got := make([]float64, slots)
-	check(ecd.Decode(dec.DecryptNew(inv), got))
-	var num, dnm float64
-	for i := 0; i < 1024; i++ {
-		want := 1.0 / den[i]
-		num += (got[i] - want) * (got[i] - want)
-		dnm += want * want
-	}
-	recipErr := math.Sqrt(num) / math.Sqrt(dnm)
-
 	// --- 3. key switch to the querier's public key ---------------------------
 	// Every client contributes a share, but the result is re-encrypted under the
 	// asking client's key, so only that client can decrypt the label.
@@ -279,37 +256,107 @@ func measureProtocol(n, logN int) protoResult {
 	return protoResult{
 		N: n, LogN: logN, Slots: slots,
 		CtxCtMs: ctxct, PtxCtMs: ptxct,
-		RecipMs: recipMs, RecipIters: newtonIters, RecipRelErr: recipErr,
 		PCKSMs: pcksMs, PCKSBytes: pcksBytes,
 		MaskMs: maskMs, AddMs: addMs, RotMs: rotMs,
 	}
 }
 
-// newtonReciprocal computes an encrypted 1/x by Newton iteration,
-// y <- y (2 - x y), starting from a public constant. Each step costs two levels.
-// The input must sit in (0, 1] for the iteration to converge, which the public
-// total sample count lets us arrange without revealing any per-class value.
-func newtonReciprocal(eval *ckks.Evaluator, params ckks.Parameters,
-	ecd *ckks.Encoder, x *rlwe.Ciphertext, iters int) *rlwe.Ciphertext {
-
-	y, err := eval.MulNew(x, -1.0)
-	check(err)
-	check(eval.Rescale(y, y))
-	check(eval.Add(y, 2.5, y)) // y0 = 2.5 - x, a standard start for x in (0,1]
-
-	for i := 0; i < iters; i++ {
-		if y.Level() < 2 {
-			break // out of levels; a deployment refreshes here
-		}
-		xy, err := eval.MulRelinNew(x, y)
-		check(err)
-		check(eval.Rescale(xy, xy))
-		check(eval.Mul(xy, -1.0, xy))
-		check(eval.Add(xy, 2.0, xy)) // 2 - x y
-		ny, err := eval.MulRelinNew(y, xy)
-		check(err)
-		check(eval.Rescale(ny, ny))
-		y = ny
+// ---------------------------------------------------------------------------
+// The encrypted reciprocal, measured on the deep chain the sign circuit needs.
+//
+// The count-weighted head merge divides the accumulated numerator by the
+// per-class totals. Those totals are the sum of every client's per-class count,
+// so decrypting them would let a coalition of N-1 clients subtract its own
+// counts and read the remaining client's class histogram. The division is
+// therefore evaluated under encryption, with Lattigo's inversion circuit over
+// the positive domain, and its bootstraps are collective refreshes.
+//
+// This is a one-time cost at aggregation. It is not paid per query.
+func measureReciprocal(n, logN int) (float64, int, float64) {
+	logQ := []int{55}
+	for i := 0; i < 14; i++ {
+		logQ = append(logQ, 45)
 	}
-	return y
+	params, err := ckks.NewParametersFromLiteral(ckks.ParametersLiteral{
+		LogN: logN, LogQ: logQ, LogP: []int{61, 61}, LogDefaultScale: 45,
+	})
+	check(err)
+
+	kgen := rlwe.NewKeyGenerator(params)
+	sks := make([]*rlwe.SecretKey, n)
+	for i := range sks {
+		sks[i] = kgen.GenSecretKeyNew()
+	}
+	crs, err := sampling.NewKeyedPRNG([]byte("he-oft-reciprocal"))
+	check(err)
+
+	ckg := multiparty.NewPublicKeyGenProtocol(params)
+	ckgCRP := ckg.SampleCRP(crs)
+	var combined multiparty.PublicKeyGenShare
+	for i := 0; i < n; i++ {
+		share := ckg.AllocateShare()
+		ckg.GenShare(sks[i], ckgCRP, &share)
+		if i == 0 {
+			combined = share
+		} else {
+			ckg.AggregateShares(share, combined, &combined)
+		}
+	}
+	pk := rlwe.NewPublicKey(params)
+	ckg.GenPublicKey(combined, ckgCRP, pk)
+
+	idealSk := rlwe.NewSecretKey(params)
+	ringQP := params.RingQP()
+	for i := 0; i < n; i++ {
+		ringQP.Add(idealSk.Value, sks[i].Value, idealSk.Value)
+	}
+	ikgen := rlwe.NewKeyGenerator(params)
+	rlk := ikgen.GenRelinearizationKeyNew(idealSk)
+	evk := rlwe.NewMemEvaluationKeySet(rlk)
+
+	minLevel, logBound, ok := mpckks.GetMinimumLevelForRefresh(128, params.DefaultScale(), n, params.Q())
+	if !ok {
+		panic("no valid refresh level for the reciprocal chain")
+	}
+	rfp, err := mpckks.NewRefreshProtocol(params, uint(params.LogDefaultScale()), params.Xe())
+	check(err)
+	btp := &collectiveBootstrapper{
+		params: params, sks: sks, rfp: rfp, crs: crs,
+		minLevel: minLevel, logBound: logBound,
+	}
+
+	enc := rlwe.NewEncryptor(params, pk)
+	dec := rlwe.NewDecryptor(params, idealSk)
+	ecd := ckks.NewEncoder(params)
+	eval := ckks.NewEvaluator(params, evk)
+	invEval := inverse.NewEvaluator(params, minimax.NewEvaluator(params, eval, btp))
+
+	// Per-class totals, rescaled by the public federation size into (2^-6, 1].
+	// The total number of examples is public, since the per-client sample counts
+	// are public, so this normalisation reveals no per-class value.
+	slots := params.MaxSlots()
+	rng := rand.New(rand.NewSource(7))
+	den := make([]float64, slots)
+	for i := range den {
+		den[i] = 0.02 + 0.97*rng.Float64()
+	}
+	pt := ckks.NewPlaintext(params, params.MaxLevel())
+	check(ecd.Encode(den, pt))
+	ct, err := enc.EncryptNew(pt)
+	check(err)
+
+	t0 := time.Now()
+	inv, err := invEval.EvaluatePositiveDomainNew(ct, -6.0, 0.0)
+	check(err)
+	elapsed := ms(time.Since(t0))
+
+	got := make([]float64, slots)
+	check(ecd.Decode(dec.DecryptNew(inv), got))
+	var num, dnm float64
+	for i := 0; i < 2048; i++ {
+		want := 1.0 / den[i]
+		num += (got[i] - want) * (got[i] - want)
+		dnm += want * want
+	}
+	return elapsed, btp.count, math.Sqrt(num) / math.Sqrt(dnm)
 }
