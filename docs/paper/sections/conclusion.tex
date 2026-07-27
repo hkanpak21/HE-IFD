@@ -1,26 +1,32 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented HE-OFT, a one-shot federated fine-tuning protocol built around a single observation about
-where federated learning is vulnerable: the strongest known attacks exploit training-time artifacts, the
-gradients, updates, and summaries a protocol exposes while the model is being built, and these are far more
-damaging than anything an adversary can extract from the released model afterwards. HE-OFT removes that
-training-time surface entirely rather than perturbing it. Each client fine-tunes a small adapter on a
-frozen pretrained backbone in plaintext and uploads one encrypted displacement, and the server's only
-operation is a linear aggregation computed under multiparty homomorphic encryption at multiplicative depth
-one, decrypted jointly by a threshold of clients. Fine-tuning is what makes this affordable: the frozen
-backbone supplies the shared frame a one-shot linear aggregation needs under heterogeneous data, freezing
-the adapter's down-projection makes that aggregation exact task arithmetic rather than an approximation,
-and the encrypted object is a few megabytes whatever the size of the backbone behind it, at no accuracy
-cost. Because a server computing under encryption cannot adapt its rule to data it cannot read, it emits
-several depth-one candidate aggregates and the clients select among them after decryption, which improves
-the released model under heterogeneity and yields a measured defense against a poisoning client, at no
-homomorphic cost. Across vision and language tasks, from a frozen RoBERTa and ViT to a half-billion-parameter
-language model, the method yields a common model stronger than any single client trains alone and, outside the most
-skewed regimes, close to a centrally fine-tuned one; a multiparty CKKS implementation reproduces the
-encrypted aggregation within the scheme's approximation bounds at about ten megabytes per client; and the one
-surface the protocol cannot remove, the released model, shows membership inference at or near chance, rising
-only on the largest label space.
-Extending the protocol to colluding or adaptive malicious participants, where verifiable homomorphic
-encryption~\cite{viand2023verifiable,atapoor2024vfhe} could certify that the server computed the
-aggregation honestly, is the natural direction for future work.
+We presented HE-OFT, a federated fine-tuning protocol in which the trained model
+is never disclosed. The design follows from the observation that federated
+learning's privacy risk is concentrated in the quantities a protocol exposes while
+the model is being built, and from the further requirement that in some
+deployments the finished model may not be distributed either. Each client
+fine-tunes on a frozen public backbone, retains its adapter locally, and uploads a
+single encrypted head displacement. The server combines those displacements under
+multiparty CKKS and never decrypts the result; queries are answered under
+encryption, and a quorum of clients returns only the predicted label, addressed to
+the party that asked.
+
+Withholding the model constrains what may be shared. Since the querying party must
+form its query from components it can evaluate itself, those components must be
+public, and the shared trained quantity must therefore attach after the last
+nonlinearity of the network. This is the source of the design's three parts: the
+partition of the trainable unit, inference on the encrypted head, and selection
+between candidate arrangements that no party can observe. Across four text
+classification tasks and one vision task, the protocol produces a model
+substantially stronger than any client obtains alone, at a cost of $0.03$ to
+$0.14$ accuracy relative to a model that is aggregated and disclosed. The
+cryptographic layer itself costs no accuracy, and the recurring communication is a
+few megabytes per query.
+
+Two directions follow. Robustness to actively malicious participants is outside
+the present guarantee, and reconciling robust aggregation with an encrypted
+contribution remains open; an upload-time norm bound enforced by a zero-knowledge
+proof is the most direct route. Serving a shared quantity that sits inside the
+backbone, rather than after it, reduces to secure transformer inference, and the
+accuracy that would recover is quantified in \cref{tab:headline}.

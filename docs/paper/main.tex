@@ -80,34 +80,34 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 \maketitle
 
 \begin{abstract}
-Organizations adapt pretrained models to private data by fine-tuning, and parties with complementary data
-over the same task would each gain from a jointly adapted model, yet cannot pool their data to build one.
-Federated learning offers the collaboration but concentrates its privacy risk at training time: gradients and
-per-round updates permit reconstruction of training data and strong membership inference, and these
-training-time attacks are substantially more effective than attacks against the final released model.
-Existing protections pull against one another: multi-round cryptographic training is costly, and one-shot
-protocols either expose their single contribution or noise it, degrading the model they release. We
-present HE-OFT (Homomorphically Encrypted One-shot Fine-Tuning), a federated fine-tuning protocol that
-eliminates the training-time attack surface
-rather than perturbing it. Each client fine-tunes a small low-rank adapter on a frozen pretrained backbone
-in plaintext and uploads a single encrypted parameter displacement; the server's only operation is a
-sample-weighted linear combination under multiparty CKKS, a scheme chosen for its threshold decryption and
-packed real-number arithmetic rather than its circuit depth: the combination runs at multiplicative depth
-one and is decrypted jointly by a threshold of clients. Fine-tuning is what makes this affordable: the
-frozen backbone supplies the shared
-frame a one-shot linear aggregation needs under heterogeneous data, and freezing the adapter's
-down-projection makes the encrypted sum of the trained factors exactly the weighted average of the clients'
-weight updates, so the encrypted object is a few
-megabytes regardless of the backbone and the cryptographic layer adds no accuracy cost. Because a server
-computing under encryption cannot read its inputs, it emits several depth-one candidate aggregates and the
-clients select among them after decryption, which improves the released model under heterogeneity and
-neutralizes a single poisoning client at no homomorphic cost. Across vision and language tasks, from frozen RoBERTa
-and ViT to a half-billion-parameter language model, the method produces a common model stronger than any
-single client trains alone, within $0.01$ of the same adapter fine-tuned on the pooled data when the data are
-near-uniform and $0.06$--$0.23$ behind it at moderate label skew ($\alpha{=}0.1$). A real multiparty CKKS implementation
-reproduces the plaintext aggregate within the approximation bounds of CKKS, and the one remaining surface,
-the released model, shows membership inference at or near chance on all but the largest label spaces, where it
-is mildly elevated and still far below the training-time attacks the protocol removes.
+Organizations adapt pretrained models to private data by fine-tuning, and parties
+holding complementary data over the same task would each gain from a jointly
+adapted model, yet cannot pool their data to build one. Federated learning offers
+the collaboration but concentrates its privacy risk at training time: gradients
+and per-round updates permit reconstruction of training data and support
+membership inference substantially stronger than any attack on the finished model.
+A protocol that exchanges a single encrypted contribution removes that surface,
+but it still ends by handing the finished model to every participant, which is not
+permitted where the model is itself a regulated or proprietary asset. We present
+HE-OFT, a federated fine-tuning protocol in which the model is never disclosed to
+any party. Each client fine-tunes a low-rank adapter and a classifier head on a
+frozen public backbone, retains the adapter locally, and uploads one encrypted
+head displacement; the server combines these under multiparty CKKS and never
+decrypts the result. Queries are answered under encryption, and a quorum of
+clients returns only the predicted label, addressed to the party that asked.
+Withholding the model determines the design, since the querying party must form
+its query from public components alone, so the shared trained quantity cannot
+reside inside the backbone. Because the server cannot read its inputs, it cannot
+select an aggregation rule, and we give an estimator that lets the federation
+choose between two servable arrangements while disclosing only the index of the
+one selected; the direct procedure, in which each client scores both on its own
+held-out data, estimates the wrong quantity and selects incorrectly in every case
+we measured. Across four text classification tasks and one vision task, the
+protocol yields a model substantially stronger than any client obtains alone, at a
+cost of $0.03$ to $0.14$ accuracy relative to a disclosed model. A real multiparty
+CKKS implementation reproduces the plaintext computation within the approximation
+bounds of the scheme, so the cryptographic layer costs no accuracy, and the
+recurring communication is a few megabytes per query.
 \end{abstract}
 
 \begin{IEEEkeywords}

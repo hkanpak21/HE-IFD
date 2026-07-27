@@ -18,7 +18,7 @@ a rank-$8$ low-rank adapter with its down-projection frozen at a shared public
 initialisation, together with a classifier head. The adapter is trained locally and
 never transmitted; the head displacement is encrypted and uploaded once. No
 labelled public data is used anywhere in this paper, because the setting without
-one is where an encrypted one-shot protocol is actually needed.
+one is the setting in which an encrypted one-shot protocol is required.
 
 We evaluate on four text classification tasks of increasing label-space size,
 AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
@@ -41,12 +41,12 @@ The disclosed model is not a configuration of our protocol and is not servable
 under the threat model of \cref{sec:threat}; it is reported so that the price of
 never disclosing a model can be read off directly.
 
-\subsection{A Federated Head Over Private Representations Is Usable}
+\subsection{Utility of the Federated Head}
 \label{sec:exp-split}
 
-\emph{Claim: sharing only the classifier head, over representations that each
-client adapts privately, produces a model usable across the whole label space,
-and which of the two servable arrangements is better depends on the label space.}
+\paragraph{Claim.} Sharing only the classifier head, over representations that
+each client adapts privately, yields a model usable across the whole label space,
+and the preferable arrangement depends on the size of the label space.
 
 \Cref{tab:headline} reports both servable arrangements and both reference points.
 The arrangement labelled \emph{shared head} gives every client the same model over
@@ -77,14 +77,15 @@ CIFAR-100  & 100 & 0.748 & $\mathbf{0.774}$ & 0.197 & 0.784 \\
 \end{tabular}
 \end{table}
 
-Three things follow. First, the federation is doing the work. A client alone
+Three observations follow. First, the federation accounts for most of the
+resulting accuracy. A client alone
 reaches $0.20$ to $0.48$, because under this skew it holds only a few classes and
 cannot classify the rest, while the federated head reaches $0.61$ to $0.79$ on
 four of the five tasks. The gap is largest exactly where a client's own data covers
 least of the label space.
 
-Second, the better arrangement changes with the size of the label space, and it
-changes for a reason. On the small label spaces the shared head wins by a wide
+Second, the preferable arrangement changes with the size of the label space, and
+the mechanism is identifiable. On the small label spaces the shared head wins by a wide
 margin, $0.17$ on AG-News and $0.18$ on TREC. On the large ones the personal
 adapter wins, and on Banking77 it wins decisively: the shared head collapses to
 $0.206$ while the personal adapter holds $0.686$. The collapse is a coverage
@@ -94,12 +95,12 @@ with. A privately adapted representation improves separability for every class t
 client will ever be asked about, including those it never observed, which is what
 rescues the large label spaces.
 
-Third, the two failure modes are complementary rather than ordered. The shared head
+Third, the two failure modes are complementary rather than ordered by severity. The shared head
 fails when coverage is thin. The personal adapter fails when each client's
 representation drifts far enough that a common head no longer transfers, which is
-what happens when the local task is nearly a single class. Neither arrangement
-dominates, which is why the federation must choose between them, and why that
-choice is the subject of \cref{sec:exp-select}.
+what occurs when the local task approaches a single class. Neither arrangement
+dominates the other, so the federation must select between them, which is the
+subject of \cref{sec:exp-select}.
 
 \paragraph{Sensitivity.} \Cref{tab:sens} varies the three protocol axes around the
 default. \tbd
@@ -127,15 +128,15 @@ selected arrangement & \tbd & $0.789$ & \tbd & \\
 \end{tabular}
 \end{table}
 
-\subsection{The Federation Can Choose Without Decrypting}
+\subsection{Accuracy of the Selection Rule}
 \label{sec:exp-select}
 
-\emph{Claim: the obvious procedure for choosing between the two arrangements
-fails systematically, and the estimator of \cref{sec:selection} corrects it while
-revealing only which arrangement won.}
+\paragraph{Claim.} The direct procedure for choosing between the two
+arrangements fails systematically, and the estimator of \cref{sec:selection}
+corrects it while disclosing only the index of the selected arrangement.
 
-We first establish that the obvious procedure fails, because that is what
-motivates the estimator. Each client measures both arrangements on data held back
+We first establish that the direct procedure fails, since this is what motivates
+the estimator. Each client measures both arrangements on data held back
 from its own training and the federation takes the sample-weighted majority. Across
 all fifteen cells of \cref{tab:headline}, this procedure selects the personal
 adapter every time, including on AG-News and TREC where the personal adapter is
@@ -183,7 +184,7 @@ global-prior estimator, rare-class fill & $\mathbf{13/15}$ & $\mathbf{0.019}$ \\
 \end{tabular}
 \end{table}
 
-Two properties of the estimator are worth stating separately. The decisive case is
+Two properties of the estimator merit separate mention. The decisive case is
 Banking77, where choosing wrongly costs $0.48$; the estimator selects correctly on
 all three seeds, by margins of $0.13$ to $0.24$. And the estimator responds to the
 data rather than to the label space: on the AG-News seed where an unlucky partition
@@ -191,22 +192,21 @@ leaves the shared head at $0.402$ and the personal adapter genuinely better, it
 switches to the personal adapter, which a rule keyed to the number of classes would
 not do.
 
-The estimator also predicts accuracy, not merely the ranking. Its estimate of the
+The estimator yields a calibrated accuracy estimate, not only a ranking. Its estimate of the
 shared arrangement's global accuracy is within $0.019$ on average across all
 fifteen cells, computed entirely from encrypted local evidence with no access to a
 test set.
 
-\paragraph{What the estimator reveals.} One value is decrypted for the whole
+\paragraph{Disclosure of the estimator.} One value is decrypted for the whole
 federation, the index of the arrangement adopted. The per-client per-class
 accuracies are not decrypted, which matters: together with the count matrix they
 would describe each client's label distribution alongside its model quality.
 
-\subsection{The Cryptographic Layer Is Affordable}
+\subsection{Cryptographic Cost}
 \label{sec:exp-cost}
 
-\emph{Claim: the protocol's cryptographic cost is dominated by one-time setup,
-the recurring per-query traffic is a few megabytes, and no step is required that
-the protocol cannot afford.}
+\paragraph{Claim.} The cryptographic cost of the protocol is dominated by
+one-time setup, and the recurring per-query traffic is a few megabytes.
 
 We do not simulate the cryptography. The protocol is implemented in real
 multiparty CKKS on Lattigo~\cite{lattigo,mouchet2021multiparty}: distributed key
@@ -238,7 +238,7 @@ reciprocal under encryption, once per aggregation & \tbd \\
 \end{tabular}
 \end{table}
 
-\paragraph{What encrypting the query costs.} Applying the head to an encrypted
+\paragraph{Cost of query encryption.} Applying the head to an encrypted
 query costs $35.2$\,ms against $4.8$\,ms for a plaintext one, a factor of seven.
 That factor buys the property that the serving party never sees the feature vector
 and therefore cannot invert it to recover the client's input, and it is small
@@ -256,7 +256,7 @@ evaluation under a single key, single-key results carry over, and GPU
 implementations of the same reduction report a full-vocabulary argmax in well under
 a second~\cite{zhang2025nexus}.
 
-\paragraph{Communication, stated in full.} The protocol is one-shot in the sense
+\paragraph{Communication.} The protocol is one-shot in the sense
 of \cref{sec:intro}: no intermediate training artifact is ever exposed. It is not
 silent. Key generation precedes it, selection costs a bounded exchange, and serving
 costs traffic per query, so we account for all of it in \cref{tab:comm}.
@@ -286,8 +286,8 @@ per query & encrypted features, uploaded & $2.0$\,MiB \\
 \end{tabular}
 \end{table}
 
-One design decision governs that recurring figure, and we state it because the
-alternative is two orders of magnitude worse. The argmax spends its levels and must
+One design decision governs the recurring figure, and we state it explicitly
+because the alternative is two orders of magnitude more expensive. The argmax spends its levels and must
 have them restored several times per query. Restoring them by a collective refresh
 would require a share from every client for every refresh, which at a hundred
 classes amounts to roughly $510$\,MiB of traffic for a single label. Generating
@@ -303,12 +303,12 @@ returns the same index as the plaintext argmax in every case tested. The accurac
 figures of \cref{tab:headline} are therefore unaffected by the cryptography, which
 is the sense in which encryption costs no accuracy here.
 
-\subsection{What a Participant Can Learn Is Bounded}
+\subsection{Residual Leakage}
 \label{sec:exp-leak}
 
-\emph{Claim: the protocol exposes no training-time artifact and no model, so the
-only channel that remains is the answers the served model gives, and that channel
-is bounded by the query allowance rather than closed.}
+\paragraph{Claim.} The protocol exposes no training-time artifact and no model,
+so the only remaining channel is the sequence of answers the served model returns,
+and that channel is bounded by the query allowance rather than eliminated.
 
 The training-time surface is removed by construction. No gradient, update, or
 data-derived summary is ever available in plaintext, there is one exchange rather
@@ -317,7 +317,7 @@ no party holds it in plaintext at any point, so the white-box attacks that a
 released model admits have no object to attack. What remains is a client that can
 ask the served model questions and read labels.
 
-Two things bound that channel, and they should not be confused. The first is
+Two distinct bounds apply to this channel, and they should not be conflated. The first is
 cryptographic and is stated in \cref{prop:server}: the protocol's messages are
 computationally independent of the private data. The second is not cryptographic.
 A client that queries the served model at points of its own choosing can, with
@@ -332,7 +332,7 @@ extraction cost of the deployment's label space.
 
 \paragraph{Comparison with a released model.} \tbd
 
-\subsection{What Disclosing the Model Would Buy}
+\subsection{Comparison with Model Disclosure}
 \label{sec:exp-release}
 
 Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
@@ -345,19 +345,21 @@ property that no accuracy figure can substitute for: after the protocol ends, th
 is no plaintext model anywhere.
 
 We do not present the disclosed model as an alternative configuration of this
-protocol, because it is not one. Disclosing the model changes the threat model
+protocol, since it does not satisfy the requirements of \cref{sec:setting}.
+Disclosing the model changes the threat model
 rather than the operating point. A participant that holds the model in plaintext
 can inspect it, run inference on it without limit, redistribute it, and mount the
 white-box attacks that \cref{sec:related-leakage} surveys, and the query allowance
 of \cref{sec:exp-leak} becomes meaningless. Those are different guarantees and they
 answer a different question. A deployment that can disclose the model should use a
 protocol designed for that, and prior one-shot federated learning provides several.
-The construction here is for deployments that cannot.
+The construction presented here addresses deployments in which disclosure is not
+permitted.
 
 \subsection{Scope and Limitations}
 \label{sec:scope}
 
-\paragraph{The trained quantity that is shared must be linear in the features.}
+\paragraph{Linearity of the shared quantity.}
 This is what \cref{sec:split} shows the never-disclosed requirement forces, and it
 is a real restriction. A shared adapter inside the backbone would adapt the
 representation for every participant rather than only for its owner, and
@@ -366,7 +368,7 @@ representation gives up. Serving such an adapter reduces to secure transformer
 inference (\cref{sec:related-inference}) and composes with that literature at its
 cost; we do not attempt it here.
 
-\paragraph{Extraction is bounded by economics, not by hardness.} The query
+\paragraph{Bounds on model extraction.} The query
 allowance of \cref{sec:exp-leak} is an operational control. Where honest use is
 intrinsically high-volume, so that no allowance separates it from extraction,
 calibrated noise added to the returned labels bounds cumulative leakage

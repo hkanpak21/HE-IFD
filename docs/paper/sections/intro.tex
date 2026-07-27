@@ -15,8 +15,8 @@ elsewhere~\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}. Competitive concerns
 point the same way, and handing the data to whoever operates the fine-tuning
 infrastructure raises the same objection~\cite{xiao2023offsite}.
 
-Federated learning is the standard answer, and its privacy problem is
-concentrated where it is least often addressed. The protocol exchanges model
+Federated learning is the standard response, and its privacy risk is concentrated
+at training time rather than in the model it produces. The protocol exchanges model
 updates instead of data, but the updates are themselves the vulnerability. A
 gradient permits reconstruction of the batch that produced
 it~\cite{zhu2019deep,geiping2020inverting}. An observer of the per-round updates
@@ -25,17 +25,16 @@ finished model: on the same model and dataset, an attack that reaches $87\%$
 accuracy against the update stream falls to $54.5\%$ against the final model
 alone~\cite{nasr2019comprehensive}. A server free to choose the weights it
 broadcasts can harvest client inputs
-outright~\cite{boenisch2023curious,fowl2022robbing}. The damage is done by the
-artifacts a protocol exposes while the model is being built, and by how many times
-it exposes them.
+outright~\cite{boenisch2023curious,fowl2022robbing}. The decisive quantities are therefore those a protocol
+exposes while the model is being built, and the number of times it exposes them.
 
 Two measures remove that surface together. Making the protocol \emph{one-shot},
 so that each client contributes once, means there is no intermediate state for
 anyone to observe. Encrypting that single contribution means the one thing that is
 exchanged is never available in plaintext. We use one-shot in this sense
 throughout: not as a claim that the parties never communicate again, but as the
-statement that no intermediate training artifact is ever exposed. Prior work pulls
-one of these levers at a time. One-shot federated learning sends its single
+statement that no intermediate training artifact is ever exposed. Prior work applies one of these
+measures at a time. One-shot federated learning sends its single
 contribution in plaintext, or protects it with differential privacy, which noises
 the very artifact it releases. Encrypted federated learning runs many rounds of
 encrypted training or encrypted aggregation, paying the cryptographic cost on
@@ -43,17 +42,16 @@ every round, and the direct route of training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
 circuit~\cite{sav2021poseidon}.
 
-Pulling both levers still leaves one artifact exposed, and it is the model. Every
+Applying both still leaves one artifact exposed, namely the model itself. Every
 protocol above ends by handing the finished model to the participants, which is
 reasonable when the purpose is to distribute a shared model, and unacceptable when
 the model may not be distributed at all. A model fine-tuned on confidential
 records can itself be a regulated artifact, and in high-risk domains such as
 health, biometrics and credit it is treated as one~\cite{euaiact2024}. It can also
-be the asset the participants are least willing to give each other. In those
-deployments the question is not how to release a model safely. It is how to build
-one that is never released.
+be the asset the participants are least willing to give each other. For such deployments the relevant question is not how to release a
+model safely, but how to construct one that is never released.
 
-\textbf{This paper builds such a protocol.} The parties fine-tune on a frozen
+This paper presents such a protocol. The parties fine-tune on a frozen
 public backbone, contribute once under multiparty CKKS, and obtain a shared
 classifier that no party ever decrypts. It answers queries under encryption and
 returns a label, so a participant learns what the model predicts on its own inputs
@@ -61,8 +59,8 @@ and nothing else about the model. There is no round in which a training artifact
 is exposed, no plaintext contribution, and no plaintext model at any point in the
 protocol's lifetime.
 
-Never decrypting the model is not a stronger version of never exposing the
-updates. It changes what can be shared at all. A model that is never decrypted
+Withholding the model is not simply a stronger form of withholding the updates.
+It changes what may be shared at all. A model that is never decrypted
 must still answer questions, and the party asking a question has to form it from
 components it can run itself, which means those components must be public. The
 shared trained quantity therefore cannot sit inside the backbone, since the
@@ -73,23 +71,24 @@ requirement determines the design, and the paper's three contributions are its
 consequences.
 
 \begin{itemize}
-\item \textbf{A split between what is shared and what stays local.} Each client
+\item \textbf{Partitioning the trainable unit.} Each client
   keeps its own adapter, which is trained locally and never transmitted, and only
   the classifier head is federated. The division is one of coverage: a client can
   improve its own representation alone, but it cannot learn to recognise a class it
   has never observed, and that is what the federation supplies. Because no
   aggregate of the adapters is ever formed, a coalition of all but one client has
   no sum from which to subtract its own contributions (\cref{sec:split}).
-\item \textbf{Serving without decrypting.} The querying client computes its own
+\item \textbf{Inference on an encrypted model.} The querying client computes its own
   features and encrypts them, so the serving party cannot invert them to recover
   the query. The serving party applies the encrypted head, reduces the logits to
   the index of the largest entry under encryption, and a quorum switches that index
   to the querier's key so that no other client learns the answer. Returning only the
   label denies the linear solve that logits would permit (\cref{sec:serving}).
-\item \textbf{Choosing between models nobody can see.} Two arrangements are
-  servable at the same cost, and which is better depends on the task. The obvious
-  procedure, letting each client measure both on its own held-out data and vote,
-  estimates the wrong quantity and chooses wrongly whenever the two differ. We give
+\item \textbf{Selection under encryption.} Two arrangements are
+  servable at the same cost, and which is preferable depends on the task. The
+  direct procedure, in which each client measures both on its own held-out data and
+  votes, estimates the wrong quantity and selects incorrectly whenever the two
+  differ. We give
   an estimator that corrects it, runs under encryption, has no fitted threshold,
   and reveals only which arrangement won (\cref{sec:selection}).
 \end{itemize}
@@ -98,9 +97,9 @@ consequences.
 frozen RoBERTa and ViT backbones, and we implement the cryptographic protocol in
 real multiparty CKKS rather than simulating it. We report what never decrypting
 the model costs, in accuracy against a released model and in the communication and
-computation the protocol adds, including the traffic that recurs per query, which
-a claim of one-shot operation should not be allowed to hide.
+computation the protocol adds, including the traffic that recurs per query, which a
+claim of one-shot operation might otherwise obscure.
 
-Each of these claims rests on a premise about where federated learning actually
+Each of these claims rests on a premise concerning where federated learning
 leaks, and on what existing work already provides. \Cref{sec:related} establishes
 both.

@@ -1,23 +1,23 @@
 \section{Background and Related Work}
 \label{sec:related}
 
-Five lines of work bear on this paper: what federated learning leaks and when,
-the cryptographic tools that protect training, one-shot federated learning and
-the price of protecting it with noise, federated fine-tuning of adapters, and
-secure inference. We take them in that order, because the first establishes the
-premise the design rests on and the rest fix its position. The closing paragraph
-returns to the claim made in \cref{sec:intro} and states what is left unserved by
-existing work.
+Five lines of work bear on this paper: the leakage properties of federated
+learning, the cryptographic tools that protect training, one-shot federated
+learning and its differentially private variants, federated fine-tuning of
+adapters, and secure inference. We take them in that order, since the first
+establishes the premise on which the design rests and the remainder determine its
+position. The closing paragraph returns to the claim of \cref{sec:intro} and
+identifies what existing work leaves unaddressed.
 
-\subsection{What Federated Learning Leaks, and When}
+\subsection{Leakage at Training Time and at Inference Time}
 \label{sec:related-leakage}
 
 Federated learning began as an iterative procedure in which a server repeatedly
 broadcasts a model, clients improve it on their own data, and the server averages
 the returned updates~\cite{mcmahan2017communication}. Every round of that loop
 reveals a fresh quantity computed on private data, and a decade of attacks has
-established that these training-time quantities are the most damaging thing such a
-protocol exposes.
+established that these training-time quantities constitute the most damaging
+disclosure such a protocol makes.
 
 A gradient permits reconstruction of the batch that produced it, pixel-accurate on
 images~\cite{zhu2019deep} and at high resolution even from trained networks, where
@@ -50,7 +50,7 @@ against well-generalised models its success concentrates at low false-positive
 operating points rather than in bulk~\cite{carlini2022membership}. Model inversion
 needs released confidences and strong priors~\cite{fredrikson2015model,hitaj2017deep}.
 
-The asymmetry has a simple explanation. Training-time quantities are
+The asymmetry admits a straightforward explanation. Training-time quantities are
 high-dimensional views of one client's data, taken repeatedly during optimisation.
 The finished model is a single aggregate that generalisation itself pushes away
 from any individual training point. This asymmetry is the premise of our design: a
@@ -91,8 +91,8 @@ round, and what is protected is a per-round sum rather than a complete
 contribution. SHE-LoRA is also instructive on key structure. It uses single-key
 homomorphic encryption and therefore has to assume that the server and the clients
 do not collude, since any client that revealed its key to the server would undo
-the protection. The threshold structure of \cref{sec:mhe} removes that assumption
-rather than stating it.
+the protection. The threshold structure of \cref{sec:mhe} discharges that assumption rather than
+imposing it.
 
 Transfer learning itself has been placed under encryption. HETAL trains a softmax
 classifier head on frozen features entirely under CKKS~\cite{lee2023hetal},
@@ -111,7 +111,7 @@ parties. They solve a different problem: outsourcing training for a party that
 cannot train locally, where our parties can train locally but must not reveal what
 they trained.
 
-\subsection{One-Shot Federated Learning and the Price of Noise}
+\subsection{One-Shot Federated Learning and Differential Privacy}
 \label{sec:related-oneshot}
 
 A parallel line collapses the many rounds into a single
@@ -204,9 +204,9 @@ model itself remains a disclosed artifact. A single prior scheme is at once
 one-shot, federated and encrypted, but only for a single-layer closed-form learner
 that cannot adapt a deep representation~\cite{fedheonn2023}.
 
-What is left unserved is a protocol that exposes no training-time quantity, that
+What remains unaddressed is a protocol that exposes no training-time quantity, that
 exchanges anything at all only once, and that never discloses the model even to
-the parties that built it. The last of these is not a refinement of the first two.
+the parties that built it. The third of these is not a refinement of the first two.
 It changes what can be shared, because a model that is never decrypted must still
 answer questions, and the party asking must be able to form a query from public
 components alone. \Cref{sec:method} works out what that forces, and the rest of the

@@ -21,9 +21,10 @@ that differential privacy incurs when it is the only protection. And the model i
 classifier in plaintext. The third requirement is the one that shapes everything
 below, and \cref{sec:threat} states precisely what it buys.
 
-These requirements are not a wish list. Each one forecloses a family of designs,
-and what remains is close to forced. We record the chain here so that the choices
-in the rest of this section read as consequences rather than preferences.
+Each requirement forecloses a family of designs, and the remaining space is
+narrow. We record the chain of implications here, so that the choices made in the
+rest of this section can be read as consequences of the requirements rather than
+as independent design preferences.
 
 \begin{itemize}
 \item[\textbf{C1}] \emph{Optimisation cannot run under encryption at acceptable
@@ -54,16 +55,16 @@ in the rest of this section read as consequences rather than preferences.
   queries.} A query is formed from features, and the client that asks must be able
   to compute those features itself. \emph{Therefore} everything the client runs is
   public, and the trained quantity that is shared cannot sit inside the backbone.
-  This is the requirement that separates the present design from the one a
-  released model would permit, and \cref{sec:split} works out what it forces.
+  This requirement distinguishes the present design from one in which
+  the model is released, and \cref{sec:split} derives its consequences.
 \end{itemize}
 
 \noindent Constraints \textbf{C1} through \textbf{C6} are shared with any
 one-shot encrypted federation. \textbf{C7} is particular to never disclosing the
-model, and the three contributions of this paper are its consequences: a split
-between what stays local and what is shared (\cref{sec:split}), a way to answer
-queries without decrypting the model (\cref{sec:serving}), and a way for the
-federation to choose between candidate models it cannot see (\cref{sec:selection}).
+model, and the three contributions of this paper follow from it: a partition of the
+trainable unit (\cref{sec:split}), a procedure for answering queries without decrypting the model
+(\cref{sec:serving}), and a procedure by which the federation selects between
+candidate arrangements it cannot observe (\cref{sec:selection}).
 
 \subsection{Notation}
 \label{sec:notation}
@@ -121,7 +122,7 @@ that one chosen party can read it, and a collective refresh, which restores a
 depleted level budget and plays the role bootstrapping plays in the single-key
 setting.
 
-We state plainly what the scheme is chosen for. The aggregation of
+We state the reason for this choice. The aggregation of
 \cref{sec:split} uses only additions and multiplications by public scalars, so it
 consumes one level. What we need from the scheme is not depth but key structure:
 threshold decryption over a collectively generated key is the property the
@@ -132,7 +133,7 @@ Additively homomorphic schemes offer neither packed real arithmetic at this widt
 nor comparable multiparty tooling, and masking-based secure aggregation reveals
 the plaintext sum to the server, which this protocol never does.
 
-\subsection{What Is Shared and What Stays Local}
+\subsection{Partitioning the Trainable Unit}
 \label{sec:split}
 
 \input{figures/training}
@@ -146,7 +147,7 @@ encrypted displacements into a single shared head and never decrypts the result.
 The adapter is trained locally and never transmitted. \Cref{fig:training} shows
 the arrangement.
 
-\paragraph{Why the split is forced.} The client that asks a question must compute
+\paragraph{Necessity of the partition.} The client that asks a question must compute
 the features of that question itself, by \textbf{C7}. If the shared trained
 quantity were an adapter placed inside the backbone, the features would depend on
 it, and computing them would require evaluating the backbone with encrypted
@@ -155,14 +156,14 @@ homomorphically, which is the cost this design exists to avoid. The trained
 quantity that is shared must therefore attach after the last nonlinearity, and in
 a transformer the only such point is the final linear map. That is the head.
 
-The adapter is not discarded, it is relocated. Each client keeps its own, so the
+The adapter is relocated rather than discarded. Each client retains its own, so the
 representation still adapts to local data, and the federation shares the part
-where sharing is actually necessary. The distinction is one of coverage: a client
+where sharing is necessary. The distinction follows from coverage: a client
 can improve its own representation alone, but it cannot learn to recognise a class
 it has never observed. Coverage is a property of the head, which is exactly what
 the federation supplies. \Cref{sec:exp-split} measures both halves of this claim.
 
-Keeping the adapter local has a second consequence, and it is a security one. No
+Retaining the adapter locally has a second consequence, which is cryptographic. No
 aggregate of the adapters is ever formed. A coalition of $\Nc-1$ clients therefore
 has no adapter sum from which to subtract its own contributions, and cannot
 recover the remaining client's adapter by arithmetic. \Cref{sec:threat} states
@@ -219,7 +220,7 @@ dimension and not by the backbone behind it. Communication is one upload per
 client and no download of model parameters at all, since no client ever receives
 the shared head.
 
-\subsection{Answering Queries Without Decrypting the Model}
+\subsection{Inference on the Encrypted Head}
 \label{sec:serving}
 
 \input{figures/serving}
@@ -232,7 +233,7 @@ index of the largest entry under encryption. A quorum of clients then key-switch
 that index to the querying client, which decrypts one label.
 \Cref{fig:serving} shows the path, and \cref{alg:serve} states it.
 
-\paragraph{Why the query is encrypted.} The serving party could be given the
+\paragraph{Encryption of the query.} The serving party could be given the
 features in plaintext, which would make the head application cheaper. We encrypt
 them because features are invertible: a party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
@@ -241,7 +242,7 @@ protocol exists to protect. The price is that the head is applied ciphertext by
 ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
 what that costs.
 
-\paragraph{Why only the label is returned.} Returning logits would defeat the
+\paragraph{Restriction to the predicted label.} Returning logits would defeat the
 construction. The head is a linear map on features the client computes itself, so a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
@@ -252,7 +253,7 @@ expensive. It does not make extraction impossible, and \cref{sec:threat} states
 the resulting bound honestly, as a bound on queries rather than a cryptographic
 hardness claim.
 
-\paragraph{Why the label reaches only the querier.} Decryption needs a quorum, so
+\paragraph{Directed decryption.} Decryption needs a quorum, so
 other clients necessarily participate in producing an answer to a question they did
 not ask. Rather than decrypt the label collectively, which would reveal it to
 every participant, the quorum key-switches the ciphertext to the querying client's
@@ -279,7 +280,7 @@ public key. The other clients contribute shares and learn nothing.
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Cost, and who serves.} The argmax is the one operation in the protocol
+\paragraph{Cost and the role of the serving party.} The argmax is the one operation in the protocol
 that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
 minutes for a large label space. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
@@ -297,13 +298,13 @@ certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.
 the features. Serving a trained quantity that sits inside the backbone is the
 problem that secure transformer inference addresses, and an encrypted shared
 adapter composes with any such system at that literature's cost. We do not
-re-solve it. One difference is worth stating: those systems evaluate a plaintext
+re-solve it. One difference should be noted: those systems evaluate a plaintext
 model on encrypted inputs, whereas here the shared weights are encrypted as well,
 so each adapter site would carry a ciphertext-by-ciphertext product. The dominant
 cost in that literature is the nonlinearities, which are unchanged, so the added
 cost is the low-rank product per site rather than a different order of magnitude.
 
-\subsection{Choosing Between Models Nobody Can See}
+\subsection{Candidate Selection Under Encryption}
 \label{sec:selection}
 
 \input{figures/selection}
@@ -318,9 +319,9 @@ score per arrangement, the two scores are compared under encryption, and exactly
 one value is decrypted: which arrangement the federation adopts.
 \Cref{fig:selection} shows this, and \cref{alg:select} states it.
 
-\paragraph{Why the obvious rule fails.} The natural procedure is for each client to
+\paragraph{Inadequacy of the held-out vote.} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. This is
-not merely noisy, it estimates the wrong quantity. The arrangement without an
+not a matter of noise: the procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, and the union of the clients' data is the whole training
 set, so pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
@@ -332,7 +333,7 @@ classes the client has never seen. The measurement is systematically optimistic 
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
 chooses wrongly whenever the two differ.
 
-\paragraph{The correction.} Score both arrangements as the expected accuracy of a
+\paragraph{A prior-weighted estimator.} Score both arrangements as the expected accuracy of a
 prediction on an example drawn from the federation's own class distribution,
 \begin{equation}
 \label{eq:estimator}
@@ -375,7 +376,7 @@ except the index of the winner.}
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{What the clients must hold back.} The estimator needs an estimate of
+\paragraph{Requirements on the held-out split.} The estimator needs an estimate of
 accuracy on classes a client has not seen, and its only local proxy is accuracy on
 classes it has barely seen. A held-out set carved uniformly almost never contains a
 class the client holds one or two examples of, so that proxy is unmeasurable. Each
@@ -403,13 +404,13 @@ honest-but-curious: they follow the protocol and may try to infer private
 information from what they observe. Clients may likewise be honest-but-curious and
 may collude.
 
-\paragraph{What the server and the serving party see.} Ciphertexts under the
+\paragraph{View of the server and the serving party.} Ciphertexts under the
 collective public key, the public per-client sample counts, and the evaluation
 keys. Neither holds a decryption key, and by \cref{sec:mhe} neither can decrypt.
 The serving party additionally sees encrypted query features, which it cannot read
 and therefore cannot invert.
 
-\paragraph{What a coalition of clients learns.} Decryption is $\Nc$-out-of-$\Nc$,
+\paragraph{Collusion among clients.} Decryption is $\Nc$-out-of-$\Nc$,
 so any coalition short of all clients, including a coalition of $\Nc-1$ clients
 acting together with the server, cannot decrypt. This is the strongest collusion
 resistance the threshold structure admits, and the design is arranged so that no
@@ -419,7 +420,7 @@ never decrypted, so it cannot be inverted the same way. The per-class totals are
 never decrypted, so a coalition cannot recover the remaining client's class
 histogram.
 
-\paragraph{What a participant can extract by querying.} A client can query the
+\paragraph{Extraction through the query interface.} A client can query the
 served model and receive labels, and enough such queries reconstruct a functional
 copy of the shared head by boundary search. This is a bound on queries, not a
 cryptographic guarantee, and we state it as such. The relevant coalition is again
@@ -431,7 +432,7 @@ composes with the protocol without modification and which we discuss in
 \cref{sec:scope}; we do not evaluate it, and the accuracy figures we report assume
 it is not used.
 
-\paragraph{What the protocol does not cover.} Robustness to actively malicious
+\paragraph{Outside the guarantee.} Robustness to actively malicious
 clients is outside the cryptographic guarantee. A client that uploads a crafted
 displacement can bias the shared head, and because contributions are encrypted the
 server cannot inspect them. \Cref{sec:scope} discusses this.
