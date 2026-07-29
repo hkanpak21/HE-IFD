@@ -100,6 +100,7 @@ func main() {
 		serveTournamentFlag = flag.Bool("serve-tournament", false, "run the Serve-mode LOG-DEPTH tournament argmax (SIMD-packed rotate-and-Max; the QuickMax optimization)")
 		btpKeyFlag          = flag.Bool("btp-keys", false, "measure the one-time bootstrapping key material that lets the serving party refresh locally")
 		commCostFlag        = flag.Bool("comm-cost", false, "measure the communication the protocol needs: key-generation shares, ciphertexts, key-switching shares, and refresh shares")
+		ringSweepFlag       = flag.Bool("ring-sweep", false, "measure the per-operation cost across ring degrees, so the GPU comparison can be made at a matched ring")
 		protocolCostFlag    = flag.Bool("protocol-cost", false, "measure the operations the encrypted-serving protocol adds: ciphertext-by-ciphertext head application, encrypted reciprocal for the head merge, key switch to the querier, and selection scoring")
 	)
 	flag.Parse()
@@ -107,6 +108,10 @@ func main() {
 	// Serve mode (encrypted inference): measure the per-query cost atoms Release
 	// mode does not pay — the collective refresh (multiparty bootstrap) and the
 	// threshold decrypt. See serve.go.
+	if *ringSweepFlag {
+		runRingSweep(*jsonOut)
+		return
+	}
 	if *serveFlag {
 		runServeSuite(*jsonOut)
 		return

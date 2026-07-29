@@ -338,6 +338,29 @@ evaluation under a single key, single-key results carry over, and GPU
 implementations of the same reduction report a full-vocabulary argmax in well under
 a second~\cite{zhang2025nexus}.
 
+\paragraph{Hardware acceleration.} The figures above are single-threaded CPU, and
+the argmax is the only operation slow enough to matter, so the question is what
+specialised hardware does to it. Since the cost of a CKKS operation grows with the
+ring degree, a comparison is only meaningful at a fixed one. Our implementation
+costs $37.3$, $78.1$ and $166.7$\,ms for a ciphertext-by-ciphertext product at ring
+degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $31.7$, $67.1$ and $144.1$\,ms for a
+rotation. Measured on an NVIDIA L4 with a GPU implementation of the same
+primitives at ring degree $2^{16}$, the product costs $30$\,ms and the rotation
+$29.5$\,ms, so the ratio at matched ring degree is about $5$ for both. The ratio
+understates the hardware, because the GPU figures are taken at a deeper level
+budget than ours and a deeper budget makes every operation more expensive.
+
+We stop at the ratio rather than projecting an end-to-end serving latency. The
+argmax is bootstrap-bound, and reported bootstrapping times on GPUs span more than
+two orders of magnitude, from a few milliseconds to tens of seconds, depending on
+the ring degree, the packing, and the quality of the implementation. A single
+projected number chosen from that range would say more about the choice than about
+the protocol. The claim we are willing to make is narrower: the operations this
+protocol needs are the ordinary CKKS primitives, they carry the same acceleration
+those primitives carry anywhere, and nothing in the multiparty setting obstructs
+that, since evaluation under a collectively generated key is identical to
+evaluation under a single key.
+
 \paragraph{Communication.} The protocol is one-shot in the sense
 of \cref{sec:intro}: no intermediate training artifact is ever exposed. It is not
 silent. Key generation precedes it, selection costs a bounded exchange, and serving
@@ -406,16 +429,73 @@ Two distinct bounds apply to this channel, and they should not be conflated. The
 cryptographic and is stated in \cref{prop:server}: the protocol's messages are
 computationally independent of the private data. The second is not cryptographic.
 A client that queries the served model at points of its own choosing can, with
-enough queries, reconstruct a functional copy of the shared head by boundary
-search. Returning only the label rather than the logits denies the linear solve
-that would otherwise recover the head in as many queries as the feature dimension,
-which raises the cost by orders of magnitude but does not make it infinite. We
-therefore state the guarantee as a bound on queries. The relevant coalition is of
-size $\Nc-1$, since a larger one can decrypt outright, so an allowance of $Q$
-queries per client constrains a coalition to $(\Nc-1)Q$ and must be set below the
-extraction cost of the deployment's label space.
+enough queries, reconstruct a functional copy of the shared head. Returning only
+the label rather than the logits denies the linear solve that would otherwise
+recover the head in as many queries as the feature dimension, which raises the
+cost but does not make it infinite. We therefore state the guarantee as a bound on
+queries, and we measure what that bound has to be.
 
-\paragraph{Comparison with a released model.} \tbd
+\paragraph{Cost of extraction.} We give the adversary every advantage the
+protocol admits. It is a participating client, so it computes query features
+itself and may submit an arbitrary vector rather than a real input, and it is
+charged one query per label. It fits a linear model to the labelled queries and we
+score the copy by \emph{fidelity}, the rate at which it agrees with the served
+model on held-out features. \Cref{tab:extract} reports the result.
+
+\begin{table}[t]
+\centering
+\caption{Label-only extraction of the served head: mean fidelity over three seeds
+and both arrangements, against the number of queries spent. The majority column
+is the share of the most common label, which is what a copy achieves for free.}
+\label{tab:extract}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccc}
+\toprule
+Task & $\Cc$ & majority & $10^3$ & $5\!\times\!10^3$ & $2\!\times\!10^4$
+     & $5\!\times\!10^4$ & $2\!\times\!10^5$ \\
+\midrule
+AG-News    & 4  & $0.488$ & $0.635$ & $0.823$ & $0.936$ & $0.973$ & $0.993$ \\
+DBpedia    & 14 & $0.250$ & $0.387$ & $0.612$ & $0.804$ & $0.901$ & $0.971$ \\
+Banking77  & 77 & $0.083$ & $0.174$ & $0.355$ & $0.592$ & $0.755$ & $0.900$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. Those figures track the size of the head rather than
+the task: the head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
+between three and five times that number of queries, with $0.80$ costing roughly
+$1.5$ times and $0.95$ roughly ten times. A deployment can therefore set its
+allowance from $\Cc$ and $d$ without repeating this experiment.
+
+The allowance follows. A coalition of $\Nc-1$ clients, the largest that cannot
+decrypt, commands $(\Nc-1)Q$ queries, so holding it below fidelity $0.90$ at
+$\Nc=10$ requires $Q$ below roughly $1.4\times10^3$ per client on AG-News and
+$2.2\times10^4$ on Banking77. The binding case is the small label space, not the
+large one, which is worth stating plainly because it runs against intuition: a
+head with few rows is cheap to copy. It is also the case in which the shared
+arrangement is preferable (\cref{tab:headline}), so the deployments that gain most
+from the federation are the ones that must meter queries most tightly.
+
+One methodological point. We also ran a boundary-search variant that spends half
+its budget bisecting toward the decision boundary, on the expectation that points
+near a boundary are more informative. It is consistently \emph{worse}, reaching
+$0.592$ against $0.755$ on Banking77 at $5\times10^4$ queries, because a bisection
+chain returns many nearly identical points and a linear fit gains less from them
+than from the same number of independent ones. We report the stronger of the two,
+which is also the simpler.
+
+\paragraph{Comparison with a released model.} The contrast is not a matter of
+degree. A participant holding the model in plaintext has fidelity $1$ at zero
+queries, may read the parameters directly rather than infer them, and is subject
+to no allowance because there is nothing to meter. Granting logits rather than
+labels would be nearly as generous: the head is linear in features the client
+computes itself, so $d+1$ logit queries recover it exactly by linear solve, which
+is $769$ queries here against the $1.2\times10^4$ to $2.0\times10^5$ that labels
+demand. Restricting the answer to the label is therefore what converts extraction
+from a solve into a search, and the query allowance is what prices that search.
 
 \subsection{Comparison with Model Disclosure}
 \label{sec:exp-release}

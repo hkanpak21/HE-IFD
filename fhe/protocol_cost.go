@@ -547,3 +547,34 @@ func repeat(v, n int) []int {
 	}
 	return out
 }
+
+// ---------------------------------------------------------------------------
+// Ring sweep: the CPU side of the GPU comparison.
+//
+// GPU CKKS figures in the literature and in our own measurements are reported
+// at ring degree 2^16, whereas the protocol's shallow operations run at 2^14.
+// Comparing across ring degrees would confound the hardware with the parameter
+// set, so this sweeps the same operations across ring degrees and lets the
+// comparison be made at a matched one.
+func runRingSweep(jsonPath string) {
+	fmt.Println("=== per-operation cost against ring degree (CPU) ===")
+	fmt.Println()
+	var out []protoResult
+	for _, logN := range []int{14, 15, 16} {
+		fmt.Printf("  measuring at ring 2^%d ...\n", logN)
+		r := measureProtocol(10, logN)
+		out = append(out, r)
+		printProto(r)
+	}
+	fmt.Println()
+	fmt.Println("log_n,slots,ct_x_ct_ms,pt_x_ct_ms,add_ms,rotation_ms")
+	for _, r := range out {
+		fmt.Printf("%d,%d,%.3f,%.3f,%.4f,%.3f\n",
+			r.LogN, r.Slots, r.CtxCtMs, r.PtxCtMs, r.AddMs, r.RotMs)
+	}
+	if jsonPath != "" {
+		b, _ := json.MarshalIndent(out, "", "  ")
+		check(os.WriteFile(jsonPath, b, 0o644))
+		fmt.Printf("\nwrote %s\n", jsonPath)
+	}
+}
