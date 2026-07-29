@@ -150,54 +150,78 @@ selected arrangement & $0.718$ & $0.803$ & $0.870$ & \\
 \subsection{Comparison with One-Shot Federated Learning}
 \label{sec:exp-peers}
 
-\paragraph{Claim.} On a partition matched to the one-shot literature's own
-setting, the protocol reaches accuracy competitive with plaintext one-shot methods
-while additionally protecting the contributions and withholding the model.
+\paragraph{Claim.} The protocol gives up no accuracy for protecting the
+contributions, where the differentially private one-shot methods give up an amount
+that grows as their budget tightens, and it withholds the model at a cost those
+methods do not incur because they do not offer the property.
 
 The peer group evaluates on different tasks from ours, so we ran our protocol on
 theirs rather than restate numbers from incomparable setups. We adopt the
 configuration DENSE reports~\cite{zhang2022dense}, CIFAR-10 across $\Nc=5$ clients
 under a Dirichlet partition, and report the arrangement our estimator selects.
-\Cref{tab:peers} places the two side by side.
+
+\paragraph{Why absolute accuracy does not settle the comparison.} On that
+partition our selected arrangement reaches $0.948$ at $\alpha=0.1$, against the
+$0.503$ that DENSE reports and the $0.406$ of FedDF. We do not present that margin
+as a result. The methods above train a ResNet-18 from scratch, whereas every client
+here fine-tunes a frozen public ViT-B/16, and the representation accounts for
+essentially all of the difference. Any of these methods would gain comparably from
+the same backbone, and running them on it is not a comparison either paper's
+authors chose. Absolute accuracy across papers therefore measures the backbone.
+
+What does compare across papers is the accuracy each method gives up for its
+privacy mechanism, because every paper measures that against its own unprotected
+baseline, on its own architecture. \Cref{tab:peers} reports the comparison in that
+form.
 
 \begin{table}[t]
 \centering
-\caption{CIFAR-10 across $\Nc=5$ clients, the configuration of~\cite{zhang2022dense}.
-Prior figures are as published; ours are the mean over three seeds of the
-arrangement selected without decrypting either. The architectures differ, and
-\cref{sec:exp-peers} states what that accounts for.}
+\caption{The accuracy each method gives up for its privacy mechanism, measured in
+each case against that method's own unprotected baseline on its own architecture,
+so that the figures do not depend on the backbone. Prior figures are as published.
+FedAUXfdp is CIFAR-10 at $\Nc=20$, $\alpha=0.16$ on ShuffleNet, with the
+class-model mechanism disabled for the baseline~\cite{hoech2022fedauxfdp}; ours is
+CIFAR-10 at $\Nc=5$, $\alpha=0.1$.}
 \label{tab:peers}
 \footnotesize
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcc}
 \toprule
-Method & Protects contribution & $\alpha=0.1$ & $\alpha=0.3$ \\
+Method & Mechanism & Baseline & Cost \\
 \midrule
-FedAvg, one round        & no & $0.239$ & $0.277$ \\
-FedDF~\cite{lin2020feddf}       & no & $0.406$ & $0.468$ \\
-DENSE~\cite{zhang2022dense}     & no & $0.503$ & $0.598$ \\
+DENSE~\cite{zhang2022dense}    & none            & --- & --- \\
+FedDF~\cite{lin2020feddf}      & none            & --- & --- \\
 \midrule
-this work, selected      & encryption & $\mathbf{0.948}$ & $\mathbf{0.950}$ \\
-this work, disclosed     & reference  & $0.955$ & $0.965$ \\
+FedAUXfdp, $\varepsilon=1.0$   & DP              & $0.752$ & $0.006$ \\
+FedAUXfdp, $\varepsilon=0.5$   & DP              & $0.752$ & $0.029$ \\
+FedAUXfdp, $\varepsilon=0.1$   & DP              & $0.752$ & $0.413$ \\
+FedAUXfdp, $\varepsilon=0.01$  & DP              & $0.752$ & $0.626$ \\
+\midrule
+this work, contribution        & encryption      & $0.955$ & $\mathbf{0.000}$ \\
+this work, withheld model      & encryption      & $0.955$ & $\mathbf{0.007}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The margin is large, and most of it is not attributable to the protocol. The
-methods above train a ResNet-18 from scratch, whereas every client here fine-tunes
-a frozen public ViT-B/16, and a pretrained representation accounts for the greater
-part of the difference. The comparison establishes something narrower and more
-useful: at accuracy well above what the plaintext one-shot literature reports on
-this partition, the protocol still exposes no training-time quantity, keeps every
-contribution encrypted, and never produces a plaintext model. Withholding the
-model costs $0.007$ at $\alpha=0.1$ and $0.015$ at $\alpha=0.3$ against the
-disclosed reference on this task, which is smaller than on any task in
-\cref{tab:headline}.
+Three readings follow, and the first two are the ones that carry the argument.
+DENSE and FedDF have no entry because they protect nothing: their single
+contribution is exposed in plaintext, so they give up no accuracy and offer no
+guarantee. FedAUXfdp does protect its contribution, and its cost is governed by the
+budget: negligible at $\varepsilon=1.0$, and $0.413$ at $\varepsilon=0.1$, which is
+where the guarantee becomes meaningful. Our contribution is protected
+cryptographically, and the cost is zero by construction rather than by measurement,
+since the decrypted result matches the plaintext computation to the encoding
+precision of the scheme.
 
-Two figures in the table bound the federation's own contribution, independently of
-the backbone. A client working alone on this partition reaches $0.364$ at
-$\alpha=0.1$, against $0.948$ for the selected arrangement, so the federated head
-supplies the difference. That gap is what the protocol buys, and it is measured on
-the same backbone in both cases.
+The third row has no counterpart in any of these methods. Every one of them ends by
+handing a plaintext model to the participants, so the question of what withholding
+it costs does not arise. Here it costs $0.007$ on this task, and $0.03$ to $0.14$
+across \cref{tab:headline}.
+
+One figure bounds the federation's own contribution independently of the backbone,
+since it is measured on the same backbone at both ends. A client working alone on
+this partition reaches $0.364$, against $0.948$ for the selected arrangement. That
+difference is what the protocol supplies.
 
 \subsection{Accuracy of the Selection Rule}
 \label{sec:exp-select}
