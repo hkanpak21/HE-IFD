@@ -169,57 +169,34 @@ essentially all of the difference. Any of these methods would gain comparably fr
 the same backbone, and running them on it is not a comparison either paper's
 authors chose. Absolute accuracy across papers therefore measures the backbone.
 
-What does compare across papers is the accuracy each method gives up for its
-privacy mechanism, because every paper measures that against its own unprotected
-baseline, on its own architecture. \Cref{tab:peers} reports the comparison in that
-form.
+\paragraph{The comparison that does hold.} What compares across papers is the
+accuracy each method gives up for its privacy mechanism, since every paper measures
+that against its own unprotected baseline on its own architecture, and the backbone
+cancels. Read that way the peer group separates into three cases.
 
-\begin{table}[t]
-\centering
-\caption{The accuracy each method gives up for its privacy mechanism, measured in
-each case against that method's own unprotected baseline on its own architecture,
-so that the figures do not depend on the backbone. Prior figures are as published.
-FedAUXfdp is CIFAR-10 at $\Nc=20$, $\alpha=0.16$ on ShuffleNet, with the
-class-model mechanism disabled for the baseline~\cite{hoech2022fedauxfdp}; ours is
-CIFAR-10 at $\Nc=5$, $\alpha=0.1$.}
-\label{tab:peers}
-\footnotesize
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{llcc}
-\toprule
-Method & Mechanism & Baseline & Cost \\
-\midrule
-DENSE~\cite{zhang2022dense}    & none            & --- & --- \\
-FedDF~\cite{lin2020feddf}      & none            & --- & --- \\
-\midrule
-FedAUXfdp, $\varepsilon=1.0$   & DP              & $0.752$ & $0.006$ \\
-FedAUXfdp, $\varepsilon=0.5$   & DP              & $0.752$ & $0.029$ \\
-FedAUXfdp, $\varepsilon=0.1$   & DP              & $0.752$ & $0.413$ \\
-FedAUXfdp, $\varepsilon=0.01$  & DP              & $0.752$ & $0.626$ \\
-\midrule
-this work, contribution        & encryption      & $0.955$ & $\mathbf{0.000}$ \\
-this work, withheld model      & encryption      & $0.955$ & $\mathbf{0.007}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+DENSE and FedDF give up nothing, because they protect nothing. Their single
+contribution is exposed in plaintext, and by the evidence of
+\cref{sec:related-leakage} that contribution is the quantity worth attacking.
 
-Three readings follow, and the first two are the ones that carry the argument.
-DENSE and FedDF have no entry because they protect nothing: their single
-contribution is exposed in plaintext, so they give up no accuracy and offer no
-guarantee. FedAUXfdp does protect its contribution, and its cost is governed by the
-budget: negligible at $\varepsilon=1.0$, and $0.413$ at $\varepsilon=0.1$, which is
-where the guarantee becomes meaningful. Our contribution is protected
-cryptographically, and the cost is zero by construction rather than by measurement,
-since the decrypted result matches the plaintext computation to the encoding
-precision of the scheme.
+FedAUXfdp does protect its contribution, and its cost is governed by the budget.
+Against its own undefended baseline of $0.752$ on CIFAR-10 at $\Nc=20$ and
+$\alpha=0.16$, the published figures give up $0.006$ at $\varepsilon=1.0$ and
+$0.029$ at $\varepsilon=0.5$, which is affordable, then $0.413$ at
+$\varepsilon=0.1$ and $0.626$ at $\varepsilon=0.01$~\cite{hoech2022fedauxfdp}. The
+mechanism is inexpensive only while the budget is loose, and the accuracy is spent
+on the artifact that is released.
 
-The third row has no counterpart in any of these methods. Every one of them ends by
-handing a plaintext model to the participants, so the question of what withholding
-it costs does not arise. Here it costs $0.007$ on this task, and $0.03$ to $0.14$
-across \cref{tab:headline}.
+Our contribution is protected cryptographically, and the cost is zero by
+construction rather than by measurement, since the decrypted result matches the
+plaintext computation to the encoding precision of the scheme. Withholding the
+model is a separate charge, and it is one no method above incurs, because every one
+of them ends by handing a plaintext model to the participants. It costs $0.007$ on
+this task and $0.03$ to $0.14$ across \cref{tab:headline}. The comparison to draw
+is therefore between a mechanism whose price rises as its guarantee tightens and one
+whose price is fixed and paid for a different property.
 
 One figure bounds the federation's own contribution independently of the backbone,
-since it is measured on the same backbone at both ends. A client working alone on
+because it is measured on the same backbone at both ends. A client working alone on
 this partition reaches $0.364$, against $0.948$ for the selected arrangement. That
 difference is what the protocol supplies.
 
