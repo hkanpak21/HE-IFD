@@ -131,43 +131,85 @@ queries, because `d+1 = 769` suffice for an exact solve. The gap between the
 deployed protocol and the obvious alternative is not a factor of two; it is a
 search versus a solve.
 
-## Result 2: output noise is a poor defence
+## Result 2: output noise is not a usable defence
 
-Randomised response on the label (a clean `ε`-local-DP randomiser: return the
-true label with probability `e^ε/(e^ε+C−1)`, else uniform among the rest), and
-the Gaussian mechanism on clipped logits for the probability case.
+Two mechanisms, both applied to the answer rather than to the training data:
 
-AG-News, seed 42, shared-head arrangement. `task_acc` is the accuracy an honest
-user gets from the *defended* model, which is the number that makes the
-trade-off legible:
+- **label**: randomised response, a clean `ε`-local-DP randomiser — return the
+  true label with probability `e^ε/(e^ε+C−1)`, else uniform among the other
+  `C−1`.
+- **probs**: logits clipped to the 99th percentile and perturbed by the Gaussian
+  mechanism at `(ε, δ=10⁻⁵)`.
 
-| access | ε | task_acc | fid @ 2·10^4 | fid @ 10^5 |
-|---|---|---|---|---|
-| label | ∞ | 0.809 | 0.946 | 0.990 |
-| label | 2.0 | 0.586 | 0.778 | 0.894 |
-| label | 0.5 | 0.326 | 0.430 | 0.597 |
-| probs | ∞ | 0.809 | 1.000 | 1.000 |
+`task_acc` is what an honest user gets from the **defended** model. Both columns
+must be read together: a defence that stops extraction by destroying the model is
+not a defence. Mean over three seeds.
 
-**The trade-off is bad.** Going from `ε=∞` to `ε=2` costs 0.22 of accuracy and
-buys a fall in fidelity from 0.99 to 0.89 — the honest user pays far more than
-the thief does. At `ε=0.5` the model is barely above chance and the adversary
-still reaches 0.60.
+| task | access | ε | task_acc | fid @2·10⁴ | fid @5·10⁴ | fid @10⁵ |
+|---|---|---|---|---|---|---|
+| ag_news (C=4) | label | ∞ | 0.649 | 0.946 | 0.978 | 0.989 |
+| | label | 8 | 0.648 | 0.914 | 0.975 | 0.986 |
+| | label | 4 | 0.620 | 0.892 | 0.938 | 0.954 |
+| | label | 2 | 0.494 | 0.775 | 0.852 | 0.889 |
+| | label | 1 | 0.372 | 0.594 | 0.702 | 0.774 |
+| | label | 0.5 | 0.303 | 0.427 | 0.518 | 0.598 |
+| | probs | ∞ | 0.649 | **1.000** | 1.000 | 1.000 |
+| | probs | 8 | 0.266 | 0.349 | 0.416 | 0.484 |
+| | probs | 2 | 0.250 | 0.266 | 0.283 | 0.307 |
+| dbpedia (C=14) | label | ∞ | 0.789 | 0.806 | 0.914 | 0.956 |
+| | label | 8 | 0.785 | 0.728 | 0.895 | 0.946 |
+| | label | 4 | 0.640 | 0.629 | 0.768 | 0.831 |
+| | label | 2 | 0.297 | 0.321 | 0.458 | 0.571 |
+| | label | 1 | 0.150 | 0.146 | 0.208 | 0.268 |
+| | probs | ∞ | 0.787 | **1.000** | 1.000 | 1.000 |
+| | probs | 8 | 0.085 | 0.128 | 0.164 | 0.211 |
+| banking77 (C=77) | label | ∞ | 0.206 | 0.444 | 0.642 | 0.777 |
+| | label | 8 | 0.203 | 0.387 | 0.425 | 0.722 |
+| | label | 4 | 0.092 | 0.101 | 0.243 | 0.364 |
+| | label | 2 | 0.028 | 0.025 | 0.037 | 0.052 |
+| | probs | ∞ | 0.185 | **1.000** | 1.000 | 1.000 |
+| | probs | 8 | 0.012 | 0.017 | 0.020 | 0.023 |
 
-The reason is structural: randomised response corrupts every answer
-independently, so the honest user eats the noise on every single query while the
-adversary averages it away over tens of thousands. Noise on an i.i.d. channel is
-exactly the thing a large sample defeats.
+### Reading it
 
-**Conclusion for the paper's scope section:** the query allowance is the right
-control and output perturbation is not a substitute for it. Differential privacy
-remains orthogonal and compatible — it protects the training data, which is a
-different thing from protecting the model — and our existing wording already
-says so. These numbers support that wording rather than changing it.
+**Returning a distribution is indefensible, with or without noise.** Undefended,
+fidelity is 1.000 at every budget — one least-squares solve. Add enough noise to
+bring extraction down and the model goes with it: on DBpedia `ε=8` leaves the
+honest user at 0.085 against an undefended 0.787, which is below the majority
+class. The Gaussian mechanism on a `C`-dimensional logit vector has L2
+sensitivity growing as `√C`, so the noise needed scales with the label space
+while the signal does not. There is no operating point where probabilities are
+worth returning.
 
-There is one framing worth keeping: with an `ε`-LDP answer and `Q` queries,
-composition gives `Qε`, so **the query allowance and a DP budget are the same
-idea measured in different units.** That is a nicer justification for the
-allowance than "set it below the extraction cost", and we may want it in §5.6.
+**Randomised response on labels buys a real reduction at a bad exchange rate.**
+On AG-News, `ε=2` costs 0.155 of accuracy and moves the adversary from 0.989 to
+0.889. The honest user pays about one accuracy point per point of fidelity
+denied, and pays it on *every* query, while the adversary averages the noise away
+over tens of thousands. Noise on an i.i.d. channel is precisely what a large
+sample defeats.
+
+**The damage grows with the label space**, because randomised response keeps the
+true label with probability `e^ε/(e^ε+C−1)`. At `C=4, ε=4` that is 0.95, so the
+cost is mild; at `C=77, ε=4` it is 0.42, so most answers are wrong and accuracy
+falls from 0.206 to 0.092 — while fidelity is still 0.364, well above the 0.083
+majority baseline. The model is destroyed before extraction is stopped.
+
+**No configuration is attractive.** Across all eighteen (task, mechanism, ε)
+cells there is none that pushes fidelity near the majority baseline while
+retaining usable accuracy. The cheap settings (`ε=8`) barely move the adversary;
+the settings that move the adversary are not deployable.
+
+### Conclusion for the paper
+
+This supports the wording already in §Scope rather than changing it: **the query
+allowance is the control, and output perturbation is not a substitute for it.**
+Differential privacy remains orthogonal and compatible — it protects the training
+data, which is a different problem from protecting the model.
+
+One framing is worth promoting into §5.6 if we want it: with an `ε`-LDP answer
+and `Q` queries, composition gives `Qε`, so **the query allowance and a privacy
+budget are the same quantity in different units.** That is a better justification
+for metering than "set it below the extraction cost".
 
 ## Result 3: the clever attack is worse
 
