@@ -525,8 +525,14 @@ to no allowance because there is nothing to meter. Granting logits rather than
 labels would be nearly as generous: the head is linear in features the client
 computes itself, so $d+1$ logit queries recover it exactly by linear solve, which
 is $769$ queries here against the $1.2\times10^4$ to $2.0\times10^5$ that labels
-demand. Restricting the answer to the label is therefore what converts extraction
+demand. We confirm this directly, recovering the head to fidelity $1.000$ from
+$10^3$ answers when the served interface returns a distribution instead of an
+index. Restricting the answer to the label is therefore what converts extraction
 from a solve into a search, and the query allowance is what prices that search.
+The same conclusion has been reached from the other direction in deployment, where
+recovering a production model's final projection layer was made materially harder
+by withdrawing exactly the richer outputs this protocol never
+offers~\cite{carlini2024stealing}.
 
 \subsection{Comparison with Model Disclosure}
 \label{sec:exp-release}

@@ -246,12 +246,17 @@ what that costs.
 construction. The head is a linear map on features the client computes itself, so a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
-dimension~\cite{tramer2016stealing}. Returning only the index of the largest entry
-denies this and reduces an adversary to label-only boundary
-search~\cite{lowdmeek2005,choquettechoo2021labelonly}, which is far more
-expensive. It does not make extraction impossible, and \cref{sec:threat} states
-the resulting bound honestly, as a bound on queries rather than a cryptographic
-hardness claim.
+dimension~\cite{tramer2016stealing}. This is not a hypothetical concern: the same
+object, the final projection layer of a production transformer, has been recovered
+through a deployed interface for a few tens of dollars, using an interface that
+exposed log-probabilities and a logit bias, and the operators' response was to
+restrict that combination~\cite{carlini2024stealing}. Returning only the index of
+the largest entry is the same restriction imposed by construction rather than by
+policy. It places an adversary in the hard-label setting, where functionally
+equivalent extraction is markedly harder and has only recently been achieved for
+general networks~\cite{chen2024hardlabel,carlini2025hardlabel}. It does not make
+extraction impossible, and \cref{sec:threat} states the resulting bound honestly,
+as a bound on queries rather than a cryptographic hardness claim.
 
 \paragraph{Directed decryption.} Decryption needs a quorum, so
 other clients necessarily participate in producing an answer to a question they did
