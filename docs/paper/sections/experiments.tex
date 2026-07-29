@@ -338,28 +338,59 @@ evaluation under a single key, single-key results carry over, and GPU
 implementations of the same reduction report a full-vocabulary argmax in well under
 a second~\cite{zhang2025nexus}.
 
+\paragraph{Threshold decryption against the size of the federation.} Producing a
+label requires a share from every client, so the cost of the final step grows with
+the federation. \Cref{tab:nparty} reports it. Both the time and the traffic are
+linear in $\Nc$, at $18$\,ms and $2.0$\,MiB per participating client, because each
+contributes one independent share and the serving party only sums them. The
+encrypted reciprocal grows more slowly, since only its two refreshes involve the
+clients.
+
+\begin{table}[t]
+\centering
+\caption{Cost of the $\Nc$-out-of-$\Nc$ steps against the size of the federation,
+at ring degree $2^{14}$. The key switch is the operation that returns a label to
+the querier; it is paid per query. The reciprocal is paid once per aggregation.}
+\label{tab:nparty}
+\footnotesize
+\begin{tabular}{lccc}
+\toprule
+ & $\Nc=5$ & $\Nc=10$ & $\Nc=20$ \\
+\midrule
+key switch to the querier & $95$\,ms & $181$\,ms & $361$\,ms \\
+key-switching shares      & $10.0$\,MiB & $20.0$\,MiB & $40.0$\,MiB \\
+encrypted reciprocal      & $3.16$\,s & $4.21$\,s & $6.30$\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \paragraph{Hardware acceleration.} The figures above are single-threaded CPU, and
 the argmax is the only operation slow enough to matter, so the question is what
 specialised hardware does to it. Since the cost of a CKKS operation grows with the
-ring degree, a comparison is only meaningful at a fixed one. Our implementation
+ring degree, the comparison is only meaningful at a fixed one. Our implementation
 costs $37.3$, $78.1$ and $166.7$\,ms for a ciphertext-by-ciphertext product at ring
 degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $31.7$, $67.1$ and $144.1$\,ms for a
-rotation. Measured on an NVIDIA L4 with a GPU implementation of the same
-primitives at ring degree $2^{16}$, the product costs $30$\,ms and the rotation
-$29.5$\,ms, so the ratio at matched ring degree is about $5$ for both. The ratio
-understates the hardware, because the GPU figures are taken at a deeper level
-budget than ours and a deeper budget makes every operation more expensive.
+rotation. Measured with a CUDA implementation of the same
+primitives~\cite{yang2024phantom} on an NVIDIA L4 at ring degree $2^{16}$, the
+product costs $30$\,ms and the rotation $29.5$\,ms, so the ratio at matched ring
+degree is about $5$ for both. Two things make that a conservative figure. The GPU numbers are taken at
+a deeper level budget than ours, and a deeper budget makes every operation more
+expensive. They are also measured on a mid-range inference card, whereas the
+GPU homomorphic-encryption libraries are tuned for current datacentre parts, on
+which published figures are substantially better.
 
-We stop at the ratio rather than projecting an end-to-end serving latency. The
-argmax is bootstrap-bound, and reported bootstrapping times on GPUs span more than
-two orders of magnitude, from a few milliseconds to tens of seconds, depending on
-the ring degree, the packing, and the quality of the implementation. A single
-projected number chosen from that range would say more about the choice than about
-the protocol. The claim we are willing to make is narrower: the operations this
-protocol needs are the ordinary CKKS primitives, they carry the same acceleration
-those primitives carry anywhere, and nothing in the multiparty setting obstructs
-that, since evaluation under a collectively generated key is identical to
-evaluation under a single key.
+The projection from a per-primitive ratio to the protocol is unusually safe here,
+and the reason is the shape of the circuit rather than the quality of the
+measurement. Serving a query is a fixed sequence: one ciphertext-by-ciphertext
+product, then $\lceil\log_2\Cc\rceil$ rounds of comparison, then one key switch.
+There is no data-dependent control flow, no attention pattern whose cost depends on
+the input, and no scheduling problem across layers, so a speedup on the primitives
+carries through to the whole rather than being absorbed by effects that dominate in
+deep encrypted inference. We none the less stop at the ratio rather than quoting an
+end-to-end accelerated latency, because the argmax is bootstrap-bound and reported
+bootstrapping times on GPUs span more than two orders of magnitude with the ring
+degree, the packing and the implementation. A single number drawn from that range
+would say more about which number was drawn than about this protocol.
 
 \paragraph{Communication.} The protocol is one-shot in the sense
 of \cref{sec:intro}: no intermediate training artifact is ever exposed. It is not
