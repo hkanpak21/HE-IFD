@@ -370,10 +370,9 @@ specialised hardware does to it. Since the cost of a CKKS operation grows with t
 ring degree, the comparison is only meaningful at a fixed one. Our implementation
 costs $37.3$, $78.1$ and $166.7$\,ms for a ciphertext-by-ciphertext product at ring
 degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $31.7$, $67.1$ and $144.1$\,ms for a
-rotation. Measured with a CUDA implementation of the same
-primitives~\cite{yang2024phantom} on an NVIDIA L4 at ring degree $2^{16}$, the
-product costs $30$\,ms and the rotation $29.5$\,ms, so the ratio at matched ring
-degree is about $5$ for both. Two things make that a conservative figure. The GPU numbers are taken at
+rotation. Microbenchmarks of the same primitives under a CUDA implementation of
+CKKS, at ring degree $2^{16}$, put the product at $30$\,ms and the rotation at
+$29.5$\,ms, so the ratio at matched ring degree is about $5$ for both. Two things make that a conservative figure. The GPU numbers are taken at
 a deeper level budget than ours, and a deeper budget makes every operation more
 expensive. They are also measured on a mid-range inference card, whereas the
 GPU homomorphic-encryption libraries are tuned for current datacentre parts, on
