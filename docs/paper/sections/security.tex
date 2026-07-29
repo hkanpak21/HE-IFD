@@ -1,0 +1,196 @@
+\section{Security}
+\label{sec:security}
+
+This section states what the protocol guarantees. \Cref{sec:ideal} gives an
+ideal functionality, \cref{sec:semihonest} proves that the protocol realizes it
+against semi-honest parties, and \cref{sec:malicious} bounds what a malicious
+coalition learns about an honest client's data. \Cref{sec:inherent} separates
+the guarantees the cryptography provides from the leakage the task itself
+carries.
+
+\subsection{The Ideal Functionality}
+\label{sec:ideal}
+
+We describe what a trusted party would do, so that the protocol can be measured
+against it. The functionality $\Fhe$ interacts with $\Nc$ clients, an
+aggregation server, and a serving party.
+
+\begin{description}
+\item[Training.] Each client $j$ sends its dataset $\Dj$. The functionality runs
+  the local training of \cref{alg:train} and forms the shared head $\thstar$ of
+  \cref{eq:aggregate}. It stores $\thstar$ and sends it to no party.
+\item[Selection.] The functionality computes the estimator of
+  \cref{eq:estimator} for both arrangements and announces the index of the
+  larger. It announces nothing else.
+\item[Serving.] On input $(\mathsf{query},x)$ from client $j$, if that client
+  has spent fewer than $Q$ queries, the functionality increments its counter and
+  returns $\hat y = \arg\max_c (\thstar\,\varphi_j(x))_c$ to client $j$ alone.
+  Otherwise it returns $\bot$.
+\end{description}
+
+\noindent The functionality also reveals a fixed leakage $\Leak$ to the
+adversary: the public parameters, the per-client sample counts $\nj$, and the
+index the selection step announces. We write the counts into the leakage because
+the protocol uses them as public scalars, and we prove security relative to
+that.
+
+Three properties of $\Fhe$ deserve statement, because they are what the protocol
+must reproduce. No party ever holds $\thstar$. The only value the whole
+federation learns is one index. A client learns the labels it asks for, and
+nothing else, up to its allowance.
+
+\subsection{Security Against Semi-Honest Parties}
+\label{sec:semihonest}
+
+\begin{definition}[Semi-honest security]
+\label{def:semihonest}
+Let $\mathcal{A}$ corrupt a set of parties that may contain the server, the
+serving party, and at most $\Nc-1$ clients. Write
+$\mathsf{view}_{\mathcal{A}}^{\Pi}(\Dset)$ for the corrupted parties' joint view
+of a protocol run on datasets $\Dset$. The protocol $\Pi$ securely realizes
+$\Fhe$ with leakage $\Leak$ if there is a probabilistic polynomial-time
+simulator $\mathcal{S}$ such that, for every $\Dset$,
+\[
+  \mathsf{view}_{\mathcal{A}}^{\Pi}(\Dset)
+  \;\stackrel{c}{\approx}\;
+  \mathcal{S}\big(\Leak,\ \{\Dj\}_{j\ \mathrm{corrupt}},\ \mathsf{out}_{\mathcal{A}}\big),
+\]
+where $\mathsf{out}_{\mathcal{A}}$ collects the answers $\Fhe$ returns to the
+corrupted clients.
+\end{definition}
+
+The simulator receives the answers because the protocol delivers them by
+construction. A definition that withheld them would be unachievable, and the
+resulting theorem would say nothing about a system that answers questions.
+
+\begin{theorem}[Semi-honest security]
+\label{thm:semihonest}
+Assume the multiparty CKKS scheme is IND-CPA secure and its decryption is
+$\Nc$-out-of-$\Nc$. Then the protocol securely realizes $\Fhe$ with leakage
+$\Leak$ against any semi-honest adversary corrupting the server, the serving
+party, and at most $\Nc-1$ clients, in the sense of \cref{def:semihonest}.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The simulator is given $\Leak$, the corrupted clients' datasets, and the answers
+the corrupted clients receive. It proceeds in three parts.
+
+\emph{Setup.} The simulator runs the distributed key generation with the
+corrupted parties, playing the honest clients on uniformly chosen shares. The
+transcript of that protocol is simulatable by the security of the key-generation
+protocol, and the resulting collective public key is distributed identically.
+
+\emph{Training.} For each honest client the simulator sends an encryption of
+zero in place of $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$. A hybrid
+argument replaces the honest ciphertexts one at a time. Each neighbouring pair
+of hybrids is indistinguishable by IND-CPA, since the adversary holds no
+decryption key and, by the threshold structure, a coalition of at most $\Nc-1$
+clients cannot assemble one. Every later value the server computes, including
+the encrypted reciprocal and $\mathsf{Enc}(\thstar)$, is a deterministic
+function of those ciphertexts and of public scalars, so the simulator computes
+them exactly as the server does.
+
+\emph{Selection and serving.} The selection step decrypts one value. The
+simulator takes that index from $\Leak$ and produces the collective
+key-switching transcript for it by the simulator of the key-switching protocol.
+For each query of a corrupted client, the simulator holds the answer in
+$\mathsf{out}_{\mathcal{A}}$ and simulates the key switch to that client in the
+same way. Queries by honest clients are switched to keys the adversary does not
+hold, so their transcripts are simulated as key switches of encryptions of zero.
+
+Composing the three parts gives a view computationally indistinguishable from
+the real one.
+\end{proof}
+
+\subsection{Input Privacy Against a Malicious Coalition}
+\label{sec:malicious}
+
+\Cref{thm:semihonest} assumes every party follows the protocol. We now ask what
+a coalition that deviates can learn about the data of a client that does not.
+We bound what the adversary learns about honest inputs. We do not claim
+correctness: a client that uploads a crafted displacement can bias the shared
+head, and \cref{sec:scope} discusses that separately.
+
+\begin{definition}[Content game]
+\label{def:contentgame}
+The adversary $\mathcal{A}$ corrupts the server, the serving party, and $\Nc-1$
+clients. One client $h$ stays honest.
+\begin{enumerate}
+\item $\mathcal{A}$ outputs two datasets $D_0$ and $D_1$ with $|D_0|=|D_1|$.
+\item The challenger samples $b\in\{0,1\}$ and gives $D_b$ to client $h$.
+\item The protocol runs. $\mathcal{A}$ may deviate arbitrarily, and may query the
+  served model up to the allowance of every client it controls.
+\item $\mathcal{A}$ outputs $b'$. Its advantage is
+  $|\Pr[b'=b]-\tfrac12|$.
+\end{enumerate}
+\end{definition}
+
+The equal-size restriction is necessary rather than cosmetic. The per-client
+sample counts are public, so an adversary free to choose datasets of different
+sizes reads the answer off the counts without attacking anything.
+
+\begin{theorem}[Input privacy]
+\label{thm:malicious}
+Assume the conditions of \cref{thm:semihonest}, and assume further that every
+party follows the key-switching protocol, deviating only in the values it
+uploads and the queries it asks. Then the advantage of $\mathcal{A}$ in
+\cref{def:contentgame} is at most $\negl(\lambda)+\delta(Q_{\mathrm{tot}})$,
+where $Q_{\mathrm{tot}}=(\Nc-1)Q$ and $\delta$ is the advantage available from
+$Q_{\mathrm{tot}}$ label queries to the served model.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The adversary's view consists of the key-generation transcript, the honest
+client's uploaded ciphertexts, the values the server computes, the key-switching
+transcripts, and the answers to its own queries. The first four are independent
+of $b$ up to $\negl(\lambda)$, by the hybrid argument of
+\cref{thm:semihonest}: the honest ciphertexts are indistinguishable from
+encryptions of zero, and every other value is a function of them and of public
+scalars. Deviating in the uploaded values does not help, because the adversary
+already chooses those values in the real protocol and they carry no dependence
+on $b$.
+
+What remains is the answers. These do depend on $b$, because $\thstar$ depends
+on client $h$'s displacement. The dependence is exactly the dependence of a
+prediction interface on its training data, and it is bounded by what
+$Q_{\mathrm{tot}}$ label queries reveal, which is $\delta(Q_{\mathrm{tot}})$ by
+definition.
+\end{proof}
+
+\paragraph{The assumption on key switching, and why it is needed.} The theorem
+assumes the coalition follows the key-switching protocol. Without that
+assumption the guarantee fails, and the failure is not subtle. Decryption is a
+protocol the clients run on a ciphertext the serving party presents. A coalition
+that presents a ciphertext of its own choosing, rather than the output of
+\cref{alg:serve}, can ask the honest client to help decrypt any value it likes,
+including a row of $\thstar$. The honest client would then supply a share for a
+computation the protocol never prescribed.
+
+Closing this needs the honest client to check what it helps to decrypt, and the
+value in question is encrypted, so the check cannot be a comparison. Two routes
+are compatible with the construction. The serving party can prove in zero
+knowledge that the ciphertext is the output of the prescribed circuit on
+committed inputs. Alternatively, verifiable homomorphic encryption can certify
+the evaluation~\cite{viand2023verifiable}. We implement neither, and we state
+the assumption rather than leave it implicit.
+
+\subsection{What the Cryptography Does Not Cover}
+\label{sec:inherent}
+
+\Cref{thm:semihonest} shows the protocol reveals no more than $\Fhe$ reveals.
+That leaves the question of what $\Fhe$ itself reveals, and the answer is not
+nothing.
+
+$\Fhe$ answers queries. Answers carry information about $\thstar$, and enough of
+them reconstruct it. \Cref{sec:exp-leak} measures the rate at three to five
+queries per parameter of the shared map for a functional copy. This is a
+property of the functionality, not of our instantiation of it. Any protocol that
+realizes $\Fhe$ inherits it, and no cryptographic assumption removes it, because
+the leakage is the service the functionality provides.
+
+Stating it this way separates two claims that are easy to confuse. The
+cryptographic claim is that the protocol adds nothing to the leakage of $\Fhe$.
+The operational claim is that $\Fhe$'s own leakage is bounded by the query
+allowance $Q$. The first rests on IND-CPA. The second rests on a measurement and
+on a deployment's ability to meter queries, and \cref{sec:exp-leak} reports both
+the measurement and the resulting bound on $Q$.

@@ -4,6 +4,10 @@
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{amsthm}
 \newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{algorithm}
@@ -51,6 +55,12 @@
 \newcommand{\thstar}{\theta^{\star}}                 % aggregated global model
 \newcommand{\Kpc}{K_{\mathrm{pc}}}                   % samples per class per client
 \newcommand{\KL}{\mathrm{KL}}
+
+% security macros
+\newcommand{\Fhe}{\mathcal{F}}                       % ideal functionality
+\newcommand{\Leak}{\mathcal{L}}                      % leakage the functionality allows
+\newcommand{\Dset}{\{\Dj\}_{j=1}^{\Nc}}              % all client datasets
+\newcommand{\negl}{\mathrm{negl}}                    % negligible function
 
 % DRAFT placeholders (replace when the runs land; \tbd marks a pending number)
 \newcommand{\tbd}{{\color{red}\textbf{??}}}
@@ -118,6 +128,7 @@ multiparty computation, privacy-preserving machine learning.
 \input{sections/intro}
 \input{sections/related}
 \input{sections/method}
+\input{sections/security}
 \input{sections/experiments}
 \input{sections/conclusion}
 

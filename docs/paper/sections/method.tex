@@ -442,46 +442,11 @@ clients is outside the cryptographic guarantee. A client that uploads a crafted
 displacement can bias the shared head, and because contributions are encrypted the
 server cannot inspect them. \Cref{sec:scope} discusses this.
 
-\subsection{Security}
-\label{sec:security}
-
-The contributions are protected cryptographically rather than by perturbation. The
-aggregation of \cref{eq:aggregate} runs entirely under multiparty CKKS, so the
-displacements are never available in plaintext to the server or to any coalition
-short of all clients, and they are protected without noise. The cryptographic layer
-therefore costs no accuracy, which is the point on which this design departs from
-differentially private one-shot federated learning.
-
-Let the view of the honest-but-curious server be everything it receives: the
-collective public key, the public weights and the public initialiser, the client
-ciphertexts, and the homomorphically computed result. Write
-$\mathsf{view}_{\mathrm{srv}}(\{\Dj\})$ for this view as a function of the private
-datasets.
-
-\begin{proposition}
-\label{prop:server}
-Under the IND-CPA security of the multiparty CKKS scheme and its
-$\Nc$-out-of-$\Nc$ threshold decryption, for any honest-but-curious server
-colluding with up to $\Nc-1$ clients there is a probabilistic polynomial-time
-simulator $\mathcal{S}$, given only the public parameters, such that
-$\mathsf{view}_{\mathrm{srv}}(\{\Dj\}) \stackrel{c}{\approx} \mathcal{S}$. In
-particular the view is computationally independent of the private datasets and of
-the displacements, and no plaintext, including $\thstar$, can be recovered without
-the participation of every client.
-\end{proposition}
-
-\begin{proof}[Proof sketch]
-The simulator outputs the public parameters together with encryptions of zero
-under the collective public key. By IND-CPA each genuine ciphertext is
-computationally indistinguishable from an encryption of zero, and a hybrid over
-the client ciphertexts replaces them one at a time, so the collection carries no
-information about the displacements or the data behind them. Every value the
-server computes is a deterministic function of those ciphertexts and of public
-quantities, so it adds nothing. Decryption requires a share from every client, and
-a coalition of at most $\Nc-1$ holds too few.
-\end{proof}
-
-\Cref{prop:server} bounds what is learned from the protocol's messages. It says
-nothing about what is learned from the answers the served model gives, which is the
-channel \cref{sec:threat} bounds by query allowance and \cref{sec:exp-leak}
-measures.
+\paragraph{Protection without perturbation.} The aggregation of
+\cref{eq:aggregate} runs entirely under multiparty CKKS, so the displacements are
+never available in plaintext to the server or to any coalition short of all
+clients. Nothing is noised. The cryptographic layer therefore costs no accuracy,
+which is the point on which this design departs from differentially private
+one-shot federated learning. \Cref{sec:security} states the guarantee, gives an
+ideal functionality, and separates what the cryptography covers from what the
+query interface reveals by construction.
