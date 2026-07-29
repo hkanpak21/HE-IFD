@@ -3,10 +3,11 @@
 
 Each subsection below states a claim in one sentence, describes the experiment
 that tests it, and reports the result. The claims are, in order: that a federated
-head over private representations is a usable model; that the federation can
-choose between arrangements without decrypting either; that the cryptographic
-layer is affordable, including the traffic that recurs; and that what a
-participant can learn is bounded. \Cref{sec:exp-release} then states what
+head over private representations is a usable model; that its accuracy is
+competitive with one-shot federated learning on that literature's own partition;
+that the federation can choose between arrangements without decrypting either;
+that the cryptographic layer is affordable, including the traffic that recurs; and
+that what a participant can learn is bounded. \Cref{sec:exp-release} then states what
 disclosing the model would have bought, and \cref{sec:scope} records what the
 protocol does not cover.
 
@@ -102,20 +103,38 @@ what occurs when the local task approaches a single class. Neither arrangement
 dominates the other, so the federation must select between them, which is the
 subject of \cref{sec:exp-select}.
 
-\paragraph{Sensitivity.} \Cref{tab:sens} varies the three protocol axes around the
-default. \tbd
+\paragraph{Sensitivity.} \Cref{tab:sens} varies the protocol axes around the
+default on DBpedia. Accuracy falls with skew as expected, from $0.971$ at
+$\alpha=1.0$ to $0.789$ at $\alpha=0.1$, and the $0.812$ at $\alpha=0.05$ is within
+the seed spread at that setting, which runs from $0.769$ to $0.861$. Longer local
+training helps, from $0.718$ at $100$ steps to $0.870$ at $400$, and it helps the
+shared head more than the personal adapter, since the head over the bare backbone
+gains $0.27$ across that range against $0.06$ for the personal adapter.
+
+The more informative reading concerns which arrangement is selected. The estimator
+chooses the shared head at $\alpha\in\{0.05,0.1\}$ and the personal adapter at
+$\alpha\in\{0.3,1.0\}$, on every seed in each case. The crossover is therefore not
+a property of the label space alone, as \cref{sec:exp-split} might suggest, but of
+coverage: the personal adapter is preferable once each client sees enough of the
+label space for its own representation to transfer, and the shared head is
+preferable when it does not. The estimator locates that crossover from encrypted
+local evidence, with no test set and no fitted threshold.
 
 \begin{table}[t]
 \centering
-\caption{Sensitivity on DBpedia along the three protocol axes, each varied around
-the default of $\Nc=10$, $\alpha=0.1$ and $200$ local steps.}
+\caption{Sensitivity on DBpedia along the protocol axes, each varied around the
+default of $\Nc=10$, $\alpha=0.1$ and $200$ local steps. The row reports the
+accuracy of the arrangement the estimator selects. The skew row is the mean over
+three seeds; the local-steps row is a single seed, and its default cell is that
+seed's value rather than the three-seed mean. The client-count row is in progress.}
 \label{tab:sens}
 \footnotesize
 \begin{tabular}{lcccc}
 \toprule
 \multicolumn{5}{@{}l}{\emph{Label skew} $\alpha$} \\
  & $0.05$ & $0.10$ & $0.30$ & $1.00$ \\
-selected arrangement & \tbd & $0.789$ & \tbd & \tbd \\
+selected arrangement & $0.812$ & $0.789$ & $0.914$ & $0.971$ \\
+selected & shared & shared & personal & personal \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{Clients} $\Nc$} \\
  & $10$ & $20$ & $50$ & \\
@@ -123,10 +142,62 @@ selected arrangement & $0.789$ & \tbd & \tbd & \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{Local steps}} \\
  & $100$ & $200$ & $400$ & \\
-selected arrangement & \tbd & $0.789$ & \tbd & \\
+selected arrangement & $0.718$ & $0.803$ & $0.870$ & \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Comparison with One-Shot Federated Learning}
+\label{sec:exp-peers}
+
+\paragraph{Claim.} On a partition matched to the one-shot literature's own
+setting, the protocol reaches accuracy competitive with plaintext one-shot methods
+while additionally protecting the contributions and withholding the model.
+
+The peer group evaluates on different tasks from ours, so we ran our protocol on
+theirs rather than restate numbers from incomparable setups. We adopt the
+configuration DENSE reports~\cite{zhang2022dense}, CIFAR-10 across $\Nc=5$ clients
+under a Dirichlet partition, and report the arrangement our estimator selects.
+\Cref{tab:peers} places the two side by side.
+
+\begin{table}[t]
+\centering
+\caption{CIFAR-10 across $\Nc=5$ clients, the configuration of~\cite{zhang2022dense}.
+Prior figures are as published; ours are the mean over three seeds of the
+arrangement selected without decrypting either. The architectures differ, and
+\cref{sec:exp-peers} states what that accounts for.}
+\label{tab:peers}
+\footnotesize
+\begin{tabular}{llcc}
+\toprule
+Method & Protects contribution & $\alpha=0.1$ & $\alpha=0.3$ \\
+\midrule
+FedAvg, one round        & no & $0.239$ & $0.277$ \\
+FedDF~\cite{lin2020feddf}       & no & $0.406$ & $0.468$ \\
+DENSE~\cite{zhang2022dense}     & no & $0.503$ & $0.598$ \\
+\midrule
+this work, selected      & encryption & $\mathbf{0.948}$ & $\mathbf{0.950}$ \\
+this work, disclosed     & reference  & $0.955$ & $0.965$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The margin is large, and most of it is not attributable to the protocol. The
+methods above train a ResNet-18 from scratch, whereas every client here fine-tunes
+a frozen public ViT-B/16, and a pretrained representation accounts for the greater
+part of the difference. The comparison establishes something narrower and more
+useful: at accuracy well above what the plaintext one-shot literature reports on
+this partition, the protocol still exposes no training-time quantity, keeps every
+contribution encrypted, and never produces a plaintext model. Withholding the
+model costs $0.007$ at $\alpha=0.1$ and $0.015$ at $\alpha=0.3$ against the
+disclosed reference on this task, which is smaller than on any task in
+\cref{tab:headline}.
+
+Two figures in the table bound the federation's own contribution, independently of
+the backbone. A client working alone on this partition reaches $0.364$ at
+$\alpha=0.1$, against $0.948$ for the selected arrangement, so the federated head
+supplies the difference. That gap is what the protocol buys, and it is measured on
+the same backbone in both cases.
 
 \subsection{Accuracy of the Selection Rule}
 \label{sec:exp-select}
@@ -233,7 +304,7 @@ ciphertext addition & $0.7$--$1.1$\,ms \\
 rotation & $30.8$\,ms \\
 selection mask and accumulate & $1.1$\,ms \\
 key switch to the querier, $\Nc=10$ & $181$\,ms \\
-reciprocal under encryption, once per aggregation & \tbd \\
+reciprocal under encryption, once per aggregation & $4.21$\,s \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -243,6 +314,16 @@ query costs $35.2$\,ms against $4.8$\,ms for a plaintext one, a factor of seven.
 That factor buys the property that the serving party never sees the feature vector
 and therefore cannot invert it to recover the client's input, and it is small
 beside the argmax that follows.
+
+\paragraph{The encrypted reciprocal.} Inverting the per-class totals under
+encryption, which \cref{sec:split} requires so that no coalition can read the
+remaining client's class histogram, takes $4.21$\,s at $\Nc=10$ and needs two
+collective refreshes. It agrees with the plaintext reciprocal to a relative error
+of $1.9\times10^{-8}$, so it costs no accuracy. The figure grows slowly with the
+federation, $3.16$\,s at $\Nc=5$ and $6.30$\,s at $\Nc=20$, because only the
+refreshes involve the clients. This is the one deep operation in building the
+shared head, and it is paid once per aggregation rather than per query, so a few
+seconds is immaterial beside the local training it follows.
 
 \paragraph{The argmax.} The argmax is the one operation in the protocol that is
 not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it takes about
@@ -283,6 +364,7 @@ per query & encrypted features, uploaded & $2.0$\,MiB \\
           & key-switching shares, ten & $2.5$\,MiB \\
 \cmidrule(l){2-3}
           & \textbf{total per query} & $\mathbf{5.0}$\,\textbf{MiB} \\
+\bottomrule
 \end{tabular}
 \end{table}
 
@@ -294,7 +376,9 @@ classes amounts to roughly $510$\,MiB of traffic for a single label. Generating
 bootstrapping keys once, collectively, and letting the serving party restore levels
 on its own reduces that traffic to zero, because evaluation under a collectively
 generated key is identical to evaluation under a single key. The protocol therefore
-specifies the latter, at a one-time key-material cost of \tbd.
+specifies the latter, at a one-time cost of $15.5$\,MiB of key material at ring
+degree $2^{16}$, generated collectively in $49$\,s. One key generation of
+$15.5$\,MiB therefore replaces $510$\,MiB on every subsequent query.
 
 \paragraph{Correctness.} The decrypted result matches the plaintext computation to
 a relative error at the level of the encoding precision of the scheme, and the
