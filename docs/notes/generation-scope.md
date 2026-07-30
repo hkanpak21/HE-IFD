@@ -33,15 +33,46 @@ the second one restricts the method rather than costing it.
 Classification asks once per input. Generation asks once per token. Every cost
 in Section 5.4 multiplies by the length of the answer.
 
-### 2. Sampling breaks the security argument
+### 2. Sampling, and why it does not have to break the argument
 
 Section 4.6 returns the index of the largest logit because returning the scores
-lets a client solve for the map. Sampling from a temperature-scaled distribution
-needs those scores.
+lets a client solve for the map in `d+1` queries. Sampling from a
+temperature-scaled distribution appears to need those scores. The method as
+built therefore covers **greedy decoding**, and the paper states that.
 
-The method therefore covers **greedy decoding** as it stands. Any sampled
-decoding needs the sampling to happen under encryption, which we have not built.
-This is a real restriction and the paper must state it as one.
+There are two ways to add sampling. They differ in what they cost.
+
+**Route A, return the distribution.** The serving party returns the softmax
+vector and the client samples locally. This is simple and it forfeits three
+things at once.
+
+1. Extraction returns to a linear solve. The map falls in `d+1` queries, which
+   is 769 here, instead of the order of `C*d` that Section 5.6 measures.
+2. The query allowance stops being a usable control. It would have to sit below
+   769 queries in total, which is not a deployment.
+3. The measured bound of Section 5.6 no longer applies at all, because it is a
+   bound on label-only extraction.
+
+**Route B, sample under encryption by the Gumbel-max trick.** Adding independent
+Gumbel noise to the logits and taking the argmax draws exactly from the softmax
+distribution. The serving party already computes an encrypted argmax. Adding an
+encrypted noise vector before it costs one ciphertext addition, measured at
+about 1 ms. The interface still returns one index, so **the security argument of
+Section 4.6 carries over unchanged**.
+
+Route B has one condition, and it decides whether the route is sound. The noise
+must be unknown to the querying client. If the client supplies its own encrypted
+noise, it knows `g` and receives `argmax(logits + g)`. Choosing `g` lets it
+isolate pairwise comparisons and binary-search the logit gaps, which is a
+stronger attack than plain label access. The noise must therefore be generated
+collectively, in the same way the keys are, so that no single party knows it.
+That is a distributed randomness protocol per token, and we have not built or
+costed it.
+
+**Summary for the paper.** Greedy decoding is what we have. Temperature sampling
+is available without giving up the label-only interface, through Gumbel-max with
+collectively generated noise. State Route B as a design that follows from the
+construction, and state clearly that we did not implement or measure it.
 
 ### 3. The map is much larger, which cuts both ways
 
