@@ -83,12 +83,21 @@ protocol, and the resulting collective public key is distributed identically.
 \emph{Training.} For each honest client the simulator sends an encryption of
 zero in place of $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$. A hybrid
 argument replaces the honest ciphertexts one at a time. Each neighbouring pair
-of hybrids is indistinguishable by IND-CPA, since the adversary holds no
-decryption key and, by the threshold structure, a coalition of at most $\Nc-1$
-clients cannot assemble one. Every later value the server computes, including
-the encrypted reciprocal and $\mathsf{Enc}(\thstar)$, is a deterministic
-function of those ciphertexts and of public scalars, so the simulator computes
-them exactly as the server does.
+of hybrids is indistinguishable by IND-CPA, which must hold against an adversary
+that already holds $\Nc-1$ of the $\Nc$ secret-key shares. This is exactly the
+threshold property of the scheme, and we assume it rather than derive it.
+
+The server's additions and its multiplication by the reciprocal are
+deterministic functions of those ciphertexts and of public scalars, so the
+simulator computes them as the server does. The encrypted reciprocal is not such
+a function. Its inversion circuit consumes levels and restores them by collective
+refresh, and a collective refresh is an interactive protocol in which every
+client contributes fresh randomness. The simulator therefore invokes the
+simulator of the refresh protocol for each of the two refreshes, playing the
+honest clients on that protocol's simulated shares. Both refreshes occur at
+fixed points in the circuit that do not depend on any plaintext, so the number
+and position of these invocations are public and the simulator knows them in
+advance.
 
 \emph{Selection and serving.} The selection step decrypts one value. The
 simulator takes that index from $\Leak$ and produces the collective
@@ -157,22 +166,47 @@ $Q_{\mathrm{tot}}$ label queries reveal, which is $\delta(Q_{\mathrm{tot}})$ by
 definition.
 \end{proof}
 
-\paragraph{The assumption on key switching, and why it is needed.} The theorem
-assumes the coalition follows the key-switching protocol. Without that
-assumption the guarantee fails, and the failure is not subtle. Decryption is a
-protocol the clients run on a ciphertext the serving party presents. A coalition
-that presents a ciphertext of its own choosing, rather than the output of
-\cref{alg:serve}, can ask the honest client to help decrypt any value it likes,
-including a row of $\thstar$. The honest client would then supply a share for a
-computation the protocol never prescribed.
+\paragraph{Why the assumption is needed.} Decryption is a protocol the clients
+run on a ciphertext the serving party presents. A coalition that presents a
+ciphertext of its own choosing, rather than the output of \cref{alg:serve}, can
+ask an honest client to help decrypt any value it likes, including a row of
+$\thstar$. The honest client cannot check the request by comparison, because the
+value is encrypted. Without a further mechanism a single deviating request
+recovers a full ciphertext of plaintext slots, which at ring degree $2^{14}$ is
+$8192$ real numbers, and the guarantee of \cref{thm:malicious} fails outright.
 
-Closing this needs the honest client to check what it helps to decrypt, and the
-value in question is encrypted, so the check cannot be a comparison. Two routes
-are compatible with the construction. The serving party can prove in zero
-knowledge that the ciphertext is the output of the prescribed circuit on
-committed inputs. Alternatively, verifiable homomorphic encryption can certify
-the evaluation~\cite{viand2023verifiable}. We implement neither, and we state
-the assumption rather than leave it implicit.
+\paragraph{Bounding a deviating request.} A cheap mechanism removes most of the
+gap, and it needs no proof system. Before contributing its decryption share,
+every client multiplies the presented ciphertext by a public plaintext mask that
+selects a single slot. The mask is fixed, public, and identical for all clients,
+so the clients agree on the masked ciphertext without communicating, and the
+operation is one plaintext-by-ciphertext multiplication, measured at $4.8$\,ms in
+\cref{tab:cost}. The prescribed output of \cref{alg:serve} is one index, so
+placing it in the selected slot costs the protocol nothing.
+
+The effect is to make each decryption request reveal one value rather than a
+ciphertext full of them. A deviating coalition still chooses \emph{which} value,
+by choosing the ciphertext it presents, so it learns one entry of $\thstar$ per
+request instead of one label. Recovering the whole map therefore costs it on the
+order of $\Cc d$ requests, which is the same order as the label-only extraction
+bound of \cref{sec:exp-leak}. The deviation buys a constant factor, not a change
+of order.
+
+This is the sense in which serving can be treated as evaluating a fixed
+function. The mask does not certify \emph{which} function the serving party
+evaluated. It bounds the width of the answer, and that alone is enough to keep a
+malicious coalition inside the query-counting argument that already governs the
+honest one. What it does not give is correctness, and what it does not prevent
+is a coalition spending its allowance on chosen entries rather than on labels.
+
+\paragraph{What full malicious security would still require.} To certify the
+function itself, the serving party must prove in zero knowledge that the
+presented ciphertext is the output of the prescribed circuit on committed
+inputs, or the evaluation must be certified by verifiable homomorphic
+encryption~\cite{viand2023verifiable}. We implement neither. We state the
+assumption of \cref{thm:malicious} rather than leave it implicit, and we report
+the mask as the mitigation that makes the assumption cheap to approximate rather
+than as a substitute for it.
 
 \subsection{What the Cryptography Does Not Cover}
 \label{sec:inherent}

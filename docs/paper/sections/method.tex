@@ -156,6 +156,18 @@ homomorphically, which is the cost this design exists to avoid. The trained
 quantity that is shared must therefore attach after the last nonlinearity, and in
 a transformer the only such point is the final linear map. That is the head.
 
+\paragraph{What the argument fixes, and what it leaves open.} The requirement
+constrains the \emph{position} of the shared map, not the task it serves. Any
+trained linear map that sits after the last nonlinearity satisfies it, provided
+the querying client can compute the features that enter the map. A classifier
+head is one such map. The vocabulary projection of an autoregressive decoder is
+another, since it is linear, sits after the final layer normalisation, and takes
+features the client can compute from a prefix it generated itself. The
+construction therefore does not depend on the label space being a set of
+classes. We evaluate classification only, and \cref{sec:scope} records what a
+generation setting would additionally require, including the restriction to
+greedy decoding that \cref{sec:serving} imposes.
+
 The adapter is relocated rather than discarded. Each client retains its own, so the
 representation still adapts to local data, and the federation shares the part
 where sharing is necessary. The distinction follows from coverage: a client
