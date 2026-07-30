@@ -4,9 +4,10 @@
 This section states what the protocol guarantees. \Cref{sec:ideal} gives an
 ideal functionality, \cref{sec:semihonest} proves that the protocol realizes it
 against semi-honest parties, and \cref{sec:malicious} bounds what a malicious
-coalition learns about an honest client's data. \Cref{sec:inherent} separates
-the guarantees the cryptography provides from the leakage the task itself
-carries.
+coalition learns about an honest client's data. \Cref{sec:malicious-ext} shows
+why the strict functionality is out of reach against a deviating serving party,
+and describes two extensions that recover it. \Cref{sec:inherent} separates the
+guarantees the cryptography provides from the leakage the task itself carries.
 
 \subsection{The Ideal Functionality}
 \label{sec:ideal}
@@ -166,47 +167,115 @@ $Q_{\mathrm{tot}}$ label queries reveal, which is $\delta(Q_{\mathrm{tot}})$ by
 definition.
 \end{proof}
 
-\paragraph{Why the assumption is needed.} Decryption is a protocol the clients
-run on a ciphertext the serving party presents. A coalition that presents a
-ciphertext of its own choosing, rather than the output of \cref{alg:serve}, can
-ask an honest client to help decrypt any value it likes, including a row of
-$\thstar$. The honest client cannot check the request by comparison, because the
-value is encrypted. Without a further mechanism a single deviating request
+\paragraph{Why the assumption cannot be discharged.} Decryption is a protocol
+the clients run on a ciphertext the serving party presents. A coalition that
+presents a ciphertext of its own choosing, rather than the output of
+\cref{alg:serve}, can ask an honest client to help decrypt any value it likes,
+including a row of $\thstar$. The natural repair is to have the honest client
+refuse such a request. It cannot, and the obstacle is the encryption itself.
+
+\begin{proposition}[No plaintext gate from a ciphertext]
+\label{prop:nogate}
+Let an honest client decide, by a polynomial-time predicate $D$ on its view,
+whether to contribute its key-switching share for a presented ciphertext. Let
+the rest of that view be independent of the underlying plaintext. If the scheme
+is IND-CPA against an adversary holding $\Nc-1$ key shares, then for every pair
+of plaintexts $m_0$ and $m_1$,
+\[
+  \big|\Pr[D(\mathsf{Enc}(m_0))=1]-\Pr[D(\mathsf{Enc}(m_1))=1]\big|
+  \le \negl(\lambda).
+\]
+\end{proposition}
+
+\begin{proof}
+A gap between the two probabilities gives an IND-CPA distinguisher that holds
+one key share. One share is at most $\Nc-1$ shares, so the assumed security of
+the scheme applies directly.
+\end{proof}
+
+An honest client therefore releases its share for both plaintexts or for
+neither. It cannot release one for a label and refuse one for a row of
+$\thstar$. No protocol of this message pattern realizes $\Fhe$ against a
+malicious serving party, so the assumption of \cref{thm:malicious} is necessary
+rather than convenient. Without a further mechanism a single deviating request
 recovers a full ciphertext of plaintext slots, which at ring degree $2^{14}$ is
-$8192$ real numbers, and the guarantee of \cref{thm:malicious} fails outright.
+$8192$ real numbers.
 
-\paragraph{Bounding a deviating request.} A cheap mechanism removes most of the
-gap, and it needs no proof system. Before contributing its decryption share,
+\Cref{prop:nogate} constrains predicates on the \emph{plaintext}. A predicate on
+the ciphertext escapes it, and \cref{sec:malicious-ext} uses that.
+
+\subsection{Extension to a Malicious Serving Party}
+\label{sec:malicious-ext}
+
+\Cref{prop:nogate} rules out the strict functionality. It does not rule out a
+weaker one, and it does not rule out checking a ciphertext by its provenance.
+This subsection describes what the protocol would guarantee under each option
+and what each one costs. We present them as extensions. The protocol we
+implement is the one of \cref{sec:method}, and no figure in
+\cref{sec:experiments} includes them.
+
+\paragraph{A functionality that is within reach.} Replace the serving step of
+$\Fhe$ by one that answers with slots rather than with labels. On a request from
+the serving party that names an arithmetic circuit $E$ over the stored
+ciphertexts, together with a recipient $P$, the functionality charges one unit
+against the allowance, evaluates $E$, and returns the value in one designated
+slot of the output to $P$ alone. An honest query is the case in which $E$ is the
+circuit of \cref{alg:serve}. The label then occupies the designated slot, so the
+two functionalities agree whenever the serving party follows the protocol. A
+deviating request is a different $E$, and it returns one scalar of the
+coalition's choosing.
+
+\paragraph{The mechanism that realizes it.} Before it contributes its share,
 every client multiplies the presented ciphertext by a public plaintext mask that
-selects a single slot. The mask is fixed, public, and identical for all clients,
-so the clients agree on the masked ciphertext without communicating, and the
-operation is one plaintext-by-ciphertext multiplication, measured at $4.8$\,ms in
-\cref{tab:cost}. The prescribed output of \cref{alg:serve} is one index, so
-placing it in the selected slot costs the protocol nothing.
+selects a single slot. The mask is fixed and identical for all clients, so they
+agree on the masked ciphertext without communicating. Shares computed on
+different ciphertexts do not combine, so one honest client is enough to force
+every successful decryption to be of a masked ciphertext. The step costs one
+plaintext-by-ciphertext multiplication, measured at $4.8$\,ms in
+\cref{tab:cost}, and it adds no traffic, because it applies to a ciphertext the
+clients already receive. Under this mechanism, and assuming each upload carries
+a proof of knowledge of its plaintext so that a simulator can extract the
+corrupted clients' inputs, the protocol realizes the functionality above with
+abort, against a malicious adversary corrupting the server, the serving party
+and up to $\Nc-1$ clients.
 
-The effect is to make each decryption request reveal one value rather than a
-ciphertext full of them. A deviating coalition still chooses \emph{which} value,
-by choosing the ciphertext it presents, so it learns one entry of $\thstar$ per
-request instead of one label. Recovering the whole map therefore costs it on the
-order of $\Cc d$ requests, which is the same order as the label-only extraction
-bound of \cref{sec:exp-leak}. The deviation buys a constant factor, not a change
-of order.
+\paragraph{Why the allowance still governs.} Each charged request returns one
+slot, so $Q_{\mathrm{tot}}$ requests return at most $Q_{\mathrm{tot}}$ scalars.
+The shared map holds $\Cc d$ parameters, and one slot carries a few tens of bits
+of precision. Recovering the map therefore costs on the order of $\Cc d$
+requests, which is the order \cref{sec:exp-leak} measures for label-only
+extraction. A deviating coalition buys a constant factor rather than a change of
+order, and the query allowance remains the control.
 
-This is the sense in which serving can be treated as evaluating a fixed
-function. The mask does not certify \emph{which} function the serving party
-evaluated. It bounds the width of the answer, and that alone is enough to keep a
-malicious coalition inside the query-counting argument that already governs the
-honest one. What it does not give is correctness, and what it does not prevent
-is a coalition spending its allowance on chosen entries rather than on labels.
+\paragraph{Closing the gap by recomputation.} \Cref{prop:nogate} blocks
+predicates on the plaintext. It does not block a client that checks where a
+ciphertext came from. The serving circuit is a deterministic function of the
+encrypted head, the encrypted query, the evaluation keys and the public
+parameters. Its level restoration is deterministic as well, because
+\cref{sec:exp-cost} restores levels under collectively generated bootstrapping
+keys rather than by collective refresh. A client can therefore recompute the
+prescribed output ciphertext and compare it as a string, which restores $\Fhe$
+itself. The design choice that saves $510$\,MiB of traffic on every query is the
+same one that leaves the circuit verifiable.
 
-\paragraph{What full malicious security would still require.} To certify the
-function itself, the serving party must prove in zero knowledge that the
-presented ciphertext is the output of the prescribed circuit on committed
-inputs, or the evaluation must be certified by verifiable homomorphic
-encryption~\cite{viand2023verifiable}. We implement neither. We state the
-assumption of \cref{thm:malicious} rather than leave it implicit, and we report
-the mask as the mitigation that makes the assumption cheap to approximate rather
-than as a substitute for it.
+\paragraph{The cost of verifying, and why sampling is enough.} Verifying every
+query costs one serving evaluation per verifying client, which
+\cref{sec:exp-cost} puts under two minutes at a hundred classes. Verifying a
+random fraction $p$ of queries costs $p$ times as much, and the shape of the
+attack makes a small $p$ sufficient. A coalition that makes $k$ deviating
+requests escapes a single honest checker with probability at most $(1-p)^{k}$.
+Recovering the shared map needs $k$ on the order of $\Cc d$, which is $3072$ on
+AG-News and $59\,136$ on Banking77. At $p=0.01$ those campaigns escape with
+probability $4\times10^{-14}$ and below $10^{-250}$. The defence is cheap because
+the attack is long. One deviating request is easy to hide and returns one scalar,
+and a campaign worth mounting does not survive thousands of independent checks.
+
+\paragraph{What none of this covers.} Correctness. A client that uploads a
+crafted displacement biases the shared head, and no mechanism above detects it.
+Certifying which function the serving party evaluated, rather than bounding the
+width of its answer, needs a zero-knowledge proof of correct evaluation or
+verifiable homomorphic encryption~\cite{viand2023verifiable}. We implement
+neither, and \cref{sec:scope} records both limitations.
 
 \subsection{What the Cryptography Does Not Cover}
 \label{sec:inherent}
