@@ -123,6 +123,16 @@ honest client either `D_0` or `D_1`. The adversary guesses which. Symmetry does
 not protect this, so the advantage comes from the query channel, and our
 extraction numbers bound it.
 
+**Revision, 2026-07-30.** The content game is written and it holds under an
+assumption we could only state, not prove. `docs/notes/malicious-security.md`
+replaces that assumption with three results. Proposition 1 shows the strict
+functionality is **not realizable** against a malicious serving party, because
+an honest client cannot gate decryption on a plaintext it cannot read.
+`F_mask` is the functionality that is realizable, and Theorem 3 proves the
+protocol realizes it with abort. Proposition 2 and Theorems 4 and 5 close the
+remaining gap by recomputation, which works because the serving circuit is
+deterministic. Read the note before touching `sections/security.tex`.
+
 ## 5. Scope beyond classification
 
 The paper says classifier head everywhere. The construction needs less than
@@ -169,6 +179,22 @@ Parts 2 and 3 need no GPU and no training. Start there.
 
 ## 7. Outstanding measurements, carried over
 
-- Pooled ceiling. The job timed out. Resubmit with a shorter budget.
-- N=50 sensitivity cell. Running.
-- N=20 sensitivity cell and the matched partitions. Landed, not yet collected.
+- Pooled ceiling. Landed 2026-07-30, `results/centralised_ceiling/`.
+- N=20 and N=50 sensitivity cells. Landed, seed 42 only,
+  `results/personal_adapter/nsweep.csv`.
+- CIFAR-10 under the actual protocol, on the DENSE and FedAUXfdp partitions.
+  Submitted 2026-07-30. The matched cells in `results/vision_matched/` come from
+  the pre-pivot pipeline and measure disclosed models, so Section 5.3 cannot use
+  them.
+
+## 8. After the paper lands
+
+**Differential privacy on the head.** Decided 2026-07-30 with the user, to start
+once the rest of the paper is finished. Section 5.8 already names calibrated
+noise on the returned labels as the control for deployments where no query
+allowance separates honest use from extraction. The open work is to add a
+mechanism on the head itself rather than on the answers, measure the accuracy it
+costs against the extraction fidelity it denies, and place the result beside the
+DP one-shot peer group, which pays its budget on a released artifact. The
+measurements in `results/extraction_defence/` are the label-side half of this
+and show that output noise alone is not deployable.
