@@ -71,16 +71,37 @@ write that clients receive a model, and never write that they learn "nothing at
 all": they learn the labels they ask for, bounded by a query allowance, which is
 an economic bound and not cryptographic hardness.
 
-**Current state (2026-07-26).** Paper rewritten end to end for this design and
-compiling. Accuracy landed on five tasks. Selection landed. Cryptographic
-per-operation and communication costs landed. Outstanding: the sensitivity sweep,
-matched partitions, the encrypted reciprocal timing, the bootstrapping key size,
-and a label-only leakage measurement. See `docs/plan/paper-rewrite.md`.
+**The shared object is a trained linear map after the last nonlinearity.** A
+classifier head is one such map. A decoder's vocabulary projection is another.
+The construction fixes the *position* of the map, not the task. Say this when
+scope comes up, and say we evaluate classification only, because we do.
+
+**Current state (2026-07-30).** Paper is 19 pages and compiles clean. It now has
+a separate security section with an ideal functionality, a semi-honest theorem,
+and a content game for input privacy under a malicious coalition. Accuracy,
+selection, cryptographic costs, extraction cost, and the pooled ceiling have all
+landed. See `docs/plan/security-program.md` for the security and journal work,
+and `docs/plan/paper-rewrite.md` for the paper flow.
+
+## Venue (decided 2026-07-29)
+
+Target **journals**, not conferences. The three candidates differ, and the TDSC
+rejection matters differently to each.
+
+- **IEEE TNSE** is the cleanest. Its one-resubmission rule covers TNSE's own
+  rejections only, so the TDSC rejection does not block it.
+- **IEEE TIFS** costs more. Signal Processing Society policy allows one
+  resubmission of a manuscript rejected by *any* journal, requires disclosing
+  the rejection, and requires verbatim quotation of every previous review with
+  responses. It also states a 13-page limit. We are at 19.
+- **IEEE TDSC** publishes no resubmission policy. Ask the editorial office
+  before assuming either way.
 
 ## The plan
 
-Full detail in `docs/plan/paper-rewrite.md`. In short: the paper is drafted, and
-what remains is measurement. Paper writing is done with the user (HITL); all
+`docs/plan/security-program.md` holds the security proofs, the journal rules,
+and the generation scope. `docs/plan/paper-rewrite.md` holds the paper flow and
+the figure and table standard. Paper writing is done with the user (HITL); all
 compute is AFK.
 
 ## The workflow
@@ -144,6 +165,37 @@ Compute nodes have **slow/no internet**. Before any sweep that needs pretrained 
 
 Single env: **`he_ofl`** (`/home/hkanpak21/.conda/envs/he_ofl`). Has `torch 2.3.0+cu121`, `torchvision`, `tenseal 0.3.16`, `transformers`/`datasets` (verify), `numpy`, `pypdf`, `termcolor`, `xgboost`, `pydicom`, `opacus`. New dep: `pip install --quiet <pkg>` from the login node is fine. Avoid `conda install` (base env is read-only).
 
+## VALAR facts that cost time to rediscover (verified 2026-07-29)
+
+- **The QOS is `gres/gpu:tesla_t4=1`.** One T4 GPU job at a time, and only the
+  `t4_ai` partition accepts the `comx29` account. `ai`, `long`, `mid`,
+  `v100_ai` and `short` all reject it.
+- **`sbatch --test-only` lies.** It reports a start time for partitions the QOS
+  cannot use. It does not check the QOS-partition association. Submit a real
+  job to find out.
+- **A job with no `--gres` runs on `t4_ai` without consuming the GPU slot.** Use
+  this for CPU-only work so it runs beside a training job.
+- `short` caps at 2 hours. `t4_ai` allows 8, but keep to 3 unless there is a
+  reason.
+- Go lives behind `module load go/1.24.4`, not on the default PATH.
+- The system GCC is 8.5 and has no `<concepts>`. A C++20 toolchain (GCC 11.4)
+  sits in the `thor310` conda env at `/home/hkanpak21/.conda/envs/thor310/bin`.
+
+## Script gotchas
+
+- **`jobs/personal_adapter_vision.py` is CIFAR-100 only.** `DATASETS` is
+  hardcoded. Passing a different alpha does not change the dataset.
+- **`jobs/vision_matched.py` holds the matched peer stages** (`dense`,
+  `fedaux`, `fedsd2c`, `s6`) and is resumable: it writes one JSON per cell and
+  skips finished cells. Its wrapper overrides `--stage` with the array index,
+  and `STAGE_ORDER` maps index to stage.
+- **`jobs/personal_adapter_test.py` checkpoints each client** under
+  `results/personal_adapter/ckpt/`. A cell that exceeds the wall clock resumes
+  instead of restarting. This is what makes N=50 reachable.
+- `vision_matched.py` uses an older selection rule (fisher / count-head). The
+  paper's rule is the global-prior estimator in `personal_adapter_test.py`. Do
+  not mix the two pipelines' numbers.
+
 ## Slurm template (use for new sbatch wrappers)
 
 ```bash
@@ -206,8 +258,12 @@ jobs/                                # sbatch wrappers — the ONLY entrypoints 
 docs/
   README.md                            what lives where
   paper/                               the manuscript (main.tex, sections/, figures/)
+    sections/security.tex              ideal functionality + both theorems
     figures/drawio/                    editable figure sources
   plan/paper-rewrite.md                THE PLAN: flow, standards, voice, experiments
+  plan/security-program.md             security proofs, journal rules, generation scope
+  notes/extraction-attack.md           the attack, the four defence cases, literature
+  notes/generation-scope.md            autoregressive scope, costs, Gumbel sampling
   design/                              why a decision was made
   issues/                              per-task agent briefs
   notes/                               walkthroughs and session records
