@@ -34,13 +34,18 @@ mean over three seeds. Each client reserves at least one held-out example from
 every class it holds, as \cref{sec:selection} requires, and tops the held-out set
 up to one tenth of its shard at random.
 
-Two reference points appear throughout. The \emph{local} model is what a client
-obtains alone, with its own adapter and its own head and no federation at all. The
-\emph{disclosed} model is the one this protocol declines to build: both the adapter
-and the head aggregated and decrypted, so that every party holds it in plaintext.
-The disclosed model is not a configuration of our protocol and is not servable
-under the threat model of \cref{sec:threat}; it is reported so that the price of
-never disclosing a model can be read off directly.
+We write $\Asel$ for the accuracy of the servable arrangement that
+\cref{sec:exp-select} selects. Three reference points appear throughout, and none
+of them is servable under the threat model of \cref{sec:threat}. We write $\Aloc$
+for the accuracy a client obtains alone, with its own adapter and its own head and
+no federation. We write $\Adis$ for the accuracy of the disclosed model, in which
+the adapter and the head are both aggregated and decrypted, so that every party
+holds the result in plaintext. We write $\Apool$ for the accuracy of one model
+trained on the union of the clients' data at the same total number of steps.
+
+Two differences follow, and the paper reports both. The quantity
+$\Adis-\Asel$ is the price of never disclosing a model. The quantity
+$\Apool-\Adis$ is the price of the partition.
 
 \subsection{Utility of the Federated Head}
 \label{sec:exp-split}
@@ -57,23 +62,25 @@ each client the shared head over its own privately adapted representation.
 \begin{table}[t]
 \centering
 \caption{Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
-Both servable arrangements are shown, together with what a client obtains alone
-and what a disclosed model would reach. The disclosed model is not servable under
-the threat model of \cref{sec:threat} and is included only as a reference.}
+Both servable arrangements are shown, together with what a client obtains alone,
+what a disclosed model would reach, and what one model trained on the pooled data
+reaches at the same total number of steps. Neither reference is servable under
+the threat model of \cref{sec:threat}. We did not run the pooled reference on
+CIFAR-100.}
 \label{tab:headline}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
- & & \multicolumn{2}{c}{servable} & & \\
-\cmidrule(lr){3-4}
-Task & $\Cc$ & shared head & personal adapter & alone & disclosed \\
+ & & \multicolumn{2}{c}{servable} & & \multicolumn{2}{c}{reference} \\
+\cmidrule(lr){3-4}\cmidrule(lr){6-7}
+Task & $\Cc$ & shared head & personal adapter & alone & disclosed & pooled \\
 \midrule
-AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 \\
-TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 \\
-DBpedia    & 14  & $\mathbf{0.789}$ & 0.754 & 0.451 & 0.925 \\
-Banking77  & 77  & 0.206 & $\mathbf{0.686}$ & 0.249 & 0.760 \\
-CIFAR-100  & 100 & 0.748 & $\mathbf{0.774}$ & 0.197 & 0.784 \\
+AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 & 0.921 \\
+TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 & 0.967 \\
+DBpedia    & 14  & $\mathbf{0.789}$ & 0.754 & 0.451 & 0.925 & 0.988 \\
+Banking77  & 77  & 0.206 & $\mathbf{0.686}$ & 0.249 & 0.760 & 0.923 \\
+CIFAR-100  & 100 & 0.748 & $\mathbf{0.774}$ & 0.197 & 0.784 & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -109,7 +116,10 @@ $\alpha=1.0$ to $0.789$ at $\alpha=0.1$, and the $0.812$ at $\alpha=0.05$ is wit
 the seed spread at that setting, which runs from $0.769$ to $0.861$. Longer local
 training helps, from $0.718$ at $100$ steps to $0.870$ at $400$, and it helps the
 shared head more than the personal adapter, since the head over the bare backbone
-gains $0.27$ across that range against $0.06$ for the personal adapter.
+gains $0.27$ across that range against $0.06$ for the personal adapter. Accuracy
+rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
+$\Nc=50$, because more clients cover more of the label space between them even as
+each one holds less data.
 
 The more informative reading concerns which arrangement is selected. The estimator
 chooses the shared head at $\alpha\in\{0.05,0.1\}$ and the personal adapter at
@@ -125,8 +135,8 @@ local evidence, with no test set and no fitted threshold.
 \caption{Sensitivity on DBpedia along the protocol axes, each varied around the
 default of $\Nc=10$, $\alpha=0.1$ and $200$ local steps. The row reports the
 accuracy of the arrangement the estimator selects. The skew row is the mean over
-three seeds; the local-steps row is a single seed, and its default cell is that
-seed's value rather than the three-seed mean. The client-count row is in progress.}
+three seeds. The local-steps and client-count rows are a single seed, and their
+default cells are that seed's value rather than the three-seed mean.}
 \label{tab:sens}
 \footnotesize
 \begin{tabular}{lcccc}
@@ -138,7 +148,7 @@ selected & shared & shared & personal & personal \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{Clients} $\Nc$} \\
  & $10$ & $20$ & $50$ & \\
-selected arrangement & $0.789$ & \tbd & \tbd & \\
+selected arrangement & $0.803$ & $0.826$ & $0.882$ & \\
 \midrule
 \multicolumn{5}{@{}l}{\emph{Local steps}} \\
  & $100$ & $200$ & $400$ & \\
@@ -156,18 +166,42 @@ that grows as their budget tightens, and it withholds the model at a cost those
 methods do not incur because they do not offer the property.
 
 The peer group evaluates on different tasks from ours, so we ran our protocol on
-theirs rather than restate numbers from incomparable setups. We adopt the
-configuration DENSE reports~\cite{zhang2022dense}, CIFAR-10 across $\Nc=5$ clients
-under a Dirichlet partition, and report the arrangement our estimator selects.
+theirs rather than restate numbers from incomparable setups. We adopt two
+published partitions of CIFAR-10: $\Nc=5$ with $\alpha\in\{0.1,0.3\}$, the
+configuration of~\cite{zhang2022dense}, and $\Nc=20$ with
+$\alpha\in\{0.04,0.16\}$, the configuration of~\cite{hoech2022fedauxfdp}.
+\Cref{tab:peers} reports the quantities of \cref{sec:setup} on each, as the mean
+over three seeds.
 
-\paragraph{Why absolute accuracy does not settle the comparison.} On that
-partition our selected arrangement reaches $0.948$ at $\alpha=0.1$, against the
-$0.503$ that DENSE reports and the $0.406$ of FedDF. We do not present that margin
-as a result. The methods above train a ResNet-18 from scratch, whereas every client
-here fine-tunes a frozen public ViT-B/16, and the representation accounts for
-essentially all of the difference. Any of these methods would gain comparably from
-the same backbone, and running them on it is not a comparison either paper's
-authors chose. Absolute accuracy across papers therefore measures the backbone.
+\begin{table}[t]
+\centering
+\caption{CIFAR-10 on two published partitions, three seeds. The columns are the
+quantities defined in \cref{sec:setup}, all measured on our protocol at the
+partition each prior paper published.}
+\label{tab:peers}
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{cccccc}
+\toprule
+$\Nc$ & $\alpha$ & $\Aloc$ & $\Asel$ & $\Adis$ & $\Adis-\Asel$ \\
+\midrule
+$5$  & $0.10$ & $0.384$ & $0.948$ & $0.962$ & $0.013$ \\
+$5$  & $0.30$ & $0.569$ & $0.950$ & $0.964$ & $0.014$ \\
+$20$ & $0.04$ & $0.212$ & $0.948$ & $0.943$ & $-0.005$ \\
+$20$ & $0.16$ & $0.399$ & $0.952$ & $0.959$ & $0.007$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Why absolute accuracy does not settle the comparison.} At $\Nc=5$ and
+$\alpha=0.1$ we measure $\Asel=0.948$, against the $0.503$
+of~\cite{zhang2022dense} and the $0.406$ of~\cite{lin2020feddf}. We do not present
+that margin as a result. Those methods train a ResNet-18 from scratch, whereas
+every client here fine-tunes a frozen public ViT-B/16, and the representation
+accounts for essentially all of the difference. Any of these methods would gain
+comparably from the same backbone, and running them on it is not a comparison
+either paper's authors chose. Absolute accuracy across papers therefore measures
+the backbone.
 
 \paragraph{The comparison that does hold.} What compares across papers is the
 accuracy each method gives up for its privacy mechanism, since every paper measures
@@ -186,19 +220,39 @@ $\varepsilon=0.1$ and $0.626$ at $\varepsilon=0.01$~\cite{hoech2022fedauxfdp}. T
 mechanism is inexpensive only while the budget is loose, and the accuracy is spent
 on the artifact that is released.
 
-Our contribution is protected cryptographically, and the cost is zero by
-construction rather than by measurement, since the decrypted result matches the
-plaintext computation to the encoding precision of the scheme. Withholding the
-model is a separate charge, and it is one no method above incurs, because every one
-of them ends by handing a plaintext model to the participants. It costs $0.007$ on
-this task and $0.03$ to $0.14$ across \cref{tab:headline}. The comparison to draw
-is therefore between a mechanism whose price rises as its guarantee tightens and one
-whose price is fixed and paid for a different property.
+Our contribution is protected cryptographically, and that protection costs no
+accuracy, by construction rather than by measurement, since the decrypted result
+matches the plaintext computation to the encoding precision of the scheme.
+Withholding the model is a separate charge, and no method above incurs it, because
+each of them ends by handing a plaintext model to the participants. At $\Nc=20$
+and $\alpha=0.16$, which is the cell quoted above, that charge is $\Adis-\Asel
+=0.007$, against the $0.006$ to $0.626$ that the same paper's mechanism costs as
+$\varepsilon$ falls from $1.0$ to $0.01$. Over \cref{tab:peers} the charge lies
+between $-0.005$ and $0.014$, and over \cref{tab:headline} between $0.03$ and
+$0.14$. The comparison to draw is therefore between a mechanism whose price rises
+as its guarantee tightens and one whose price is bounded and paid for a different
+property.
 
-One figure bounds the federation's own contribution independently of the backbone,
-because it is measured on the same backbone at both ends. A client working alone on
-this partition reaches $0.364$, against $0.948$ for the selected arrangement. That
-difference is what the protocol supplies.
+\paragraph{A partition at which the charge is negative.} At $\Nc=20$ and
+$\alpha=0.04$ we measure $\Asel>\Adis$, by $0.005$ on average, on two seeds of
+three and by no margin on the third. The mechanism is the following. At that
+concentration each client holds close to a single class, so the aggregate of the
+adapters moves the representation toward every local task at once and improves none
+of them. The arrangement that leaves the public backbone unchanged avoids this, and
+it is the arrangement the estimator selects. We record one property of this cell:
+the Dirichlet draw at $\alpha=0.04$ assigns fewer than twenty samples to some
+clients, which cannot train, so the effective federation size is $17$ to $19$
+rather than $20$.
+
+One difference bounds the federation's own contribution independently of the
+backbone, because both of its terms are measured on the same backbone. At $\Nc=5$
+and $\alpha=0.1$ we measure $\Aloc=0.384$ against $\Asel=0.948$. That difference is
+what the protocol supplies.
+
+\paragraph{Selection on these partitions.} The estimator of \cref{sec:exp-select}
+selects correctly in $11$ of the $12$ cells behind \cref{tab:peers}. The exception
+is $\Nc=5$ with $\alpha=0.3$ on one seed, where the selected arrangement reaches
+$0.945$ and the other reaches $0.953$.
 
 \subsection{Accuracy of the Selection Rule}
 \label{sec:exp-select}
@@ -511,11 +565,12 @@ from the federation are the ones that must meter queries most tightly.
 
 One methodological point. We also ran a boundary-search variant that spends half
 its budget bisecting toward the decision boundary, on the expectation that points
-near a boundary are more informative. It is consistently \emph{worse}, reaching
-$0.592$ against $0.755$ on Banking77 at $5\times10^4$ queries, because a bisection
-chain returns many nearly identical points and a linear fit gains less from them
-than from the same number of independent ones. We report the stronger of the two,
-which is also the simpler.
+near a boundary are more informative. It is worse in $13$ of the $15$ cells we
+measured, reaching $0.675$ against $0.755$ on Banking77 at $5\times10^4$ queries,
+because a bisection chain returns many nearly identical points and a linear fit
+gains less from them than from the same number of independent ones. The two
+exceptions are AG-News at the two largest budgets, where it wins by $0.003$. We
+report the stronger of the two, which is also the simpler.
 
 \paragraph{Comparison with a released model.} The contrast is not a matter of
 degree. A participant holding the model in plaintext has fidelity $1$ at zero
@@ -525,7 +580,7 @@ labels would be nearly as generous: the head is linear in features the client
 computes itself, so $d+1$ logit queries recover it exactly by linear solve, which
 is $769$ queries here against the $1.2\times10^4$ to $2.0\times10^5$ that labels
 demand. We confirm this directly, recovering the head to fidelity $1.000$ from
-$10^3$ answers when the served interface returns a distribution instead of an
+$769$ answers when the served interface returns a distribution instead of an
 index. Restricting the answer to the label is therefore what converts extraction
 from a solve into a search, and the query allowance is what prices that search.
 The same conclusion has been reached from the other direction in deployment, where
@@ -537,13 +592,20 @@ offers~\cite{carlini2024stealing}.
 \label{sec:exp-release}
 
 Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
-price to be read directly. Against a model that is aggregated, decrypted and
-handed to every participant, the servable arrangement selected by
-\cref{sec:exp-select} gives up $0.07$ on AG-News, $0.10$ on TREC, $0.14$ on
-DBpedia, $0.08$ on Banking77 and $0.03$ on CIFAR-100. The price is largest in the
-middle of the label-space range and smallest at the extremes, and it is paid for a
-property that no accuracy figure can substitute for: after the protocol ends, there
-is no plaintext model anywhere.
+price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
+$0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
+CIFAR-100. The price is largest in the middle of the label-space range and
+smallest at the extremes, and it is paid for a property that no accuracy figure
+can substitute for: after the protocol ends, there is no plaintext model anywhere.
+
+\paragraph{The partition costs more than the disclosure does.} The last column of
+\cref{tab:headline} isolates the second difference of \cref{sec:setup}. On three of
+the four text tasks $\Apool-\Adis$ exceeds $\Adis-\Asel$. It is $0.182$ against
+$0.071$ on AG-News, $0.257$ against $0.104$ on TREC, and $0.163$ against $0.075$ on
+Banking77. DBpedia is the exception, at $0.063$ against $0.136$. Most of the
+distance between a servable arrangement and a centralised model is therefore
+attributable to the partition of the data, and not to the decision never to
+decrypt.
 
 We do not present the disclosed model as an alternative configuration of this
 protocol, since it does not satisfy the requirements of \cref{sec:setting}.
