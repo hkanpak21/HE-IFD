@@ -16,19 +16,24 @@ We describe what a trusted party would do, so that the protocol can be measured
 against it. The functionality $\Fhe$ interacts with $\Nc$ clients, an
 aggregation server, and a serving party.
 
-\begin{description}
-\item[Training.] Each client $j$ sends its dataset $\Dj$. The functionality runs
-  the local training of \cref{alg:train} and forms the shared head $\thstar$ of
-  \cref{eq:aggregate}. It stores $\thstar$ and sends it to no party.
-\item[Selection.] The functionality computes the estimator of
-  \cref{eq:estimator} for both arrangements and announces the index of the
-  larger. It announces nothing else.
-\item[Serving.] On input $(\mathsf{query},x)$ from client $j$, if that client
-  has spent fewer than $Q$ queries, the functionality increments its counter and
-  returns $\hat y = \arg\max_c (\thstar\,\varphi_j(x))_c$ to client $j$ alone.
-  Otherwise it returns $\bot$.
-\end{description}
+\smallskip
+\noindent\emph{Training.} Each client $j$ sends its dataset $\Dj$. The
+functionality runs the local training of \cref{alg:train} and forms the shared
+head $\thstar$ of \cref{eq:aggregate}. It stores $\thstar$ and sends it to no
+party.
 
+\smallskip
+\noindent\emph{Selection.} The functionality computes the estimator of
+\cref{eq:estimator} for both arrangements and announces the index of the larger.
+It announces nothing else.
+
+\smallskip
+\noindent\emph{Serving.} On input $(\mathsf{query},x)$ from client $j$, if that
+client has spent fewer than $Q$ queries, the functionality increments its counter
+and returns $\hat y = \arg\max_c (\thstar\,\varphi_j(x))_c$ to client $j$ alone.
+Otherwise it returns $\bot$.
+
+\smallskip
 \noindent The functionality also reveals a fixed leakage $\Leak$ to the
 adversary: the public parameters, the per-client sample counts $\nj$, and the
 index the selection step announces. We write the counts into the leakage because
@@ -167,7 +172,7 @@ $Q_{\mathrm{tot}}$ label queries reveal, which is $\delta(Q_{\mathrm{tot}})$ by
 definition.
 \end{proof}
 
-\paragraph{Why the assumption cannot be discharged.} Decryption is a protocol
+\paragraph{Why the assumption cannot be discharged} Decryption is a protocol
 the clients run on a ciphertext the serving party presents. A coalition that
 presents a ciphertext of its own choosing, rather than the output of
 \cref{alg:serve}, can ask an honest client to help decrypt any value it likes,
@@ -214,7 +219,7 @@ and what each one costs. We present them as extensions. The protocol we
 implement is the one of \cref{sec:method}, and no figure in
 \cref{sec:experiments} includes them.
 
-\paragraph{A functionality that is within reach.} Replace the serving step of
+\paragraph{A functionality that is within reach} Replace the serving step of
 $\Fhe$ by one that answers with slots rather than with labels. On a request from
 the serving party that names an arithmetic circuit $E$ over the stored
 ciphertexts, together with a recipient $P$, the functionality charges one unit
@@ -225,7 +230,7 @@ two functionalities agree whenever the serving party follows the protocol. A
 deviating request is a different $E$, and it returns one scalar of the
 coalition's choosing.
 
-\paragraph{The mechanism that realizes it.} Before it contributes its share,
+\paragraph{The mechanism that realizes it} Before it contributes its share,
 every client multiplies the presented ciphertext by a public plaintext mask that
 selects a single slot. The mask is fixed and identical for all clients, so they
 agree on the masked ciphertext without communicating. Shares computed on
@@ -239,7 +244,7 @@ corrupted clients' inputs, the protocol realizes the functionality above with
 abort, against a malicious adversary corrupting the server, the serving party
 and up to $\Nc-1$ clients.
 
-\paragraph{Why the allowance still governs.} Each charged request returns one
+\paragraph{Why the allowance still governs} Each charged request returns one
 slot, so $Q_{\mathrm{tot}}$ requests return at most $Q_{\mathrm{tot}}$ scalars.
 The shared map holds $\Cc d$ parameters, and one slot carries a few tens of bits
 of precision. Recovering the map therefore costs on the order of $\Cc d$
@@ -247,7 +252,7 @@ requests, which is the order \cref{sec:exp-leak} measures for label-only
 extraction. A deviating coalition buys a constant factor rather than a change of
 order, and the query allowance remains the control.
 
-\paragraph{Closing the gap by recomputation.} \Cref{prop:nogate} blocks
+\paragraph{Closing the gap by recomputation} \Cref{prop:nogate} blocks
 predicates on the plaintext. It does not block a client that checks where a
 ciphertext came from. The serving circuit is a deterministic function of the
 encrypted head, the encrypted query, the evaluation keys and the public
@@ -258,7 +263,7 @@ prescribed output ciphertext and compare it as a string, which restores $\Fhe$
 itself. The design choice that saves $510$\,MiB of traffic on every query is the
 same one that leaves the circuit verifiable.
 
-\paragraph{The cost of verifying, and why sampling is enough.} Verifying every
+\paragraph{The cost of verifying, and why sampling is enough} Verifying every
 query costs one serving evaluation per verifying client, which
 \cref{sec:exp-cost} puts under two minutes at a hundred classes. Verifying a
 random fraction $p$ of queries costs $p$ times as much, and the shape of the
@@ -270,7 +275,7 @@ probability $4\times10^{-14}$ and below $10^{-250}$. The defence is cheap becaus
 the attack is long. One deviating request is easy to hide and returns one scalar,
 and a campaign worth mounting does not survive thousands of independent checks.
 
-\paragraph{What none of this covers.} Correctness. A client that uploads a
+\paragraph{What none of this covers} Correctness. A client that uploads a
 crafted displacement biases the shared head, and no mechanism above detects it.
 Certifying which function the serving party evaluated, rather than bounding the
 width of its answer, needs a zero-knowledge proof of correct evaluation or

@@ -138,7 +138,7 @@ the plaintext sum to the server, which this protocol never does.
 
 \input{figures/training}
 
-\paragraph{The construction.} Every client uses the same frozen public backbone
+\paragraph{The construction} Every client uses the same frozen public backbone
 $\featx$, and trains two things on its own data: a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
@@ -147,7 +147,7 @@ encrypted displacements into a single shared head and never decrypts the result.
 The adapter is trained locally and never transmitted. \Cref{fig:training} shows
 the arrangement.
 
-\paragraph{Necessity of the partition.} The client that asks a question must compute
+\paragraph{Necessity of the partition} The client that asks a question must compute
 the features of that question itself, by \textbf{C7}. If the shared trained
 quantity were an adapter placed inside the backbone, the features would depend on
 it, and computing them would require evaluating the backbone with encrypted
@@ -156,7 +156,7 @@ homomorphically, which is the cost this design exists to avoid. The trained
 quantity that is shared must therefore attach after the last nonlinearity, and in
 a transformer the only such point is the final linear map. That is the head.
 
-\paragraph{What the argument fixes, and what it leaves open.} The requirement
+\paragraph{What the argument fixes, and what it leaves open} The requirement
 constrains the \emph{position} of the shared map, not the task it serves. Any
 trained linear map that sits after the last nonlinearity satisfies it, provided
 the querying client can compute the features that enter the map. A classifier
@@ -181,7 +181,7 @@ has no adapter sum from which to subtract its own contributions, and cannot
 recover the remaining client's adapter by arithmetic. \Cref{sec:threat} states
 this precisely.
 
-\paragraph{The aggregation.} Let $g_{j}\in\mathbb{R}^{\Cc}$ collect client $j$'s
+\paragraph{The aggregation} Let $g_{j}\in\mathbb{R}^{\Cc}$ collect client $j$'s
 per-class example counts, $g_{j,c}=n_{j,c}$. The shared head is the
 coverage-weighted combination
 \begin{equation}
@@ -194,7 +194,7 @@ row-$c$ displacements. Clients holding a class decide its row, and rows that no
 client covers remain at the public initialiser. Each client forms the products
 $g_j\odot\disp$ locally, before encryption, so the server only adds ciphertexts.
 
-\paragraph{The division.} The denominator of \cref{eq:aggregate} is the vector of
+\paragraph{The division} The denominator of \cref{eq:aggregate} is the vector of
 federation-wide per-class totals. It cannot be decrypted. Every client knows its
 own counts, so a coalition of $\Nc-1$ clients that learned the totals would
 subtract its own and read the remaining client's class histogram exactly, which
@@ -225,7 +225,7 @@ backbone $\featx$ and the same public head initialiser $\thz$.}
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Cost.} The server performs one ciphertext addition per client per
+\paragraph{Cost} The server performs one ciphertext addition per client per
 ciphertext, one encrypted reciprocal, and one multiplication. The encrypted object
 is the head alone, whose size is set by the number of classes and the feature
 dimension and not by the backbone behind it. Communication is one upload per
@@ -237,7 +237,7 @@ the shared head.
 
 \input{figures/serving}
 
-\paragraph{The construction.} A client that wants a prediction computes the
+\paragraph{The construction} A client that wants a prediction computes the
 features of its query with its own backbone and adapter, encrypts them, and sends
 the ciphertext to a serving party. The serving party applies the encrypted shared
 head to the encrypted features, obtains encrypted logits, and reduces them to the
@@ -245,7 +245,7 @@ index of the largest entry under encryption. A quorum of clients then key-switch
 that index to the querying client, which decrypts one label.
 \Cref{fig:serving} shows the path, and \cref{alg:serve} states it.
 
-\paragraph{Encryption of the query.} The serving party could be given the
+\paragraph{Encryption of the query} The serving party could be given the
 features in plaintext, which would make the head application cheaper. We encrypt
 them because features are invertible: a party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
@@ -254,7 +254,7 @@ protocol exists to protect. The price is that the head is applied ciphertext by
 ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
 what that costs.
 
-\paragraph{Restriction to the predicted label.} Returning logits would defeat the
+\paragraph{Restriction to the predicted label} Returning logits would defeat the
 construction. The head is a linear map on features the client computes itself, so a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
@@ -270,7 +270,7 @@ general networks~\cite{chen2024hardlabel,carlini2025hardlabel}. It does not make
 extraction impossible, and \cref{sec:threat} states the resulting bound honestly,
 as a bound on queries rather than a cryptographic hardness claim.
 
-\paragraph{Directed decryption.} Decryption needs a quorum, so
+\paragraph{Directed decryption} Decryption needs a quorum, so
 other clients necessarily participate in producing an answer to a question they did
 not ask. Rather than decrypt the label collectively, which would reveal it to
 every participant, the quorum key-switches the ciphertext to the querying client's
@@ -297,7 +297,7 @@ public key. The other clients contribute shares and learn nothing.
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Cost and the role of the serving party.} The argmax is the one operation in the protocol
+\paragraph{Cost and the role of the serving party} The argmax is the one operation in the protocol
 that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
 minutes for a large label space. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
@@ -311,7 +311,7 @@ computes but cannot decrypt, and it learns neither the model nor any client's
 data. It is trusted only for availability, and where honest computation must be
 certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.
 
-\paragraph{Scope.} This construction serves a trained quantity that is linear in
+\paragraph{Scope} This construction serves a trained quantity that is linear in
 the features. Serving a trained quantity that sits inside the backbone is the
 problem that secure transformer inference addresses, and an encrypted shared
 adapter composes with any such system at that literature's cost. We do not
@@ -326,7 +326,7 @@ cost is the low-rank product per site rather than a different order of magnitude
 
 \input{figures/selection}
 
-\paragraph{The construction.} Two arrangements are servable at the same cost: the
+\paragraph{The construction} Two arrangements are servable at the same cost: the
 shared head over each client's own adapter, and the shared head over the bare
 public backbone with no adapter at all. Which is better depends on the task, and
 the federation must choose without decrypting either. Each client evaluates both
@@ -336,7 +336,7 @@ score per arrangement, the two scores are compared under encryption, and exactly
 one value is decrypted: which arrangement the federation adopts.
 \Cref{fig:selection} shows this, and \cref{alg:select} states it.
 
-\paragraph{Inadequacy of the held-out vote.} The natural procedure is for each client to
+\paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. This is
 not a matter of noise: the procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, and the union of the clients' data is the whole training
@@ -350,7 +350,7 @@ classes the client has never seen. The measurement is systematically optimistic 
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
 chooses wrongly whenever the two differ.
 
-\paragraph{A prior-weighted estimator.} Score both arrangements as the expected accuracy of a
+\paragraph{A prior-weighted estimator} Score both arrangements as the expected accuracy of a
 prediction on an example drawn from the federation's own class distribution,
 \begin{equation}
 \label{eq:estimator}
@@ -393,7 +393,7 @@ except the index of the winner.}
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Requirements on the held-out split.} The estimator needs an estimate of
+\paragraph{Requirements on the held-out split} The estimator needs an estimate of
 accuracy on classes a client has not seen, and its only local proxy is accuracy on
 classes it has barely seen. A held-out set carved uniformly almost never contains a
 class the client holds one or two examples of, so that proxy is unmeasurable. Each
@@ -403,7 +403,7 @@ class donates it, so its adapter never trains on that class, which is exactly th
 probe the estimator needs. This costs a negligible amount of training data and
 requires no change to the cryptography.
 
-\paragraph{Cost and disclosure.} Every step is depth one except the comparisons,
+\paragraph{Cost and disclosure} Every step is depth one except the comparisons,
 which are the same circuit already used for the argmax. The client knows its own
 labels, so the mask that selects the true class is a public plaintext, and the
 per-class totals are the same aggregate already used in \cref{eq:aggregate}, so the
@@ -421,13 +421,13 @@ honest-but-curious: they follow the protocol and may try to infer private
 information from what they observe. Clients may likewise be honest-but-curious and
 may collude.
 
-\paragraph{View of the server and the serving party.} Ciphertexts under the
+\paragraph{View of the server and the serving party} Ciphertexts under the
 collective public key, the public per-client sample counts, and the evaluation
 keys. Neither holds a decryption key, and by \cref{sec:mhe} neither can decrypt.
 The serving party additionally sees encrypted query features, which it cannot read
 and therefore cannot invert.
 
-\paragraph{Collusion among clients.} Decryption is $\Nc$-out-of-$\Nc$,
+\paragraph{Collusion among clients} Decryption is $\Nc$-out-of-$\Nc$,
 so any coalition short of all clients, including a coalition of $\Nc-1$ clients
 acting together with the server, cannot decrypt. This is the strongest collusion
 resistance the threshold structure admits, and the design is arranged so that no
@@ -437,7 +437,7 @@ never decrypted, so it cannot be inverted the same way. The per-class totals are
 never decrypted, so a coalition cannot recover the remaining client's class
 histogram.
 
-\paragraph{Extraction through the query interface.} A client can query the
+\paragraph{Extraction through the query interface} A client can query the
 served model and receive labels, and enough such queries reconstruct a functional
 copy of the shared head by boundary search. This is a bound on queries, not a
 cryptographic guarantee, and we state it as such. The relevant coalition is again
@@ -449,12 +449,12 @@ composes with the protocol without modification and which we discuss in
 \cref{sec:scope}; we do not evaluate it, and the accuracy figures we report assume
 it is not used.
 
-\paragraph{Outside the guarantee.} Robustness to actively malicious
+\paragraph{Outside the guarantee} Robustness to actively malicious
 clients is outside the cryptographic guarantee. A client that uploads a crafted
 displacement can bias the shared head, and because contributions are encrypted the
 server cannot inspect them. \Cref{sec:scope} discusses this.
 
-\paragraph{Protection without perturbation.} The aggregation of
+\paragraph{Protection without perturbation} The aggregation of
 \cref{eq:aggregate} runs entirely under multiparty CKKS, so the displacements are
 never available in plaintext to the server or to any coalition short of all
 clients. Nothing is noised. The cryptographic layer therefore costs no accuracy,
