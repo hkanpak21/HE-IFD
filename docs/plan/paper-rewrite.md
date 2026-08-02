@@ -186,31 +186,47 @@ already in the paper palette.
 
 ---
 
-## 4. Experiments that do not exist yet
+## 4. Experiments (status at 2026-08-02)
 
-Ordered by how badly the paper needs them.
+Everything the paper claims is now measured. Closed:
 
-| # | experiment | why it is needed | cost |
-|---|---|---|---|
-| E1 | Cryptographic cost of the new protocol: ciphertext-by-ciphertext head application, encrypted argmax per query, encrypted reciprocal for the head merge, key switch to the querier | Section 4.4 has no numbers at all for the current design. `tab:cost` measures the old one. | one Lattigo job, hours |
-| E2 | Cost of blind selection: encrypted scoring over the holdout, batched | Contribution 3 must state its price | folds into E1 |
-| E3 | Sensitivity under the new design: skew, client count, trajectory length | `tab:sens` used the aggregated adapter | one VALAR campaign, ~6h |
-| E4 | Matched partitions of prior one-shot methods under the new design | `tab:matched` used the aggregated adapter | one campaign, ~4h |
-| E5 | Membership inference against the serving oracle, label only | The released model no longer exists, so the current MIA section has no subject | one campaign, ~6h |
-| E6 | Robustness with leave-one-out candidates on the head only | `tab:poison` used the aggregated adapter, and selection is now encrypted | one campaign, ~4h |
-| E7 | GPU timings for the encrypted argmax | requested; FIDESlib and a built OpenFHE are already on VALAR | uncertain, build risk |
+| # | experiment | landed as |
+|---|---|---|
+| E1 | Cryptographic cost of the protocol | Table VI and Figure 4, from `results/fhe_serve/cost_grid.json` |
+| E2 | Cost of blind selection | folded into E1; the selection mask is one row of Table VI |
+| E3 | Sensitivity: skew, client count, trajectory length | Table III, all three rows filled |
+| E4 | Matched partitions of prior one-shot methods | Table IV, DENSE and FedAUXfdp, three seeds each |
+| E5 | What a participant can learn from the serving interface | became model extraction rather than membership inference, since no released model exists. Table VIII and `docs/notes/extraction-attack.md` |
+| E7 | GPU comparison | matched-ring primitive ratios in Section 5.4, about 5 to 6. We decline to project an end-to-end accelerated latency, and say why |
 
-E1 and E2 are blocking: the paper cannot claim a cost it has not measured.
-E3 through E6 are re-runs of tables that already exist in the old design.
-E7 is an improvement, not a gap.
+Dropped: **E6**, robustness with leave-one-out candidates. Selection is now
+encrypted and the shared object is the head alone, so the old poisoning table has
+no subject. Correctness against a malicious client is stated as out of scope in
+the security section and in the limitations.
+
+### Still open
+
+| item | why it matters | cost |
+|---|---|---|
+| Pooled reference on CIFAR-100 | Table II carries an em dash in that cell, which a reviewer will ask about | one job, ~1h |
+| Three seeds for the client-count row | N=20 and N=50 are seed 42 only, and the caption discloses it. Two more seeds each would let the row match the skew row | four jobs, ~4h |
+| Fold the twelve CIFAR-10 cells into Table V | selection is 13/15 in the table and 11/12 on the matched partitions, reported separately. One table at 24/27 is stronger | no compute, table edit |
+| Autoregressive perplexity | the generation claim is structural, and a reviewer may ask for one number | new pipeline, largest remaining cost. **Blocked on a decision**: GPT-2 ties the vocabulary projection to the input embedding, and untying it to federate costs perplexity on its own, which confounds the federation effect |
+| Differential privacy on the head | deferred with the user until the paper lands. The label-side half is measured in `results/extraction_defence/` and shows output noise is not deployable | one campaign |
+
+### Non-experimental, still open
+
+- Ask the TDSC editorial office whether a rejected manuscript may return. No
+  public policy exists.
+- If the venue moves to TIFS: find the TDSC reviews, quote every one verbatim
+  with a response, and cut the paper from 21 pages to 13.
+- Verify the author list of `beitollahi2024parametric` in `refs.bib` before
+  citing it. It is currently uncited and flagged in place.
 
 ---
 
 ## 5. Order of work
 
-1. Figures 1–3 in draw.io, checked at final print size.
-2. Section 3 rewritten around the three contributions.
-3. Section 2, with the secure-inference subsection and the closing validation.
-4. Section 1, rewritten to set up exactly what Sections 2 and 3 deliver.
-5. Section 4 restructured claim by claim, with gaps marked where E1–E6 will land.
-6. Abstract and conclusion last.
+Sections 1 through 5 are written and the paper is with the PIs on Overleaf as of
+2026-08-02. **Do not edit `docs/paper/` without explicit direction**, since local
+edits will diverge from the copy they are reading.

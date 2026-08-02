@@ -19,13 +19,26 @@ If a document disagrees with `method.tex`, the document is stale. Anything under
 `docs/archive/` is superseded by definition and must not be mined for
 methodology.
 
-## Source of truth (updated 2026-07-26)
+## Source of truth (updated 2026-08-02)
 
 - **Method and protocol** -> **`docs/paper/sections/method.tex`**.
+- **Security claims** -> **`docs/paper/sections/security.tex`**, with the
+  reasoning in `docs/notes/malicious-security.md`.
 - **Plan, standards, outstanding experiments** -> **`docs/plan/paper-rewrite.md`**.
-- **Numbers** -> `results/<case>/`. The accuracy table the paper reports comes
-  from `results/personal_adapter*/stratified/results.csv`; the cryptographic costs
-  come from `results/fhe_serve/`.
+- **Numbers.** Every figure in the paper traces to one of these:
+
+| paper element | record |
+|---|---|
+| Table II, five-task accuracy | `results/personal_adapter*/stratified/results.csv` |
+| Table II, pooled column | `results/centralised_ceiling/results.csv`, `matched_total` rows |
+| Table III, client-count row | `results/personal_adapter/nsweep.csv` |
+| Table IV, matched CIFAR-10 | `results/personal_adapter_vision/cifar10_matched.csv` |
+| Table VI and Figure 4, cost | `results/fhe_serve/cost_grid.json` |
+| the argmax and query totals | `results/fhe_serve/argmax_tournament.csv` |
+| Table VII, communication | `results/fhe_serve/comm_cost.json` |
+| Table VIII, extraction | `results/extraction_budget/results.csv` |
+| the extraction scaling law | `results/extraction_scale/results.csv` |
+| the noise-defence note | `results/extraction_defence/results.csv` |
 
 **Deprecated. Do NOT mine for methodology, equations, or threat model:**
 - `docs/archive/` — superseded notes and issue briefs, kept only for provenance.
@@ -76,12 +89,28 @@ classifier head is one such map. A decoder's vocabulary projection is another.
 The construction fixes the *position* of the map, not the task. Say this when
 scope comes up, and say we evaluate classification only, because we do.
 
-**Current state (2026-07-30).** Paper is 19 pages and compiles clean. It now has
-a separate security section with an ideal functionality, a semi-honest theorem,
-and a content game for input privacy under a malicious coalition. Accuracy,
-selection, cryptographic costs, extraction cost, and the pooled ceiling have all
-landed. See `docs/plan/security-program.md` for the security and journal work,
-and `docs/plan/paper-rewrite.md` for the paper flow.
+**Current state (2026-08-02). The paper is with the PIs.** It is 21 pages,
+compiles clean, and the user has moved it to Overleaf. **Do not edit
+`docs/paper/` without explicit direction.** Local edits will diverge from the
+Overleaf copy the PIs are reading.
+
+What the paper now contains, all measured and all sourced from records in
+`results/`:
+
+- A separate security section: an ideal functionality, a semi-honest theorem, a
+  content game for input privacy, an impossibility result showing the strict
+  functionality is out of reach against a deviating serving party, and a
+  subsection of extensions that would recover it.
+- Accuracy on five tasks, with four quantities per task: selected, alone,
+  disclosed and pooled. The paper argues in that notation.
+- CIFAR-10 on the DENSE and FedAUXfdp partitions, under the actual protocol.
+- Cryptographic cost over the full grid of ring degree and client count, with
+  the per-query total stated in seconds.
+- Extraction cost, the scaling law, and the separation between fidelity and
+  knowledge of client data.
+
+See `docs/plan/security-program.md` for the security and journal work, and
+`docs/plan/paper-rewrite.md` for the paper flow and what is still outstanding.
 
 ## Venue (decided 2026-07-29)
 
@@ -183,8 +212,29 @@ Single env: **`he_ofl`** (`/home/hkanpak21/.conda/envs/he_ofl`). Has `torch 2.3.
 
 ## Script gotchas
 
-- **`jobs/personal_adapter_vision.py` is CIFAR-100 only.** `DATASETS` is
-  hardcoded. Passing a different alpha does not change the dataset.
+- **`jobs/vision_matched.py` is the PRE-PIVOT pipeline. Its numbers are
+  disclosed models.** `agg_count_head` calls `agg_plain` first, which merges the
+  adapter as well as the head, and only then overrides the head rows. So every
+  candidate it produces is the model this protocol declines to build. It has no
+  shared-head arrangement, no personal-adapter arrangement, and no client-alone
+  mode, and it selects by the held-out client vote that the paper rejects. Use
+  it for nothing the paper claims. Corrected 2026-08-02, after it nearly put
+  disclosed-model figures into Section 5.3.
+- **`jobs/personal_adapter_vision.py` is the correct vision pipeline**, and it is
+  parameterised despite the hardcoded `DATASETS`. `main()` takes dataset names
+  and seeds as positional arguments, and reads `PA_N`, `PA_ALPHA` and `PA_K` from
+  the environment. Run a matched partition with
+  `PA_N=5 PA_ALPHA=0.1 sbatch jobs/personal_adapter_vision.sh cifar10 42`.
+  About 22 min per cell on a T4 for CIFAR-10, 43 min for CIFAR-100.
+  **Its per-dataset JSON name carries no N or alpha**, so parallel configs
+  overwrite it. The authoritative output is the CSV block printed to the `.out`
+  log, which is what `results/personal_adapter_vision/cifar10_matched.csv` was
+  built from.
+- **`fhe` has `-cost-grid`**, which measures every protocol operation over the
+  cross product of ring degree and client count in one run. Prefer it to
+  `-ring-sweep` and `-protocol-cost`, which each cover one axis and whose
+  single-run timings do not agree with each other. CPU-only: submit
+  `jobs/fhe_cost_grid.sh`, which has no `--gres` and so runs beside a GPU job.
 - **`jobs/vision_matched.py` holds the matched peer stages** (`dense`,
   `fedaux`, `fedsd2c`, `s6`) and is resumable: it writes one JSON per cell and
   skips finished cells. Its wrapper overrides `--stage` with the array index,
@@ -264,6 +314,8 @@ docs/
   plan/security-program.md             security proofs, journal rules, generation scope
   notes/extraction-attack.md           the attack, the four defence cases, literature
   notes/generation-scope.md            autoregressive scope, costs, Gumbel sampling
+  notes/malicious-security.md          the impossibility, the realizable functionality,
+                                       recomputation and spot-checking
   design/                              why a decision was made
   issues/                              per-task agent briefs
   notes/                               walkthroughs and session records
