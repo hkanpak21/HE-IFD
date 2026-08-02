@@ -381,13 +381,22 @@ the per-operation rows invite the wrong sum. On one core a query takes $31.5$\,s
 at four classes and $113.2$\,s at a hundred. The arithmetic and the key switch
 account for $0.24$\,s of that at every label-space size. Everything else is the
 encrypted argmax, which is therefore the only operation whose cost decides whether
-a deployment is practical. Three facts qualify that number. It is
-single-threaded, and the tournament argmax described below is a fold over
-$\lceil\log_2\Cc\rceil$ rounds whose comparisons within a round are independent.
-It is bootstrap-bound, and bootstrapping is the operation specialised hardware
-improves most. And it already reflects a fourteenfold reduction over the
-sequential fold, so it is what the optimised circuit costs rather than the naive
-one.
+a deployment is practical. The number is already the optimised circuit rather
+than the naive one. The tournament costs about $16$\,s per round and needs
+$\lceil\log_2\Cc\rceil$ rounds, against the fourteenfold larger sequential fold.
+
+Three levers apply to that figure, and they differ in what they move. Multi-core
+execution does not shorten the circuit, because the rounds are sequential by
+construction and the comparisons within one round are already packed into a
+single operation on a single ciphertext. It applies inside each primitive
+instead, across the residue moduli of the RNS decomposition, and our
+single-threaded measurement uses none of it. Overlapping computation with
+communication raises throughput rather than lowering latency, because the level
+restorations lie on the critical path of one query, while a serving party that
+answers many queries can pipeline them. Hardware acceleration is the only lever
+that acts directly on the dominant term. The argmax is bootstrap-bound, which is
+where a GPU implementation helps most and, for the reason given below, where we
+decline to project a single number.
 
 \paragraph{The encrypted reciprocal} Inverting the per-class totals under
 encryption, which \cref{sec:split} requires so that no coalition can read the
