@@ -556,6 +556,37 @@ func repeat(v, n int) []int {
 // Comparing across ring degrees would confound the hardware with the parameter
 // set, so this sweeps the same operations across ring degrees and lets the
 // comparison be made at a matched one.
+// runCostGrid measures every protocol operation over the full cross product of
+// ring degree and federation size, so one figure can carry both axes.
+func runCostGrid(jsonPath string) {
+	fmt.Println("=== per-operation cost against ring degree and federation size (CPU) ===")
+	fmt.Println()
+	var out []protoResult
+	for _, logN := range []int{14, 15, 16} {
+		for _, n := range []int{5, 10, 20} {
+			fmt.Printf("  measuring at ring 2^%d, N=%d ...\n", logN, n)
+			r := measureProtocol(n, logN)
+			out = append(out, r)
+			printProto(r)
+			if jsonPath != "" { // write after every cell so a wall-clock kill keeps the work
+				b, _ := json.MarshalIndent(out, "", "  ")
+				check(os.WriteFile(jsonPath, b, 0o644))
+			}
+		}
+	}
+	fmt.Println()
+	fmt.Println("log_n,n_parties,slots,ct_x_ct_ms,pt_x_ct_ms,add_ms,rotation_ms," +
+		"key_switch_ms,key_switch_bytes,reciprocal_ms,mask_ms")
+	for _, r := range out {
+		fmt.Printf("%d,%d,%d,%.3f,%.3f,%.4f,%.3f,%.3f,%d,%.1f,%.4f\n",
+			r.LogN, r.N, r.Slots, r.CtxCtMs, r.PtxCtMs, r.AddMs, r.RotMs,
+			r.PCKSMs, r.PCKSBytes, r.RecipMs, r.MaskMs)
+	}
+	if jsonPath != "" {
+		fmt.Printf("\nwrote %s\n", jsonPath)
+	}
+}
+
 func runRingSweep(jsonPath string) {
 	fmt.Println("=== per-operation cost against ring degree (CPU) ===")
 	fmt.Println()

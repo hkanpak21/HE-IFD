@@ -101,6 +101,7 @@ func main() {
 		btpKeyFlag          = flag.Bool("btp-keys", false, "measure the one-time bootstrapping key material that lets the serving party refresh locally")
 		commCostFlag        = flag.Bool("comm-cost", false, "measure the communication the protocol needs: key-generation shares, ciphertexts, key-switching shares, and refresh shares")
 		ringSweepFlag       = flag.Bool("ring-sweep", false, "measure the per-operation cost across ring degrees, so the GPU comparison can be made at a matched ring")
+		costGridFlag        = flag.Bool("cost-grid", false, "measure every protocol operation over the cross product of ring degree and federation size")
 		protocolCostFlag    = flag.Bool("protocol-cost", false, "measure the operations the encrypted-serving protocol adds: ciphertext-by-ciphertext head application, encrypted reciprocal for the head merge, key switch to the querier, and selection scoring")
 	)
 	flag.Parse()
@@ -108,6 +109,10 @@ func main() {
 	// Serve mode (encrypted inference): measure the per-query cost atoms Release
 	// mode does not pay — the collective refresh (multiparty bootstrap) and the
 	// threshold decrypt. See serve.go.
+	if *costGridFlag {
+		runCostGrid(*jsonOut)
+		return
+	}
 	if *ringSweepFlag {
 		runRingSweep(*jsonOut)
 		return
