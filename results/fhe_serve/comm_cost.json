@@ -1,0 +1,38 @@
+[
+  {
+    "n_parties": 5,
+    "log_n": 14,
+    "public_key_share_bytes": 1179736,
+    "relin_key_share_bytes_two_rounds": 28313952,
+    "galois_key_share_bytes_per_rotation": 9438040,
+    "ciphertext_bytes_full_level": 2097582,
+    "ciphertext_bytes_level_1": 524622,
+    "key_switch_share_bytes_full_level": 1048648,
+    "key_switch_share_bytes_level_1": 262168,
+    "collective_refresh_share_bytes": 1573253
+  },
+  {
+    "n_parties": 10,
+    "log_n": 14,
+    "public_key_share_bytes": 1179736,
+    "relin_key_share_bytes_two_rounds": 28313952,
+    "galois_key_share_bytes_per_rotation": 9438040,
+    "ciphertext_bytes_full_level": 2097582,
+    "ciphertext_bytes_level_1": 524622,
+    "key_switch_share_bytes_full_level": 1048648,
+    "key_switch_share_bytes_level_1": 262168,
+    "collective_refresh_share_bytes": 1573253
+  },
+  {
+    "n_parties": 20,
+    "log_n": 14,
+    "public_key_share_bytes": 1179736,
+    "relin_key_share_bytes_two_rounds": 28313952,
+    "galois_key_share_bytes_per_rotation": 9438040,
+    "ciphertext_bytes_full_level": 2097582,
+    "ciphertext_bytes_level_1": 524622,
+    "key_switch_share_bytes_full_level": 1048648,
+    "key_switch_share_bytes_level_1": 262168,
+    "collective_refresh_share_bytes": 1573253
+  }
+]

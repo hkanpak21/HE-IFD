@@ -58,27 +58,27 @@ type config struct {
 
 // result captures the validated correctness + cost numbers for one scenario.
 type result struct {
-	Scenario        string  `json:"scenario"`
-	LattigoVersion  string  `json:"lattigo_version"`
-	D               int     `json:"d_head_params"`
-	N               int     `json:"n_clients"`
-	LogN            int     `json:"log_ring_degree"`
-	RingDegree      int     `json:"ring_degree"`
-	Slots           int     `json:"slots_per_ciphertext"`
-	CtPerClient     int     `json:"ciphertexts_per_client"`
-	LogScale        int     `json:"log_scale"`
-	MultDepth       int     `json:"multiplicative_depth_used"`
-	BytesPerCt      int     `json:"bytes_per_ciphertext_fresh"`
-	UploadBytes     int     `json:"total_upload_bytes"`     // N clients × Δ ciphertexts
-	DownloadBytes   int     `json:"total_download_bytes"`   // final result ciphertexts → all clients
-	DecShareBytes   int     `json:"decrypt_share_bytes_total"` // CKS shares (threshold-decrypt traffic)
-	RelL2Error      float64 `json:"relative_l2_error"`
-	MaxAbsError     float64 `json:"max_abs_error"`
-	Passed          bool    `json:"passed_1e-3"`
-	EncryptMs       float64 `json:"client_encrypt_ms_total"`
-	AggregateMs     float64 `json:"server_aggregate_ms"`
-	DecryptMs       float64 `json:"threshold_decrypt_ms"`
-	DkgMs           float64 `json:"dkg_keygen_ms"`
+	Scenario       string  `json:"scenario"`
+	LattigoVersion string  `json:"lattigo_version"`
+	D              int     `json:"d_head_params"`
+	N              int     `json:"n_clients"`
+	LogN           int     `json:"log_ring_degree"`
+	RingDegree     int     `json:"ring_degree"`
+	Slots          int     `json:"slots_per_ciphertext"`
+	CtPerClient    int     `json:"ciphertexts_per_client"`
+	LogScale       int     `json:"log_scale"`
+	MultDepth      int     `json:"multiplicative_depth_used"`
+	BytesPerCt     int     `json:"bytes_per_ciphertext_fresh"`
+	UploadBytes    int     `json:"total_upload_bytes"`        // N clients × Δ ciphertexts
+	DownloadBytes  int     `json:"total_download_bytes"`      // final result ciphertexts → all clients
+	DecShareBytes  int     `json:"decrypt_share_bytes_total"` // CKS shares (threshold-decrypt traffic)
+	RelL2Error     float64 `json:"relative_l2_error"`
+	MaxAbsError    float64 `json:"max_abs_error"`
+	Passed         bool    `json:"passed_1e-3"`
+	EncryptMs      float64 `json:"client_encrypt_ms_total"`
+	AggregateMs    float64 `json:"server_aggregate_ms"`
+	DecryptMs      float64 `json:"threshold_decrypt_ms"`
+	DkgMs          float64 `json:"dkg_keygen_ms"`
 }
 
 const lattigoVersion = "github.com/tuneinsight/lattigo/v6 v6.2.0"
@@ -91,12 +91,63 @@ func check(err error) {
 
 func main() {
 	var (
-		dFlag    = flag.Int("d", 0, "single-scenario head dimension (0 = run default suite)")
-		nFlag    = flag.Int("n", 0, "single-scenario client count")
-		logNFlag = flag.Int("logn", 14, "log2 ring degree")
-		jsonOut  = flag.String("json", "", "optional path to write results JSON")
+		dFlag               = flag.Int("d", 0, "single-scenario head dimension (0 = run default suite)")
+		nFlag               = flag.Int("n", 0, "single-scenario client count")
+		logNFlag            = flag.Int("logn", 14, "log2 ring degree")
+		jsonOut             = flag.String("json", "", "optional path to write results JSON")
+		serveFlag           = flag.Bool("serve", false, "run the Serve-mode encrypted-inference cost benchmark (collective refresh + threshold decrypt) instead of the Release-mode aggregation suite")
+		serveArgmaxFlag     = flag.Bool("serve-argmax", false, "run the Serve-mode encrypted-argmax cost benchmark over C classes (collective-refresh-backed sign circuit)")
+		serveTournamentFlag = flag.Bool("serve-tournament", false, "run the Serve-mode LOG-DEPTH tournament argmax (SIMD-packed rotate-and-Max; the QuickMax optimization)")
+		btpKeyFlag          = flag.Bool("btp-keys", false, "measure the one-time bootstrapping key material that lets the serving party refresh locally")
+		commCostFlag        = flag.Bool("comm-cost", false, "measure the communication the protocol needs: key-generation shares, ciphertexts, key-switching shares, and refresh shares")
+		ringSweepFlag       = flag.Bool("ring-sweep", false, "measure the per-operation cost across ring degrees, so the GPU comparison can be made at a matched ring")
+		costGridFlag        = flag.Bool("cost-grid", false, "measure every protocol operation over the cross product of ring degree and federation size")
+		protocolCostFlag    = flag.Bool("protocol-cost", false, "measure the operations the encrypted-serving protocol adds: ciphertext-by-ciphertext head application, encrypted reciprocal for the head merge, key switch to the querier, and selection scoring")
 	)
 	flag.Parse()
+
+	// Serve mode (encrypted inference): measure the per-query cost atoms Release
+	// mode does not pay — the collective refresh (multiparty bootstrap) and the
+	// threshold decrypt. See serve.go.
+	if *costGridFlag {
+		runCostGrid(*jsonOut)
+		return
+	}
+	if *ringSweepFlag {
+		runRingSweep(*jsonOut)
+		return
+	}
+	if *serveFlag {
+		runServeSuite(*jsonOut)
+		return
+	}
+	// Serve-mode ARGMAX (Job 2): full encrypted argmax over C classes, its
+	// bootstraps wired to collective refreshes. See serve_argmax.go.
+	if *serveArgmaxFlag {
+		runArgmaxSuite(*jsonOut)
+		return
+	}
+	// Serve-mode TOURNAMENT argmax (Job 3): log-depth SIMD-packed rotate-and-Max,
+	// the QuickMax optimization. See serve_tournament.go.
+	if *serveTournamentFlag {
+		runTournamentSuite(*jsonOut)
+		return
+	}
+	// The operations encrypted serving adds over Release-mode aggregation.
+	// See protocol_cost.go.
+	if *protocolCostFlag {
+		runProtocolCost(*jsonOut)
+		return
+	}
+	// Communication accounting, so that "one-shot" can be stated precisely.
+	if *commCostFlag {
+		runCommCost(*jsonOut)
+		return
+	}
+	if *btpKeyFlag {
+		runBootstrapKeys(*jsonOut)
+		return
+	}
 
 	var scenarios []config
 	if *dFlag > 0 && *nFlag > 0 {
@@ -244,7 +295,7 @@ func run(c config) result {
 	//    PT-scalar × CT  (the w_i multiply, +1 level, then Rescale)
 	//    CT + CT         (accumulation across clients, and adding θ₀ plaintext)
 	//    Multiplicative depth used = 1.
-    // =======================================================================
+	// =======================================================================
 	evaluator := ckks.NewEvaluator(params, nil) // nil eval keys: no relin needed
 	t0 = time.Now()
 	aggCts := make([]*rlwe.Ciphertext, ctPerClient)

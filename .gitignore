@@ -95,3 +95,14 @@ REJECTED_PAPER/*.pdf
 # Keep the one-page change summary (source + pdf) tracked, unlike the big rejected PDFs
 !REJECTED_PAPER/changes_summary.pdf
 REJECTED_PAPER/*.zip
+
+# LaTeX build artifacts (main.pdf stays tracked: it is the deliverable)
+*.aux
+*.log
+*.out
+*.blg
+*.bbl
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+texput.log

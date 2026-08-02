@@ -2,28 +2,29 @@
 \centering
 \begin{tikzpicture}[
   pbox/.style={draw=paperblue, fill=paperbluelt, rounded corners, align=left,
-               text width=58mm, inner sep=4pt, font=\footnotesize, minimum height=7.5mm},
+               text width=60mm, inner sep=4pt, font=\footnotesize, minimum height=7.5mm},
   srv/.style={pbox, fill=paperneutrallt, draw=paperneutral},
   num/.style={circle, draw=paperneutral, fill=white, inner sep=0.6pt, font=\scriptsize, minimum size=4.4mm},
   go/.style={-{Stealth[length=2mm]}, semithick, draw=paperneutral}
 ]
-\node[pbox, fill=blueA] (s1) {Per-class prototype exchange over P2P channels (server excluded) $\Rightarrow$ shared loss basin $\theta_0$};
-\node[pbox, fill=blueA, below=3.6mm of s1] (s2) {Distributed key generation $\Rightarrow$ collective CKKS key};
-\node[pbox, fill=blueB, below=3.6mm of s2] (s3) {Local teacher training, then $K$-step bounded distillation from $\theta_0$ $\Rightarrow$ displacement $\Delta_j$};
-\node[pbox, fill=blueB, below=3.6mm of s3] (s4) {Encrypt $\Delta_j$; clients $\rightarrow$ server};
-\node[srv, below=3.6mm of s4] (s5) {Server: $\theta^\star=\theta_0+\sum_j w_j\Delta_j$ on ciphertexts (additions, public-scalar mult.; depth $1$)};
-\node[srv, below=3.6mm of s5] (s6) {Broadcast $\mathsf{Enc}(\theta^\star)$; server $\rightarrow$ clients};
-\node[pbox, fill=blueC, below=3.6mm of s6] (s7) {Threshold decryption by a quorum of clients $\Rightarrow$ global model $\theta^\star$};
-\foreach \a/\b in {s1/s2,s2/s3,s3/s4,s4/s5,s5/s6,s6/s7} \draw[go] (\a) -- (\b);
-\foreach \s/\n in {s1/1,s2/2,s3/3,s4/4,s5/5,s6/6,s7/7} \node[num] at ([xshift=-3.2mm]\s.west) {\n};
+\node[pbox, fill=blueA] (s1) {Public, data-free setup: frozen backbone $\varphi$ and shared init $\theta_0$ (freeze-$A$ adapter $+$ head); distributed key generation $\Rightarrow$ collective CKKS key};
+\node[pbox, fill=blueB, below=3.6mm of s1] (s2) {Each client fine-tunes the trainable unit for $K$ steps from $\theta_0$ $\Rightarrow$ displacement $\Delta_j=\theta_j-\theta_0$};
+\node[pbox, fill=blueB, below=3.6mm of s2] (s3) {Encrypt $\Delta_j$; clients $\rightarrow$ server};
+\node[srv, below=3.6mm of s3] (s4) {Server, depth $1$: candidate aggregates $\{\theta_0+\lambda\textstyle\sum_j w_j\Delta_j$, count-/Fisher-reweighted, leave-one-out$\}$ on ciphertexts};
+\node[pbox, fill=blueC, below=3.6mm of s4] (s5) {Clients threshold-decrypt the candidates and vote on local data $\Rightarrow$ selected $\theta^\star$};
+\node[pbox, fill=blueD, text=white, below=3.6mm of s5] (s6) {Disclose $\theta^\star$: \emph{Release} --- decrypt, every client holds the plaintext model; \emph{or Serve} --- keep $\mathsf{Enc}(\theta^\star)$, answer queries under encryption, decrypt only the $\arg\max$ label};
+\foreach \a/\b in {s1/s2,s2/s3,s3/s4,s4/s5,s5/s6} \draw[go] (\a) -- (\b);
+\foreach \s/\n in {s1/1,s2/2,s3/3,s4/4,s5/5,s6/6} \node[num] at ([xshift=-3.2mm]\s.west) {\n};
 \begin{scope}[on background layer]
-  \node[draw=paperblue, dashed, rounded corners, fit=(s5)(s6), inner sep=2.2mm,
+  \node[draw=paperblue, dashed, rounded corners, fit=(s3)(s4), inner sep=2.2mm,
         label={[font=\scriptsize\itshape, text=paperblue]right:encrypted}] {};
 \end{scope}
 \end{tikzpicture}
-\caption{Step-by-step view of the protocol. Steps 1--3 run among the clients without the server; the
-displacements are encrypted (step~4) and the server's single operation is the linear combination of step~5,
-which it performs without being able to decrypt; the global model is recovered only by a quorum of clients
-(step~7).}
+\caption{Step-by-step view of HE-OFT. There is no alignment phase: the backbone and the initializer
+$\theta_0$ are public and carry no data (step~1). Each client fine-tunes in plaintext and encrypts only its
+displacement (steps~2--3); the server's sole operation is the depth-one candidate aggregation (step~4),
+performed without the ability to decrypt; a quorum of clients decrypts and votes (step~5). The selected model
+$\theta^\star$ is then either \emph{released} (decrypted and distributed) or \emph{served} (kept encrypted and
+queried under encryption) --- the two disclosure settings of \cref{sec:serve} (step~6).}
 \label{fig:protocol-steps}
 \end{figure}

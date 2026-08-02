@@ -1,0 +1,109 @@
+match,N,alpha,dataset,C,seed,mode,n,acc_mean,acc_min,acc_max,note
+dense,5,0.1,cifar10,10,42,current,1,0.9545,0.9545,0.9545,agg adapter + agg head
+dense,5,0.1,cifar10,10,42,local,5,0.3633,0.202,0.4925,own adapter + own head
+dense,5,0.1,cifar10,10,42,B_personal,5,0.9303,0.9025,0.9445,own adapter + agg head
+dense,5,0.1,cifar10,10,42,A_headonly,1,0.9385,0.9385,0.9385,r=0, head only, federated
+dense,5,0.1,cifar10,10,42,sel_perclient,5,0.9303,0.9025,0.9445,per-client vote (biased), 5/5 chose B
+dense,5,0.1,cifar10,10,42,sel_federated,5,0.9303,0.9025,0.9445,federation picked B (B=0.9800 A=0.9339)
+dense,5,0.1,cifar10,10,42,sel_fed_balanced,5,0.9303,0.9025,0.9445,federation picked B (B=0.8816 A=0.8757)
+dense,5,0.1,cifar10,10,42,sel_globalprior,5,0.9385,0.9385,0.9385,picked A (E_B=0.6229 E_A=0.9358; true B=0.9303 A=0.9385)
+dense,5,0.1,cifar10,10,42,sel_gp_rarefill,5,0.9385,0.9385,0.9385,picked A (E_B=0.7233 E_A=0.9358; true B=0.9303 A=0.9385)
+dense,5,0.1,cifar10,10,43,current,1,0.963,0.963,0.963,agg adapter + agg head
+dense,5,0.1,cifar10,10,43,local,5,0.3352,0.2,0.614,own adapter + own head
+dense,5,0.1,cifar10,10,43,B_personal,5,0.9289,0.903,0.9555,own adapter + agg head
+dense,5,0.1,cifar10,10,43,A_headonly,1,0.9515,0.9515,0.9515,r=0, head only, federated
+dense,5,0.1,cifar10,10,43,sel_perclient,5,0.9289,0.903,0.9555,per-client vote (biased), 5/5 chose B
+dense,5,0.1,cifar10,10,43,sel_federated,5,0.9289,0.903,0.9555,federation picked B (B=0.9800 A=0.9600)
+dense,5,0.1,cifar10,10,43,sel_fed_balanced,5,0.9515,0.9515,0.9515,federation picked A (B=0.9548 A=0.9792)
+dense,5,0.1,cifar10,10,43,sel_globalprior,5,0.9515,0.9515,0.9515,picked A (E_B=0.6061 E_A=0.9610; true B=0.9289 A=0.9515)
+dense,5,0.1,cifar10,10,43,sel_gp_rarefill,5,0.9515,0.9515,0.9515,picked A (E_B=0.8214 E_A=0.9610; true B=0.9289 A=0.9515)
+dense,5,0.1,cifar10,10,44,current,1,0.9675,0.9675,0.9675,agg adapter + agg head
+dense,5,0.1,cifar10,10,44,local,5,0.4531,0.2075,0.592,own adapter + own head
+dense,5,0.1,cifar10,10,44,B_personal,5,0.9413,0.9105,0.9575,own adapter + agg head
+dense,5,0.1,cifar10,10,44,A_headonly,1,0.9555,0.9555,0.9555,r=0, head only, federated
+dense,5,0.1,cifar10,10,44,sel_perclient,5,0.9413,0.9105,0.9575,per-client vote (biased), 5/5 chose B
+dense,5,0.1,cifar10,10,44,sel_federated,5,0.9413,0.9105,0.9575,federation picked B (B=0.9810 A=0.9480)
+dense,5,0.1,cifar10,10,44,sel_fed_balanced,5,0.9413,0.9105,0.9575,federation picked B (B=0.9699 A=0.9594)
+dense,5,0.1,cifar10,10,44,sel_globalprior,5,0.9555,0.9555,0.9555,picked A (E_B=0.7800 E_A=0.9481; true B=0.9413 A=0.9555)
+dense,5,0.1,cifar10,10,44,sel_gp_rarefill,5,0.9555,0.9555,0.9555,picked A (E_B=0.8621 E_A=0.9481; true B=0.9413 A=0.9555)
+dense,5,0.3,cifar10,10,42,current,1,0.9645,0.9645,0.9645,agg adapter + agg head
+dense,5,0.3,cifar10,10,42,local,5,0.5993,0.478,0.6915,own adapter + own head
+dense,5,0.3,cifar10,10,42,B_personal,5,0.953,0.9445,0.9595,own adapter + agg head
+dense,5,0.3,cifar10,10,42,A_headonly,1,0.9445,0.9445,0.9445,r=0, head only, federated
+dense,5,0.3,cifar10,10,42,sel_perclient,5,0.953,0.9445,0.9595,per-client vote (biased), 5/5 chose B
+dense,5,0.3,cifar10,10,42,sel_federated,5,0.953,0.9445,0.9595,federation picked B (B=0.9800 A=0.9540)
+dense,5,0.3,cifar10,10,42,sel_fed_balanced,5,0.9445,0.9445,0.9445,federation picked A (B=0.9491 A=0.9587)
+dense,5,0.3,cifar10,10,42,sel_globalprior,5,0.9445,0.9445,0.9445,picked A (E_B=0.8670 E_A=0.9553; true B=0.9530 A=0.9445)
+dense,5,0.3,cifar10,10,42,sel_gp_rarefill,5,0.9445,0.9445,0.9445,picked A (E_B=0.9212 E_A=0.9553; true B=0.9530 A=0.9445)
+dense,5,0.3,cifar10,10,43,current,1,0.965,0.965,0.965,agg adapter + agg head
+dense,5,0.3,cifar10,10,43,local,5,0.5122,0.451,0.5995,own adapter + own head
+dense,5,0.3,cifar10,10,43,B_personal,5,0.9446,0.9235,0.962,own adapter + agg head
+dense,5,0.3,cifar10,10,43,A_headonly,1,0.9515,0.9515,0.9515,r=0, head only, federated
+dense,5,0.3,cifar10,10,43,sel_perclient,5,0.9446,0.9235,0.962,per-client vote (biased), 5/5 chose B
+dense,5,0.3,cifar10,10,43,sel_federated,5,0.9446,0.9235,0.962,federation picked B (B=0.9790 A=0.9540)
+dense,5,0.3,cifar10,10,43,sel_fed_balanced,5,0.9515,0.9515,0.9515,federation picked A (B=0.9551 A=0.9778)
+dense,5,0.3,cifar10,10,43,sel_globalprior,5,0.9515,0.9515,0.9515,picked A (E_B=0.8780 E_A=0.9551; true B=0.9446 A=0.9515)
+dense,5,0.3,cifar10,10,43,sel_gp_rarefill,5,0.9515,0.9515,0.9515,picked A (E_B=0.9041 E_A=0.9551; true B=0.9446 A=0.9515)
+dense,5,0.3,cifar10,10,44,current,1,0.9615,0.9615,0.9615,agg adapter + agg head
+dense,5,0.3,cifar10,10,44,local,5,0.5961,0.4795,0.677,own adapter + own head
+dense,5,0.3,cifar10,10,44,B_personal,5,0.9499,0.925,0.97,own adapter + agg head
+dense,5,0.3,cifar10,10,44,A_headonly,1,0.954,0.954,0.954,r=0, head only, federated
+dense,5,0.3,cifar10,10,44,sel_perclient,5,0.9499,0.925,0.97,per-client vote (biased), 5/5 chose B
+dense,5,0.3,cifar10,10,44,sel_federated,5,0.9499,0.925,0.97,federation picked B (B=0.9760 A=0.9600)
+dense,5,0.3,cifar10,10,44,sel_fed_balanced,5,0.9499,0.925,0.97,federation picked B (B=0.9590 A=0.9524)
+dense,5,0.3,cifar10,10,44,sel_globalprior,5,0.954,0.954,0.954,picked A (E_B=0.8735 E_A=0.9605; true B=0.9499 A=0.9540)
+dense,5,0.3,cifar10,10,44,sel_gp_rarefill,5,0.954,0.954,0.954,picked A (E_B=0.9318 E_A=0.9605; true B=0.9499 A=0.9540)
+fedauxfdp,20,0.04,cifar10,10,42,current,1,0.9315,0.9315,0.9315,agg adapter + agg head
+fedauxfdp,20,0.04,cifar10,10,42,local,17,0.2499,0.098,0.3905,own adapter + own head
+fedauxfdp,20,0.04,cifar10,10,42,B_personal,17,0.9046,0.8695,0.9405,own adapter + agg head
+fedauxfdp,20,0.04,cifar10,10,42,A_headonly,1,0.943,0.943,0.943,r=0, head only, federated
+fedauxfdp,20,0.04,cifar10,10,42,sel_perclient,17,0.9046,0.8695,0.9405,per-client vote (biased), 17/17 chose B
+fedauxfdp,20,0.04,cifar10,10,42,sel_federated,17,0.9046,0.8695,0.9405,federation picked B (B=0.9831 A=0.9419)
+fedauxfdp,20,0.04,cifar10,10,42,sel_fed_balanced,17,0.9046,0.8695,0.9405,federation picked B (B=0.9600 A=0.9288)
+fedauxfdp,20,0.04,cifar10,10,42,sel_globalprior,17,0.943,0.943,0.943,picked A (E_B=0.3929 E_A=0.9416; true B=0.9046 A=0.9430)
+fedauxfdp,20,0.04,cifar10,10,42,sel_gp_rarefill,17,0.943,0.943,0.943,picked A (E_B=0.5934 E_A=0.9416; true B=0.9046 A=0.9430)
+fedauxfdp,20,0.04,cifar10,10,43,current,1,0.9495,0.9495,0.9495,agg adapter + agg head
+fedauxfdp,20,0.04,cifar10,10,43,local,18,0.2063,0.084,0.418,own adapter + own head
+fedauxfdp,20,0.04,cifar10,10,43,B_personal,18,0.9196,0.886,0.946,own adapter + agg head
+fedauxfdp,20,0.04,cifar10,10,43,A_headonly,1,0.9495,0.9495,0.9495,r=0, head only, federated
+fedauxfdp,20,0.04,cifar10,10,43,sel_perclient,18,0.9196,0.886,0.946,per-client vote (biased), 18/18 chose B
+fedauxfdp,20,0.04,cifar10,10,43,sel_federated,18,0.9196,0.886,0.946,federation picked B (B=0.9921 A=0.9511)
+fedauxfdp,20,0.04,cifar10,10,43,sel_fed_balanced,18,0.9196,0.886,0.946,federation picked B (B=0.9429 A=0.9053)
+fedauxfdp,20,0.04,cifar10,10,43,sel_globalprior,18,0.9495,0.9495,0.9495,picked A (E_B=0.3232 E_A=0.9510; true B=0.9196 A=0.9495)
+fedauxfdp,20,0.04,cifar10,10,43,sel_gp_rarefill,18,0.9495,0.9495,0.9495,picked A (E_B=0.5107 E_A=0.9510; true B=0.9196 A=0.9495)
+fedauxfdp,20,0.04,cifar10,10,44,current,1,0.948,0.948,0.948,agg adapter + agg head
+fedauxfdp,20,0.04,cifar10,10,44,local,19,0.18,0.0925,0.4195,own adapter + own head
+fedauxfdp,20,0.04,cifar10,10,44,B_personal,19,0.9093,0.806,0.9475,own adapter + agg head
+fedauxfdp,20,0.04,cifar10,10,44,A_headonly,1,0.951,0.951,0.951,r=0, head only, federated
+fedauxfdp,20,0.04,cifar10,10,44,sel_perclient,19,0.9093,0.806,0.9475,per-client vote (biased), 19/19 chose B
+fedauxfdp,20,0.04,cifar10,10,44,sel_federated,19,0.9093,0.806,0.9475,federation picked B (B=0.9910 A=0.9559)
+fedauxfdp,20,0.04,cifar10,10,44,sel_fed_balanced,19,0.9093,0.806,0.9475,federation picked B (B=0.9390 A=0.9331)
+fedauxfdp,20,0.04,cifar10,10,44,sel_globalprior,19,0.951,0.951,0.951,picked A (E_B=0.3306 E_A=0.9571; true B=0.9093 A=0.9510)
+fedauxfdp,20,0.04,cifar10,10,44,sel_gp_rarefill,19,0.951,0.951,0.951,picked A (E_B=0.6995 E_A=0.9571; true B=0.9093 A=0.9510)
+fedauxfdp,20,0.16,cifar10,10,42,current,1,0.954,0.954,0.954,agg adapter + agg head
+fedauxfdp,20,0.16,cifar10,10,42,local,20,0.3509,0.209,0.567,own adapter + own head
+fedauxfdp,20,0.16,cifar10,10,42,B_personal,20,0.9297,0.875,0.953,own adapter + agg head
+fedauxfdp,20,0.16,cifar10,10,42,A_headonly,1,0.95,0.95,0.95,r=0, head only, federated
+fedauxfdp,20,0.16,cifar10,10,42,sel_perclient,20,0.9303,0.875,0.953,per-client vote (biased), 19/20 chose B
+fedauxfdp,20,0.16,cifar10,10,42,sel_federated,20,0.9297,0.875,0.953,federation picked B (B=0.9760 A=0.9491)
+fedauxfdp,20,0.16,cifar10,10,42,sel_fed_balanced,20,0.95,0.95,0.95,federation picked A (B=0.9464 A=0.9655)
+fedauxfdp,20,0.16,cifar10,10,42,sel_globalprior,20,0.95,0.95,0.95,picked A (E_B=0.6489 E_A=0.9512; true B=0.9297 A=0.9500)
+fedauxfdp,20,0.16,cifar10,10,42,sel_gp_rarefill,20,0.95,0.95,0.95,picked A (E_B=0.9401 E_A=0.9512; true B=0.9297 A=0.9500)
+fedauxfdp,20,0.16,cifar10,10,43,current,1,0.963,0.963,0.963,agg adapter + agg head
+fedauxfdp,20,0.16,cifar10,10,43,local,20,0.4075,0.209,0.6005,own adapter + own head
+fedauxfdp,20,0.16,cifar10,10,43,B_personal,20,0.9422,0.9255,0.9605,own adapter + agg head
+fedauxfdp,20,0.16,cifar10,10,43,A_headonly,1,0.952,0.952,0.952,r=0, head only, federated
+fedauxfdp,20,0.16,cifar10,10,43,sel_perclient,20,0.9423,0.9255,0.9605,per-client vote (biased), 19/20 chose B
+fedauxfdp,20,0.16,cifar10,10,43,sel_federated,20,0.9422,0.9255,0.9605,federation picked B (B=0.9880 A=0.9579)
+fedauxfdp,20,0.16,cifar10,10,43,sel_fed_balanced,20,0.952,0.952,0.952,federation picked A (B=0.9471 A=0.9509)
+fedauxfdp,20,0.16,cifar10,10,43,sel_globalprior,20,0.952,0.952,0.952,picked A (E_B=0.6165 E_A=0.9585; true B=0.9422 A=0.9520)
+fedauxfdp,20,0.16,cifar10,10,43,sel_gp_rarefill,20,0.952,0.952,0.952,picked A (E_B=0.8386 E_A=0.9585; true B=0.9422 A=0.9520)
+fedauxfdp,20,0.16,cifar10,10,44,current,1,0.9605,0.9605,0.9605,agg adapter + agg head
+fedauxfdp,20,0.16,cifar10,10,44,local,20,0.4372,0.237,0.6395,own adapter + own head
+fedauxfdp,20,0.16,cifar10,10,44,B_personal,20,0.9426,0.9055,0.959,own adapter + agg head
+fedauxfdp,20,0.16,cifar10,10,44,A_headonly,1,0.9545,0.9545,0.9545,r=0, head only, federated
+fedauxfdp,20,0.16,cifar10,10,44,sel_perclient,20,0.9448,0.9055,0.959,per-client vote (biased), 18/20 chose B
+fedauxfdp,20,0.16,cifar10,10,44,sel_federated,20,0.9426,0.9055,0.959,federation picked B (B=0.9811 A=0.9512)
+fedauxfdp,20,0.16,cifar10,10,44,sel_fed_balanced,20,0.9426,0.9055,0.959,federation picked B (B=0.9667 A=0.9553)
+fedauxfdp,20,0.16,cifar10,10,44,sel_globalprior,20,0.9545,0.9545,0.9545,picked A (E_B=0.6857 E_A=0.9506; true B=0.9426 A=0.9545)
+fedauxfdp,20,0.16,cifar10,10,44,sel_gp_rarefill,20,0.9545,0.9545,0.9545,picked A (E_B=0.8948 E_A=0.9506; true B=0.9426 A=0.9545)

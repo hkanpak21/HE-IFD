@@ -1,0 +1,6 @@
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_training.pdf}
+\caption{Building the shared head. Every client fine-tunes on the same frozen public backbone. The adapter is trained locally and never transmitted, so no aggregate of the adapters is ever formed and a coalition of clients has no sum from which to subtract its own contributions. Only the head displacement is encrypted and uploaded. The server adds the ciphertexts, weighting each by a public count, and divides by the per-class totals under encryption, holding no decryption key. The result is a shared head that no party decrypts.}
+\label{fig:training}
+\end{figure*}

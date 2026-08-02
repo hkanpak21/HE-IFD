@@ -529,10 +529,13 @@
 
 @article{wan2024privacy,
   title={Quantifying and Defending against the Privacy Risk in Logit-based Federated Learning},
-  author={Wan, Wenlong and Gao, Yufei and Gu, Hanlin and Fan, Lixin and Yang, Qiang},
-  journal={arXiv preprint arXiv:2406.XXXXX},
-  year={2024}
+  author={Wan, Sheng and Gao, Dashan and Gu, Hanlin and Fan, Lixin and Hu, Daning and Yang, Qiang},
+  journal={arXiv preprint arXiv:2606.08252},
+  year={2026}
 }
+
+% UNCITED and UNVERIFIED: the author list below was written from recollection.
+% Verify it against the record before citing this entry.
 
 @inproceedings{beitollahi2024parametric,
   title={Parametric Feature Transfer: One-shot Federated Learning with Foundation Models},
@@ -910,3 +913,162 @@
   pages     = {965--978},
   year      = {2022},
   organization = {IEEE}}
+
+% ---- Serve-mode / encrypted-inference additions (2026-07-14) ----
+% Model extraction, label-only attacks, and the report-noisy-max DP primitive
+% for the Serve setting (sec:serve). Standard references; verify pages if needed.
+
+@inproceedings{tramer2016stealing,
+  title     = {Stealing Machine Learning Models via Prediction {APIs}},
+  author    = {Tram{\`e}r, Florian and Zhang, Fan and Juels, Ari and Reiter, Michael K. and Ristenpart, Thomas},
+  booktitle = {25th USENIX Security Symposium (USENIX Security 16)},
+  pages     = {601--618},
+  year      = {2016}}
+
+@inproceedings{lowdmeek2005,
+  title     = {Adversarial Learning},
+  author    = {Lowd, Daniel and Meek, Christopher},
+  booktitle = {Proceedings of the 11th ACM SIGKDD International Conference on Knowledge Discovery in Data Mining (KDD)},
+  pages     = {641--647},
+  year      = {2005}}
+
+@inproceedings{choquettechoo2021labelonly,
+  title     = {Label-Only Membership Inference Attacks},
+  author    = {Choquette-Choo, Christopher A. and Tram{\`e}r, Florian and Carlini, Nicholas and Papernot, Nicolas},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  pages     = {1964--1974},
+  year      = {2021}}
+
+@inproceedings{mcsherry2007mechanism,
+  title     = {Mechanism Design via Differential Privacy},
+  author    = {McSherry, Frank and Talwar, Kunal},
+  booktitle = {48th Annual IEEE Symposium on Foundations of Computer Science (FOCS)},
+  pages     = {94--103},
+  year      = {2007}}
+
+% ---- Data-protection / AI compliance (FTaaS motivation, 2026-07-14) ----
+% Provisions verified against primary sources (EUR-Lex, govinfo.gov CFR,
+% eur-lex/artificialintelligenceact.eu, kvkk.gov.tr). Use "strictly restricts /
+% heightened conditions / de-identification," never "forbids."
+
+@misc{gdpr2016,
+  title        = {Regulation (EU) 2016/679 (General Data Protection Regulation)},
+  author       = {{European Parliament and Council of the European Union}},
+  howpublished = {Official Journal of the European Union, L 119, pp.\ 1--88},
+  year         = {2016},
+  note         = {Art.\ 5(1)(b--c) purpose limitation and data minimisation; Art.\ 9 special categories; Chapter V transfers to third countries}}
+
+@misc{hipaa,
+  title        = {{HIPAA} Privacy Rule},
+  author       = {{U.S. Department of Health and Human Services}},
+  howpublished = {45 C.F.R. Parts 160 and 164},
+  year         = {2013},
+  note         = {\S\,164.502(b) minimum necessary; \S\,164.514(a--b) de-identification (Expert Determination and Safe Harbor); \S\,164.508 authorization; \S\,164.502(e) business-associate agreements}}
+
+@misc{kvkk2016,
+  title        = {Law on the Protection of Personal Data (Ki\c{s}isel Verilerin Korunmas{\i} Kanunu), Law No.\ 6698},
+  author       = {{Republic of T\"urkiye}},
+  year         = {2016},
+  note         = {Art.\ 6 special categories of personal data; Art.\ 5 processing conditions; Art.\ 9 transfer abroad (as amended by Law No.\ 7499, 2024)}}
+
+@misc{euaiact2024,
+  title        = {Regulation (EU) 2024/1689 (Artificial Intelligence Act)},
+  author       = {{European Parliament and Council of the European Union}},
+  howpublished = {Official Journal of the European Union, L, 2024/1689},
+  year         = {2024},
+  note         = {Art.\ 10 data and data governance for high-risk AI systems; Annex III; Art.\ 6(1) with Annex I}}
+
+@misc{pipl2021,
+  title  = {Personal Information Protection Law of the People's Republic of China},
+  author = {{Standing Committee of the National People's Congress}},
+  year   = {2021}}
+
+@misc{dpdp2023,
+  title  = {Digital Personal Data Protection Act},
+  author = {{Parliament of India}},
+  year   = {2023}}
+
+% ---- Efficient encrypted argmax (Serve cost, 2026-07-14) ----
+@inproceedings{cheon2020comparison,
+  title     = {Efficient Homomorphic Comparison Methods with Optimal Complexity},
+  author    = {Cheon, Jung Hee and Kim, Dongwoo and Kim, Duhyeong},
+  booktitle = {Advances in Cryptology -- ASIACRYPT 2020},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {12492},
+  pages     = {221--256},
+  year      = {2020}}
+
+@inproceedings{zhang2025nexus,
+  title     = {Secure Transformer Inference Made Non-interactive},
+  author    = {Zhang, Jiawen and Liu, Jian and Yang, Xinpeng and Wang, Yinghao and Chen, Kejia and Hou, Xiaoyang and Ren, Kui and Yang, Xiaohu},
+  booktitle = {Network and Distributed System Security Symposium (NDSS)},
+  year      = {2025},
+  note      = {Cryptology ePrint Archive, Paper 2024/136}}
+
+% ===== Secure transformer inference (added 2026-07-26) =====
+% VERIFY these three against the papers before submission: venue and author list
+% are from recollection, not from an extracted PDF.
+@inproceedings{hao2022iron,
+  title={{Iron}: Private Inference on Transformers},
+  author={Hao, Meng and Li, Hongwei and Chen, Hanxiao and Xing, Pengzhi and Xu, Guowen and Zhang, Tianwei},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  pages={15718--15731},
+  year={2022}}
+
+@inproceedings{pang2024bolt,
+  title={{BOLT}: Privacy-Preserving, Accurate and Efficient Inference for Transformers},
+  author={Pang, Qi and Zhu, Jinhao and M{\"o}llering, Helen and Zheng, Wenting and Schneider, Thomas},
+  booktitle={IEEE Symposium on Security and Privacy (S\&P)},
+  pages={4753--4771},
+  year={2024}}
+
+@article{dong2023puma,
+  title={{PUMA}: Secure Inference of {LLaMA-7B} in Five Minutes},
+  author={Dong, Ye and Lu, Wen-jie and Zheng, Yancheng and Wu, Haoqi and Zhao, Derun and Tan, Jin and Huang, Zhicong and Hong, Cheng and Wei, Tao and Chen, Wenguang},
+  journal={arXiv preprint arXiv:2307.12533},
+  year={2023}}
+
+@article{yang2024phantom,
+  title   = {Phantom: A {CUDA}-Accelerated Word-Wise Homomorphic Encryption Library},
+  author  = {Yang, Hao and Shen, Shiyu and Dai, Wangchen and Zhou, Lu and Liu, Zhe and Zhao, Yunlei},
+  journal = {IEEE Transactions on Dependable and Secure Computing},
+  volume  = {21},
+  number  = {5},
+  pages   = {4895--4906},
+  year    = {2024},
+  doi     = {10.1109/TDSC.2024.3363900},
+  note    = {Library available at https://github.com/encryptorion-lab/phantom-fhe},
+}
+
+@inproceedings{carlini2024stealing,
+  title     = {Stealing Part of a Production Language Model},
+  author    = {Carlini, Nicholas and Paleka, Daniel and Dvijotham, Krishnamurthy Dj and Steinke, Thomas and others},
+  booktitle = {Proceedings of the 41st International Conference on Machine Learning (ICML)},
+  year      = {2024},
+  note      = {arXiv:2403.06634},
+}
+
+@inproceedings{chen2024hardlabel,
+  title     = {Hard-Label Cryptanalytic Extraction of Neural Network Models},
+  author    = {Chen, Yi and Dong, Xiaoyang and Guo, Jian and Shen, Yantian and Wang, Anyu and Wang, Xiaoyun},
+  booktitle = {Advances in Cryptology -- ASIACRYPT 2024},
+  year      = {2024},
+  publisher = {Springer},
+}
+
+@inproceedings{carlini2025hardlabel,
+  title     = {Polynomial Time Cryptanalytic Extraction of Deep Neural Networks in the Hard-Label Setting},
+  author    = {Carlini, Nicholas and Ch{\'a}vez-Saab, Jorge and Hambitzer, Anna and Rodr{\'i}guez-Henr{\'i}quez, Francisco and Shamir, Adi},
+  booktitle = {Advances in Cryptology -- EUROCRYPT 2025},
+  year      = {2025},
+  publisher = {Springer},
+}
+
+@inproceedings{canales2024polynomial,
+  title     = {Polynomial Time Cryptanalytic Extraction of Neural Network Models},
+  author    = {Canales-Mart{\'i}nez, Isaac A. and Ch{\'a}vez-Saab, Jorge and Hambitzer, Anna and Rodr{\'i}guez-Henr{\'i}quez, Francisco and Satpute, Nitin and Shamir, Adi},
+  booktitle = {Advances in Cryptology -- EUROCRYPT 2024},
+  pages     = {3--33},
+  year      = {2024},
+  publisher = {Springer},
+}

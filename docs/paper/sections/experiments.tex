@@ -1,595 +1,702 @@
 \section{Experiments}
 \label{sec:experiments}
 
-We evaluate the protocol's central claim: that encryption protects each client's contribution at no cost to
-the shared model's accuracy, where one-shot differentially private federated learning must trade accuracy for
-the same protection. The evaluation tests that claim and the design choices behind it. We ask, in order: what
-fine-tuning the pretrained layers and selecting among depth-one candidate aggregates add over the naive
-one-shot average; how the method behaves under heterogeneity, a poisoned client, and the trajectory budget;
-what the cryptographic protocol costs in time and communication; how much the one remaining surface, the
-released model, leaks; and what the method
-reaches at the published setups of prior one-shot methods and on a half-billion-parameter backbone.
-Throughout, the
-question is not whether the global model attains the highest possible test
-accuracy, but whether the clients jointly obtain a single model close to a centrally fine-tuned one, in one
-round, with cryptographic privacy that adds no accuracy cost.
+Each subsection below states a claim in one sentence, describes the experiment
+that tests it, and reports the result. The claims are, in order: that a federated
+head over private representations is a usable model; that its accuracy is
+competitive with one-shot federated learning on that literature's own partition;
+that the federation can choose between arrangements without decrypting either;
+that the cryptographic layer is affordable, including the traffic that recurs; and
+that what a participant can learn is bounded. \Cref{sec:exp-release} then states what
+disclosing the model would have bought, and \cref{sec:scope} records what the
+protocol does not cover.
 
 \subsection{Setup}
 \label{sec:setup}
 
-Every client starts from the \emph{same} public pretrained backbone with a zero-initialized low-rank
-adapter and a freshly initialized head --- the standard adapter initialization $\thz$, which carries no
-client data and classifies at chance --- fine-tunes the adapter and head on its own private data for a
-bounded $\Ksteps$ steps, and uploads the encrypted displacement; the server forms the depth-one weighted
-sum of \cref{eq:aggregate}. No labelled public set is used anywhere in the paper, since the setting
-without one is where a one-shot encrypted aggregation is actually needed
-(\cref{sec:publicbase} discusses the easier case in which a deployment has one). We evaluate on four text
-classification tasks of increasing label-space size --- AG-News (4 classes), TREC (6), DBpedia (14), and
-Banking77 (77) --- with a frozen RoBERTa-base encoder, and on CIFAR-100 with a frozen ViT. Data
-are partitioned across clients by a Dirichlet distribution over labels with concentration $\alpha$, the
-standard label-skew partition~\cite{hsu2019measuring,li2022niidbench}: a smaller $\alpha$ leaves each client
-a few dominant classes and almost none of the rest. This induces label-distribution skew, one axis of
-heterogeneity in the standard taxonomy~\cite{kairouz2021advances}; it holds the feature distribution fixed
-across clients and so does not model cross-institution domain shift, which we leave to future multi-source
-evaluation. Unless stated otherwise there are $\Nc=10$ clients, the adapter has rank $8$, the
-trajectory is $\Ksteps=200$ steps, and every number is the mean over three seeds.
+Every client fine-tunes on the same frozen public backbone. The trainable unit is
+a rank-$8$ low-rank adapter with its down-projection frozen at a shared public
+initialisation, together with a classifier head. The adapter is trained locally and
+never transmitted; the head displacement is encrypted and uploaded once. No
+labelled public data is used anywhere in this paper, because the setting without
+one is the setting in which an encrypted one-shot protocol is required.
 
-Alongside the accuracy of the HE-OFT global model we report two reference points: the \emph{naive
-aggregate}, the plain sample-weighted average of the clients' fine-tuned units with no candidate
-selection, and, as the ceiling, the \emph{centralized} model, the same adapter and head fine-tuned on the
-pooled private data, what one party would obtain holding all of it. The quantities of interest are the
-lift over the naive aggregate and the gap below the centralized ceiling; the centralized
-accuracy itself appears in captions rather than repeated in every row. \Cref{tab:setup} lists the
-evaluation axes.
+We evaluate on four text classification tasks of increasing label-space size,
+AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
+$77$, using a frozen RoBERTa-base encoder, and on CIFAR-100 with a frozen
+ViT-B/16. Data are partitioned across clients by a Dirichlet distribution over
+labels with concentration $\alpha$, the standard label-skew
+partition~\cite{hsu2019measuring,li2022niidbench}, which induces label-distribution
+skew in the usual taxonomy~\cite{kairouz2021advances} and holds the feature
+distribution fixed across clients. Unless stated otherwise there are $\Nc=10$
+clients, $\alpha=0.1$, the local trajectory is $200$ steps, and every number is the
+mean over three seeds. Each client reserves at least one held-out example from
+every class it holds, as \cref{sec:selection} requires, and tops the held-out set
+up to one tenth of its shard at random.
 
-\begin{table}[t]
-\centering
-\caption{Evaluation axes. Each varies one dimension around the default ($\Nc=10$, rank-$8$ adapter,
-$\Ksteps=200$, three seeds); no public data is used anywhere.}
-\label{tab:setup}
-\footnotesize
-\begin{tabular}{p{0.26\linewidth}p{0.29\linewidth}p{0.30\linewidth}}
-\toprule
-Axis & Setting & Question it probes \\
-\midrule
-Trainable unit & head-only vs.\ rank-$\{4,8,16\}$ adapter & value of fine-tuning pretrained layers \\
-Heterogeneity $\alpha$ & $0.05$ (severe) to $1.0$ (mild) & robustness to label skew \\
-Clients $\Nc$ & $10,\ 20,\ 50,\ 100$ & scalability in participants \\
-Trajectory $\Ksteps$ & $100,\ 200,\ 400$ & the bounded-step budget \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table}
+We write $\Asel$ for the accuracy of the servable arrangement that
+\cref{sec:exp-select} selects. Three reference points appear throughout, and none
+of them is servable under the threat model of \cref{sec:threat}. We write $\Aloc$
+for the accuracy a client obtains alone, with its own adapter and its own head and
+no federation. We write $\Adis$ for the accuracy of the disclosed model, in which
+the adapter and the head are both aggregated and decrypted, so that every party
+holds the result in plaintext. We write $\Apool$ for the accuracy of one model
+trained on the union of the clients' data at the same total number of steps.
 
-\subsection{The Value of Fine-Tuning the Pretrained Layers}
-\label{sec:superior}
+Two differences follow, and the paper reports both. The quantity
+$\Adis-\Asel$ is the price of never disclosing a model. The quantity
+$\Apool-\Adis$ is the price of the partition.
 
-The design rests on two choices working together: adapting the backbone's own layers with a small
-frozen-projection adapter (small enough to encrypt inexpensively, yet fine-tuning the pretrained
-representation itself), and selecting among depth-one candidate aggregates after decryption rather than
-committing to a fixed rule the blind server cannot adapt. \Cref{fig:increment} and \cref{tab:headline}
-measure both at $\Nc=10$ and moderate heterogeneity, against the naive sample-weighted average and the
-centralized ceiling.
+\subsection{Utility of the Federated Head}
+\label{sec:exp-split}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_increment.pdf}
-\caption{HE-OFT raises the single encrypted aggregation well above the chance start and above the naive
-sample-weighted average; the gap to centralized grows with the size of the label space, and no client data
-is shared.}
-\label{fig:increment}
-\end{figure}
+\paragraph{Claim} Sharing only the classifier head, over representations that
+each client adapts privately, yields a model usable across the whole label space,
+and the preferable arrangement depends on the size of the label space.
+
+\Cref{tab:headline} reports both servable arrangements and both reference points.
+The arrangement labelled \emph{shared head} gives every client the same model over
+the bare public backbone. The arrangement labelled \emph{personal adapter} gives
+each client the shared head over its own privately adapted representation.
 
 \begin{table}[t]
 \centering
-\caption{HE-OFT against the naive one-shot aggregation and the centralized ceiling ($\Nc=10$, $\alpha=0.1$,
-rank-$8$ frozen-projection adapter, three seeds). ``Naive'' is the plain sample-weighted average
-($\lambda{=}1$, no candidate selection); HE-OFT is the client-selected candidate; $\pm$ is the seed standard
-deviation; the gap is HE-OFT to centralized. Text tasks use frozen RoBERTa, CIFAR-100 a frozen ViT-B/16.}
+\caption{Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
+Both servable arrangements are shown, together with what a client obtains alone,
+what a disclosed model would reach, and what one model trained on the pooled data
+reaches at the same total number of steps. Neither reference is servable under
+the threat model of \cref{sec:threat}. We did not run the pooled reference on
+CIFAR-100.}
 \label{tab:headline}
 \footnotesize
-\begin{tabular}{lcccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccccc}
 \toprule
-Task ($\Cc$) & naive avg & HE-OFT & centralized & gap \\
+ & & \multicolumn{2}{c}{servable} & & \multicolumn{2}{c}{reference} \\
+\cmidrule(lr){3-4}\cmidrule(lr){6-7}
+Task & $\Cc$ & shared head & personal adapter & alone & disclosed & pooled \\
 \midrule
-AG-News (4)     & 0.51 & $\mathbf{0.75}{\pm}0.09$ & 0.91 & 0.16 \\
-TREC (6)        & 0.51 & $\mathbf{0.72}{\pm}0.05$ & 0.95 & 0.23 \\
-DBpedia (14)    & 0.80 & $\mathbf{0.93}{\pm}0.01$ & 0.99 & 0.06 \\
-Banking77 (77)  & 0.39 & $\mathbf{0.77}{\pm}0.02$ & 0.88 & 0.11 \\
-CIFAR-100 (100) & 0.47 & $\mathbf{0.78}{\pm}0.01$ & 0.87 & 0.09 \\
+AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 & 0.921 \\
+TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 & 0.967 \\
+DBpedia    & 14  & $\mathbf{0.789}$ & 0.754 & 0.451 & 0.925 & 0.988 \\
+Banking77  & 77  & 0.206 & $\mathbf{0.686}$ & 0.249 & 0.760 & 0.923 \\
+CIFAR-100  & 100 & 0.748 & $\mathbf{0.774}$ & 0.197 & 0.784 & --- \\
 \bottomrule
 \end{tabular}
-\normalsize
 \end{table}
 
-Two effects combine in \cref{tab:headline}. First, fine-tuning the frozen backbone's own layers with a
-small adapter raises the model far above the chance start: from a $\thz$ that classifies at chance to between
-$0.72$ and $0.93$ across the four text tasks and $0.78$ on CIFAR-100, with only the small adapter and head
-entering the encrypted combination, so the protocol and its cost do not change across tasks. Second, the
-candidate set with client-side selection (\cref{sec:candidates}) raises the released model above the
-naive sample-weighted average, by $0.24$ on AG-News, $0.21$ on TREC, $0.13$ on DBpedia and $0.38$ on
-Banking77; the naive average is the combination that heterogeneity makes unstable, and the vote
-selects the candidate that is robust to it. Across these headline cells that winner is the count-weighted head
-merge in the large majority of runs and the Fisher merge in the rest, never the plain scaling family: it is
-the coverage reweighting --- the clients that hold a class deciding its head row --- not a smaller aggregation
-step, that recovers what the naive average loses under skew. The remaining gap to the centralized fine-tune is small at moderate
-label spaces ($0.06$ on the 14-class DBpedia) and is largest where a single round must cover many classes
-each client barely observes; even there, freezing the adapter's projection and selecting a coverage-weighted
-candidate hold the 77-class Banking77 gap to $0.11$, down from $0.49$ for the naive average. HE-OFT
-produces the model in one round, with no client exposing its data and with encryption that perturbs nothing.
+Three observations follow. First, the federation accounts for most of the
+resulting accuracy. A client alone
+reaches $0.20$ to $0.48$, because under this skew it holds only a few classes and
+cannot classify the rest, while the federated head reaches $0.61$ to $0.79$ on
+four of the five tasks. The gap is largest exactly where a client's own data covers
+least of the label space.
 
-The lift comes from the adapter, not its rank. \Cref{tab:unit} varies the trainable unit on DBpedia: a
-head alone on the frozen features reaches $0.78$, and its own centralized ceiling is only $0.93$, because a
-linear probe cannot adapt the representation. Adding a rank-$4$ adapter, which fine-tunes the backbone's own
-layers, lifts the released model to $0.93$ and raises the centralized ceiling to $0.99$; rank $8$ matches it
-and rank $16$ does not improve on either, while tripling the encrypted object. The adapter is therefore what
-makes fine-tuning worthwhile, and a small rank captures all of it, which is also what keeps the ciphertext
-count low; we fix rank $8$ elsewhere as a mid-point.
+Second, the preferable arrangement changes with the size of the label space, and
+the mechanism is identifiable. On the small label spaces the shared head wins by a wide
+margin, $0.17$ on AG-News and $0.18$ on TREC. On the large ones the personal
+adapter wins, and on Banking77 it wins decisively: the shared head collapses to
+$0.206$ while the personal adapter holds $0.686$. The collapse is a coverage
+failure. With $77$ classes and this skew most head rows are decided by very few
+clients or none, and a head over the bare public backbone has nothing else to work
+with. A privately adapted representation improves separability for every class the
+client will ever be asked about, including those it never observed, which is what
+rescues the large label spaces.
+
+Third, the two failure modes are complementary rather than ordered by severity. The shared head
+fails when coverage is thin. The personal adapter fails when each client's
+representation drifts far enough that a common head no longer transfers, which is
+what occurs when the local task approaches a single class. Neither arrangement
+dominates the other, so the federation must select between them, which is the
+subject of \cref{sec:exp-select}.
+
+\paragraph{Sensitivity} \Cref{tab:sens} varies the protocol axes around the
+default on DBpedia. Accuracy falls with skew as expected, from $0.971$ at
+$\alpha=1.0$ to $0.789$ at $\alpha=0.1$, and the $0.812$ at $\alpha=0.05$ is within
+the seed spread at that setting, which runs from $0.769$ to $0.861$. Longer local
+training helps, from $0.718$ at $100$ steps to $0.870$ at $400$, and it helps the
+shared head more than the personal adapter, since the head over the bare backbone
+gains $0.27$ across that range against $0.06$ for the personal adapter. Accuracy
+rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
+$\Nc=50$, because more clients cover more of the label space between them even as
+each one holds less data.
+
+The more informative reading concerns which arrangement is selected. The estimator
+chooses the shared head at $\alpha\in\{0.05,0.1\}$ and the personal adapter at
+$\alpha\in\{0.3,1.0\}$, on every seed in each case. The crossover is therefore not
+a property of the label space alone, as \cref{sec:exp-split} might suggest, but of
+coverage: the personal adapter is preferable once each client sees enough of the
+label space for its own representation to transfer, and the shared head is
+preferable when it does not. The estimator locates that crossover from encrypted
+local evidence, with no test set and no fitted threshold.
 
 \begin{table}[t]
 \centering
-\caption{Trainable unit on DBpedia ($\Nc{=}10$, $\alpha{=}0.1$, three seeds): a head alone on the frozen
-features versus a freeze-$A$ rank-$r$ adapter plus head. ``params'' is the trainable count, which sets the
-encrypted object's size; HE-OFT is the vote-selected accuracy; ``centralized'' is the same unit trained on
-the pooled data.}
-\label{tab:unit}
-\footnotesize
-\begin{tabular}{lccc}
-\toprule
-Trainable unit & params & HE-OFT & centralized \\
-\midrule
-head only            & $11$k  & $0.78{\pm}0.01$ & $0.93$ \\
-$+$ rank-$4$ adapter  & $84$k  & $\mathbf{0.93}{\pm}0.01$ & $0.99$ \\
-$+$ rank-$8$ adapter  & $158$k & $\mathbf{0.93}{\pm}0.01$ & $0.99$ \\
-$+$ rank-$16$ adapter & $306$k & $0.91{\pm}0.04$ & $0.99$ \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table}
-
-\subsection{Sensitivity: Heterogeneity, Client Count, Trajectory Length}
-\label{sec:heterogeneity}
-
-How much the released model trails the centralized one is governed by label skew, the axis the single
-linear aggregation is most exposed to. \Cref{tab:sens} sweeps the three protocol axes on DBpedia. Under
-the Dirichlet concentration at $\Nc=10$, the accuracy degrades gracefully and monotonically, from $0.98$
-when the data are near-uniform
-($\alpha=1.0$, within $0.01$ of centralized) to $0.87$ under severe skew ($\alpha=0.05$), while the
-centralized fine-tune barely moves. The gap the one-shot aggregation pays is therefore a property of
-heterogeneity, small when each client sees most of the label space and widening only when each sees a sliver
-of it; this is the same coverage effect that \cref{sec:basin} characterises, and the candidate selection
-contains it rather than letting it collapse the model.
-
-\begin{table}[t]
-\centering
-\caption{Sensitivity of HE-OFT on DBpedia along the three protocol axes, each varied around the default
-($\Nc=10$, $\alpha=0.1$, $\Ksteps=200$); centralized $\approx 0.99$ throughout. $\pm$ is the standard
-deviation over three seeds; the $\Ksteps$ sweep is a single seed.}
+\caption{Sensitivity on DBpedia along the protocol axes, each varied around the
+default of $\Nc=10$, $\alpha=0.1$ and $200$ local steps. The row reports the
+accuracy of the arrangement the estimator selects. The skew row is the mean over
+three seeds. The local-steps and client-count rows are a single seed, and their
+default cells are that seed's value rather than the three-seed mean.}
 \label{tab:sens}
 \footnotesize
 \begin{tabular}{lcccc}
 \toprule
-\multicolumn{5}{@{}l}{\emph{Heterogeneity} $\alpha$ \quad ($\Nc=10$, $\Ksteps=200$)} \\
+\multicolumn{5}{@{}l}{\emph{Label skew} $\alpha$} \\
  & $0.05$ & $0.10$ & $0.30$ & $1.00$ \\
-HE-OFT & $0.87{\pm}0.05$ & $0.93{\pm}0.01$ & $0.96{\pm}0.02$ & $0.98{\pm}0.00$ \\
+selected arrangement & $0.812$ & $0.789$ & $0.914$ & $0.971$ \\
+selected & shared & shared & personal & personal \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{Clients} $\Nc$ \quad ($\alpha=0.1$, $\Ksteps=200$)} \\
+\multicolumn{5}{@{}l}{\emph{Clients} $\Nc$} \\
  & $10$ & $20$ & $50$ & \\
-HE-OFT & $0.93{\pm}0.01$ & $0.90{\pm}0.02$ & $0.93{\pm}0.00$ & \\
+selected arrangement & $0.803$ & $0.826$ & $0.882$ & \\
 \midrule
-\multicolumn{5}{@{}l}{\emph{Trajectory} $\Ksteps$ \quad ($\Nc=10$, $\alpha=0.1$)} \\
+\multicolumn{5}{@{}l}{\emph{Local steps}} \\
  & $100$ & $200$ & $400$ & \\
-HE-OFT & $0.91$ & $0.93$ & $0.94$ & \\
+selected arrangement & $0.718$ & $0.803$ & $0.870$ & \\
 \bottomrule
 \end{tabular}
-\normalsize
 \end{table}
 
-The aggregation is also stable as participants are added. Holding $\alpha=0.1$ and scaling the client count
-from $10$ to $50$ (\cref{tab:sens}, middle), HE-OFT stays at $0.90$--$0.93$ with no downward trend, even as
-each
-client's shard thins fivefold; the single linear combination neither destabilises nor washes out as $\Nc$
-grows, and the protocol's cost (\cref{sec:fhe-cost}) is the only quantity that scales with it. The
-trajectory budget behaves the same way (\cref{tab:sens}, bottom): within the swept range a longer
-trajectory helps monotonically, from $0.91$ at $\Ksteps=100$ to $0.94$ at $\Ksteps=400$, narrowing the gap
-to centralized to $0.05$, the frozen backbone keeping even the longest trajectory's displacements coherent
-enough to sum.
+\subsection{Comparison with One-Shot Federated Learning}
+\label{sec:exp-peers}
 
-\subsection{Robustness to a Poisoned Client}
-\label{sec:robust}
+\paragraph{Claim} The protocol gives up no accuracy for protecting the
+contributions, where the differentially private one-shot methods give up an amount
+that grows as their budget tightens, and it withholds the model at a cost those
+methods do not incur because they do not offer the property.
 
-The same multi-candidate mechanism that selects the best aggregation rule also gives a measured defense
-against a misbehaving client, at no homomorphic cost. We add to the candidate set the $\Nc$ leave-one-out
-aggregates (\cref{sec:candidates}) and let one client (the one holding the largest shard, the worst case for
-sample weighting) upload a crafted displacement instead of an honest one: a sign-flipped update, a
-large-norm Gaussian, or one trained on label-flipped data. The honest clients vote on their local
-holdouts over the plain aggregate and the $\Nc$ leave-one-out aggregates; the candidate that excludes
-the attacker is selected whenever its exclusion improves the held-out accuracy.
-
-\Cref{tab:poison} reports the result on DBpedia and AG-News at $\Nc=10$, three seeds. The undefended plain
-aggregate is pulled down to $0.25$--$0.50$ depending on the attack, while the vote-selected model recovers
-to within rounding of the attacker-free oracle, and the vote identifies and excludes the attacker in
-$17$ of $18$ cells. The one miss is a Gaussian attack whose corruption was mild enough that including the
-attacker still scored best on the holdouts, i.e. the vote kept it precisely because it was not harmful. This
-is not a general Byzantine guarantee (it assumes an honest holdout majority and a single attacker), but it
-shows the candidate machinery already absorbs a poisoning client that the blind server cannot filter.
+The peer group evaluates on different tasks from ours, so we ran our protocol on
+theirs rather than restate numbers from incomparable setups. We adopt two
+published partitions of CIFAR-10: $\Nc=5$ with $\alpha\in\{0.1,0.3\}$, the
+configuration of~\cite{zhang2022dense}, and $\Nc=20$ with
+$\alpha\in\{0.04,0.16\}$, the configuration of~\cite{hoech2022fedauxfdp}.
+\Cref{tab:peers} reports the quantities of \cref{sec:setup} on each, as the mean
+over three seeds.
 
 \begin{table}[t]
 \centering
-\caption{Robustness to one poisoned client ($\Nc=10$, $\alpha=0.1$). Each accuracy is the mean over the
-two tasks (DBpedia, AG-News) and three seeds, six runs per attack.
-``Plain'' is the undefended sample-weighted aggregate that includes the attacker; ``HE-OFT'' is the
-vote-selected leave-one-out candidate; ``oracle'' is the attacker-free aggregate; ``excluded'' counts the
-runs in which the vote dropped the attacker.}
-\label{tab:poison}
+\caption{CIFAR-10 on two published partitions, three seeds. The columns are the
+quantities defined in \cref{sec:setup}, all measured on our protocol at the
+partition each prior paper published.}
+\label{tab:peers}
 \footnotesize
-\begin{tabular}{lccccc}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{cccccc}
 \toprule
-Attack & plain & HE-OFT & oracle & excluded \\
+$\Nc$ & $\alpha$ & $\Aloc$ & $\Asel$ & $\Adis$ & $\Adis-\Asel$ \\
 \midrule
-sign-flip   & 0.25 & $\mathbf{0.65}$ & 0.65 & 6/6 \\
-large-Gauss & 0.50 & $\mathbf{0.67}$ & 0.65 & 5/6 \\
-label-flip  & 0.48 & $\mathbf{0.65}$ & 0.65 & 6/6 \\
+$5$  & $0.10$ & $0.384$ & $0.948$ & $0.962$ & $0.013$ \\
+$5$  & $0.30$ & $0.569$ & $0.950$ & $0.964$ & $0.014$ \\
+$20$ & $0.04$ & $0.212$ & $0.948$ & $0.943$ & $-0.005$ \\
+$20$ & $0.16$ & $0.399$ & $0.952$ & $0.959$ & $0.007$ \\
 \bottomrule
 \end{tabular}
-\normalsize
 \end{table}
 
-\subsection{When Public Data Is Available}
-\label{sec:publicbase}
+\paragraph{Why absolute accuracy does not settle the comparison} At $\Nc=5$ and
+$\alpha=0.1$ we measure $\Asel=0.948$, against the $0.503$
+of~\cite{zhang2022dense} and the $0.406$ of~\cite{lin2020feddf}. We do not present
+that margin as a result. Those methods train a ResNet-18 from scratch, whereas
+every client here fine-tunes a frozen public ViT-B/16, and the representation
+accounts for essentially all of the difference. Any of these methods would gain
+comparably from the same backbone, and running them on it is not a comparison
+either paper's authors chose. Absolute accuracy across papers therefore measures
+the backbone.
 
-We study the harder setting in which no public data exists, because that is where a one-shot encrypted
-aggregation is actually needed. When a deployment does have a public labelled set, the problem is strictly
-easier and standard recipes apply directly: the shared initialization can be warm-started on it, or a model
-can be trained on the public data and then refined. With enough of it, training a model from scratch on
-the public set is itself an option. We therefore treat public data as outside the method and rely on none of
-it anywhere in this paper.
+\paragraph{The comparison that does hold} What compares across papers is the
+accuracy each method gives up for its privacy mechanism, since every paper measures
+that against its own unprotected baseline on its own architecture, and the backbone
+cancels. Read that way the peer group separates into three cases.
 
-\subsection{Homomorphic-Encryption Implementation and Cost}
-\label{sec:fhe-cost}
+DENSE and FedDF give up nothing, because they protect nothing. Their single
+contribution is exposed in plaintext, and by the evidence of
+\cref{sec:related-leakage} that contribution is the quantity worth attacking.
 
-We do not simulate the cryptography. We implement the entire protocol end to end in real multiparty CKKS on
-the Lattigo library~\cite{lattigo,mouchet2021multiparty}: distributed key generation, encryption under the
-joint public key, the homomorphic weighted aggregation of \cref{eq:aggregate}, and threshold decryption by a
-collective key-switch, and the decrypted aggregate matches the plaintext computation to within CKKS encoding
-precision (verified below). The server's only cryptographic operation is that depth-one weighted sum, and its
-cost is set entirely by the number of \emph{fine-tuned} parameters that enter a ciphertext, not by the frozen
-backbone behind them. We measure the per-operation rates directly and calculate every reported configuration
-from them, so a small adapter and head are inexpensive to encrypt whatever model they sit on.
+FedAUXfdp does protect its contribution, and its cost is governed by the budget.
+Against its own undefended baseline of $0.752$ on CIFAR-10 at $\Nc=20$ and
+$\alpha=0.16$, the published figures give up $0.006$ at $\varepsilon=1.0$ and
+$0.029$ at $\varepsilon=0.5$, which is affordable, then $0.413$ at
+$\varepsilon=0.1$ and $0.626$ at $\varepsilon=0.01$~\cite{hoech2022fedauxfdp}. The
+mechanism is inexpensive only while the budget is loose, and the accuracy is spent
+on the artifact that is released.
 
-\paragraph{Parameters and setup.} All figures use ring degree $2^{14}$ ($8192$ slots per ciphertext), a
-modulus chain $\log Q=\{55,45\}$ with key-switch prime $\log P=\{61\}$, and scale $2^{45}$. The circuit is
-multiplicative \emph{depth one} (one plaintext-scalar multiplication and a rescale, with no relinearization
-and no bootstrapping), and decryption is $\Nc$-out-of-$\Nc$ (no single party can decrypt). Communication
-figures are exact; timings are single-run wall-clock on one core of a commodity laptop CPU (Apple M4) and are
-reported as indicative. The circuit uses no ciphertext rotations and no relinearization, and because the only
-server operation is the one-shot aggregation, there is no encrypted training loop and hence no convergence
-behaviour to report under encryption. The server accumulates the weighted sum as a streaming reduction,
-holding at most two adapter-sized ciphertext sets at once (about $38$\,MiB), so its memory does not grow with
-$\Nc$.
+Our contribution is protected cryptographically, and that protection costs no
+accuracy, by construction rather than by measurement, since the decrypted result
+matches the plaintext computation to the encoding precision of the scheme.
+Withholding the model is a separate charge, and no method above incurs it, because
+each of them ends by handing a plaintext model to the participants. At $\Nc=20$
+and $\alpha=0.16$, which is the cell quoted above, that charge is $\Adis-\Asel
+=0.007$, against the $0.006$ to $0.626$ that the same paper's mechanism costs as
+$\varepsilon$ falls from $1.0$ to $0.01$. Over \cref{tab:peers} the charge lies
+between $-0.005$ and $0.014$, and over \cref{tab:headline} between $0.03$ and
+$0.14$. The comparison to draw is therefore between a mechanism whose price rises
+as its guarantee tightens and one whose price is bounded and paid for a different
+property.
 
-\paragraph{Communication.} A round is one upload and one download, and the protocol completes in a single
-round. The per-client traffic is fixed by the trainable-parameter count: a unit of up to $8192$ parameters
-is a single $0.5$\,MiB ciphertext. The headline configuration, a freeze-$A$ rank-$8$ adapter with a
-classifier head (about $1.5\times10^5$ trainable parameters), occupies $19$ ciphertexts, or $9.5$\,MiB per
-client; freezing the down-projection is what halves this relative to training both factors. Total traffic
-scales linearly in the number of clients (\cref{tab:cost}). The contrast with encrypted full-model
-schemes is structural: on the same backbone, encrypting the full RoBERTa-base ($1.25\times10^8$ parameters)
-would move about $7.5$\,GiB per client \emph{per round}, and such schemes run for many rounds, where HE-OFT
-encrypts only the adapter and runs once (\cref{fig:comm}). The object stays small even on a
-half-billion-parameter
-backbone: a freeze-$A$ adapter on the $0.5$B Qwen2.5 model is $26$ ciphertexts ($13$\,MiB), because only the
-adapter is encrypted, never the backbone.
+\paragraph{A partition at which the charge is negative} At $\Nc=20$ and
+$\alpha=0.04$ we measure $\Asel>\Adis$, by $0.005$ on average, on two seeds of
+three and by no margin on the third. The mechanism is the following. At that
+concentration each client holds close to a single class, so the aggregate of the
+adapters moves the representation toward every local task at once and improves none
+of them. The arrangement that leaves the public backbone unchanged avoids this, and
+it is the arrangement the estimator selects. We record one property of this cell:
+the Dirichlet draw at $\alpha=0.04$ assigns fewer than twenty samples to some
+clients, which cannot train, so the effective federation size is $17$ to $19$
+rather than $20$.
 
-\paragraph{Computation.} The server's homomorphic work is tens of milliseconds at deployment scale and stays
-sub-second even at $\Nc=100$ (\cref{tab:cost}). The measured operations follow simple
-laws: a client encrypts in about $2.1$\,ms per ciphertext (in parallel across clients), while the server
-aggregation and the threshold decryption scale linearly in $\Nc\times(\text{ciphertexts/client})$, and the
-one-time distributed key generation grows linearly in $\Nc$ at about $1$\,ms per party. From these rates the
-freeze-$A$ adapter ($19$ ciphertexts) costs about $40$\,ms to encrypt per client and, at $\Nc=100$, about
-$0.72$\,s to aggregate and $0.43$\,s to decrypt (\cref{tab:cost}). Emitting $k$ candidate aggregates
-(\cref{sec:candidates}) costs $k$ threshold decryptions, so a dozen candidates add about half a second; there
-is no bootstrapping anywhere in the protocol.
+One difference bounds the federation's own contribution independently of the
+backbone, because both of its terms are measured on the same backbone. At $\Nc=5$
+and $\alpha=0.1$ we measure $\Aloc=0.384$ against $\Asel=0.948$. That difference is
+what the protocol supplies.
+
+\paragraph{Selection on these partitions} The estimator of \cref{sec:exp-select}
+selects correctly in $11$ of the $12$ cells behind \cref{tab:peers}. The exception
+is $\Nc=5$ with $\alpha=0.3$ on one seed, where the selected arrangement reaches
+$0.945$ and the other reaches $0.953$.
+
+\subsection{Accuracy of the Selection Rule}
+\label{sec:exp-select}
+
+\paragraph{Claim} The direct procedure for choosing between the two
+arrangements fails systematically, and the estimator of \cref{sec:selection}
+corrects it while disclosing only the index of the selected arrangement.
+
+We first establish that the direct procedure fails, since this is what motivates
+the estimator. Each client measures both arrangements on data held back
+from its own training and the federation takes the sample-weighted majority. Across
+all fifteen cells of \cref{tab:headline}, this procedure selects the personal
+adapter every time, including on AG-News and TREC where the personal adapter is
+$0.17$ and $0.18$ worse. Weighting each class equally within a client's held-out
+set does not help, and selects identically.
+
+The failure is structural rather than statistical. The shared arrangement is one
+model, and the union of the clients' data is the whole training set, so pooled
+held-out measurements estimate its accuracy on the global distribution to within
+$0.02$. The personal arrangement is $\Nc$ different models, and client $j$'s
+held-out data measures only client $j$'s own model, on client $j$'s own
+distribution, which is the distribution that model was fitted to. Its measured
+accuracy exceeds its true global accuracy by $0.29$ on average. A client's
+held-out set also contains only the classes that client holds, so the very
+quantity that decides the comparison, accuracy on classes the client has never
+seen, cannot be measured locally at all. The procedure compares an accurate number
+against an optimistic one, so it is not close to correct and it does not become
+correct with more held-out data.
+
+\Cref{tab:select} reports the estimator of \cref{eq:estimator} against that
+baseline. Scoring both arrangements under the federation's own class prior, letting
+the shared arrangement pool evidence across clients and scoring the personal
+arrangement's unobserved classes at zero, selects correctly in $12$ of $15$ cells.
+Filling the unobserved classes from each client's rarest classes instead of with
+zero selects correctly in $13$. Both are parameter-free in the sense that matters:
+the rule compares two numbers on the same absolute accuracy scale, with no fitted
+threshold.
 
 \begin{table}[t]
 \centering
-\caption{Cryptographic cost per trainable unit (multiparty CKKS, ring $2^{14}$, $0.5$\,MiB per ciphertext;
-times in ms on one CPU core, Apple M4). The MiB column is the per-client upload, equal to the download;
-the protocol completes in one round, and total traffic scales linearly in $\Nc$ (\cref{fig:comm}). Clients
-encrypt in parallel; aggregation and threshold decryption scale linearly in $\Nc\times$ciphertexts; the
-one-time distributed key generation costs $\approx 11$\,ms at $\Nc{=}10$ and $\approx 96$\,ms at
-$\Nc{=}100$.}
-\label{tab:cost}
-\footnotesize
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{lccccc}
-\toprule
- & & & & \multicolumn{2}{c}{aggregate / decrypt (ms)} \\
-\cmidrule(l){5-6}
-Trainable unit & ct.\ & MiB & enc.\ (ms) & $\Nc{=}10$ & $\Nc{=}100$ \\
-\midrule
-freeze-$A$ adapter & 19 & $9.5$ & $40$ & $76$ / $44$ & $717$ / $430$ \\
-text head (4) & 1 & $0.5$ & $2.3$ & $3.9$ / $2.4$ & $38.9$ / $23.2$ \\
-vision head (100) & 10 & $5.0$ & $21.5$ & $39.0$ / $24.6$ & $382.2$ / $216.5$ \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table}
-
-\paragraph{Comparison with other encrypted schemes.} \Cref{tab:hecomm} places HE-OFT against the encrypted
-federated-learning approaches. Two properties separate it from all of them. First, it is one-shot: it
-encrypts a single contribution and runs one round, where encrypted-training schemes such as
-POSEIDON~\cite{sav2021poseidon} run multiparty CKKS for many rounds, hours of wall-clock even on small
-models, and aggregation schemes such as BatchCrypt, FedML-HE, and
-FedSHE~\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe} encrypt and sum updates on every round of an
-iterative protocol. Second, it encrypts only the small adapter and head, not the full model: the per-client
-object is $9.5$\,MiB against the gigabytes a full-model scheme moves on the same backbone, and there is no
-bootstrapping because the circuit is depth one. The closest recent scheme, SHE-LoRA~\cite{li2025shelora},
-also encrypts only adapter parameters, but it is multi-round and pays its encryption cost on every round, and
-because it trains both adapter factors it carries the bilinear aggregation noise under encryption that our
-frozen-projection design removes. The secure-aggregation primitive of~\cite{kemmaka2025hybagg}
-is one-round but protects a per-round sum within an iterative protocol rather than a one-shot contribution.
-\Cref{fig:comm} shows the per-round communication gap on a shared backbone, before the round-count multiplier
-that further separates a one-round protocol from a multi-round one.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_comm.pdf}
-\caption{Total communication on a shared backbone (RoBERTa-base), calculated for CKKS ring $2^{14}$
-($0.5$\,MiB per ciphertext; $50$ rounds for the iterative schemes). HE-OFT encrypts only the adapter and runs
-once; full-model encrypted schemes move gigabytes per round (BatchCrypt, FedML-HE, FedSHE) to terabytes over
-training (POSEIDON-style encrypted training).}
-\label{fig:comm}
-\end{figure}
-
-\begin{table*}[t]
-\centering
-\caption{HE-OFT against encrypted federated-learning schemes. Communication is per client; HE-OFT's is
-calculated for a freeze-$A$ adapter (RoBERTa-base, $19$ ciphertexts), the full-model figure for encrypting
-the same backbone.}
-\label{tab:hecomm}
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-Method & cryptographic scheme & encrypted object & rounds & communication per client \\
-\midrule
-\textbf{HE-OFT (ours)} & multiparty CKKS & adapter$+$head & \textbf{1} & \textbf{$9.5$ MiB, once} \\
-SHE-LoRA~\cite{li2025shelora} & CKKS (selective) & adapter subset & many & adapter-scale, every round \\
-POSEIDON & multiparty CKKS & full model & many & GiB, every round \\
-BatchCrypt / FedML-HE / FedSHE & CKKS & full model & many & GiB, every round \\
-Hyb-Agg & multi-key CKKS & update sum & per round & one transmission per sum \\
-\bottomrule
-\end{tabular}
-\normalsize
-\end{table*}
-
-The encrypted object stays depth one and the server cost grows only with the ciphertext count, never with the
-size of the frozen backbone the adapter sits in.
-
-\paragraph{Comparison with encrypted transfer learning.} HETAL~\cite{lee2023hetal} solves a neighbouring
-but different problem: a single data owner outsources training, so the optimizer itself must run on
-ciphertexts --- an encrypted gradient method with approximated softmax and bootstrapping, at a reported
-$567$--$3442$\,s of encrypted training per benchmark on an NVIDIA A40 GPU. Our parties can train locally
-and must only hide what they trained, so the optimizer never touches a ciphertext, and the entire
-encrypted pipeline (encrypt, aggregate, threshold-decrypt) is $0.16$--$1.2$\,s on one laptop CPU core,
-exact to a relative $\ell_2\approx10^{-9}$. The two designs are complementary rather than competing; the
-contrast quantifies what moving the encryption boundary from the optimizer to a one-shot aggregation buys.
-
-\paragraph{Correctness.} The decrypted aggregate matches the plaintext computation to a relative $\ell_2$
-error between $2.7\times10^{-9}$ ($\Nc=10$) and $2.6\times10^{-8}$ ($\Nc=100$). This is the encoding precision
-of CKKS at scale $2^{45}$; it grows mildly with $\Nc$ as ciphertext additions and the key-switch smudging
-noise accumulate, and it stays several orders of magnitude below any tolerance the decoded model is sensitive
-to. Because the circuit is depth one, the error is not amplified.
-
-\paragraph{Comparison with prior cryptographic federated learning.} The contrast with prior homomorphic
-federated learning is structural, not incremental. Encrypted-training methods such as
-POSEIDON~\cite{sav2021poseidon} reach comparable accuracy but through many rounds of homomorphic computation
-that the source paper reports at roughly $1.4$ hours of wall-clock; secure-aggregation
-primitives~\cite{kemmaka2025hybagg} sum updates once per round inside an iterative protocol. Our protocol runs
-in a single round whose server computation is milliseconds and whose communication is a few megabytes,
-because the only encrypted object is a bounded fine-tuning displacement of a small adapter, combined at
-multiplicative depth one. The broader method-level positioning closes \cref{sec:related}.
-
-\subsection{Residual Leakage: Measuring the Inference-Time Surface}
-\label{sec:mia}
-
-The design goal set in \cref{sec:intro} was to eliminate the training-time attack surface, and the protocol
-achieves it by construction: no gradient, update, or data-derived summary is ever observable in plaintext,
-and there is only one round in which anything is exchanged at all. What the cryptographic guarantee of
-\cref{sec:security} does not cover is the final model, which every party obtains in the clear after
-decryption. This is the \emph{inference-time} surface of \cref{sec:related-leakage}, and it is not a gap a
-stronger mechanism could close: any protocol that hands separate parties a shared, useful model must move
-knowledge between them, and a model that classifies categories a client never saw locally necessarily
-encodes information about the data that taught it those categories. The meaningful question is not whether
-this residual leakage is zero, which it cannot be, but how large it is, and the evidence of
-\cref{sec:related-leakage} is that it is the weakest surface an adversary can be left with. This section
-measures it directly.
-
-Read as attack surfaces, the alternatives differ by orders of magnitude. Multi-round federated learning
-publishes a fresh update every round, so a curious server or peer accumulates a long sequence of
-training-time views of each client~\cite{shokri2017membership,nasr2019comprehensive}. One-shot methods that
-rely on differential privacy ship, in a single object, essentially the whole of a client's local knowledge:
-a synthetic copy of its data, or a noised model. HE-OFT exposes only the final aggregate: the per-client
-displacements are encrypted and never appear in the clear, and because there is no alignment phase there is
-no prototype channel either.
-
-We measure the residual on that one open channel with membership-inference
-attacks~\cite{yeom2018privacy,salem2019ml,carlini2022membership}, training the target and a population of
-shadow models through the full federated pipeline and attacking the released model with the
-likelihood-ratio attack LiRA (\cref{tab:mia}). On the text tasks other than Banking77 the leakage is at the
-level of random
-guessing: LiRA reaches an AUC of $0.49$--$0.50$ and a true-positive rate of about $1\%$ at a $1\%$
-false-positive rate, indistinguishable from chance. On the 77-class Banking77 it is mildly elevated, to an
-AUC of $0.59$ and a $3.4\%$ true-positive rate, the one text task where coverage forces the model to
-memorise the most per class, and exactly the task where the accuracy gap to centralized is largest. On the
-$100$-class CIFAR-100, whose vision MIA we report once the freeze-$A$ re-run completes
-\textcolor{red}{[TODO]}, the same coverage effect predicts a similarly mild elevation at a large label space.
-
-The threat model of \cref{sec:threat} admits a stronger adversary than the external one: a fellow client that
-holds its own labelled data, and with it a per-class prior an outsider lacks. The two adversaries therefore
-run \emph{different} attacks --- the external one LiRA, the fellow one a class-conditionally standardized loss
-threshold, the attack its extra class knowledge actually enables --- and comparing them isolates whether
-observing more buys anything. It does not, for two reasons that meet in the middle. First, handing the class
-prior to LiRA changes nothing: LiRA already calibrates each example against the shadow models that did and did
-not train on it, a per-example conditioning that subsumes any coarser class-level one, so a per-class location
-shift cancels in the likelihood ratio and a fellow-run LiRA is numerically identical to the external one
-(which is why \cref{tab:mia} reports the external). Second, the fellow's own class-conditional threshold ---
-the one attack its prior does move --- is a weaker instrument than LiRA to begin with, and stays at or below
-it on every task, weaker even on Banking77 where there is signal to exploit. Observing more therefore yields
-no additive advantage against the released model: the stronger attack ignores the extra knowledge, and the
-attack that uses the extra knowledge is the weaker one. Being a participant rather than an outsider does not
-increase what one can learn about another's membership, beyond what any usable classifier of that data would
-already reveal.
-
-\begin{table}[t]
-\centering
-\caption{Membership inference against the released model: external adversary, LiRA, three seeds. AUC and the
-true-positive rate at a $1\%$ false-positive rate; $0.50$ AUC and $1\%$ TPR are chance. A fellow client is no
-stronger under LiRA (its class prior cancels in the likelihood ratio; see text), so these external figures
-are the operative ones.}
-\label{tab:mia}
+\caption{Choosing between the two servable arrangements without decrypting either.
+Cells are counted over five tasks and three seeds. Regret is the accuracy given up
+by a wrong choice, averaged over tasks.}
+\label{tab:select}
 \footnotesize
 \begin{tabular}{lcc}
 \toprule
-Task ($\Cc$) & AUC & TPR@1\% \\
+Selection rule & correct cells & regret \\
 \midrule
-AG-News (4)     & 0.50 & 0.9\% \\
-TREC (6)        & 0.49 & 0.7\% \\
-DBpedia (14)    & 0.50 & 0.9\% \\
-Banking77 (77)  & 0.59 & 3.4\% \\
-CIFAR-100 (100) & \textcolor{red}{??} & \textcolor{red}{??} \\
+majority of held-out accuracies      & 6/15 & 0.383 \\
+same, class-balanced within a client & 6/15 & 0.383 \\
+global-prior estimator, zero fill    & 12/15 & 0.027 \\
+global-prior estimator, rare-class fill & $\mathbf{13/15}$ & $\mathbf{0.019}$ \\
 \bottomrule
 \end{tabular}
-\normalsize
 \end{table}
 
-% ---------------------------------------------------------------------------
-% TWO-ATTACK CONTRAST (external LiRA vs fellow class-conditional threshold).
-% UNCOMMENT once the client-specific (fellow) MIA numbers land. It substantiates
-% the text claim: LiRA buys the fellow client nothing over the external adversary,
-% so the fellow is reported with its only distinct lever --- a class-conditionally
-% standardized loss threshold --- which remains limited. Fill the ?? from the
-% fellow-scored runs (mia/surfaces.py:score_fellow, "threshold" key).
-% \begin{table}[t]
-% \centering
-% \caption{External versus fellow-client membership inference on the released
-% model. The external adversary uses LiRA; the fellow client, for whom LiRA is
-% provably no stronger (its per-class prior cancels in the likelihood ratio),
-% instead applies a class-conditionally standardized loss threshold, the only
-% attack its extra knowledge changes --- and even that lever stays limited.}
-% \label{tab:mia-fellow}
-% \footnotesize
-% \begin{tabular}{lcccc}
-% \toprule
-% & \multicolumn{2}{c}{external (LiRA)} & \multicolumn{2}{c}{fellow (class-cond.\ threshold)} \\
-% \cmidrule(r){2-3}\cmidrule(l){4-5}
-% Task ($\Cc$) & AUC & TPR@1\% & AUC & TPR@1\% \\
-% \midrule
-% AG-News (4)     & 0.50 & 0.9\% & 0.50 & 1.3\% \\
-% TREC (6)        & 0.49 & 0.7\% & 0.51 & 1.0\% \\
-% DBpedia (14)    & 0.50 & 0.9\% & 0.51 & 0.9\% \\
-% Banking77 (77)  & 0.59 & 3.4\% & 0.54 & 1.7\% \\
-% CIFAR-100 (100) & ?? & ?? & ?? & ?? \\
-% \bottomrule
-% \end{tabular}
-% \normalsize
-% \end{table}
+Two properties of the estimator merit separate mention. The decisive case is
+Banking77, where choosing wrongly costs $0.48$; the estimator selects correctly on
+all three seeds, by margins of $0.13$ to $0.24$. And the estimator responds to the
+data rather than to the label space: on the AG-News seed where an unlucky partition
+leaves the shared head at $0.402$ and the personal adapter genuinely better, it
+switches to the personal adapter, which a rule keyed to the number of classes would
+not do.
 
-We do not claim the released model leaks nothing. A model that gives every client coverage of classes it
-never observed must carry information about the data that supplied that coverage, and an adversary with
-strong priors about a client's distribution can recover some of it; this is a property of useful shared
-models, not of our protocol in particular. What the protocol guarantees is that this residual is the
-\emph{entire} surface (not multiplied across the rounds of an iterative protocol, and not handed over
-wholesale as released data), and driving the exposed surface down to that inherent floor, rather than
-promising to remove a leak that cannot be removed when parties set out to build a common model, is the
-privacy goal the design meets.
+The estimator yields a calibrated accuracy estimate, not only a ranking. Its estimate of the
+shared arrangement's global accuracy is within $0.019$ on average across all
+fifteen cells, computed entirely from encrypted local evidence with no access to a
+test set.
 
-\subsection{At Prior Methods' Partitions, and Scale}
-\label{sec:matched}
+\paragraph{Disclosure of the estimator} One value is decrypted for the whole
+federation, the index of the arrangement adopted. The per-client per-class
+accuracies are not decrypted, which matters: together with the count matrix they
+would describe each client's label distribution alongside its model quality.
 
-The positioning paragraph closing \cref{sec:related} separates the methods qualitatively; the accuracies each
-paper reports are obtained at its own setup and do not compare directly. To make the comparison controlled,
-we run HE-OFT at the \emph{published partitions}
-of three one-shot methods, matching the dataset, client count, and Dirichlet $\alpha$ but keeping our own
-model class --- a frozen ViT-B/16 with a freeze-$A$ adapter, stronger than the comparators' backbones, which
-we state plainly. The result is therefore not a head-to-head comparison at equal model capacity; it isolates
-what the protocol reaches when the substrate is a modern frozen backbone, holding the data partition fixed to
-each prior method's. \Cref{tab:matched} reports it. At the data-free DENSE setup (CIFAR-10, $\Nc=5$) HE-OFT reaches $0.96$ against their
-reported $0.50$/$0.60$; at the differentially private FedAUXfdp setup (CIFAR-10, $\Nc=20$, severe skew)
-$0.94$ against $0.75$ at $\varepsilon{=}0.5$; and at the FedSD2C setup (Tiny-ImageNet, $\Nc=10$) $0.73$. The
-gains owe much to the stronger frozen backbone, which is the point: the protocol's cryptographic and
-communication structure carries unchanged onto a backbone that makes the task easy, where prior data-free and
-differentially private one-shot methods cannot reach the same accuracy and, in the DP case, pay an explicit
-budget for a weaker guarantee than encryption gives. The same backbone is also why the CIFAR-10 cells
-cluster in a narrow $0.94$--$0.96$ band across partitions: the frozen representation, not the partition,
-sets the ceiling, and the seed spread within each cell stays between $0.002$ and $0.02$.
+\subsection{Cryptographic Cost}
+\label{sec:exp-cost}
+
+\paragraph{Claim} The cryptographic cost of the protocol is dominated by
+one-time setup, and the recurring per-query traffic is a few megabytes.
+
+We do not simulate the cryptography. The protocol is implemented in real
+multiparty CKKS on Lattigo~\cite{lattigo,mouchet2021multiparty}: distributed key
+generation, encryption under the collective public key, the head aggregation, the
+reciprocal under encryption, the encrypted argmax, and key switching to a
+designated party. All figures use ring degree $2^{14}$ for the shallow operations
+and a deeper chain at ring degree $2^{15}$ for the circuits that need it. Timings
+are single-run wall clock on a commodity CPU and are reported as indicative;
+communication figures are exact.
 
 \begin{table}[t]
 \centering
-\caption{HE-OFT at prior one-shot methods' data partitions, on our own frozen ViT-B/16 $+$ freeze-$A$
-adapter (three seeds) --- a stronger backbone than the comparators', so the columns are not an
-equal-capacity head-to-head. Comparator numbers are paper-verbatim at the cited setup.}
-\label{tab:matched}
+\caption{Per-operation cost at the default setting, $\Nc=10$ and ring degree
+$2^{14}$. The first two rows are the same operation with the query encrypted and
+left in plaintext, which is what encrypting the query costs. One query at four
+classes takes $31.5$\,s in total and one query at a hundred classes takes
+$113.2$\,s. The argmax is more than $99$ per cent of both.}
+\label{tab:cost}
 \footnotesize
-\begin{tabular}{llcc}
+\begin{tabular}{lc}
 \toprule
-Matched setup & data, $\Nc$, $\alpha$ & HE-OFT & reported \\
+Operation & cost \\
 \midrule
-DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.1   & $\mathbf{0.96}{\pm}0.00$ & 0.50 \\
-DENSE~\cite{zhang2022dense}     & CIFAR-10, 5, 0.3   & $\mathbf{0.96}{\pm}0.00$ & 0.60 \\
-FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.04 & $\mathbf{0.94}{\pm}0.01$ & 0.75$^\ddagger$ \\
-FedAUXfdp~\cite{hoech2022fedauxfdp} & CIFAR-10, 20, 0.16 & $\mathbf{0.96}{\pm}0.01$ & 0.75$^\ddagger$ \\
-FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.1 & $\mathbf{0.73}{\pm}0.01$ & --- \\
-FedSD2C~\cite{zhang2024fedsd2c} & Tiny-ImageNet, 10, 0.3 & $\mathbf{0.73}{\pm}0.02$ & --- \\
+head applied to an encrypted query & $39.0$\,ms \\
+head applied to a plaintext query & $5.4$\,ms \\
+ciphertext addition & $0.7$\,ms \\
+rotation & $33.1$\,ms \\
+selection mask and accumulate & $1.1$\,ms \\
+key switch to the querier & $198$\,ms \\
+\midrule
+encrypted argmax, $\Cc=4$ & $31.2$\,s \\
+encrypted argmax, $\Cc=100$ & $113.0$\,s \\
+reciprocal under encryption, once per aggregation & $4.21$\,s \\
 \bottomrule
 \end{tabular}
-\normalsize
-
-\smallskip
-\noindent\footnotesize $^\ddagger$FedAUXfdp at $\varepsilon{=}0.5$ on its CIFAR-10 setup.\normalsize
 \end{table}
 
-The protocol also carries to a half-billion-parameter backbone. On a frozen Qwen2.5-0.5B causal language
-model with a freeze-$A$ adapter (three seeds), HE-OFT reaches $0.85$--$0.88$ on DBpedia, where the naive
-average is far lower and swings widely across seeds ($0.44$--$0.63$), and $0.71$--$0.72$ on AG-News, while
-the encrypted object stays at $26$ ciphertexts ($13$\,MiB):
-the cost is set by the adapter, not by the $0.5$B backbone behind it, which is never encrypted.
+\paragraph{Cost of query encryption} Applying the head to an encrypted
+query costs $39.0$\,ms against $5.4$\,ms for a plaintext one, a factor of seven.
+That factor buys the property that the serving party never sees the feature vector
+and therefore cannot invert it to recover the client's input, and it is small
+beside the argmax that follows.
 
-\iffromscratch
-\subsection{Beyond Pretrained Backbones}
-\label{sec:fromscratch}
+\paragraph{What one query costs, end to end} We state the total plainly, because
+the per-operation rows invite the wrong sum. On one core a query takes $31.5$\,s
+at four classes and $113.2$\,s at a hundred. The arithmetic and the key switch
+account for $0.24$\,s of that at every label-space size. Everything else is the
+encrypted argmax, which is therefore the only operation whose cost decides whether
+a deployment is practical. The number is already the optimised circuit rather
+than the naive one. The tournament costs about $16$\,s per round and needs
+$\lceil\log_2\Cc\rceil$ rounds, against the fourteenfold larger sequential fold.
 
-The protocol does not require a pretrained backbone; it requires a shared frame. Where clients instead train
-a small network from a common random initialization, the same one-shot encrypted aggregation applies, but the
-shared frame must be established rather than inherited. Without a pretrained representation the clients'
-bounded updates are expressed in a coordinate system fixed only by the random seed, so agreeing on a useful
-starting point reintroduces the kind of alignment step a pretrained backbone removes. We therefore present
-pretrained fine-tuning as the primary setting and treat the from-scratch variant as a generalization whose
-alignment cost is left to future work.
-\fi
+Three levers apply to that figure, and they differ in what they move. Multi-core
+execution does not shorten the circuit, because the rounds are sequential by
+construction and the comparisons within one round are already packed into a
+single operation on a single ciphertext. It applies inside each primitive
+instead, across the residue moduli of the RNS decomposition, and our
+single-threaded measurement uses none of it. Overlapping computation with
+communication raises throughput rather than lowering latency, because the level
+restorations lie on the critical path of one query, while a serving party that
+answers many queries can pipeline them. Hardware acceleration is the only lever
+that acts directly on the dominant term. The argmax is bootstrap-bound, which is
+where a GPU implementation helps most and, for the reason given below, where we
+decline to project a single number.
+
+\paragraph{The encrypted reciprocal} Inverting the per-class totals under
+encryption, which \cref{sec:split} requires so that no coalition can read the
+remaining client's class histogram, takes $4.21$\,s at $\Nc=10$ and needs two
+collective refreshes. It agrees with the plaintext reciprocal to a relative error
+of $1.9\times10^{-8}$, so it costs no accuracy. The figure grows slowly with the
+federation, $3.16$\,s at $\Nc=5$ and $6.30$\,s at $\Nc=20$, because only the
+refreshes involve the clients. This is the one deep operation in building the
+shared head, and it is paid once per aggregation rather than per query, so a few
+seconds is immaterial beside the local training it follows.
+
+\paragraph{The argmax} The argmax is the one operation in the protocol that is
+not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it takes about
+$16$\,s per comparison, which is roughly twenty minutes at a hundred classes.
+Packing the logits into one ciphertext and reducing them by a tournament lowers the
+number of sequential comparisons from $\Cc-1$ to $\lceil\log_2\Cc\rceil$ and
+brings the same computation to under two minutes at a hundred classes, a
+fourteenfold reduction, and the result is exact rather than approximate. Because
+homomorphic evaluation under a collectively generated key is identical to
+evaluation under a single key, single-key results carry over, and GPU
+implementations of the same reduction report a full-vocabulary argmax in well under
+a second~\cite{zhang2025nexus}.
+
+\paragraph{The two axes that set the cost} The ring degree is the security
+parameter, and the number of clients decides how many shares a decryption needs.
+\Cref{fig:cost} separates them, from one measurement over the full grid.
+
+The per-query arithmetic answers to the ring degree alone. It roughly doubles
+with each doubling of the degree, and it does not move with $\Nc$: the encrypted
+product measures $38.4$, $39.0$ and $39.2$\,ms at $\Nc=5$, $10$ and $20$.
+
+The key switch that returns a label answers to both, and doubles with each. It
+runs from $103$\,ms at the smallest setting to $1.73$\,s at the largest. Traffic
+follows the same law, at $2.0$\,MiB per participating client, because each
+contributes one independent share and the serving party only sums them. The
+encrypted reciprocal grows more slowly, $3.16$\,s at $\Nc=5$ against $6.30$\,s at
+$\Nc=20$, since only its two refreshes involve the clients.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_cost.pdf}
+\caption{Per-operation cost against the two axes that set it, from one
+measurement over the whole grid. Left: the per-query arithmetic at $\Nc=10$,
+which the ring degree sets and the federation size does not touch. Right: the key
+switch that returns one label, which grows with both. Read in seconds, the left
+panel spans $0.0007$ to $0.18$\,s and the right panel spans $0.10$ to $1.7$\,s.
+Neither is the cost of a query: the encrypted argmax between them takes $31$\,s at
+four classes and $113$\,s at a hundred, and \cref{tab:cost} states the total.}
+\label{fig:cost}
+\end{figure}
+
+\paragraph{Hardware acceleration} The figures above are single-threaded CPU, and
+the argmax is the only operation slow enough to matter, so the question is what
+specialised hardware does to it. Since the cost of a CKKS operation grows with the
+ring degree, the comparison is only meaningful at a fixed one. \Cref{fig:cost}
+gives our figures: $39.0$, $82.5$ and $174.9$\,ms for a ciphertext-by-ciphertext
+product at ring degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $33.1$, $71.6$ and
+$149.7$\,ms for a rotation. Microbenchmarks of the same primitives under a CUDA
+implementation of CKKS, at ring degree $2^{16}$, put the product at $30$\,ms and
+the rotation at $29.5$\,ms, so the ratio at matched ring degree is about $5$ for
+the rotation and about $6$ for the product. Two things make that a conservative figure. The GPU numbers are taken at
+a deeper level budget than ours, and a deeper budget makes every operation more
+expensive. They are also measured on a mid-range inference card, whereas the
+GPU homomorphic-encryption libraries are tuned for current datacentre parts, on
+which published figures are substantially better.
+
+The projection from a per-primitive ratio to the protocol is unusually safe here,
+and the reason is the shape of the circuit rather than the quality of the
+measurement. Serving a query is a fixed sequence: one ciphertext-by-ciphertext
+product, then $\lceil\log_2\Cc\rceil$ rounds of comparison, then one key switch.
+There is no data-dependent control flow, no attention pattern whose cost depends on
+the input, and no scheduling problem across layers, so a speedup on the primitives
+carries through to the whole rather than being absorbed by effects that dominate in
+deep encrypted inference. We none the less stop at the ratio rather than quoting an
+end-to-end accelerated latency, because the argmax is bootstrap-bound and reported
+bootstrapping times on GPUs span more than two orders of magnitude with the ring
+degree, the packing and the implementation. A single number drawn from that range
+would say more about which number was drawn than about this protocol.
+
+\paragraph{Communication} The protocol is one-shot in the sense
+of \cref{sec:intro}: no intermediate training artifact is ever exposed. It is not
+silent. Key generation precedes it, selection costs a bounded exchange, and serving
+costs traffic per query, so we account for all of it in \cref{tab:comm}.
+
+\begin{table}[t]
+\centering
+\caption{Communication at $\Nc=10$, ring degree $2^{14}$. Share sizes do not
+depend on the number of clients, so only the totals scale. The recurring row is the
+one that matters for a deployment.}
+\label{tab:comm}
+\footnotesize
+\begin{tabular}{llc}
+\toprule
+When & Item & Per client \\
+\midrule
+setup, once & collective public key share & $1.13$\,MiB \\
+            & relinearization key share & $27.0$\,MiB \\
+            & rotation keys, seven of them & $63.0$\,MiB \\
+\midrule
+training, once & encrypted head displacement & a few MiB \\
+\midrule
+per query & encrypted features, uploaded & $2.0$\,MiB \\
+          & encrypted label, returned & $0.5$\,MiB \\
+          & key-switching shares, ten & $2.5$\,MiB \\
+\cmidrule(l){2-3}
+          & \textbf{total per query} & $\mathbf{5.0}$\,\textbf{MiB} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+One design decision governs the recurring figure, and we state it explicitly
+because the alternative is two orders of magnitude more expensive. The argmax spends its levels and must
+have them restored several times per query. Restoring them by a collective refresh
+would require a share from every client for every refresh, which at a hundred
+classes amounts to roughly $510$\,MiB of traffic for a single label. Generating
+bootstrapping keys once, collectively, and letting the serving party restore levels
+on its own reduces that traffic to zero, because evaluation under a collectively
+generated key is identical to evaluation under a single key. The protocol therefore
+specifies the latter, at a one-time cost of $15.5$\,MiB of key material at ring
+degree $2^{16}$, generated collectively in $49$\,s. One key generation of
+$15.5$\,MiB therefore replaces $510$\,MiB on every subsequent query.
+
+\paragraph{Correctness} The decrypted result matches the plaintext computation to
+a relative error at the level of the encoding precision of the scheme, and the
+encrypted argmax is exact: over label spaces from four to a hundred classes it
+returns the same index as the plaintext argmax in every case tested. The accuracy
+figures of \cref{tab:headline} are therefore unaffected by the cryptography, which
+is the sense in which encryption costs no accuracy here.
+
+\subsection{Residual Leakage}
+\label{sec:exp-leak}
+
+\paragraph{Claim} The protocol exposes no training-time artifact and no model,
+so the only remaining channel is the sequence of answers the served model returns,
+and that channel is bounded by the query allowance rather than eliminated.
+
+The training-time surface is removed by construction. No gradient, update, or
+data-derived summary is ever available in plaintext, there is one exchange rather
+than many, and its single artifact is a ciphertext. The model is removed as well:
+no party holds it in plaintext at any point, so the white-box attacks that a
+released model admits have no object to attack. What remains is a client that can
+ask the served model questions and read labels.
+
+Two distinct bounds apply to this channel, and they should not be conflated. The first is
+cryptographic and is stated in \cref{thm:semihonest}: the protocol's messages are
+computationally independent of the private data. The second is not cryptographic.
+A client that queries the served model at points of its own choosing can, with
+enough queries, reconstruct a functional copy of the shared head. Returning only
+the label rather than the logits denies the linear solve that would otherwise
+recover the head in as many queries as the feature dimension, which raises the
+cost but does not make it infinite. We therefore state the guarantee as a bound on
+queries, and we measure what that bound has to be.
+
+\paragraph{Cost of extraction} We give the adversary every advantage the
+protocol admits. It is a participating client, so it computes query features
+itself and may submit an arbitrary vector rather than a real input, and it is
+charged one query per label. It fits a linear model to the labelled queries and we
+score the copy by \emph{fidelity}, the rate at which it agrees with the served
+model on held-out features. \Cref{tab:extract} reports the result.
+
+\begin{table}[t]
+\centering
+\caption{Label-only extraction of the served head: mean fidelity over three seeds
+and both arrangements, against the number of queries spent. The majority column
+is the share of the most common label, which is what a copy achieves for free.}
+\label{tab:extract}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccc}
+\toprule
+Task & $\Cc$ & majority & $10^3$ & $5\!\times\!10^3$ & $2\!\times\!10^4$
+     & $5\!\times\!10^4$ & $2\!\times\!10^5$ \\
+\midrule
+AG-News    & 4  & $0.488$ & $0.635$ & $0.823$ & $0.936$ & $0.973$ & $0.993$ \\
+DBpedia    & 14 & $0.250$ & $0.387$ & $0.612$ & $0.804$ & $0.901$ & $0.971$ \\
+Banking77  & 77 & $0.083$ & $0.174$ & $0.355$ & $0.592$ & $0.755$ & $0.900$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. Those figures track the size of the head rather than
+the task: the head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
+between three and five times that number of queries, with $0.80$ costing roughly
+$1.5$ times and $0.95$ roughly ten times. A deployment can therefore set its
+allowance from $\Cc$ and $d$ without repeating this experiment.
+
+The allowance follows. A coalition of $\Nc-1$ clients, the largest that cannot
+decrypt, commands $(\Nc-1)Q$ queries, so holding it below fidelity $0.90$ at
+$\Nc=10$ requires $Q$ below roughly $1.4\times10^3$ per client on AG-News and
+$2.2\times10^4$ on Banking77. The binding case is the small label space, not the
+large one, which is worth stating plainly because it runs against intuition: a
+head with few rows is cheap to copy. It is also the case in which the shared
+arrangement is preferable (\cref{tab:headline}), so the deployments that gain most
+from the federation are the ones that must meter queries most tightly.
+
+\paragraph{What a copy does not give} Fidelity measures agreement with the
+served model, and nothing more. A copy at fidelity $0.90$ reproduces nine in ten
+of the served model's decisions, including its mistakes. It does not follow that
+the adversary has learned any client's data. The recovered object is a linear map
+over a public feature space, fitted from labels the adversary requested at points
+it chose itself, and no client record enters the attack at any stage. Turning a
+copy into a statement about a particular record is the separate problem of
+membership inference or reconstruction. That problem needs a surface this protocol
+does not expose, since no gradient, update or data-derived summary is ever
+available in plaintext, and we do not evaluate it here.
+
+One methodological point. We also ran a boundary-search variant that spends half
+its budget bisecting toward the decision boundary, on the expectation that points
+near a boundary are more informative. It is worse in $13$ of the $15$ cells we
+measured, reaching $0.675$ against $0.755$ on Banking77 at $5\times10^4$ queries,
+because a bisection chain returns many nearly identical points and a linear fit
+gains less from them than from the same number of independent ones. The two
+exceptions are AG-News at the two largest budgets, where it wins by $0.003$. We
+report the stronger of the two, which is also the simpler.
+
+\paragraph{Comparison with a released model} The contrast is not a matter of
+degree. A participant holding the model in plaintext has fidelity $1$ at zero
+queries, may read the parameters directly rather than infer them, and is subject
+to no allowance because there is nothing to meter. Granting logits rather than
+labels would be nearly as generous: the head is linear in features the client
+computes itself, so $d+1$ logit queries recover it exactly by linear solve, which
+is $769$ queries here against the $1.2\times10^4$ to $2.0\times10^5$ that labels
+demand. We confirm this directly, recovering the head to fidelity $1.000$ from
+$769$ answers when the served interface returns a distribution instead of an
+index. Restricting the answer to the label is therefore what converts extraction
+from a solve into a search, and the query allowance is what prices that search.
+The same conclusion has been reached from the other direction in deployment, where
+recovering a production model's final projection layer was made materially harder
+by withdrawing exactly the richer outputs this protocol never
+offers~\cite{carlini2024stealing}.
+
+\subsection{Comparison with Model Disclosure}
+\label{sec:exp-release}
+
+Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
+price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
+$0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
+CIFAR-100. The price is largest in the middle of the label-space range and
+smallest at the extremes, and it is paid for a property that no accuracy figure
+can substitute for: after the protocol ends, there is no plaintext model anywhere.
+
+\paragraph{The partition costs more than the disclosure does} The last column of
+\cref{tab:headline} isolates the second difference of \cref{sec:setup}. On three of
+the four text tasks $\Apool-\Adis$ exceeds $\Adis-\Asel$. It is $0.182$ against
+$0.071$ on AG-News, $0.257$ against $0.104$ on TREC, and $0.163$ against $0.075$ on
+Banking77. DBpedia is the exception, at $0.063$ against $0.136$. Most of the
+distance between a servable arrangement and a centralised model is therefore
+attributable to the partition of the data, and not to the decision never to
+decrypt.
+
+We do not present the disclosed model as an alternative configuration of this
+protocol, since it does not satisfy the requirements of \cref{sec:setting}.
+Disclosing the model changes the threat model
+rather than the operating point. A participant that holds the model in plaintext
+can inspect it, run inference on it without limit, redistribute it, and mount the
+white-box attacks that \cref{sec:related-leakage} surveys, and the query allowance
+of \cref{sec:exp-leak} becomes meaningless. Those are different guarantees and they
+answer a different question. A deployment that can disclose the model should use a
+protocol designed for that, and prior one-shot federated learning provides several.
+The construction presented here addresses deployments in which disclosure is not
+permitted.
 
 \subsection{Scope and Limitations}
 \label{sec:scope}
 
-Two boundaries follow from well-understood properties rather than incidental shortcomings. First, the single
-linear aggregation pays a gap to centralized fine-tuning that widens with the size of the label space under
-severe skew, because a client contributes signal only for classes it holds and the shared head is untrained;
-this is an inherent property of combining bounded one-shot updates without an alignment phase, largest on the
-77-class Banking77, and the coverage-weighted candidate contains it (to a gap of $0.11$) rather than removing
-it. Second, the method fine-tunes a
-pretrained backbone, so it inherits that backbone's fit to the task and applies to the label-groundable
-foundation models used for transfer today rather than to a backbone with no relevant pretraining. Both are
-stated where they apply; neither touches the privacy claim, which holds regardless of the accuracy the shared
-model reaches.
+\paragraph{Linearity of the shared quantity}
+This is what \cref{sec:split} shows the never-disclosed requirement forces, and it
+is a real restriction. A shared adapter inside the backbone would adapt the
+representation for every participant rather than only for its owner, and
+\cref{tab:headline} shows on the small label spaces what a privately adapted
+representation gives up. Serving such an adapter reduces to secure transformer
+inference (\cref{sec:related-inference}) and composes with that literature at its
+cost; we do not attempt it here.
 
-\paragraph{Malicious and colluding clients.} Our cryptographic guarantees assume honest-but-curious
-participants. An actively malicious client could upload a crafted displacement to bias the shared model, and
-because the contributions are encrypted the server cannot inspect them, so plaintext outlier filtering does
-not apply. The leave-one-out candidates of \cref{sec:robust} give a lightweight client-side defense that
-already neutralises a single poisoning client without any server-side filtering, but it assumes an
-honest-majority holdout and does not cover colluding or adaptive adversaries. Stronger guarantees compatible
-with the encryption are left to future work: an upload-time norm bound enforced by a zero-knowledge proof,
-which caps any single client's influence without revealing its update, and encrypted-domain robust
-aggregation evaluated homomorphically. The one-shot structure shrinks the attack surface to a single round
-but removes the cross-round consistency checks a multi-round protocol could use, and reconciling robust
-aggregation with depth-one encryption is the open problem this direction must solve.
+\paragraph{Bounds on model extraction} The query
+allowance of \cref{sec:exp-leak} is an operational control. Where honest use is
+intrinsically high-volume, so that no allowance separates it from extraction,
+calibrated noise added to the returned labels bounds cumulative leakage
+instead~\cite{mcsherry2007mechanism}. That mechanism composes with the protocol
+without modification, and it is orthogonal to it: the protocol protects the
+contributions cryptographically, and differential privacy would protect the answers
+statistically. We do not evaluate it, and every accuracy figure in this paper
+assumes it is not in use.
+
+\paragraph{Malicious participants} The cryptographic guarantees assume
+honest-but-curious parties. A client that uploads a crafted head displacement can
+bias the shared head, and because contributions are encrypted the server cannot
+inspect them. Two directions are compatible with the encryption and are left to
+future work: an upload-time norm bound enforced by a zero-knowledge proof, which
+caps any single client's influence without revealing its contribution, and robust
+aggregation evaluated homomorphically. The one-shot structure shrinks the attack
+surface to a single exchange but removes the cross-round consistency checks a
+multi-round protocol could use.
+
+\paragraph{Availability} Threshold decryption is $\Nc$-out-of-$\Nc$, which gives
+the strongest collusion resistance the structure admits and the weakest
+availability: every client must participate for a label to be produced. A
+$t$-out-of-$\Nc$ threshold would relax this, at the cost of admitting coalitions of
+size $t$ and requiring a tighter query allowance, since the bound of
+\cref{sec:exp-leak} scales with the size of the largest coalition that cannot
+decrypt. Which point on that trade-off a deployment wants is a deployment question.

@@ -1,0 +1,12 @@
+backbone,N,alpha,method,seed,surface,attack,tpr_at_0.1pct,tpr_at_1pct,auc
+vit_b16,10,0.1,freeze_a_vit_r8_twosurface,42,released,external_lira,0.52,3.30,0.6348
+vit_b16,10,0.1,freeze_a_vit_r8_twosurface,43,released,external_lira,0.16,3.86,0.6064
+vit_b16,10,0.1,freeze_a_vit_r8_twosurface,44,released,external_lira,1.22,3.98,0.6299
+vit_b16,10,0.1,freeze_a_vit_r8_twosurface,42,released,fellow_threshold,0.64,2.50,0.5851
+vit_b16,10,0.1,freeze_a_vit_r8_twosurface,43,released,fellow_threshold,0.08,1.89,0.5911
+vit_b16,10,0.1,freeze_a_vit_r8_twosurface,44,released,fellow_threshold,0.12,3.01,0.5903
+# 3-seed means (paper tab:mia + tab:mia-fellow, CIFAR-100 row):
+#   external LiRA:      AUC 0.62, TPR@1% 3.7%
+#   fellow threshold:   AUC 0.59, TPR@1% 2.5%
+#   fellow LiRA == external LiRA per seed (class prior cancels in the likelihood ratio)
+# Raw per-seed JSON on VALAR: results/.../*_twosurface_*seed{42,43,44}.json (n_shadows=8, pool=5000)

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="serving">
+    <mxGraphModel dx="1032" dy="560" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1032" pageHeight="560" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="hA" value="Plaintext, on the querying client" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=15;fontStyle=2;fontColor=#5B7B6E;" vertex="1" parent="1">
+          <mxGeometry x="14" y="14" width="276" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="hB" value="Ciphertext, evaluated by the serving party" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=15;fontStyle=2;fontColor=#5B7FA6;" vertex="1" parent="1">
+          <mxGeometry x="392" y="14" width="318" height="22" as="geometry" />
+        </mxCell>
+        <mxCell id="hC" value="Threshold decryption" style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=15;fontStyle=2;fontColor=#8B9EA8;" vertex="1" parent="1">
+          <mxGeometry x="800" y="14" width="222" height="22" as="geometry" />
+        </mxCell>
+
+        <mxCell id="cl" value="Querying client" style="swimlane;startSize=26;html=1;rounded=1;fillColor=#FBF7EF;strokeColor=#C6A87D;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;swimlaneFillColor=#FBF7EF;" vertex="1" parent="1">
+          <mxGeometry x="14" y="120" width="276" height="188" as="geometry" />
+        </mxCell>
+        <mxCell id="clq" value="query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFE7D6;strokeColor=#A8905F;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="cl">
+          <mxGeometry x="74" y="36" width="128" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="clb" value="frozen public backbone&#xa;and the client's own adapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4C5A9;strokeColor=#A8905F;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="cl">
+          <mxGeometry x="14" y="80" width="248" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="cle" value="encrypt the feature vector" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="cl">
+          <mxGeometry x="14" y="136" width="248" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="cli1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#A8905F;" edge="1" parent="cl" source="clq" target="clb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="cli2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#A8905F;" edge="1" parent="cl" source="clb" target="cle">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="clnote" value="The backbone and the adapter are the client's own,&#xa;so the serving party never sees the feature vector&#xa;and cannot invert it to recover the query." style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=14;fontStyle=2;fontColor=#A8905F;" vertex="1" parent="1">
+          <mxGeometry x="6" y="322" width="292" height="58" as="geometry" />
+        </mxCell>
+
+        <mxCell id="sp" value="Serving party" style="swimlane;startSize=26;html=1;rounded=1;fillColor=#EDF1F3;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;swimlaneFillColor=#EDF1F3;" vertex="1" parent="1">
+          <mxGeometry x="392" y="86" width="318" height="256" as="geometry" />
+        </mxCell>
+        <mxCell id="sp1" value="apply the encrypted head to the&#xa;encrypted features" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="sp">
+          <mxGeometry x="24" y="44" width="280" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="sp2" value="encrypted logits" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="sp">
+          <mxGeometry x="24" y="100" width="280" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sp3" value="argmax under encryption&#xa;log-depth tournament of comparisons" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#7B9BBF;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="sp">
+          <mxGeometry x="24" y="144" width="280" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="sp4" value="Holds the evaluation keys only.&#xa;It computes but cannot decrypt." style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=14;fontStyle=2;fontColor=#5B7B6E;" vertex="1" parent="sp">
+          <mxGeometry x="14" y="196" width="300" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="spi1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;" edge="1" parent="sp" source="sp1" target="sp2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="spi2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;" edge="1" parent="sp" source="sp2" target="sp3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="head" value="shared classifier head,&#xa;in ciphertext" style="shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=12;whiteSpace=wrap;html=1;fillColor=#5B7FA6;strokeColor=#3E5F80;fontFamily=Times New Roman;fontSize=15;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="429" y="386" width="244" height="86" as="geometry" />
+        </mxCell>
+        <mxCell id="headn" value="Produced once by the aggregation of Fig. 1 and never decrypted." style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=14;fontStyle=2;fontColor=#5B7FA6;" vertex="1" parent="1">
+          <mxGeometry x="371" y="478" width="360" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="td" value="Quorum of clients" style="swimlane;startSize=26;html=1;rounded=1;fillColor=#F2F4F5;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;swimlaneFillColor=#F2F4F5;" vertex="1" parent="1">
+          <mxGeometry x="800" y="120" width="222" height="152" as="geometry" />
+        </mxCell>
+        <mxCell id="td1" value="each client contributes&#xa;a key-switching share" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C7D0D6;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="td">
+          <mxGeometry x="14" y="38" width="194" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="td2" value="switch to the querier's key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#C7D0D6;strokeColor=#8B9EA8;fontFamily=Times New Roman;fontSize=15;fontColor=#3A3A3A;" vertex="1" parent="td">
+          <mxGeometry x="14" y="92" width="194" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="tdi" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8B9EA8;" edge="1" parent="td" source="td1" target="td2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="lab" value="one predicted label,&#xa;to the querier alone" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D3DEEA;strokeColor=#5B7FA6;fontFamily=Times New Roman;fontSize=16;fontColor=#3A3A3A;" vertex="1" parent="1">
+          <mxGeometry x="823" y="312" width="176" height="52" as="geometry" />
+        </mxCell>
+        <mxCell id="labn" value="The other clients contribute shares&#xa;without learning the answer." style="text;html=1;align=center;verticalAlign=middle;fontFamily=Times New Roman;fontSize=14;fontStyle=2;fontColor=#8B9EA8;" vertex="1" parent="1">
+          <mxGeometry x="789" y="372" width="244" height="42" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ea" value="encrypted&#xa;features" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;strokeWidth=1.6;fontFamily=Times New Roman;fontSize=14;fontColor=#5B7FA6;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.78;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;" edge="1" parent="1" source="cl" target="sp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eb" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;strokeWidth=1.6;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="head" target="sp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ec" value="encrypted&#xa;label" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5B7FA6;strokeWidth=1.6;fontFamily=Times New Roman;fontSize=14;fontColor=#5B7FA6;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.42;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="sp" target="td">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ed" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#8B9EA8;strokeWidth=1.6;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="td" target="lab">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
