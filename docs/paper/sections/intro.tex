@@ -12,16 +12,16 @@ infrastructure raises the same objection~\cite{xiao2023offsite}.
 
 Federated learning (FL) enables collaboration~\cite{mcmahan2017communication,kairouz2021advances},
 and its privacy risk is concentrated at training time. The protocol exchanges model
-updates instead of data, but the updates are themselves the vulnerability: A
+updates instead of data, but the updates are themselves the vulnerability. A
 gradient permits reconstruction of the batch that produced
 it~\cite{zhu2019deep,geiping2020inverting}. An observer of the per-round updates
 mounts membership inference far stronger than anything possible against the
-final model: on the same model and dataset, an attack that reaches $87\%$
+final model. On the same model and dataset, an attack that reaches $87\%$
 accuracy against the update stream falls to $54.5\%$ against the final model
 alone~\cite{nasr2019comprehensive}. A server, free to choose the weights it
 broadcasts, can harvest client inputs
-outright~\cite{boenisch2023curious,fowl2022robbing}. Two things therefore set the attack surface: what a protocol reveals while training
-runs, and how often it reveals it.
+outright~\cite{boenisch2023curious,fowl2022robbing}. Two things therefore set the attack surface, namely what a protocol reveals while
+training runs and how often it reveals it.
 
 Two measures remove that surface together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
 there is no intermediate state for anyone to observe. Encrypting that single
@@ -39,7 +39,7 @@ adds noise to the very artifact it releases.
 encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and the direct route of training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
-circuit~\cite{sav2021poseidon,xu2022hercules,pirillo2025reboot}. That cost scales with the network being trained: POSEIDON trains a three-layer
+circuit~\cite{sav2021poseidon,xu2022hercules,pirillo2025reboot}. That cost scales with the network being trained. POSEIDON trains a three-layer
 network of sixty-four neurons per layer on handwritten digits at ten parties in
 $1.4$ hours~\cite{sav2021poseidon}, and its successors lower the constant without
 changing what sets it. Adapting a pretrained transformer by this route is out of

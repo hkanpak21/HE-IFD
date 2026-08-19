@@ -56,7 +56,7 @@ lossless, but it protects one round's sum inside an iterative protocol, and the
 revealed per-round sums have themselves been shown to leak across
 rounds~\cite{so2023securing,kerkouche2023client}. Homomorphic encryption goes
 further by computing on contributions that stay encrypted. In its most ambitious
-form it trains a network entirely under encryption: POSEIDON runs encrypted
+form it trains a network entirely under encryption. POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
 polynomial approximations so that they can be evaluated
 homomorphically~\cite{sav2021poseidon}. The guarantee is strong and the model loses no accuracy. The approach is iterative,
@@ -72,7 +72,7 @@ training~\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe}, SHE-LoRA
 selectively encrypts a sensitivity-chosen subset of a low-rank adapter each
 round~\cite{li2025shelora}, and hybrid multi-key schemes reduce a round of secure
 summation to one client-to-server transmission~\cite{kemmaka2025hybagg}. All of
-these remain bound to the iterative protocol: the encryption cost is paid on every
+these remain bound to the iterative protocol. The encryption cost is paid on every
 round, and what is protected is a per-round sum rather than a complete
 contribution. SHE-LoRA also shows why key structure matters. It uses single-key
 homomorphic encryption and therefore has to assume that the server and the clients
@@ -127,7 +127,7 @@ distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and relat
 approaches protect a diffusion-generated~\cite{feddiff2024} or
 teacher-ensemble~\cite{li2021fedkt} surrogate, or add noise-free differential
 privacy to the distillation itself~\cite{sun2021fedmdnfdp}. These are our natural
-quantitative peers, and their privacy is lossy: the noise a meaningful budget
+quantitative peers, and their privacy is lossy. The noise a meaningful budget
 requires is added to the very artifact that is released, so accuracy falls as the
 budget tightens. The guarantee also differs in kind. Differential privacy proves a
 statistical bound on how much a released artifact can reveal and buys that bound
@@ -147,7 +147,7 @@ or multi-round.
 
 A recent line federates parameter-efficient fine-tuning, communicating a low-rank
 adapter rather than a model. FedIT averages the adapters round by
-round~\cite{zhang2024fedit}, but per-factor averaging is biased: a client learns a
+round~\cite{zhang2024fedit}, but per-factor averaging is biased. A client learns a
 product of two factors, and averaging the factors separately does not give the
 average of the products. FLoRA removes the discrepancy by stacking
 factors~\cite{wang2024flora}, FlexLoRA by reconstructing full products and

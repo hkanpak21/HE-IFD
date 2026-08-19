@@ -1,45 +1,49 @@
 # Overleaf paste list, 2026-08-19
 
-One entry per change that is ready to go into Overleaf. Each entry says which
-file, what to search for, and what to do. Paste the block inside the fenced
-LaTeX, nothing else.
+What to paste into Overleaf, and where.
 
-Entries are added here as items in `docs/plan/paper-todo-2026-08-19.md` are
-accepted. Anything still marked PENDING below is waiting on a decision in that
-file, so do not paste it yet.
+## The fastest route, and the one I recommend
 
-Rules that every block here follows: no em dash, no en dash, no colon used to
-introduce an explanation, no markdown bold, active voice.
+Local and Overleaf were identical when this session started. Since then the only
+local changes are the ones listed below, so **replacing the whole file is safe
+and is far less work than 51 separate edits.** For each file, select all in
+Overleaf and paste the whole local file over it.
 
-## Status
-
-| # | item | file | status |
+| Overleaf file | local file | what changed | count |
 |---|---|---|---|
-| P1 | abstract, priority claim and paragraph break | `main.tex` | READY |
-| P2 | Table II column header | `experiments.tex` | READY |
-| P3 | capital letter after a colon | `intro.tex` | READY |
-| P4 | differential privacy clause in the Setting | `method.tex` | READY |
-| P5 | C6 reason clause | `method.tex` | READY |
-| P6 | the membership inference claim, two sites | `main.tex`, `intro.tex` | PENDING T12 |
+| `main.tex` | `docs/paper/main.tex` | the abstract, see A below | 1 block |
+| `sections/intro.tex` | same path | punctuation only | 4 |
+| `sections/related.tex` | same path | punctuation only | 4 |
+| `sections/method.tex` | same path | punctuation only | 16 |
+| `sections/security.tex` | same path | punctuation only | 1 |
+| `sections/experiments.tex` | same path | punctuation only | 20 |
+| `sections/conclusion.tex` | same path | punctuation only | 3 |
+
+**One condition.** This works only if nobody edited Overleaf after the export
+you gave me this morning. If a PI has edited since, tell me and I will produce
+the 51 edits as individual find and replace pairs instead.
+
+The paper compiles at 21 pages with zero undefined references after all of it.
 
 ---
 
-## P1. `main.tex`, the abstract
+## A. The abstract. `main.tex`. This is the only change that is not punctuation
 
-**Find** the abstract, which currently has a blank line in the middle of it and
-ends its fourth sentence with "where the resulting final model is never
-disclosed to any party."
+Four things change in one block.
 
-**Replace the whole abstract body** with the block below. Two things change and
-nothing else. The blank line before "We present HE-OFT" is gone, so the abstract
-is one paragraph again. And the priority claim is now restrictive, so it says
-first cryptographically secure one-shot federated fine-tuning rather than first
-one-shot federated fine-tuning.
+1. The blank line in the middle is gone, so the abstract is one paragraph again.
+2. The priority claim is now restrictive. It says first cryptographically secure
+   one-shot federated fine-tuning, not first one-shot federated fine-tuning.
+3. Two more results are stated, which answers Küpçü's comment of 11 August,
+   3:21 pm. The accuracy the protocol reaches against what a client reaches
+   alone, and what one query costs in time as well as in traffic.
+4. **A number is corrected. The floor is $0.03$, not $0.04$.** See the note at
+   the end of this file.
 
 ```latex
 Organizations adapt large pretrained models to private data by fine-tuning, and parties
 holding complementary data over the same task would each gain from a jointly
-fine-tuned model, yet cannot pool their data to build one. Federated learning offers collaboration but concentrates its privacy risk at training time: gradients
+fine-tuned model, yet cannot pool their data to build one. Federated learning offers collaboration but concentrates its privacy risk at training time. Gradients
 and per-round updates permit reconstruction of training data and support
 membership inference substantially stronger than any attack on the final model.
 A one-shot protocol that exchanges a single encrypted contribution removes that surface,
@@ -49,107 +53,96 @@ HE-OFT, the first cryptographically secure one-shot federated fine-tuning protoc
 in which the final model is never disclosed to any party.
 Each client fine-tunes a low-rank adapter and a classifier head on a
 frozen public backbone, retains the adapter locally, and uploads one encrypted
-head displacement; the server combines these under multiparty CKKS and never
+head displacement. The server combines these under multiparty CKKS and never
 decrypts the result. Queries are answered under encryption, and a quorum of
-clients returns only the predicted label, addressed to the party that asked. The federation also chooses between two servable arrangements without decrypting either. Across four text classification tasks and one vision task, HE-OFT costs $0.04$ to $0.14$ accuracy against a disclosed model, and $5$\,MiB of traffic per query.
+clients returns only the predicted label, addressed to the party that asked. The federation also chooses between two servable arrangements without decrypting either. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, and it gives up $0.03$ to $0.14$ against a disclosed model. One query costs $31.5$\,s at four classes and $113.2$\,s at a hundred, and $5$\,MiB of traffic.
 ```
 
-Why the comma matters. Without the restrictive "in which", the sentence claims
-we are the first one-shot federated fine-tuning protocol of any kind. The
-federated adapter line already holds that ground. With it, the claim is about
-the class we can defend.
+Every number here traces to a record.
+
+| number | source |
+|---|---|
+| $0.61$ to $0.79$ | three-seed means of `sel_gp_rarefill`, `results/personal_adapter/stratified/results.csv` and `results/personal_adapter_vision/stratified/results.csv`. TREC is the floor at $0.607$, DBpedia the ceiling at $0.789$ |
+| $0.20$ to $0.48$ | three-seed means of `local` in the same two records. CIFAR-100 is the floor at $0.197$, AG-News the ceiling at $0.475$ |
+| $0.03$ to $0.14$ | `current` minus `sel_gp_rarefill`, per task. CIFAR-100 $0.029$, AG-News $0.071$, Banking77 $0.075$, TREC $0.104$, DBpedia $0.136$. These are the five figures already printed in Section 5.7 |
+| $31.5$ and $113.2$ seconds | `results/fhe_serve/cost_grid.json` and `argmax_tournament.csv`, already in Section 5.4 |
 
 ---
 
-## P2. `experiments.tex`, Table II header
+## B. The punctuation pass. Six section files
 
-**Find** the header row of Table II:
+51 edits in total. Every one removes a colon that introduces an explanation, or
+a semicolon, and nothing else changes. No claim, no number and no citation moves.
 
-```latex
-Task & $\Cc$ & shared head & adapter & alone & disclosed & pooled \\
+Examples of the shape, so you can see there is no surprise in the other 48:
+
+```
+before   the updates are themselves the vulnerability: A gradient permits
+after    the updates are themselves the vulnerability. A gradient permits
+
+before   All of these remain bound to the iterative protocol: the encryption cost
+after    All of these remain bound to the iterative protocol. The encryption cost
+
+before   never decrypts the result; queries are answered under encryption
+after    never decrypts the result. Queries are answered under encryption
 ```
 
-**Replace with:**
+Four sites needed more than a period, because a bare split read badly.
 
-```latex
-Task & $\Cc$ & shared head & personal adapter & alone & disclosed & pooled \\
+```
+before   Two further protocols of the same family are used below: a key switch to
+         a designated public key, which re-encrypts a result so that one chosen
+         party can read it, and a collective refresh, which restores a depleted
+         level budget and plays the role bootstrapping plays in the single-key
+         setting.
+after    Two further protocols of the same family are used below. The first is a
+         key switch to a designated public key, which re-encrypts a result so
+         that one chosen party can read it. The second is a collective refresh,
+         which restores a depleted level budget and plays the role bootstrapping
+         plays in the single-key setting.
+
+before   Two things therefore set the attack surface: what a protocol reveals
+         while training runs, and how often it reveals it.
+after    Two things therefore set the attack surface, namely what a protocol
+         reveals while training runs and how often it reveals it.
+
+before   The claims are, in order: that a federated head ...; that its accuracy
+         ...; that the federation ...; that the cryptographic layer ...; and that
+         what a participant can learn is bounded.
+after    the same list with commas instead of the colon and the semicolons
+
+before   cost; we do not attempt it here.
+after    cost, and we do not attempt it here.
 ```
 
-Ten sentences in the body call this arrangement the personal adapter, and one
-name per thing is a checklist rule. If the column is too narrow at that width,
-tell me and I will rename the arrangement everywhere instead, which is ten
-edits rather than one.
+## What I left alone, and why
+
+- `Left:` and `Right:` in the caption of Figure 4. That is a caption label, not
+  an explanation, and IEEE captions use it. Say the word and it goes.
+- The `\thanks` fields in `main.tex`, which hold `e-mail:` and
+  `received XX; revised XX`. Both are required forms.
+- One `\Require query $x$ at client $j$; ...` inside an algorithm block, where
+  the semicolon separates two preconditions.
+- The `\;` in the display equations. Those are spacing commands, not
+  semicolons.
+- The `---` in the CIFAR-100 pooled cell of Table II. That is a missing value,
+  not an em dash in prose. It should probably read `n/a`, which is one edit if
+  you want it.
 
 ---
 
-## P3. `intro.tex`, capital letter after a colon
+## C. Number correction. Please read this one
 
-**Find:**
+The abstract has said $0.04$ to $0.14$ since 2026-08-06. **It should say $0.03$
+to $0.14$, which is what the conclusion has said all along.**
 
-```latex
-updates instead of data, but the updates are themselves the vulnerability: A
-gradient permits reconstruction of the batch that produced
-```
+I made this error. On 2026-08-06 I recomputed the CIFAR-100 charge as $0.037$
+and changed the abstract from $0.03$ to $0.04$ on that basis. Rechecked today
+against `results/personal_adapter_vision/stratified/results.csv`, the three-seed
+mean of the selected arrangement is $0.7558$ and of the disclosed model is
+$0.7845$, so the charge is $0.029$. Section 5.7 of the manuscript has printed
+$0.029$ correctly the whole time, so the abstract was the only place that was
+wrong. The block in A above carries the fix.
 
-**Replace with:**
-
-```latex
-updates instead of data, but the updates are themselves the vulnerability. A
-gradient permits reconstruction of the batch that produced
-```
-
-The colon introduced an explanation, which is one of the patterns we are
-removing, and it left a capital letter mid-sentence.
-
----
-
-## P4. `method.tex`, the Setting, the differential privacy clause
-
-**Find:**
-
-```latex
-available in plaintext to any other party, and we do not consider differential privacy due to the accuracy loss incurred. (3) The resulting model is
-```
-
-**Replace with:**
-
-```latex
-available in plaintext to any other party, and differential privacy alone is not
-enough, because of the accuracy it costs. (3) The resulting model is
-```
-
-As it stands the method says we do not consider differential privacy, and
-Section 5.2 then compares against differentially private one-shot FL for two
-pages. The new clause says what we mean, which is that we do not accept it as
-the only protection.
-
----
-
-## P5. `method.tex`, constraint C6
-
-**Find:**
-
-```latex
-\item[\textbf{C6}] \emph{No single party may be able to decrypt.} The parties are
-  mutually distrustful and the server is semi-honest. \emph{Therefore}, the secret
-```
-
-**Replace with:**
-
-```latex
-\item[\textbf{C6}] \emph{No single party may be able to decrypt.} No party may hold
-  the decryption key alone, and the server is semi-honest. \emph{Therefore}, the secret
-```
-
-The old reason clause said the parties are mutually distrustful, which reads
-oddly next to semi-honest. Section IV says semi-honest, so the new word stays
-and the reason changes to match it.
-
----
-
-## P6. PENDING. The membership inference claim
-
-Küpçü's comment of 11 August, 3:32 pm, says the claim is too strong. It appears
-twice, once in the abstract and once in the introduction. Waiting on the
-decision at T12 before the text is written, because the fix changes a claim and
-not only a phrasing.
+`docs/notes/PI_notes/PI_notes_2026-08-06.md` note 1 has been corrected so that
+the record does not carry the wrong figure forward.

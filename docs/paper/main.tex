@@ -109,21 +109,19 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 \begin{abstract}
 Organizations adapt large pretrained models to private data by fine-tuning, and parties
 holding complementary data over the same task would each gain from a jointly
-fine-tuned model, yet cannot pool their data to build one. Federated learning offers collaboration but concentrates its privacy risk at training time: gradients
+fine-tuned model, yet cannot pool their data to build one. Federated learning offers collaboration but concentrates its privacy risk at training time. Gradients
 and per-round updates permit reconstruction of training data and support
 membership inference substantially stronger than any attack on the final model.
 A one-shot protocol that exchanges a single encrypted contribution removes that surface,
 but it still ends by handing the final model to every participant, which is not
-permitted where the model is itself a regulated or proprietary asset. 
-
-We present
-HE-OFT, the first one-shot federated fine-tuning protocol, where the resulting final model is
-never disclosed to any party.
+permitted where the model is itself a regulated or proprietary asset. We present
+HE-OFT, the first cryptographically secure one-shot federated fine-tuning protocol,
+in which the final model is never disclosed to any party.
 Each client fine-tunes a low-rank adapter and a classifier head on a
 frozen public backbone, retains the adapter locally, and uploads one encrypted
-head displacement; the server combines these under multiparty CKKS and never
+head displacement. The server combines these under multiparty CKKS and never
 decrypts the result. Queries are answered under encryption, and a quorum of
-clients returns only the predicted label, addressed to the party that asked. The federation also chooses between two servable arrangements without decrypting either. Across four text classification tasks and one vision task, HE-OFT costs $0.04$ to $0.14$ accuracy against a disclosed model, and $5$\,MiB of traffic per query.
+clients returns only the predicted label, addressed to the party that asked. The federation also chooses between two servable arrangements without decrypting either. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, and it gives up $0.03$ to $0.14$ against a disclosed model. One query costs $31.5$\,s at four classes and $113.2$\,s at a hundred, and $5$\,MiB of traffic.
 
 
 \end{abstract}
