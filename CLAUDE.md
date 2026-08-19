@@ -203,18 +203,34 @@ Compute nodes have **slow/no internet**. Before any sweep that needs pretrained 
 
 Single env: **`he_ofl`** (`/home/hkanpak21/.conda/envs/he_ofl`). Has `torch 2.3.0+cu121`, `torchvision`, `tenseal 0.3.16`, `transformers`/`datasets` (verify), `numpy`, `pypdf`, `termcolor`, `xgboost`, `pydicom`, `opacus`. New dep: `pip install --quiet <pkg>` from the login node is fine. Avoid `conda install` (base env is read-only).
 
-## VALAR facts that cost time to rediscover (verified 2026-07-29)
+## VALAR facts that cost time to rediscover (verified 2026-08-20)
 
-- **The QOS is `gres/gpu:tesla_t4=1`.** One T4 GPU job at a time, and only the
-  `t4_ai` partition accepts the `comx29` account. `ai`, `long`, `mid`,
-  `v100_ai` and `short` all reject it.
+**The `ai` partition opened on 2026-08-20 and it changes how work is planned.**
+The old `comx29` and `t4_ai` route still works, and everything written before
+this date assumes it. Prefer `ai`.
+
+- **Use account `ai`, QOS `ai`, partition `ai`.** Verified by a real job, 1583143,
+  which ran on `ai07`. The old `comx29` and `t4_ai` association also still exists.
+- **The QOS `ai` allows 8 GPUs, 240 CPUs and 350G of memory per user, with 8
+  running jobs and 50 queued.** Eight GPU jobs run at once, where `comx29`
+  allowed one.
+- **The `ai` partition has no time limit.** `MaxTime=UNLIMITED`. The three hour
+  rule below applies to `t4_ai` and to nothing on `ai`. Resumable jobs are still
+  worth writing, because a preempted job restarts, but the wall clock no longer
+  forces the split.
+- **176 GPUs over 22 nodes: 72 `ampere_a40`, 64 `tesla_t4`, 32 `tesla_v100`, 8
+  `rtx_a6000`.** A bare `--gres=gpu:1` takes whatever is free and will often give
+  a T4. Ask for the card by name, `--gres=gpu:ampere_a40:1`, when the run is long
+  enough for it to matter. An A40 holds 48G against the T4's 15G.
+- `OverSubscribe=YES:4` and `PreemptMode=REQUEUE` on `ai`. A job can be requeued,
+  so checkpointing still earns its keep.
 - **`sbatch --test-only` lies.** It reports a start time for partitions the QOS
   cannot use. It does not check the QOS-partition association. Submit a real
   job to find out.
-- **A job with no `--gres` runs on `t4_ai` without consuming the GPU slot.** Use
-  this for CPU-only work so it runs beside a training job.
-- `short` caps at 2 hours. `t4_ai` allows 8, but keep to 3 unless there is a
-  reason.
+- **A job with no `--gres` runs without consuming a GPU slot.** Use this for
+  CPU-only work, such as the Lattigo cost jobs, so it runs beside training.
+- `short` caps at 2 hours. `t4_ai` allows 8. `mid` allows 1 day and `long` 7,
+  but neither took the `comx29` account.
 - Go lives behind `module load go/1.24.4`, not on the default PATH.
 - The system GCC is 8.5 and has no `<concepts>`. A C++20 toolchain (GCC 11.4)
   sits in the `thor310` conda env at `/home/hkanpak21/.conda/envs/thor310/bin`.
@@ -259,13 +275,13 @@ Single env: **`he_ofl`** (`/home/hkanpak21/.conda/envs/he_ofl`). Has `torch 2.3.
 
 ```bash
 #!/bin/bash
-#SBATCH --partition=t4_ai
-#SBATCH --account=comx29
-#SBATCH --qos=comx29
-#SBATCH --gres=gpu:tesla_t4:1
+#SBATCH --partition=ai
+#SBATCH --account=ai
+#SBATCH --qos=ai
+#SBATCH --gres=gpu:ampere_a40:1  # or gpu:tesla_t4:1 for short work; bare gpu:1 gets whatever is free
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=24G              # bump to 64G+ for TenSEAL / multiparty CKKS work
-#SBATCH --time=03:00:00        # VALAR HARD CAP is 3h per job — never exceed
+#SBATCH --time=12:00:00        # the ai partition has no cap; t4_ai still caps at 8h
 #SBATCH --job-name=<name>
 #SBATCH --output=/scratch/hkanpak21/HE_IFD/results/<case>/runs/<name>_%j.out
 #SBATCH --error=/scratch/hkanpak21/HE_IFD/results/<case>/runs/<name>_%j.err
@@ -280,7 +296,11 @@ exec srun python -u -m src.<entrypoint> "$@"   # flat src/ package (post-consoli
 
 The Lattigo (Go) real-FHE job is the exception — it builds/runs a Go binary, may use a CPU partition (no GPU needed), and lives under `fhe/`.
 
-**VALAR job time limit: 3 hours, hard.** Any job that would exceed 3h must be split into resumable ≤3h chunks (`sweep.py` skips already-completed cells; select cell subsets via env vars or a job-array index). A sweep that dies at the wall-clock should resume, not restart, on the next submission.
+**Job time limits.** The `ai` partition has none, so a long sweep can run as one
+job. `t4_ai` caps at 8 hours and `short` at 2. Keep sweeps resumable anyway
+(`sweep.py` skips completed cells, and cell subsets are selectable through env
+vars or a job-array index), because `ai` preempts by requeue. A sweep that dies
+should resume, not restart.
 
 ## Datasets
 
