@@ -44,7 +44,8 @@ methodology.
 | Table IV, matched CIFAR-10 | `results/personal_adapter_vision/cifar10_matched.csv` |
 | Table VI and Figure 4, cost | `results/fhe_serve/cost_grid.json` |
 | the argmax and query totals | `results/fhe_serve/argmax_tournament.csv` |
-| Table VII, communication | `results/fhe_serve/comm_cost.json` |
+| Table VII, communication | `results/fhe_serve/comm_grid.json`, the `serving` chain at `log_n` 15 |
+| the bootstrapping key size and its generation time | `results/fhe_serve/btp_keys.json` |
 | Table VIII, extraction | `results/extraction_budget/results.csv` |
 | the extraction scaling law | `results/extraction_scale/results.csv` |
 | the noise-defence note | `results/extraction_defence/results.csv` |
