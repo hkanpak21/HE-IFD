@@ -18,10 +18,11 @@ number or a clause. One is a deletion, which is item T20 of the TODO.
 
 | what | count |
 |---|---|
-| wrong numbers corrected | 6 |
+| wrong numbers corrected | 5 |
+| claims requalified, no number changed | 2 |
 | undisclosed methodology stated | 2 |
 | tables deleted | 1 |
-| lines added, net of the deletion | about minus 24 |
+| net line change in the section | minus 20, from 710 to 690 |
 
 ## Records used
 
@@ -81,7 +82,6 @@ tasks would print $0.081$, $0.081$, $0.005$ and $0.004$.
 
 ## A1. Table V, both baseline rows, around line 309
 
-
 FIND
 
 ```latex
@@ -99,7 +99,6 @@ same, class-balanced within a client & 7/15 & 0.403 \\
 ## A2. Table V caption, around line 300
 
 The regret column is a sum over the five tasks, not an average over them.
-
 
 FIND
 
@@ -159,11 +158,17 @@ The training figure is the pool before the Dirichlet partition and before each
 client carves a tenth of its shard into a holdout. At $\Nc=10$ on AG-News a client
 therefore holds about $2{,}000$ examples.
 
+One caveat on that table. The two columns headed "used" come from the code and, for
+the test split, from the check above. The two headed "full" are the published sizes
+of the corpora, because no dataset cache exists on the machine this was checked on.
+Only Banking77 is settled by the record alone, where the check rejects $5{,}000$ and
+admits $3{,}080$. TREC rests on the published $5{,}452$ and $500$, both far below the
+caps.
+
 TREC and Banking77 are used whole on both splits, so the sentence must not claim
 they are subsampled. "At most" carries that, and the second sentence names them.
 
 ## B1. Setup, around line 26
-
 
 FIND
 
@@ -205,7 +210,6 @@ same event, so C1 discloses it and C2 names it.
 
 ## C1. Table II caption, around line 69
 
-
 FIND
 
 ```latex
@@ -226,7 +230,6 @@ The wording copies the disclosure the paper already makes for Table IV at
 $\Nc=20$ and $\alpha=0.04$, so the two read the same way.
 
 ## C2. The unlucky partition sentence, around line 320
-
 
 FIND
 
@@ -259,7 +262,6 @@ which is $26.5$ minutes. The $20.4$ minute figure in that file is the $C=77$ row
 at $1{,}225{,}902.9$\,ms. The paper's own arithmetic already disagrees with its
 own word, since $16$\,s times $99$ comparisons is $26.4$ minutes.
 
-
 FIND
 
 ```latex
@@ -285,7 +287,6 @@ $1.2\times10^4$, which is what the paragraph above already prints. Divided by ni
 that is $1.3\times10^3$. The printed $1.4\times10^3$ is looser than the record
 supports and contradicts the paper's own $1.2\times10^4$.
 
-
 FIND
 
 ```latex
@@ -309,7 +310,6 @@ accuracy is the `B_personal` row. The mean difference over the fifteen cells is
 $0.2848$, which rounds to $0.28$, not $0.29$. The range runs from $0.0199$ on
 CIFAR-100 seed 42 to $0.5715$ on TREC seed 43.
 
-
 FIND
 
 ```latex
@@ -328,7 +328,6 @@ Real. The same comparison for the shared arrangement gives a mean absolute error
 of $0.0194$ over the fifteen cells and a worst cell of $0.1148$, on TREC seed 44.
 The sentence two lines below it says "on average" and is correct, so only this one
 moves.
-
 
 FIND
 
@@ -372,7 +371,7 @@ prints exactly the strings the table prints.
 | ciphertext addition, 0.7 ms | yes | nowhere |
 | rotation, 33.1 ms | yes | "Hardware acceleration" |
 | selection mask and accumulate, 1.1 ms | no | nowhere, but it is inside the $0.24$\,s the end-to-end paragraph states |
-| key switch to the querier, 198 ms | yes | nowhere, and the figure spans $103$\,ms to $1.73$\,s in prose |
+| key switch to the querier, 198 ms | yes | the prose gives its span, $103$\,ms to $1.73$\,s |
 | encrypted argmax, $C=4$, 31.2 s | caption | "What one query costs" |
 | encrypted argmax, $C=100$, 113.0 s | caption | "What one query costs" |
 | reciprocal, 4.21 s | no | "The encrypted reciprocal", with $3.16$ and $6.30$\,s beside it |
@@ -404,7 +403,6 @@ above the table already discloses the deeper chain, so deleting the caption
 removes the contradiction without adding a word.
 
 ## E1. Delete the table, around line 350
-
 
 FIND
 
@@ -446,7 +444,6 @@ REPLACE
 ```
 
 ## E2. The figure caption, which is the only cross-reference to the table, around line 451
-
 
 FIND
 
@@ -497,7 +494,8 @@ survive recomputation.
 | "more than $99$ per cent" | $99.2$ per cent at $C=4$ and $99.8$ at $C=100$ |
 | Banking77 allowance $2.2\times10^4$ | $2.0\times10^5$ over nine |
 | "margins of $0.13$ to $0.24$" | the zero-fill margins in the notes are $0.1296$, $0.1790$ and $0.2368$. The rare-class fill gives $0.4554$ to $0.5347$, and the paper does not say which variant it quotes, so the sentence is true as written and only ambiguous |
-| Table IV and Table VII, every cell | reproduce from their records |
+| Table IV, all twenty-four cells | recomputed as three-seed means from `results/personal_adapter_vision/cifar10_matched.csv`, giving $0.384$, $0.948$, $0.962$, $0.013$, then $0.569$, $0.950$, $0.964$, $0.014$, then $0.212$, $0.948$, $0.943$, $-0.005$, then $0.399$, $0.952$, $0.959$, $0.007$ |
+| Table VII, every row | every cell recomputes from `results/fhe_serve/comm_cost.json` at $\Nc=10$, giving $1.13$, $27.0$, $63.0$, $2.0$, $0.5$, $2.5$ and a total of $5.0$\,MiB, and the $510$\,MiB alternative is $34$ refreshes times ten clients times $1{,}573{,}253$ bytes. That record measured the aggregation chain, not the serving chain, and `pastes/T22-communication-corrected.md` replaces the whole table from `results/fhe_serve/comm_grid.json`. T31 proposes nothing on it |
 
 ---
 
@@ -513,6 +511,10 @@ One ordering constraint and one warning.
 - B1 sits on the sentence that T14 moves into the setup subsection. If T14 lands
   first, its insertion point is the same paragraph. Paste B1 before T14, or check
   the anchor after T14 lands.
+
+`pastes/T22-communication-corrected.md` also edits this file, at Table VII and the
+two paragraphs under it. Its anchors were checked against these eleven and none of
+them overlap, so the two lists can be pasted in either order.
 
 ---
 
