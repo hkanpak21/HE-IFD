@@ -366,8 +366,11 @@ def main():
                 run_task(t, sd, rows)
             except Exception as e:
                 print(f"[FAIL] {t} s{sd}: {type(e).__name__}: {e}", flush=True)
-            (OUTDIR / f"personal_adapter_{'_'.join(tasks)}.json").write_text(
-                json.dumps(rows, indent=2))
+            # The config goes in the filename. Without it, two jobs at different
+            # alpha or K silently overwrite each other, which is the trap
+            # personal_adapter_vision.py fell into.
+            stem = f"personal_adapter_{'_'.join(tasks)}_N{N}_a{ALPHA}_K{K}"
+            (OUTDIR / f"{stem}.json").write_text(json.dumps(rows, indent=2))
 
     cols = ["task", "C", "seed", "mode", "n", "acc_mean", "acc_min", "acc_max", "note"]
     print("\n" + ",".join(cols))
