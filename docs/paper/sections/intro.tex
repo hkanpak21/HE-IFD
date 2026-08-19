@@ -1,105 +1,105 @@
 \section{Introduction}
 \label{sec:intro}
 
-Organizations adapt public pretrained models to their own data by
+Organizations adapt large public pretrained models to their own data by
 fine-tuning~\cite{bommasani2021opportunities,hu2022lora}. Often several
 organizations hold complementary data over the same task, different patient
 populations, fraud patterns, or customer bases, and each would obtain a better
-model from the combination than from its own data alone. They cannot pool that
-data. Data-protection law restricts the sharing of confidential records across
-institutions, imposing data-minimisation and cross-border-transfer limits and, for
-health data, a de-identification bar before any disclosure, under regimes from the
-EU General Data Protection Regulation and the U.S.\ Health Insurance Portability
-and Accountability Act to Turkey's Personal Data Protection Law and a widening set
-elsewhere~\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}. Competitive concerns
+model from the combination than from its own data alone. They cannot pool that data, because data protection law restricts the sharing of
+confidential records across institutions~\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}. Competitive concerns
 point the same way, and handing the data to whoever operates the fine-tuning
 infrastructure raises the same objection~\cite{xiao2023offsite}.
 
-Federated learning is the standard response, and its privacy risk is concentrated
-at training time rather than in the model it produces. The protocol exchanges model
-updates instead of data, but the updates are themselves the vulnerability. A
+Federated learning (FL) enables collaboration~\cite{mcmahan2017communication,kairouz2021advances},
+and its privacy risk is concentrated at training time. The protocol exchanges model
+updates instead of data, but the updates are themselves the vulnerability: A
 gradient permits reconstruction of the batch that produced
 it~\cite{zhu2019deep,geiping2020inverting}. An observer of the per-round updates
 mounts membership inference far stronger than anything possible against the
-finished model: on the same model and dataset, an attack that reaches $87\%$
+final model: on the same model and dataset, an attack that reaches $87\%$
 accuracy against the update stream falls to $54.5\%$ against the final model
-alone~\cite{nasr2019comprehensive}. A server free to choose the weights it
-broadcasts can harvest client inputs
-outright~\cite{boenisch2023curious,fowl2022robbing}. The decisive quantities are therefore those a protocol
-exposes while the model is being built, and the number of times it exposes them.
+alone~\cite{nasr2019comprehensive}. A server, free to choose the weights it
+broadcasts, can harvest client inputs
+outright~\cite{boenisch2023curious,fowl2022robbing}. Two things therefore set the attack surface: what a protocol reveals while training
+runs, and how often it reveals it.
 
-Two measures remove that surface together. Making the protocol \emph{one-shot},
-so that each client contributes once, means there is no intermediate state for
-anyone to observe. Encrypting that single contribution means the one thing that is
-exchanged is never available in plaintext. We use one-shot in this sense
-throughout: not as a claim that the parties never communicate again, but as the
-statement that no intermediate training artifact is ever exposed. Prior work applies one of these
-measures at a time. One-shot federated learning sends its single
-contribution in plaintext, or protects it with differential privacy, which noises
-the very artifact it releases. Encrypted federated learning runs many rounds of
+Two measures remove that surface together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
+there is no intermediate state for anyone to observe. Encrypting that single
+contribution means that the one thing that is exchanged is never available in
+plaintext.
+ In this paper, one-shot does not mean the parties stop communicating. It means that
+no intermediate training artifact is ever exposed.
+ Prior work applies one of these
+measures at a time. One-shot FL~\cite{guha2019oneshot,wang2025towards} sends its
+single contribution in
+plaintext~\cite{zhang2022dense,dai2024coboosting,tang2024fusefl}, or protects it
+with differential privacy~\cite{hoech2022fedauxfdp,li2021fedkt,feddiff2024}, which
+adds noise to the very artifact it releases.
+ Encrypted FL runs many rounds of
 encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and the direct route of training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
-circuit~\cite{sav2021poseidon}.
+circuit~\cite{sav2021poseidon,xu2022hercules,pirillo2025reboot}. That cost scales with the network being trained: POSEIDON trains a three-layer
+network of sixty-four neurons per layer on handwritten digits at ten parties in
+$1.4$ hours~\cite{sav2021poseidon}, and its successors lower the constant without
+changing what sets it. Adapting a pretrained transformer by this route is out of
+reach, and that is the case this paper addresses.
 
-Applying both still leaves one artifact exposed, namely the model itself. Every
-protocol above ends by handing the finished model to the participants, which is
-reasonable when the purpose is to distribute a shared model, and unacceptable when
-the model may not be distributed at all. A model fine-tuned on confidential
-records can itself be a regulated artifact, and in high-risk domains such as
-health, biometrics and credit it is treated as one~\cite{euaiact2024}. It can also
-be the asset the participants are least willing to give each other. For such deployments the relevant question is not how to release a
-model safely, but how to construct one that is never released.
 
-This paper presents such a protocol. The parties fine-tune on a frozen
-public backbone, contribute once under multiparty CKKS, and obtain a shared
-classifier that no party ever decrypts. It answers queries under encryption and
+Applying both measures (encrypted, one-shot training) still leaves one artifact exposed, namely the model itself.
+Every protocol above ends by handing the final decrypted model to the participants, which is
+unacceptable when the model may not be distributed at all. A model fine-tuned on
+confidential records can be a regulated artifact in high-risk domains such as
+health, biometrics, and credit~\cite{euaiact2024}, and it can be the asset the
+participants are least willing to give to each other. Such deployments need a
+protocol that builds a model and never releases it.
+
+
+
+In this work, we present HE-OFT, the first one-shot federated fine-tuning protocol
+that enables several parties to adapt a pretrained model together and to query the
+result, without any of them ever holding it in plaintext. The parties fine-tune on a frozen public backbone, contribute once, and obtain a
+shared classifier. The contribution is encrypted under multiparty
+CKKS~\cite{cheon2017ckks,mouchet2021multiparty}, a homomorphic encryption scheme
+whose secret key is split across the parties.
+ The backbone stays public and in plaintext, so the cost of the cryptography does
+not grow with it. The classifier answers queries under encryption and
 returns a label, so a participant learns what the model predicts on its own inputs
 and nothing else about the model. There is no round in which a training artifact
 is exposed, no plaintext contribution, and no plaintext model at any point in the
-protocol's lifetime.
+protocol.
 
-Withholding the model is not simply a stronger form of withholding the updates.
-It changes what may be shared at all. A model that is never decrypted
-must still answer questions, and the party asking a question has to form it from
-components it can run itself, which means those components must be public. The
-shared trained quantity therefore cannot sit inside the backbone, since the
-features would then depend on it and computing them would require evaluating every
-nonlinearity of the network homomorphically. It has to attach after the last
-nonlinearity, and in a transformer there is exactly one such place. This single
-requirement determines the design, and the paper's three contributions are its
-consequences.
+The querier must build its query from parts it can run itself, so those parts must
+be public. The shared trained quantity therefore sits after the last nonlinearity,
+which, in a transformer, is a single place. The three contributions below follow from
+that.
+
 
 \begin{itemize}
-\item \textbf{Partitioning the trainable unit.} Each client
-  keeps its own adapter, which is trained locally and never transmitted, and only
-  the classifier head is federated. The division is one of coverage: a client can
-  improve its own representation alone, but it cannot learn to recognise a class it
-  has never observed, and that is what the federation supplies. Because no
-  aggregate of the adapters is ever formed, a coalition of all but one client has
-  no sum from which to subtract its own contributions (\cref{sec:split}).
-\item \textbf{Inference on an encrypted model.} The querying client computes its own
-  features and encrypts them, so the serving party cannot invert them to recover
-  the query. The serving party applies the encrypted head, reduces the logits to
-  the index of the largest entry under encryption, and a quorum switches that index
-  to the querier's key so that no other client learns the answer. Returning only the
+\item \textbf{A split trainable unit.} Each client keeps its own adapter and never
+  transmits it. Only the classifier head is federated, because a client can improve
+  its own features alone but cannot recognize a class it has never seen. No adapter
+  aggregate exists, so a coalition of all but one client has nothing to subtract
+  from (\cref{sec:split}).
+\item \textbf{A serving path that never decrypts.} The querying client encrypts its
+  own features, so the serving party cannot read the query. The serving party
+  applies the encrypted head and takes the argmax under encryption, and a quorum
+  switches the result to the querier's key. Only a label leaves the protocol, and a
   label denies the linear solve that logits would permit (\cref{sec:serving}).
-\item \textbf{Selection under encryption.} Two arrangements are
-  servable at the same cost, and which is preferable depends on the task. The
-  direct procedure, in which each client measures both on its own held-out data and
-  votes, estimates the wrong quantity and selects incorrectly whenever the two
-  differ. We give
-  an estimator that corrects it, runs under encryption, has no fitted threshold,
-  and reveals only which arrangement won (\cref{sec:selection}).
+\item \textbf{A selection rule that runs under encryption.} Two arrangements are
+  servable at the same cost, and which one is better depends on the task. Each
+  client scoring both on its own held-out data and voting estimates the wrong
+  quantity, and selects wrongly whenever the two differ. The estimator given here
+  corrects that, needs no fitted threshold, and reveals only which arrangement won
+  (\cref{sec:selection}).
 \end{itemize}
 
-\noindent We evaluate on four text classification tasks and one vision task, with
-frozen RoBERTa and ViT backbones, and we implement the cryptographic protocol in
-real multiparty CKKS rather than simulating it. We report what never decrypting
-the model costs, in accuracy against a released model and in the communication and
-computation the protocol adds, including the traffic that recurs per query, which a
-claim of one-shot operation might otherwise obscure.
 
-Each of these claims rests on a premise concerning where federated learning
-leaks, and on what existing work already provides. \Cref{sec:related} establishes
-both.
+\noindent We evaluate on four text classification tasks and one vision task, with
+frozen RoBERTa~\cite{liu2019roberta} and ViT~\cite{dosovitskiy2021vit} backbones,
+and we implement the cryptographic protocol in
+real multiparty CKKS rather than simulating it. We report what withholding the model costs, in accuracy against a disclosed model
+and in added communication and computation. Our accounting includes the traffic
+that recurs on every query.
+
+% Each of these claims rests on a premise concerning where FL leaks, and on what existing work already provides. \Cref{sec:related} establishes both.

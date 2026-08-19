@@ -23,8 +23,9 @@ one is the setting in which an encrypted one-shot protocol is required.
 
 We evaluate on four text classification tasks of increasing label-space size,
 AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
-$77$, using a frozen RoBERTa-base encoder, and on CIFAR-100 with a frozen
-ViT-B/16. Data are partitioned across clients by a Dirichlet distribution over
+$77$, using a frozen RoBERTa-base encoder~\cite{liu2019roberta}, and on CIFAR-100
+with a frozen ViT-B/16~\cite{dosovitskiy2021vit}. Data are partitioned across
+clients by a Dirichlet distribution over
 labels with concentration $\alpha$, the standard label-skew
 partition~\cite{hsu2019measuring,li2022niidbench}, which induces label-distribution
 skew in the usual taxonomy~\cite{kairouz2021advances} and holds the feature
@@ -74,7 +75,7 @@ CIFAR-100.}
 \toprule
  & & \multicolumn{2}{c}{servable} & & \multicolumn{2}{c}{reference} \\
 \cmidrule(lr){3-4}\cmidrule(lr){6-7}
-Task & $\Cc$ & shared head & personal adapter & alone & disclosed & pooled \\
+Task & $\Cc$ & shared head & adapter & alone & disclosed & pooled \\
 \midrule
 AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 & 0.921 \\
 TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 & 0.967 \\
@@ -195,8 +196,8 @@ $20$ & $0.16$ & $0.399$ & $0.952$ & $0.959$ & $0.007$ \\
 
 \paragraph{Why absolute accuracy does not settle the comparison} At $\Nc=5$ and
 $\alpha=0.1$ we measure $\Asel=0.948$, against the $0.503$
-of~\cite{zhang2022dense} and the $0.406$ of~\cite{lin2020feddf}. We do not present
-that margin as a result. Those methods train a ResNet-18 from scratch, whereas
+of~\cite{zhang2022dense} and the $0.406$ that the same paper reports
+for~\cite{lin2020feddf}. We do not present that margin as a result. Those methods train a ResNet-18 from scratch, whereas
 every client here fine-tunes a frozen public ViT-B/16, and the representation
 accounts for essentially all of the difference. Any of these methods would gain
 comparably from the same backbone, and running them on it is not a comparison
@@ -208,9 +209,12 @@ accuracy each method gives up for its privacy mechanism, since every paper measu
 that against its own unprotected baseline on its own architecture, and the backbone
 cancels. Read that way the peer group separates into three cases.
 
-DENSE and FedDF give up nothing, because they protect nothing. Their single
-contribution is exposed in plaintext, and by the evidence of
-\cref{sec:related-leakage} that contribution is the quantity worth attacking.
+DENSE and FedDF report no accuracy cost for privacy, because neither sets out to
+protect the contribution. What each client sends, a trained model in one case and
+repeated predictions over many rounds in the other, is available to the server in
+plaintext, and by the evidence of \cref{sec:related-leakage} those are the
+quantities an adversary would target.
+
 
 FedAUXfdp does protect its contribution, and its cost is governed by the budget.
 Against its own undefended baseline of $0.752$ on CIFAR-10 at $\Nc=20$ and
@@ -585,8 +589,8 @@ between three and five times that number of queries, with $0.80$ costing roughly
 $1.5$ times and $0.95$ roughly ten times. A deployment can therefore set its
 allowance from $\Cc$ and $d$ without repeating this experiment.
 
-The allowance follows. A coalition of $\Nc-1$ clients, the largest that cannot
-decrypt, commands $(\Nc-1)Q$ queries, so holding it below fidelity $0.90$ at
+The allowance follows. A coalition of $\tc-1$ clients, the largest that cannot
+decrypt, commands $(\tc-1)Q$ queries, so holding it below fidelity $0.90$ at
 $\Nc=10$ requires $Q$ below roughly $1.4\times10^3$ per client on AG-News and
 $2.2\times10^4$ on Banking77. The binding case is the small label space, not the
 large one, which is worth stating plainly because it runs against intuition: a
@@ -693,10 +697,13 @@ aggregation evaluated homomorphically. The one-shot structure shrinks the attack
 surface to a single exchange but removes the cross-round consistency checks a
 multi-round protocol could use.
 
-\paragraph{Availability} Threshold decryption is $\Nc$-out-of-$\Nc$, which gives
-the strongest collusion resistance the structure admits and the weakest
-availability: every client must participate for a label to be produced. A
-$t$-out-of-$\Nc$ threshold would relax this, at the cost of admitting coalitions of
-size $t$ and requiring a tighter query allowance, since the bound of
-\cref{sec:exp-leak} scales with the size of the largest coalition that cannot
-decrypt. Which point on that trade-off a deployment wants is a deployment question.
+\paragraph{Availability} \Cref{sec:security} states the protocol for a
+$\tc$-out-of-$\Nc$ threshold, and every measurement here is taken at $\tc=\Nc$.
+That setting gives the strongest collusion resistance the structure admits and the
+weakest availability, since every client must take part for a label to be
+produced. Lowering $\tc$ relaxes that at two costs. It admits coalitions of size
+$\tc$, and it tightens the query allowance, because the bound of
+\cref{sec:exp-leak} scales with the largest coalition that cannot decrypt. Which
+point on that trade-off a deployment wants is a deployment question. We did not
+measure any point other than $\tc=\Nc$.
+

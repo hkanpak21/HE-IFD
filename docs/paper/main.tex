@@ -18,6 +18,16 @@
 \usepackage{orcidlink}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\usepackage{float}
+
+% Ideal-functionality float, ruled in the style used by the secure-aggregation
+% literature: rule, title, rule, body, rule. Numbered independently of figures.
+\floatstyle{ruled}
+\newfloat{functionality}{tbp}{lof}
+\floatname{functionality}{Functionality}
+\crefname{functionality}{Functionality}{Functionalities}
+\Crefname{functionality}{Functionality}{Functionalities}
+
 
 % SANZO palette (mirrors docs/paper/figures/make_figures.py and FL_TDSC/figures/sanzo.md)
 \definecolor{paperblue}{HTML}{5B7FA6}     % SANZO primary blue (borders / primary)
@@ -57,6 +67,7 @@
 \newcommand{\KL}{\mathrm{KL}}
 
 % security macros
+\newcommand{\tc}{t}                                  % decryption threshold
 \newcommand{\Fhe}{\mathcal{F}}                       % ideal functionality
 \newcommand{\Leak}{\mathcal{L}}                      % leakage the functionality allows
 \newcommand{\Dset}{\{\Dj\}_{j=1}^{\Nc}}              % all client datasets
@@ -77,7 +88,7 @@
 
 \begin{document}
 
-\title{HE-OFT: Privacy-Preserving One-Shot Federated Fine-Tuning of Pretrained Models under Homomorphic Encryption}
+\title{HE-OFT: Privacy-Preserving One-Shot Federated Fine-Tuning under Homomorphic Encryption}
 
 \author{
 Halil \.{I}brahim Kanpak\,\orcidlink{0009-0005-0284-5941},
@@ -96,34 +107,25 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 \maketitle
 
 \begin{abstract}
-Organizations adapt pretrained models to private data by fine-tuning, and parties
+Organizations adapt large pretrained models to private data by fine-tuning, and parties
 holding complementary data over the same task would each gain from a jointly
-adapted model, yet cannot pool their data to build one. Federated learning offers
-the collaboration but concentrates its privacy risk at training time: gradients
+fine-tuned model, yet cannot pool their data to build one. Federated learning offers collaboration but concentrates its privacy risk at training time: gradients
 and per-round updates permit reconstruction of training data and support
-membership inference substantially stronger than any attack on the finished model.
-A protocol that exchanges a single encrypted contribution removes that surface,
-but it still ends by handing the finished model to every participant, which is not
-permitted where the model is itself a regulated or proprietary asset. We present
-HE-OFT, a federated fine-tuning protocol in which the model is never disclosed to
-any party. Each client fine-tunes a low-rank adapter and a classifier head on a
+membership inference substantially stronger than any attack on the final model.
+A one-shot protocol that exchanges a single encrypted contribution removes that surface,
+but it still ends by handing the final model to every participant, which is not
+permitted where the model is itself a regulated or proprietary asset. 
+
+We present
+HE-OFT, the first one-shot federated fine-tuning protocol, where the resulting final model is
+never disclosed to any party.
+Each client fine-tunes a low-rank adapter and a classifier head on a
 frozen public backbone, retains the adapter locally, and uploads one encrypted
 head displacement; the server combines these under multiparty CKKS and never
 decrypts the result. Queries are answered under encryption, and a quorum of
-clients returns only the predicted label, addressed to the party that asked.
-Withholding the model determines the design, since the querying party must form
-its query from public components alone, so the shared trained quantity cannot
-reside inside the backbone. Because the server cannot read its inputs, it cannot
-select an aggregation rule, and we give an estimator that lets the federation
-choose between two servable arrangements while disclosing only the index of the
-one selected; the direct procedure, in which each client scores both on its own
-held-out data, estimates the wrong quantity and selects incorrectly in every case
-we measured. Across four text classification tasks and one vision task, the
-protocol yields a model substantially stronger than any client obtains alone, at a
-cost of $0.03$ to $0.14$ accuracy relative to a disclosed model. A real multiparty
-CKKS implementation reproduces the plaintext computation within the approximation
-bounds of the scheme, so the cryptographic layer costs no accuracy, and the
-recurring communication is a few megabytes per query.
+clients returns only the predicted label, addressed to the party that asked. The federation also chooses between two servable arrangements without decrypting either. Across four text classification tasks and one vision task, HE-OFT costs $0.04$ to $0.14$ accuracy against a disclosed model, and $5$\,MiB of traffic per query.
+
+
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -140,7 +142,7 @@ multiparty computation, privacy-preserving machine learning.
 
 \section*{Acknowledgments}
 We acknowledge the support of T\"UB\.{I}TAK (the Scientific and Technological Research Council of T\"urkiye)
-projects 124E091 and 124N941. The authors used Claude Sonnet 4.6 and Claude Opus 4.6 to enhance the
+projects 124E091 and 124N941. The authors used Claude Sonnet 5 and Claude Opus 5 to enhance the
 manuscript by shortening sentences, correcting typos, and improving grammar.
 
 \bibliographystyle{IEEEtran}

@@ -7,6 +7,7 @@
 | `design/` | design records, why a decision was made |
 | `issues/` | task briefs for work not yet done |
 | `notes/` | walkthroughs and session records |
+| `notes/PI_notes/` | the PI review of the manuscript: every comment, why, and the agreed replacement text. Read before editing any section it covers. |
 | `archive/` | superseded, kept for provenance only |
 
 Conventions: filenames are lowercase kebab-case, and carry a date only when the

@@ -1005,6 +1005,98 @@
   year      = {2025},
   note      = {Cryptology ePrint Archive, Paper 2024/136}}
 
+% ===== Secure aggregation with malicious clients and drop-out tolerance =====
+% Verified 2026-08-07 by reading comparators/Fault_Tolerant_and_Malicious_Secure_
+% Federated_Learning-16.pdf (the HAL preprint, hal-04715083). Title, author list
+% and venue read from the cover and title pages. DOI from the EURECOM record.
+% Page numbers not verified, so the entry omits them.
+%
+% UNCITED ON PURPOSE. This paper was read as the format precedent for the ideal
+% functionality of Section IV and as background on the malicious-aggregator
+% boundary. Neither use warrants a citation: formatting is not citable, and the
+% boundary claim in that paper is attributed by its own authors to RoFL, so
+% citing it here would be second-hand. It is also a self-citation, since Kupcu is
+% an author of this manuscript. Cite it only if it becomes load-bearing.
+@inproceedings{karakoc2024fullsa,
+  title     = {Fault Tolerant and Malicious Secure Federated Learning},
+  author    = {Karako{\c{c}}, Ferhat and K{\"u}p{\c{c}}{\"u}, Alptekin and {\"O}nen, Melek},
+  booktitle = {Cryptology and Network Security (CANS)},
+  year      = {2024},
+  doi       = {10.1007/978-981-97-8016-7_4}}
+
+% ===== Backbones evaluated in this paper (added 2026-08-06, PI request) =====
+% Both verified 2026-08-06 from their arXiv abstract pages: title, full author
+% list and date read directly.
+@misc{liu2019roberta,
+  title  = {{RoBERTa}: A Robustly Optimized {BERT} Pretraining Approach},
+  author = {Liu, Yinhan and Ott, Myle and Goyal, Naman and Du, Jingfei and Joshi, Mandar and Chen, Danqi and Levy, Omer and Lewis, Mike and Zettlemoyer, Luke and Stoyanov, Veselin},
+  year   = {2019},
+  note   = {arXiv:1907.11692}}
+
+@inproceedings{dosovitskiy2021vit,
+  title     = {An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale},
+  author    = {Dosovitskiy, Alexey and Beyer, Lucas and Kolesnikov, Alexander and Weissenborn, Dirk and Zhai, Xiaohua and Unterthiner, Thomas and Dehghani, Mostafa and Minderer, Matthias and Heigold, Georg and Gelly, Sylvain and Uszkoreit, Jakob and Houlsby, Neil},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  note      = {arXiv:2010.11929}}
+
+% ===== Encrypted training, POSEIDON successors (added 2026-08-06, PI request) =====
+% Hercules verified 2026-08-02 from its arXiv abstract page: title, full author
+% list and date read directly. JOURNAL VENUE NOT CONFIRMED. If it appeared in a
+% journal, upgrade this entry before submission.
+@misc{xu2022hercules,
+  title  = {{Hercules}: Boosting the Performance of Privacy-preserving Federated Learning},
+  author = {Xu, Guowen and Han, Xingshuo and Xu, Shengmin and Zhang, Tianwei and Li, Hongwei and Huang, Xinyi and Deng, Robert H.},
+  year   = {2022},
+  note   = {arXiv:2207.04620}}
+
+% ReBoot read 2026-08-06 from its arXiv abstract page. VERIFY THE AUTHOR LIST
+% before submission: the fetch returned two authors, which is short for the scope
+% of the work, and a third may have been dropped.
+@misc{pirillo2025reboot,
+  title  = {{ReBoot}: Encrypted Training of Deep Neural Networks with {CKKS} Bootstrapping},
+  author = {Pirillo, Alberto and Colombo, Luca},
+  year   = {2025},
+  note   = {arXiv:2506.19693}}
+
+% ===== Encrypted serving and the argmax primitive (added 2026-08-02) =====
+% Verified 2026-08-02. slytHErin read from comparators/poseidon/2305.00690v1.pdf;
+% the other three from their arXiv abstract pages (title, authors, venue, dates).
+@inproceedings{intoci2023slytherin,
+  title     = {{slytHErin}: An Agile Framework for Encrypted Deep Neural Network Inference},
+  author    = {Intoci, Francesco and Sav, Sinem and Pyrgelis, Apostolos and Bossuat, Jean-Philippe and Troncoso-Pastoriza, Juan Ram{\'o}n and Hubaux, Jean-Pierre},
+  booktitle = {Workshop on Cloud Security and Privacy (Cloud S\&P)},
+  year      = {2023},
+  note      = {arXiv:2305.00690}}
+
+@inproceedings{xia2026cryptpeft,
+  title     = {{CryptPEFT}: Efficient and Private Neural Network Inference via Parameter-Efficient Fine-Tuning},
+  author    = {Xia, Saisai and Wang, Wenhao and Wang, Zihao and Zhang, Yuhui and Jin, Yier and Meng, Dan and Hou, Rui},
+  booktitle = {Network and Distributed System Security Symposium (NDSS)},
+  year      = {2026},
+  note      = {arXiv:2508.12264}}
+
+@inproceedings{mazzone2025ranking,
+  title     = {Efficient Ranking, Order Statistics, and Sorting under {CKKS}},
+  author    = {Mazzone, Federico and Everts, Maarten and Hahn, Florian and Peter, Andreas},
+  booktitle = {USENIX Security Symposium},
+  pages     = {8541--8558},
+  year      = {2025},
+  note      = {arXiv:2412.15126}}
+
+@misc{avitan2025cutmax,
+  title  = {Efficient Decoding Methods for Language Models on Encrypted Data},
+  author = {Avitan, Matan and Baruch, Moran and Drucker, Nir and Zimerman, Itamar and Goldberg, Yoav},
+  year   = {2025},
+  note   = {arXiv:2509.08383}}
+
+@inproceedings{turazza2026ghofl,
+  title     = {The {Gaussian-Head} {OFL} Family: One-Shot Federated Learning from Client Global Statistics},
+  author    = {Turazza, Fabio and Picone, Marco and Mamei, Marco},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2026},
+  note      = {arXiv:2602.01186}}
+
 % ===== Secure transformer inference (added 2026-07-26) =====
 % VERIFY these three against the papers before submission: venue and author list
 % are from recollection, not from an extracted PDF.

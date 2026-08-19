@@ -1,25 +1,25 @@
+% Add overview in beginning
+
 \section{Method}
 \label{sec:method}
 
 \subsection{Setting}
 \label{sec:setting}
 
-We consider $\Nc$ clients holding private labelled data over a common label space
-of $\Cc$ classes. Client $j$ holds $\Dj$ of size $\nj$, and the data are
+We consider $\Nc$ clients holding private labeled data over a common label space
+of $\Cc$ classes. Client $j$ holds data $\Dj$ of size $\nj$. In our experiments, the data are
 heterogeneous: each client's class proportions are drawn from a Dirichlet
 distribution of concentration $\alpha$, so a smaller $\alpha$ leaves each client a
 few dominant classes and almost none of the rest. The clients want a classifier
 that works across the whole label space, and they cannot pool their data to build
 one.
 
-Three requirements separate this setting from ordinary federated learning. The
+Three requirements separate this setting from ordinary federated learning. (1) The
 protocol is \emph{one-shot}: each client uploads once, and there is no iterative
-exchange. Privacy is \emph{cryptographic}: a client's contribution is never
-available in plaintext to any other party, and we do not accept the accuracy loss
-that differential privacy incurs when it is the only protection. And the model is
+exchange. (2) Privacy is \emph{cryptographic}: a client's contribution is never
+available in plaintext to any other party, and we do not consider differential privacy due to the accuracy loss incurred. (3) The resulting model is
 \emph{never disclosed}: no party, client or server, ever holds the trained
-classifier in plaintext. The third requirement is the one that shapes everything
-below, and \cref{sec:threat} states precisely what it buys.
+classifier in plaintext. %The third requirement is the one that shapes everything below, and \cref{sec:threat} states precisely what it buys.
 
 Each requirement forecloses a family of designs, and the remaining space is
 narrow. We record the chain of implications here, so that the choices made in the
@@ -27,41 +27,40 @@ rest of this section can be read as consequences of the requirements rather than
 as independent design preferences.
 
 \begin{itemize}
-\item[\textbf{C1}] \emph{Optimisation cannot run under encryption at acceptable
+\item[\textbf{C1}] \emph{Optimization cannot run under encryption at acceptable
   cost.} Gradient steps, softmax, and adaptive curvature require deep, repeatedly
-  bootstrapped homomorphic circuits. \emph{Therefore} all learning happens in
+  bootstrapped homomorphic circuits. \emph{Therefore}, for efficiency, all learning happens in
   plaintext on the clients, and the server performs no learning.
 \item[\textbf{C2}] \emph{A server computing on ciphertexts cannot read its
   inputs.} It cannot inspect, compare, or branch, so it cannot select a
-  data-dependent aggregation rule. \emph{Therefore} the choice is deferred to the
+  data-dependent aggregation rule. \emph{Therefore}, the choice is deferred to the
   clients, who make it without decrypting anything (\cref{sec:selection}).
 \item[\textbf{C3}] \emph{Independently trained models do not combine linearly.}
   In the parameter space of a deep network, models trained from different
-  starting points occupy incomparable regions. \emph{Therefore} every client
-  starts its trainable unit from one public initialiser on one frozen public
+  starting points occupy incomparable regions. \emph{Therefore}, every client
+  starts its trainable unit from one public initializer on one frozen public
   backbone.
 \item[\textbf{C4}] \emph{Multiplicative depth dominates homomorphic cost.}
-  \emph{Therefore} the aggregation is a linear combination, and the design is
+  \emph{Therefore}, the aggregation is a linear combination, and the design is
   arranged so that this cheapest operation is exactly the one the method needs.
 \item[\textbf{C5}] \emph{Intermediate training signals are the strongest attack
   surface.} Each exposed round is a fresh training-time artifact, far more
-  revealing than a finished model (\cref{sec:related-leakage}). \emph{Therefore}
+  revealing than a finished model (\cref{sec:related-leakage}). \emph{Therefore},
   the protocol is one-shot, and its single artifact is a ciphertext.
 \item[\textbf{C6}] \emph{No single party may be able to decrypt.} The parties are
-  mutually distrustful and the server is untrusted. \emph{Therefore} the secret
+  mutually distrustful and the server is semi-honest. \emph{Therefore}, the secret
   key is generated and held distributively, under multiparty CKKS
   (\cref{sec:mhe}).
 \item[\textbf{C7}] \emph{The model is never disclosed, yet it must answer
-  queries.} A query is formed from features, and the client that asks must be able
-  to compute those features itself. \emph{Therefore} everything the client runs is
+  queries.} A query is formed from features, and the client that asks the query must be able
+  to compute those features itself. \emph{Therefore}, everything the client runs is
   public, and the trained quantity that is shared cannot sit inside the backbone.
   This requirement distinguishes the present design from one in which
   the model is released, and \cref{sec:split} derives its consequences.
 \end{itemize}
 
-\noindent Constraints \textbf{C1} through \textbf{C6} are shared with any
-one-shot encrypted federation. \textbf{C7} is particular to never disclosing the
-model, and the three contributions of this paper follow from it: a partition of the
+%\noindent Constraints \textbf{C1} through \textbf{C6} are shared with any one-shot encrypted federation. \textbf{C7} is particular to never disclosing the model, and 
+The three contributions of this paper follow from these constraints: a partition of the
 trainable unit (\cref{sec:split}), a procedure for answering queries without decrypting the model
 (\cref{sec:serving}), and a procedure by which the federation selects between
 candidate arrangements it cannot observe (\cref{sec:selection}).
@@ -111,7 +110,7 @@ is restored by bootstrapping~\cite{cheon2018bootstrapping}.
 
 A single-key scheme would require one party to hold the secret key and therefore
 to be trusted with decryption. We use the multiparty variant of
-CKKS~\cite{mouchet2021multiparty}, in which the secret key is shared among the
+CKKS~\cite{mouchet2021multiparty}, where the secret key is shared among the
 clients through a distributed key-generation protocol that produces a collective
 public key without ever assembling the secret in one place. Any party, the server
 included, may compute on ciphertexts under the collective public key, but
@@ -122,23 +121,14 @@ that one chosen party can read it, and a collective refresh, which restores a
 depleted level budget and plays the role bootstrapping plays in the single-key
 setting.
 
-We state the reason for this choice. The aggregation of
-\cref{sec:split} uses only additions and multiplications by public scalars, so it
-consumes one level. What we need from the scheme is not depth but key structure:
-threshold decryption over a collectively generated key is the property the
-protocol cannot do without, and mature distributed key generation and collective
-key switching provide it directly. CKKS additionally packs thousands of real
-values into one ciphertext and multiplies them by public scalars natively.
-Additively homomorphic schemes offer neither packed real arithmetic at this width
-nor comparable multiparty tooling, and masking-based secure aggregation reveals
-the plaintext sum to the server, which this protocol never does.
+%We state the reason for this choice. The aggregation of \cref{sec:split} uses only additions and multiplications by public scalars, so it consumes one level. What we need from the scheme is not depth but key structure: threshold decryption over a collectively generated key is the property the protocol cannot do without, and mature distributed key generation and collective key switching provide it directly. CKKS additionally packs thousands of real values into one ciphertext and multiplies them by public scalars natively. Additively homomorphic schemes offer neither packed real arithmetic at this width nor comparable multiparty tooling, and masking-based secure aggregation reveals the plaintext sum to the server, which this protocol never does.
 
 \subsection{Partitioning the Trainable Unit}
 \label{sec:split}
 
 \input{figures/training}
 
-\paragraph{The construction} Every client uses the same frozen public backbone
+\paragraph{The construction} Each client uses the same frozen public backbone
 $\featx$, and trains two things on its own data: a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
@@ -147,14 +137,14 @@ encrypted displacements into a single shared head and never decrypts the result.
 The adapter is trained locally and never transmitted. \Cref{fig:training} shows
 the arrangement.
 
-\paragraph{Necessity of the partition} The client that asks a question must compute
-the features of that question itself, by \textbf{C7}. If the shared trained
+\paragraph{Necessity of the partition} The client that sends an inference query must compute
+the features of that query itself, by \textbf{C7}. If the shared trained
 quantity were an adapter placed inside the backbone, the features would depend on
 it, and computing them would require evaluating the backbone with encrypted
 weights. Every nonlinearity of the network would then have to be evaluated
 homomorphically, which is the cost this design exists to avoid. The trained
 quantity that is shared must therefore attach after the last nonlinearity, and in
-a transformer the only such point is the final linear map. That is the head.
+a transformer, the only such point is the final linear map. That is the head.
 
 \paragraph{What the argument fixes, and what it leaves open} The requirement
 constrains the \emph{position} of the shared map, not the task it serves. Any
@@ -419,7 +409,10 @@ The participants are $\Nc$ clients, an aggregation server, and a serving party,
 the last of which may be the server. The server and the serving party are
 honest-but-curious: they follow the protocol and may try to infer private
 information from what they observe. Clients may likewise be honest-but-curious and
-may collude.
+may collude. \Cref{sec:malicious} strengthens the client side of this model, and
+allows up to $\tc-1$ clients to deviate arbitrarily while the server and the
+serving party stay honest. \Cref{sec:malicious-ext} explains why that last
+assumption cannot be dropped.
 
 \paragraph{View of the server and the serving party} Ciphertexts under the
 collective public key, the public per-client sample counts, and the evaluation
@@ -427,10 +420,11 @@ keys. Neither holds a decryption key, and by \cref{sec:mhe} neither can decrypt.
 The serving party additionally sees encrypted query features, which it cannot read
 and therefore cannot invert.
 
-\paragraph{Collusion among clients} Decryption is $\Nc$-out-of-$\Nc$,
-so any coalition short of all clients, including a coalition of $\Nc-1$ clients
-acting together with the server, cannot decrypt. This is the strongest collusion
-resistance the threshold structure admits, and the design is arranged so that no
+\paragraph{Collusion among clients} Decryption is $\tc$-out-of-$\Nc$, so any
+coalition of fewer than $\tc$ clients, including one that acts together with the
+server, cannot decrypt. Our implementation sets $\tc=\Nc$, which is the largest
+value the parameter takes and therefore the strongest collusion resistance the
+structure admits. The design is arranged so that no
 arithmetic shortcut evades it. No aggregate of the adapters exists, so there is no
 sum from which a coalition can subtract its own contributions. The shared head is
 never decrypted, so it cannot be inverted the same way. The per-class totals are
@@ -441,8 +435,8 @@ histogram.
 served model and receive labels, and enough such queries reconstruct a functional
 copy of the shared head by boundary search. This is a bound on queries, not a
 cryptographic guarantee, and we state it as such. The relevant coalition is again
-of size $\Nc-1$, since a larger one can decrypt outright, so a per-client query
-allowance $Q$ constrains the coalition to $(\Nc-1)Q$ queries and must be set below
+of size $\tc-1$, since a larger one can decrypt outright, so a per-client query
+allowance $Q$ constrains the coalition to $(\tc-1)Q$ queries and must be set below
 the extraction cost of the deployment's label space. A deployment that cannot
 enforce such an allowance can add calibrated noise to the returned labels, which
 composes with the protocol without modification and which we discuss in
@@ -456,8 +450,8 @@ server cannot inspect them. \Cref{sec:scope} discusses this.
 
 \paragraph{Protection without perturbation} The aggregation of
 \cref{eq:aggregate} runs entirely under multiparty CKKS, so the displacements are
-never available in plaintext to the server or to any coalition short of all
-clients. Nothing is noised. The cryptographic layer therefore costs no accuracy,
+never available in plaintext to the server or to any coalition of fewer than
+$\tc$ clients. Nothing is noised. The cryptographic layer therefore costs no accuracy,
 which is the point on which this design departs from differentially private
 one-shot federated learning. \Cref{sec:security} states the guarantee, gives an
 ideal functionality, and separates what the cryptography covers from what the

@@ -1,61 +1,47 @@
 \section{Background and Related Work}
 \label{sec:related}
 
-Five lines of work bear on this paper: the leakage properties of federated
-learning, the cryptographic tools that protect training, one-shot federated
-learning and its differentially private variants, federated fine-tuning of
-adapters, and secure inference. We take them in that order, since the first
-establishes the premise on which the design rests and the remainder determine its
-position. The closing paragraph returns to the claim of \cref{sec:intro} and
-identifies what existing work leaves unaddressed.
+% In this section, we review the related work on (i) attacks at training time and at inference time, (ii) protecting training with cryptography, (iii) one-shot FL and differential privacy, (iv) federated fine-tuning and task arithmetic, and (v) secure inference.
 
-\subsection{Leakage at Training Time and at Inference Time}
+% We take them in that order, since the first establishes the premise on which the design rests and the remainder determine its position. The closing paragraph returns to the claim of \cref{sec:intro} and identifies what existing work leaves unaddressed.
+
+\subsection{Attacks at Training Time and at Inference Time}
 \label{sec:related-leakage}
 
-Federated learning began as an iterative procedure in which a server repeatedly
-broadcasts a model, clients improve it on their own data, and the server averages
-the returned updates~\cite{mcmahan2017communication}. Every round of that loop
-reveals a fresh quantity computed on private data, and a decade of attacks has
-established that these training-time quantities constitute the most damaging
-disclosure such a protocol makes.
+Federated learning (FL) began as an iterative procedure in which a server repeatedly
+broadcasts a model, clients train it on their own data, and the server averages
+the returned updates~\cite{mcmahan2017communication}. In every round each client sends a new update computed on its private data. Several
+attacks have shown that these updates leak more than anything else the protocol
+reveals.
 
-A gradient permits reconstruction of the batch that produced it, pixel-accurate on
+A gradient allows reconstruction of the batch that produced it, pixel-accurate on
 images~\cite{zhu2019deep} and at high resolution even from trained networks, where
 averaging over a hundred images or a hundred local steps still leaves individual
 inputs recoverable~\cite{geiping2020inverting}. An observer of the per-round
-updates infers membership and unintended properties of another client's data: with
-the update stream of a federated run on CIFAR-100 a passive server reaches $79.2\%$
-membership accuracy and an active one $87.3\%$, against $54.5\%$ for a black-box
-attack on the same finished model, and the source identifies the repeated
-per-round updates as the factor that boosts the
-attack~\cite{nasr2019comprehensive}. Accuracy grows with the number of rounds
-observed~\cite{zari2021efficient}, and update-level membership inference has
-reached $0.99$ precision at perfect recall~\cite{melis2019exploiting}. A server
-free to choose the weights it broadcasts does not need inference at all: crafted
-weights harvest verbatim copies of client inputs, through mini-batches of a
-hundred points and even through a secure-aggregation
-layer~\cite{boenisch2023curious,fowl2022robbing}. Federated distillation, which
-shares predictions rather than gradients, was hoped to avoid this, but its
-training-time quantities leak as well: paired-logit inversion recovers images from
-shared logits~\cite{takahashi2023breaching}, and membership can be inferred from
-distillation outputs and public-set
-usage~\cite{yang2023fdleaks,gu2023ldia,shi2025unveiling}.
+updates in FL infers membership and unintended properties of another client's
+data~\cite{nasr2019comprehensive,melis2019exploiting}, and the repetition of those
+updates is what makes the attack strong. Accuracy grows with the number of rounds observed~\cite{zari2021efficient}. A server that chooses the weights it broadcasts does not need inference at all.
+Crafted weights make clients return verbatim copies of their own inputs, even
+through a secure-aggregation layer~\cite{boenisch2023curious,fowl2022robbing}. Several works use federated distillation to avoid this, sharing predictions instead
+of gradients. The predictions leak too. Attacks recover images from shared
+logits~\cite{takahashi2023breaching} and infer membership from distillation
+outputs~\cite{yang2023fdleaks,gu2023ldia,shi2025unveiling}.
 
-Attacks that see only the finished model are consistently weaker, and the field's
-central survey draws exactly this line, separating adversaries who observe the
-intermediate iterates from those who see only the final
-model~\cite{kairouz2021advances}. Membership inference against a finished model is
-a mature literature~\cite{shokri2017membership,yeom2018privacy,salem2019ml}, and
-against well-generalised models its success concentrates at low false-positive
-operating points rather than in bulk~\cite{carlini2022membership}. Model inversion
+
+Attacks that see only the final model are consistently weaker. The field survey
+separates adversaries who watch the intermediate updates from those who see only
+the final model~\cite{kairouz2021advances}. Membership inference against a final model is a mature
+literature~\cite{shokri2017membership,yeom2018privacy,salem2019ml}. Against models
+that generalise well it identifies few members, and only at very low false-positive
+rates~\cite{carlini2022membership}. Model inversion
 needs released confidences and strong priors~\cite{fredrikson2015model,hitaj2017deep}.
 
-The asymmetry admits a straightforward explanation. Training-time quantities are
-high-dimensional views of one client's data, taken repeatedly during optimisation.
-The finished model is a single aggregate that generalisation itself pushes away
-from any individual training point. This asymmetry is the premise of our design: a
-protocol that never exposes a training-time quantity, and that exchanges anything
-at all only once, reduces every adversary to the weaker position.
+The reason is simple. An update is a detailed view of one client's data, and the
+protocol sends a new one every round. The final model is a single average, and
+generalisation moves it away from any one training example. Our design follows. A
+protocol that never sends an update, and that sends anything only once, leaves
+every adversary with the weaker attack.
+
 
 \subsection{Protecting Training with Cryptography}
 \label{sec:related-crypto}
@@ -73,9 +59,9 @@ further by computing on contributions that stay encrypted. In its most ambitious
 form it trains a network entirely under encryption: POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
 polynomial approximations so that they can be evaluated
-homomorphically~\cite{sav2021poseidon}. The guarantee is strong and adds no noise,
-but the approach is iterative and pays for encrypted nonlinearity with a deep
-multiplicative circuit, repeated bootstrapping, and hours of wall-clock time. The
+homomorphically~\cite{sav2021poseidon}. The guarantee is strong and the model loses no accuracy. The approach is iterative,
+and encrypted nonlinearity costs a deep multiplicative circuit, repeated
+bootstrapping, and hours of wall-clock time. The
 delicacy of polynomial activations is documented by a substantial line of
 work~\cite{garimella2021sisyphus,baruch2022methodology,agamennone2025polynomial,alhossain2025training,ibarrondo2021fhebn}.
 
@@ -88,11 +74,11 @@ round~\cite{li2025shelora}, and hybrid multi-key schemes reduce a round of secur
 summation to one client-to-server transmission~\cite{kemmaka2025hybagg}. All of
 these remain bound to the iterative protocol: the encryption cost is paid on every
 round, and what is protected is a per-round sum rather than a complete
-contribution. SHE-LoRA is also instructive on key structure. It uses single-key
+contribution. SHE-LoRA also shows why key structure matters. It uses single-key
 homomorphic encryption and therefore has to assume that the server and the clients
 do not collude, since any client that revealed its key to the server would undo
-the protection. The threshold structure of \cref{sec:mhe} discharges that assumption rather than
-imposing it.
+the protection. The threshold structure of \cref{sec:mhe} removes the need for that assumption.
+
 
 Transfer learning itself has been placed under encryption. HETAL trains a softmax
 classifier head on frozen features entirely under CKKS~\cite{lee2023hetal},
@@ -107,9 +93,8 @@ a frozen public backbone with a small trainable unit, but they run an optimiser 
 ciphertexts, so multiplicative depth grows with the step count and every
 nonlinearity must be approximated. Most are also single-party, one data owner
 outsourcing computation rather than a collaboration of mutually distrustful
-parties. They solve a different problem: outsourcing training for a party that
-cannot train locally, where our parties can train locally but must not reveal what
-they trained.
+parties. They solve a different problem. A party that cannot train on its own outsources the
+work. Our parties train on their own and must protect what they trained.
 
 \subsection{One-Shot Federated Learning and Differential Privacy}
 \label{sec:related-oneshot}
@@ -122,13 +107,19 @@ ensemble distillation trains a server model against aggregated client prediction
 over many rounds~\cite{lin2020feddf}. Genuinely single-round methods arrived with
 data-free distillation, in which the server distils the clients' models through a
 generator or synthesised inputs~\cite{zhang2022dense,dai2024coboosting}, and with
-fusion methods that stitch client models together~\cite{tang2024fusefl} or
-aggregate them through a layer-wise
-posterior~\cite{liu2024fedlpa,zhang2024fedsd2c}. These establish that one round can
-produce a usable model, but they operate in plaintext: the single contribution
-each client sends, an entire model or a synthetic distillate of its data, is
-exposed, and by the evidence of \cref{sec:related-leakage} that is precisely the
-quantity worth attacking.
+fusion methods that aggregate client models through a layer-wise
+posterior~\cite{liu2024fedlpa,zhang2024fedsd2c} or stitch them together in stages
+whose total cost the authors account as a single round~\cite{tang2024fusefl}.
+These establish that one round can produce a usable model, but they work in
+plaintext. Each client sends one contribution, an entire model or a synthetic
+distillate of its data, and by the evidence of \cref{sec:related-leakage} that is
+what an adversary would target. A recent method removes the model from the
+exchange altogether, having each client run a frozen pretrained encoder and upload
+per-class sufficient statistics once, from which the server fits a closed-form
+head~\cite{turazza2026ghofl}. That is one round and it sends no model, but the
+statistics travel in plaintext, and per-class totals are exactly what
+\cref{sec:split} keeps encrypted.
+
 
 The one-shot methods that do address privacy use differential privacy. FedAUXfdp
 releases client contributions under a differentially private mechanism after
@@ -164,7 +155,7 @@ re-factoring~\cite{bai2024flexlora}, HetLoRA by reconciling heterogeneous
 ranks~\cite{cho2024hetlora}, and FedSA-LoRA by sharing only one
 factor~\cite{guo2025fedsalora}. FFA-LoRA freezes the randomly initialised
 down-projection and trains only the up-projection, so that averaging the trained
-factor is exact; it was introduced to stabilise multi-round differentially private
+factor is exact. It was introduced to stabilise multi-round differentially private
 tuning~\cite{sun2024ffalora}. Algebraically, combining displacements from a shared
 initialiser is task-vector merging~\cite{ilharco2023editing}, which has been shown
 equivalent to one-shot federated averaging~\cite{tao2024taskarith}, and that one
@@ -182,14 +173,50 @@ encryption with secret sharing to evaluate transformers between two or three
 parties~\cite{hao2022iron,pang2024bolt,dong2023puma}, with the nonlinearities of
 attention as the dominant cost. This literature is what makes the disclosure
 setting of \cref{sec:serving} affordable, and we compose with it rather than
-re-solve it: the construction here serves a trained quantity that is linear in the
-features, and serving a trained quantity that sits inside the backbone reduces to
-exactly the problem these systems address. One difference should be stated. These
-systems evaluate a plaintext model on encrypted inputs, whereas the shared weights
-here are encrypted as well, so each site would carry a ciphertext-by-ciphertext
-product rather than a ciphertext-by-plaintext one. Since the dominant cost in that
-literature is the nonlinearities, which are unchanged, the difference is an
-additive term rather than a change of order.
+re-solve it. The map served here is linear in the features. Serving a trained map
+that sits inside the backbone instead would reduce to exactly the problem these
+systems address. One difference should be stated. Most of these systems evaluate a
+plaintext model on encrypted inputs, whereas the shared weights here are encrypted
+as well, so each site would carry a ciphertext-by-ciphertext product rather than a
+ciphertext-by-plaintext one. Since the dominant cost in that literature is the
+nonlinearities, which are unchanged, the difference is an additive term rather
+than a change of order.
+
+Two systems sit closer, and both deserve a full statement. slytHErin evaluates a
+network under CKKS in three arrangements, an encrypted input against a plaintext
+model, a plaintext input against an encrypted model, and both
+encrypted~\cite{intoci2023slytherin}. The last holds the model under a multiparty
+key and key-switches the prediction to the querier, which is the serving setting
+of \cref{sec:serving}, and the same group built the encrypted training scheme of
+\cref{sec:related-crypto}, so the pair is the closest existing route to a model
+that no party decrypts. Two properties separate it from what follows. It evaluates
+the whole network homomorphically, which is why the models it reports are a
+twenty-layer and a fifty-layer network on a handwritten-digit task rather than a
+pretrained encoder. And it returns the prediction vector, so the querier receives
+scores. A score vector is a materially cheaper target for the extraction attack of
+\cref{sec:exp-leak} than a label is.
+
+CryptPEFT divides the work as we do and reaches the opposite conclusion about who
+holds the secret. A public frozen backbone runs in plaintext on the client, the
+client encrypts the resulting features, only the adapter is evaluated under
+encryption, and the client receives the predicted label
+alone~\cite{xia2026cryptpeft}. The motivation is the one that forces our design.
+Confining encrypted computation to a small trained unit placed after the
+representation avoids evaluating every nonlinearity of a backbone homomorphically.
+It is a two-party protocol between one client and one provider, the trained unit is
+that provider's plaintext, and there is no training protocol, so it establishes
+that the serving arrangement is practical without addressing how mutually
+distrustful parties would build the unit at all.
+
+The encrypted maximum is a primitive with its own literature, and constructions
+faster than the tournament of \cref{sec:serving} exist. Ranking and order
+statistics under CKKS have been given at constant comparison
+depth~\cite{mazzone2025ranking}, and a decoding method for language models returns
+an encrypted indicator of the maximum without decrypting the scores that produced
+it~\cite{avitan2025cutmax}. Both are single-key and neither carries the collective
+refreshes that the threshold setting requires, so neither transfers unchanged.
+They do show that the cost we report in \cref{sec:exp-cost} is a property of our
+construction rather than of the problem.
 
 \medskip
 \noindent\emph{Positioning.}
@@ -206,8 +233,6 @@ that cannot adapt a deep representation~\cite{fedheonn2023}.
 
 What remains unaddressed is a protocol that exposes no training-time quantity, that
 exchanges anything at all only once, and that never discloses the model even to
-the parties that built it. The third of these is not a refinement of the first two.
-It changes what can be shared, because a model that is never decrypted must still
-answer questions, and the party asking must be able to form a query from public
-components alone. \Cref{sec:method} works out what that forces, and the rest of the
+the parties that built it. The third changes what can be shared, because a model that is never decrypted must
+still answer questions from public components alone. \Cref{sec:method} works out what that forces, and the rest of the
 paper measures what it costs.

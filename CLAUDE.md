@@ -6,6 +6,11 @@ Read this first when you (Claude) attach to this repo. It tells you how the user
 
 You have no conversation history. Your ground truth, in order:
 
+0. **`docs/notes/PI_notes/`** — if your task touches the paper at all, read the
+   README there and the current dated file FIRST. The PIs are reviewing on
+   Overleaf, and that folder records every comment, why it was made, and the
+   replacement text agreed. The section text does not explain itself; those
+   notes do.
 1. **`docs/plan/paper-rewrite.md`** — the current plan: the paper's flow, the
    figure and table standard, the voice rules, and the experiments still
    outstanding. Read it fully.
@@ -19,8 +24,12 @@ If a document disagrees with `method.tex`, the document is stale. Anything under
 `docs/archive/` is superseded by definition and must not be mined for
 methodology.
 
-## Source of truth (updated 2026-08-02)
+## Source of truth (updated 2026-08-06)
 
+- **PI review of the paper** -> **`docs/notes/PI_notes/`**. Read the README and
+  the current dated file before editing any section they cover. Replacement text
+  is proposed in chat and pasted into Overleaf by the user, never applied to
+  `docs/paper/` locally.
 - **Method and protocol** -> **`docs/paper/sections/method.tex`**.
 - **Security claims** -> **`docs/paper/sections/security.tex`**, with the
   reasoning in `docs/notes/malicious-security.md`.

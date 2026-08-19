@@ -30,6 +30,11 @@ The companion folder `comparators/<method>/` holds a shallow clone of each metho
 | 12 | **FedAUXfdp** | Hoech et al., IJCAI-W 2022 (arXiv:2205.14960) | yes | (ε, δ)-DP; full grid ε ∈ {1.0, 0.5, 0.1, 0.01}, δ=1e-5 (class model) + ε=0.1, δ=1e-5 (scoring) | **CIFAR-10** (private) with STL-10 / CIFAR-100 (auxiliary distillation); N=20, Dir(α) α ∈ {0.01, 0.04, 0.16, 10.24} | ShuffleNet / MobileNetv2 / ResNet8 with pretrained feature extractor |
 | 13 | **FedGM** | Chen, Zhou & Jiang, *Electronics* 13(10):1815, 2024 — MDPI | yes | **Label-DP** (PDF text not extracted; MDPI blocks automated fetch) | n/r (PDF blocked) — search snippets mention CIFAR-10 | n/r (PDF blocked) |
 | 14 | **Hyb-Agg** | Kemmaka & Tran, arXiv:2511.23252 (2025) | yes (1-round, non-interactive aggregation) | **HE** (Multi-Key CKKS + ECDH masking); no DP | **synthetic vectors only** — no real datasets, no ML accuracy reported | n/a — protocol-only paper, no training |
+| 16 | **slytHErin** | Intoci et al., Cloud S&P 2023 (arXiv:2305.00690) | n/a — inference only, no training | **HE + multiparty CKKS**; Scenario 3 = model AND data encrypted, model never decrypted | **MNIST only** | NN5 / NN20 (~754K) / NN50 (~1M), fully-connected + conv + pooling |
+| 17 | **CryptPEFT** | Xia et al., NDSS 2026 (arXiv:2508.12264) | n/a — inference only | **MPC (2-party)**, not HE; adapter is the provider's plaintext secret | CIFAR-10, CIFAR-100, Food-101, SVHN, Flowers-102 | frozen public ViT backbone + encrypted PEFT adapter |
+| 18 | **Mazzone et al.** | USENIX Sec '25, pp. 8541-8558 (arXiv:2412.15126) | n/a — primitive | single-key CKKS | n/a — 128-element vectors | n/a — ranking / order statistics / sorting |
+| 19 | **cutmax** | Avitan et al., 2025 (arXiv:2509.08383) | n/a — primitive | 2-party, plaintext model + encrypted input | LLM output distributions | n/a — HE argmax + top-p sampling |
+| 20 | **GH-OFL** | Turazza, Picone & Mamei, ICLR 2026 (arXiv:2602.01186) | **yes** | **none** — uploads per-class sufficient statistics in plaintext | n/r — abstract only, results not extracted | frozen pretrained encoder + closed-form Gaussian head |
 
 ---
 
@@ -493,6 +498,117 @@ So Hyb-Agg is a **protocol-only paper**: it reports cryptographic latency / band
 - FedSHE: single-key CKKS; 1 round; very low expansion (≈6.6% of Paillier-FL); but requires trusted key manager
 
 **Apples-to-apples with our v1:** Hyb-Agg is a **complementary primitive**, not a competitor — it sits at the secure-aggregation layer that our protocol would also need. Our HE-IFD `aggregate.py` is FHE-compatible by construction (linear δ-aggregation only); plugging in Hyb-Agg's MK-CKKS layer would be the natural mechanism to lift v1 from plaintext-simulated to real HE. The relevant numbers from Hyb-Agg are **latency (431.8 ms client / 191.1 ms server) and bandwidth (~12× expansion)** — these become per-round overheads on top of our N-sweep accuracy curves once we add the HE layer. No accuracy comparison applies.
+
+---
+
+## 16. slytHErin (Intoci et al., Cloud S&P 2023) — THE ENCRYPTED-SERVING PEER
+
+**Francesco Intoci, Sinem Sav, Apostolos Pyrgelis, Jean-Philippe Bossuat, Juan Ramón Troncoso-Pastoriza, Jean-Pierre Hubaux. "slytHErin: An Agile Framework for Encrypted Deep Neural Network Inference." 5th Workshop on Cloud Security and Privacy (Cloud S&P), 2023. arXiv:2305.00690v1.**
+
+Verified 2026-08-02 by reading `comparators/poseidon/2305.00690v1.pdf` directly (pages 1-2, 11-16). Same group as POSEIDON (Sav, Pyrgelis, Troncoso-Pastoriza, Hubaux).
+
+**Why this matters:** it is the only prior system found that serves a model **held under a multiparty key and never decrypted**. Its Scenario 3 is our serving setting.
+
+**Three scenarios (paper Section 1, p. 2, verbatim):**
+> "(i) the client's data is encrypted while the model is in cleartext, (ii) the client's data is in cleartext and the model is encrypted, and (iii) both the client's data and the model are encrypted."
+
+**Scenario 3 mechanism (paper Section 5.6, p. 11, verbatim):**
+> "In **Scenario 3**, the model-providers rely on these functionalities to refresh the ciphertexts noise and to change the encryption key of the prediction result, so that only the client can decrypt it."
+
+So the querier receives the **prediction result**, i.e. the score vector, NOT a label. No encrypted argmax.
+
+**Setup (paper Section 6.1, p. 12):** Go + Lattigo. MNIST only. NN5 = 5-layer CNN; NN20 = 20-layer, ~754K params; NN50 = 50-layer, ~1M params. CKKS at 128-bit security. Local cluster, 20 ms network delay, 1 Gbps, Ubuntu 22.04, 12-core Intel Xeon E5-2680 2.5 GHz, 256 GB RAM. Results averaged over 3-5 runs.
+
+**Table 2 (paper p. 14, verbatim) — NN20 on Scenario 3, varying model-provider count:**
+
+| # of Parties | Latency (s) | Throughput (samples/s) |
+|---|---|---|
+| 3 | 245.58 (±0.50) | 1.19 |
+| 5 | 238.15 (±4.12) | 1.22 |
+| 10 | 278.19 (±9.11) | 1.05 |
+| 20 | 354.17 (±10.66) | 0.82 |
+
+Figure 5 (p. 14) gives amortized time per sample, distributed vs centralized bootstrapping: 0.84/0.82/0.95/1.21 s distributed against 1.67 s centralized at 3/5/10/20 parties.
+
+**Table 3 (paper p. 15, verbatim) — NN50, batch of 585 samples, Scenario 3 at N=3 model-providers:**
+
+| Scenario | Latency (s) | Amortized (s/sample) | Throughput (samples/s) | Avg latency/layer (s) |
+|---|---|---|---|---|
+| 1: plaintext model, encrypted data | 2,496.83 | 4.26 | 0.234 | 48.95 |
+| 2: encrypted model, plaintext data | 2,699.75 | 4.62 | 0.216 | 52.93 |
+| 3: encrypted model, encrypted data | 613.52 | 2.09 | 0.476 | 12.02 |
+
+**Table 1 (paper p. 14, verbatim) — NN5, Scenario 1, latency (s) against prior frameworks:**
+
+| Framework | batch 1 | batch 83 | batch 4,096 |
+|---|---|---|---|
+| CryptoNets | 250 | 250 | 250 |
+| Faster CryptoNets | 39.1 | 3,245 | 160,153 |
+| LoLa | 2.2 | 182.6 | 8,951 |
+| nGraph-HE2 | 2.05 | 2.05 | 2.05 |
+| **slytHErin** | **3.7** | **4.08** | **243.4** |
+
+**Apples-to-apples with HE-OFT:** the closest quantitative peer we have. Both hold the model under a multiparty CKKS key and never decrypt it, and both key-switch only to the querier. **Two differences must be stated whenever the numbers are placed side by side.** (a) slytHErin evaluates the *entire network* homomorphically, which is why its models are 5-to-50-layer networks on MNIST rather than a pretrained transformer; we evaluate a public frozen backbone in plaintext on the client and put only the final linear map under encryption. (b) slytHErin returns the score vector; we take the argmax under encryption and return only the label. By our own §5.6 extraction record, a score vector is a materially cheaper extraction target than a label. Our comparable figure is the per-query total at N=10, 31.5 s at 4 classes and 113.2 s at 100 classes (`results/fhe_serve/cost_grid.json`, `argmax_tournament.csv`), single-threaded, unbatched, against their 278.19 s batch latency and ~0.95 s amortized per sample at 10 parties on a 12-core machine. **We do not batch and they do; any published comparison must say so.**
+
+---
+
+## 17. CryptPEFT (Xia et al., NDSS 2026)
+
+**Saisai Xia, Wenhao Wang, Zihao Wang, Yuhui Zhang, Yier Jin, Dan Meng, Rui Hou. "CryptPEFT: Efficient and Private Neural Network Inference via Parameter-Efficient Fine-Tuning." NDSS 2026. arXiv:2508.12264 (submitted 17 Aug 2025).**
+
+Verified 2026-08-02 from the arXiv abstract page. Title, author list and venue read directly.
+
+**Abstract, verbatim (the operative sentences):**
+> "we propose CryptPEFT, the first PEFT solution specifically designed for private inference scenarios. CryptPEFT introduces a novel one-way communication (OWC) architecture that confines encrypted computation solely to the adapter, significantly reducing both computational and communication overhead. ... We evaluated CryptPEFT using Vision Transformer backbones across widely used image classification datasets. Our results show that CryptPEFT significantly outperforms existing baselines, delivering speedups ranging from 20.62× to 291.48× in simulated wide-area network (WAN) and local-area network (LAN) settings. On CIFAR-100, CryptPEFT attains 85.47% accuracy with just 2.26 seconds of inference latency."
+
+**Structural match to us:** public frozen ViT backbone run in plaintext by the client, client encrypts the intermediate features, only the adapter is evaluated under encryption, client receives the label. The motivation for the one-way architecture is ours: avoid the two-way traffic between backbone and adapter.
+
+**Where it stops:** two-party secure computation (MPC), not HE. Single client and single provider, not federated. The secret adapter is that provider's plaintext. No training protocol, so it does not address how mutually distrustful parties would build the adapter.
+
+**Apples-to-apples with HE-OFT:** a related-work anchor and a design-validation citation, not an accuracy peer. Their 85.47% on CIFAR-100 is a *single-provider fine-tune*, not a federated merge, so it is not comparable to our Table II CIFAR-100 figures. Cite it for the architecture, not for a number.
+
+---
+
+## 18. Mazzone et al. (USENIX Security 2025) — encrypted argmax peer
+
+**Federico Mazzone, Maarten Everts, Florian Hahn, Andreas Peter. "Efficient Ranking, Order Statistics, and Sorting under CKKS." USENIX Security Symposium 2025, pp. 8541-8558. arXiv:2412.15126 (v1 19 Dec 2024, v2 10 Feb 2025).**
+
+Verified 2026-08-02 from the arXiv abstract page for title, authors and venue. The 5.76 s and 78.64 s figures were reproduced on that page.
+
+**Abstract figures:** ranks a 128-element vector in ≈5.76 s, computes argmin/argmax in 12.83 s, sorts in 78.64 s. Constant comparison depth, achieved by abandoning the swap-based paradigm and re-encoding the vector for simultaneous all-pairs comparison. Open source at github.com/FedericoMazzone/openfhe-statistics.
+
+> **`n/r`: the 12.83 s argmin/argmax figure appeared in the automated extraction but was NOT reproduced on the second fetch, which dropped that clause. Transcribe it from the paper before it goes into the manuscript.** Ring degree and party model also `n/r`.
+
+**Apples-to-apples with HE-OFT:** direct peer for `results/fhe_serve/argmax_tournament.csv`. Ours at C padded to 128 is 7 tournament rounds, 112.4 s total, of which 46.3 s is 34 collective refreshes, at N=10 parties and ring 2^15, single-threaded. Theirs is single-key. The gap is a mix of the multiparty setting, the refresh count and the algorithm. **Cite it as the construction that would reduce our dominant cost, not as a like-for-like defeat.**
+
+---
+
+## 19. cutmax (Avitan et al., 2025) — argmax at vocabulary scale
+
+**Matan Avitan, Moran Baruch, Nir Drucker, Itamar Zimerman, Yoav Goldberg. "Efficient Decoding Methods for Language Models on Encrypted Data." arXiv:2509.08383 (v1 10 Sep 2025, v2 17 Nov 2025).**
+
+Verified 2026-08-02 from the arXiv abstract page.
+
+**Abstract, verbatim (operative sentences):**
+> "We introduce cutmax, an HE-friendly argmax algorithm that reduces ciphertext operations compared to prior methods, enabling practical greedy decoding under encryption. We also propose the first HE-compatible nucleus (top-p) sampling method, leveraging cutmax for efficient stochastic decoding with provable privacy guarantees. ... Evaluations on realistic LLM outputs show latency reductions of 24x-35x over baselines, advancing secure text generation."
+
+Per-model timings (32,768 and 151,936 vocabularies, 1× H100) appeared in the automated extraction but are **`n/r`** here: not reproduced on the verification fetch. Transcribe before use.
+
+**Apples-to-apples with HE-OFT:** two-party, plaintext model, encrypted input, so the trust model is not ours. Relevant in two places. It is the right citation for the label-only interface argument, since it returns an encrypted one-hot without decrypting the scores. And **it publishes an HE-compatible top-p sampling method, which overlaps the Gumbel-max sampling result in `docs/notes/generation-scope.md` that we have not implemented.** Read it before that note is written up.
+
+---
+
+## 20. GH-OFL (Turazza, Picone & Mamei, ICLR 2026)
+
+**Fabio Turazza, Marco Picone, Marco Mamei. "The Gaussian-Head OFL Family: One-Shot Federated Learning from Client Global Statistics." ICLR 2026. arXiv:2602.01186 (v1 1 Feb 2026, v2 29 May 2026).**
+
+Verified 2026-08-02 from the arXiv abstract page: title, author list, venue and dates read directly.
+
+**What it does (from the abstract):** assumes class-conditional Gaussianity of pretrained embeddings, so clients transmit only per-class sufficient statistics rather than models. The server builds heads from three components: closed-form Gaussian heads, FisherMix with synthetic samples, and Proto-Hyper for refinement. Claims state-of-the-art robustness under strong non-IID skew while remaining strictly data-free.
+
+> **`n/r`: datasets, backbones, client counts, α values and every accuracy figure.** Only the abstract page was read. Transcribe the results tables before any number is used or any comparison is claimed.
+
+**Apples-to-apples with HE-OFT:** structurally this is our accuracy setting with the cryptography removed — one round, frozen pretrained encoder, a head fitted at the server. It is the peer a reviewer familiar with this line will name. The comparison favours us on the security axis and tests us on accuracy: GH-OFL uploads per-class sufficient statistics **in plaintext**, which is precisely the object our coverage-weighted merge keeps encrypted, because a coalition that learned the per-class totals recovers the remaining client's class histogram. Worth reading properly before Table II is defended.
 
 ---
 
