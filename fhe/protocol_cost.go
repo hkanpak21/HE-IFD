@@ -376,37 +376,64 @@ func measureReciprocal(n, logN int) (float64, int, float64) {
 // switched, and the label leaving the argmax sits near the bottom of the chain,
 // so we report the share at both ends of the range.
 type commResult struct {
-	N            int `json:"n_parties"`
-	LogN         int `json:"log_n"`
-	PubKeyShare  int `json:"public_key_share_bytes"`
-	RelinShare   int `json:"relin_key_share_bytes_two_rounds"`
-	GaloisShare  int `json:"galois_key_share_bytes_per_rotation"`
-	CtFullLevel  int `json:"ciphertext_bytes_full_level"`
-	CtLowLevel   int `json:"ciphertext_bytes_level_1"`
-	KSShareFull  int `json:"key_switch_share_bytes_full_level"`
-	KSShareLow   int `json:"key_switch_share_bytes_level_1"`
-	RefreshShare int `json:"collective_refresh_share_bytes"`
+	N            int    `json:"n_parties"`
+	LogN         int    `json:"log_n"`
+	Chain        string `json:"chain"`
+	NumModuli    int    `json:"num_moduli"`
+	NumAux       int    `json:"num_aux_moduli"`
+	PubKeyShare  int    `json:"public_key_share_bytes"`
+	RelinShare   int    `json:"relin_key_share_bytes_two_rounds"`
+	GaloisShare  int    `json:"galois_key_share_bytes_per_rotation"`
+	CtFullLevel  int    `json:"ciphertext_bytes_full_level"`
+	CtLowLevel   int    `json:"ciphertext_bytes_level_1"`
+	KSShareFull  int    `json:"key_switch_share_bytes_full_level"`
+	KSShareLow   int    `json:"key_switch_share_bytes_level_1"`
+	RefreshShare int    `json:"collective_refresh_share_bytes"`
 }
 
 func runCommCost(jsonPath string) {
 	fmt.Println("=== encrypted-serving protocol: communication ===")
 	fmt.Println()
-	var out []commResult
-	for _, n := range []int{5, 10, 20} {
-		r := measureComm(n, 14)
-		out = append(out, r)
-		fmt.Printf("N=%d  (ring 2^%d)\n", r.N, r.LogN)
-		fmt.Printf("  setup, per client: public key share %s, relinearization %s, one rotation key %s\n",
-			human(r.PubKeyShare), human(r.RelinShare), human(r.GaloisShare))
-		fmt.Printf("  one ciphertext   : %s at full level, %s near the bottom of the chain\n",
-			human(r.CtFullLevel), human(r.CtLowLevel))
-		fmt.Printf("  key-switch share : %s at full level, %s near the bottom\n",
-			human(r.KSShareFull), human(r.KSShareLow))
-		fmt.Printf("  refresh share    : %s\n\n", human(r.RefreshShare))
+	// Two chains are measured, because the protocol uses two. The aggregation
+	// chain carries the head merge, which is depth one. The serving chain is the
+	// one runTournament builds, and it is what a query ciphertext actually lives
+	// in. Reporting only the first understates the per-query traffic.
+	aggQ := []int{55, 45, 45, 45, 45, 45, 45, 45}
+	serveQ := []int{55}
+	for i := 0; i < 14; i++ {
+		serveQ = append(serveQ, 45)
 	}
-	fmt.Println("n_parties,log_n,pubkey_share_B,relin_share_B,galois_share_B,ct_full_B,ct_low_B,ks_share_full_B,ks_share_low_B,refresh_share_B")
+	chains := []struct {
+		label string
+		logQ  []int
+		logP  []int
+		logNs []int
+	}{
+		{"aggregation", aggQ, []int{61}, []int{14, 15, 16}},
+		{"serving", serveQ, []int{61, 61}, []int{14, 15, 16}},
+	}
+	var out []commResult
+	for _, ch := range chains {
+		for _, logN := range ch.logNs {
+			for _, n := range []int{5, 10, 20} {
+				r := measureComm(n, logN, ch.logQ, ch.logP, ch.label)
+				out = append(out, r)
+				fmt.Printf("N=%d  (ring 2^%d, %s chain, %d moduli)\n",
+					r.N, r.LogN, r.Chain, r.NumModuli)
+				fmt.Printf("  setup, per client: public key share %s, relinearization %s, one rotation key %s\n",
+					human(r.PubKeyShare), human(r.RelinShare), human(r.GaloisShare))
+				fmt.Printf("  one ciphertext   : %s at full level, %s near the bottom of the chain\n",
+					human(r.CtFullLevel), human(r.CtLowLevel))
+				fmt.Printf("  key-switch share : %s at full level, %s near the bottom\n",
+					human(r.KSShareFull), human(r.KSShareLow))
+				fmt.Printf("  refresh share    : %s\n\n", human(r.RefreshShare))
+			}
+		}
+	}
+	fmt.Println("n_parties,log_n,chain,num_moduli,pubkey_share_B,relin_share_B,galois_share_B,ct_full_B,ct_low_B,ks_share_full_B,ks_share_low_B,refresh_share_B")
 	for _, r := range out {
-		fmt.Printf("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", r.N, r.LogN, r.PubKeyShare,
+		fmt.Printf("%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d\n", r.N, r.LogN, r.Chain,
+			r.NumModuli, r.PubKeyShare,
 			r.RelinShare, r.GaloisShare, r.CtFullLevel, r.CtLowLevel,
 			r.KSShareFull, r.KSShareLow, r.RefreshShare)
 	}
@@ -417,11 +444,11 @@ func runCommCost(jsonPath string) {
 	}
 }
 
-func measureComm(n, logN int) commResult {
+func measureComm(n, logN int, logQ, logP []int, chain string) commResult {
 	params, err := ckks.NewParametersFromLiteral(ckks.ParametersLiteral{
 		LogN:            logN,
-		LogQ:            []int{55, 45, 45, 45, 45, 45, 45, 45},
-		LogP:            []int{61},
+		LogQ:            logQ,
+		LogP:            logP,
 		LogDefaultScale: 45,
 	})
 	check(err)
@@ -457,7 +484,9 @@ func measureComm(n, logN int) commResult {
 	_ = sk
 
 	return commResult{
-		N: n, LogN: logN,
+		N: n, LogN: logN, Chain: chain,
+		NumModuli:    len(logQ),
+		NumAux:       len(logP),
 		PubKeyShare:  pkShare.BinarySize(),
 		RelinShare:   r1.BinarySize() + r2.BinarySize(),
 		GaloisShare:  gkShare.BinarySize(),
