@@ -1,594 +1,529 @@
 # Paper TODO, 2026-08-19
 
-This is the work I propose to do on the manuscript, drawn from three sources:
-the CryptoKU meeting of 2026-08-07, the writing checklist in
+Revision 2. Rewritten after the direction of 2026-08-19: make the smallest
+change that answers each comment, and do not rewrite anything that works.
+
+Sources: the CryptoKU meeting of 2026-08-07, the checklist in
 `docs/checklist_for_writing_paper.md`, and the PI comments in
 `docs/notes/PI_notes/`.
 
 ## How to review this file
 
-Under each item there is a `**Decision.**` line. Write one of `ACCEPT`,
-`REJECT`, or `CHANGE`, and a reason. A reason on a rejection matters more than
-the rejection, because it tells me what rule to apply to the next item of the
-same class.
+Each item has a `**Decision.**` line. Write `ACCEPT`, `REJECT` or `CHANGE`, and
+a reason. The reason matters more than the verdict, because it tells me what
+rule to apply to the next item of the same kind.
 
-Nothing in this file has been applied to the manuscript. The only change already
-made today is the sync described in T1, which copies the Overleaf state into
-`docs/paper/` so that later diffs carry signal.
+Each item also carries a size tag, so the cost is visible before the decision:
 
-## Sources, and how items are labelled
+| tag | means |
+|---|---|
+| `[word]` | one or two words change |
+| `[line]` | one sentence changes |
+| `[para]` | one paragraph changes |
+| `[move]` | existing text moves, wording untouched |
+| `[section]` | a section is reworked. Only two items are this size |
+
+## Ground rules
+
+1. **Smallest change that answers the comment.** Repeated large edits between PI
+   passes are what produced the semi-honest inconsistency. A comment on one
+   sentence gets one sentence back.
+2. **Do not restructure.** No new itemize, enumerate, bold run-in headings or
+   subsections unless a comment asks for one. Where the paper already has too
+   much of this, remove it rather than add more.
+3. **Do not change the voice of passages nobody complained about.** The register
+   took a long time to settle.
+4. Writing rules, replacing the earlier register note:
+   - No metaphor or figure of speech you have seen in print before.
+   - Never a long word where a short one works.
+   - If a word can go, cut it.
+   - Active voice.
+   - No jargon where an everyday word exists.
+   - Break any of these before writing something ugly.
+5. **No em dash, no en dash, no colon used to introduce an explanation.** These
+   read as machine writing. Current counts in the manuscript: one `---` in a
+   table cell, no en dashes, 46 mid-sentence colons and 27 semicolons, of which
+   most are the elaborating kind.
+6. No number enters the paper without a record under `results/`. No citation
+   enters without the claim being checked against the source.
+7. Replacement text goes into the paste list, see the last section. I do not
+   edit `docs/paper/` except for sync.
+
+## Labels
 
 | tag | source |
 |---|---|
-| `AK` | Alptekin Küpçü, Overleaf comments of 11 and 12 August |
-| `SS` | Sinem Sav, Overleaf comments of 4 and 17 August |
+| `AK` | Alptekin Küpçü, Overleaf, 11 and 12 August |
+| `SS` | Sinem Sav, Overleaf, 4 and 17 August |
 | `MTG` | CryptoKU meeting, 2026-08-07 |
-| `CHK` | `docs/checklist_for_writing_paper.md` |
-| `HK` | found while checking something else, no PI comment attached |
+| `CHK` | the writing checklist |
+| `HK` | found while checking something else |
 
-## Ground rules I will hold to
+## Answers received on 2026-08-19, folded into the items below
 
-1. No number enters the paper without a matching record under `results/`.
-2. No citation enters the paper without the claim being checked against the
-   source. If a source cannot be checked, the item stays open rather than
-   shipping unverified.
-3. Replacement text is proposed in chat for pasting into Overleaf. I do not
-   edit `docs/paper/` unless told to for a specific item.
-4. Register: `academic-ste`. No em dash. No en dash except between numerals.
-   One idea per sentence. Active voice with a named actor.
+1. The overview is a short overview of the **method**, not an overview of the
+   paper in the introduction. T7.
+2. "Against normal FL" means against cryptographically secure FL, on security,
+   privacy and accuracy. It is not a request for new experiments. T13.
+3. "Merge train and aggregation" meant **simplify the writing** of the ideal
+   functionality. Step 1 already does both, so only the wording changes. T18.
+4. Assume the 18 page limit **includes** references. We are at 21. Related work
+   is where Küpçü says the length is. T8.
+5. For work that is not really related, one sentence carrying every citation at
+   once: "Several works do XYZ [c1, c2, ..., cn]". T8.
 
 ---
 
-# A. Sync and correctness, before anything else
+# A. Correctness. Small, and one of them is a claim we cannot defend
 
-## T1. Sync local to the Overleaf state. DONE
+## T1. Sync local to Overleaf `[move]` DONE
 
-Copied all seven `.tex` files from `temp_current_overleaf/` into `docs/paper/`.
-The PI edits of 11 to 17 August are now the local baseline. Without this, every
-later diff is noise.
+All seven files copied from `temp_current_overleaf/` into `docs/paper/`.
+Committed as `af29f68`.
 
 **Decision.**
 
 ---
 
-## T2. `AK` `HK` Repair the priority claim in the abstract
+## T2. `AK` `HK` The abstract claims priority over all one-shot fine-tuning `[line]`
 
 The Overleaf edit reads "the first one-shot federated fine-tuning protocol,
 where the resulting final model is never disclosed". With that comma the claim
-becomes "first one-shot federated fine-tuning protocol", which FedIT and the
-other federated adapter works contradict.
-
-Agreed framing from 2026-08-19: the claim is first *cryptographically secure*
-one-shot federated fine-tuning. Two candidate sentences, pick one:
-
-```latex
-We present HE-OFT, the first cryptographically secure one-shot federated
-fine-tuning protocol, in which the final model is never disclosed to any party.
-```
-
-```latex
-We present HE-OFT, the first one-shot federated fine-tuning protocol in which the
-final model is never disclosed to any party.
-```
-
-The first states the class the claim lives in. The second is narrower and needs
-no defence of what "cryptographically secure" covers. My recommendation is the
-first, because "cryptographically secure" is the axis that separates us from the
-differentially private one-shot line as well as from the plaintext one.
+is "first one-shot federated fine-tuning protocol", which the federated adapter
+line contradicts. Agreed on 2026-08-19: the claim is first cryptographically
+secure one-shot federated fine-tuning. Text in the paste list.
 
 **Decision.**
 
 ---
 
-## T3. `HK` Three defects the Overleaf edits introduced
+## T3. `HK` Three defects the Overleaf edits left behind `[word]`
 
-1. The abstract is now two paragraphs. A blank line was inserted before "We
-   present HE-OFT". IEEE abstracts are one paragraph.
-2. Table II renames the column to "adapter", and ten sentences in the body still
-   say "personal adapter". One name for one thing, which is `CHK` item and the
-   `academic-ste` rule. Cheapest repair is to restore the column header.
-3. "the updates are themselves the vulnerability: A gradient permits" has a
-   capital letter after a colon.
-
-**Decision.**
-
----
-
-## T4. `HK` Two edits that changed a claim, not only its wording
-
-1. `method.tex` Setting now reads "we do not consider differential privacy due
-   to the accuracy loss incurred". Section 5.2 compares against differentially
-   private one-shot FL at length, so as written the method contradicts the
-   experiments. Proposed: "differential privacy is not accepted as the only
-   protection, because of the accuracy it costs".
-2. `method.tex` C6 now says the server is "semi-honest" where it said
-   "untrusted". This is consistent with Section IV, so I would keep it, but it
-   should be flagged because C6's stated reason is "the parties are mutually
-   distrustful", which reads oddly next to "semi-honest". Proposed: keep
-   semi-honest and change the reason to "no party may hold the decryption key
-   alone".
+1. The abstract is now two paragraphs. Delete the blank line before "We present
+   HE-OFT".
+2. Table II says "adapter" and ten sentences in the body say "personal adapter".
+   Restore the column header.
+3. "the vulnerability: A gradient permits" has a capital after a colon. The
+   colon should go anyway under ground rule 5.
 
 **Decision.**
 
 ---
 
-## T5. `HK` File the new PI comments into the review record
+## T4. `HK` Two edits that changed a claim, not only wording `[line]`
 
-`docs/PI_comments_on_2026-08-19.md` sits outside the review folder. I will move
-it to `docs/notes/PI_notes/PI_notes_2026-08-19.md` and work it into the same
-four-field form the 2026-08-06 file uses: location, comment verbatim, why the
-comment was made, replacement text. That form is what lets a context-zero agent
-pick the paper up later, which is why `CLAUDE.md` points at the folder.
-
-**Decision.**
-
----
-
-# B. Küpçü's structural asks. These are the largest items
-
-## T6. `AK` Restructure the introduction: problems first, then one solution
-
-Comment of 11 August, 7:14 pm: state every problem first, then present our
-solution, rather than alternating problem and solution. He suggests bold
-`Problem 1`, `Problem 2` headings, one per paragraph.
-
-The introduction currently alternates four times: FL leaks at training time,
-so one-shot and encryption; both still release the model, so never disclose it;
-the query must be built from public parts, so the head is the shared object.
-
-Proposed shape:
-
-1. Setting and motivation, one paragraph.
-2. **Problem 1.** Federated learning leaks most at training time.
-3. **Problem 2.** Removing that surface still ends with the model disclosed.
-4. **Problem 3.** A model that is never disclosed must still answer queries,
-   and the querier can only run public parts.
-5. Solution overview, with Figure 1, see T7.
-6. Contributions, see T9.
-
-This is a rewrite of the whole section, not an edit. It is the item most likely
-to need a second pass with the PIs, so I would like it accepted or rejected
-before I start rather than after.
+1. The method now says "we do not consider differential privacy due to the
+   accuracy loss incurred". Section 5.2 compares against differentially private
+   one-shot FL at length, so the method contradicts the experiments. One clause
+   fixes it.
+2. C6 now says the server is semi-honest where it said untrusted. Section IV
+   says semi-honest, so keep the new word and change the reason clause, which
+   still says the parties are mutually distrustful. This is the exact class of
+   inconsistency ground rule 1 exists to prevent.
 
 **Decision.**
 
 ---
 
-## T7. `AK` `MTG` Move Figure 1 and its caption into the introduction as an overview
+## T5. `HK` File the new comments into the review record `[move]`
 
-Comment of 11 August, 7:12 pm. The meeting note asks for an overview at the
-start of the methodology. These are the same request pointed at two places, and
-they need one answer, because the paper should not carry two overviews.
-
-My recommendation: the overview goes in the introduction, as Küpçü asks, built
-around Figure 1 and one worked query from end to end. The method section then
-opens with two or three sentences that say what the section covers, not a second
-overview. A single running example also answers `CHK` item 1.
-
-If the PIs want the overview in the method section instead, say so here and I
-will put it there and leave the introduction with the figure alone.
+Move `docs/PI_comments_on_2026-08-19.md` into
+`docs/notes/PI_notes/PI_notes_2026-08-19.md` and put it in the same four field
+form as the 2026-08-06 file. No paper text involved.
 
 **Decision.**
 
 ---
 
-## T8. `AK` Shorten the related work and add a summary table
+# B. Küpçü's introduction comments
 
-Comment of 11 August, 7:10 pm: the section is far too long and needs a summary
-table. Section II runs from page 2 to page 4.
+## T6. `AK` The introduction alternates problem and solution `[move]`
 
-Proposed table, one row per system, columns: rounds (one-shot or multi-round),
-what is protected (nothing, differential privacy, encryption), whether the model
-is disclosed, whether it adapts a pretrained backbone, and what the query
-interface returns. HE-OFT is the last row. Every cell traces to
-`comparators/REPORTED_RESULTS.md`, which is paper-verbatim, and any cell I
-cannot source stays blank rather than guessed.
+Comment of 11 August, 7:14 pm. He suggests bold `Problem 1`, `Problem 2`
+headings. **I propose not to use them**, per the direction to keep it natural
+and per ground rule 2. The paper already has too many run-in headings, see T25.
 
-That table then lets the prose drop most of its per-system description, which is
-where the length is.
+The complaint is about order, and the order can be fixed by moving two existing
+paragraphs rather than rewriting them. Today the section runs: leak, fix, leak,
+fix, leak, fix. Moving the two solution paragraphs down groups the problems
+without touching a sentence, and one transition sentence carries the join.
 
-Note one apparent conflict with the meeting: `MTG` says use plots instead of
-tables where possible. That note is about results tables. A comparison matrix in
-related work is a different object and I read the two asks as compatible.
+If the PIs want the bold headings after all, say so here and I will add them,
+but I would rather show them the reordered version first.
 
 **Decision.**
 
 ---
 
-## T9. `AK` Rewrite the contribution list so each item is self-contained
+## T7. `AK` `MTG` A short overview at the head of the method `[para]`
 
-Three comments of 11 August, 7:06 to 7:07 pm, one per bullet:
+Küpçü's 7:12 pm comment suggests moving Figure 1 and its caption into the
+introduction under an overview heading. The direction of 2026-08-19 is that the
+overview belongs at the start of the method and should be brief.
 
-- "a coalition of all but one client has nothing to subtract from" is not clear.
-- "a label denies the linear solve that logits would permit" is not clear, and
-  the idea was not introduced earlier.
-- "Two arrangements" was never defined at that point.
-
-All three are the same defect: each bullet states a consequence that depends on
-a fact the reader does not have yet. The fix is to state the mechanism in the
-bullet and move the consequence into the section it belongs to, or to give the
-one-clause definition inline.
-
-This item depends on T6, because if the problems are stated first then some of
-the missing background is already on the page by the time the bullets arrive.
+Proposal, which answers three comments with one paragraph: leave Figure 1 where
+it is, and open Section III with a short paragraph that walks one query from end
+to end and points at the figure. That covers the overview Küpçü asks for, the
+overview the meeting asked for, and his 12 August 10:47 am comment that the
+figure is never explained.
 
 **Decision.**
 
 ---
 
-## T10. `AK` The evaluation paragraph repeats, and may itself be a contribution
+## T8. `AK` Shorten the related work `[section]`
 
-Comment of 11 August, 7:09 pm, on "Our accounting includes the traffic that
-recurs on every query": there is repetition here, and is this not a contribution
-in its own right, and why is it not under contributions.
+Comment of 11 August, 7:10 pm. This section is the reason we are three pages
+over. It runs from page 2 to page 4.
 
-My reading: the honest cost accounting is a contribution, because no peer in the
-one-shot line reports per-query traffic at all. I propose it becomes a fourth
-bullet, which also removes the repetition Küpçü flags, since the paragraph then
-does not restate what the bullets said.
+Two devices, both from the direction of 2026-08-19:
 
-**Decision.**
+1. Work that is not really related collapses into one sentence carrying every
+   citation at once. Candidates: the general attack literature in 2.1 beyond the
+   three results we actually use, the task arithmetic background in 2.4, and the
+   secure inference systems in 2.5 that are two party.
+2. A small summary table, since Küpçü asked for one. Five or six rows, four
+   columns: rounds, what is protected, whether the model is disclosed, what the
+   query returns. Every cell traceable to `comparators/REPORTED_RESULTS.md`, and
+   any cell I cannot source stays blank. The table costs a third of a column and
+   should let the prose drop more than it costs.
 
----
-
-## T11. `AK` Two missing citations in the introduction
-
-Comments of 11 August, 3:29 and 3:30 pm.
-
-1. "each would obtain a better model from the combination than from its own data
-   alone" carries no citation. This is an empirical claim about federated
-   learning and needs one.
-2. "its privacy risk is concentrated at training time" carries no citation. Note
-   3 of the 2026-08-06 file added citations to the first half of that sentence,
-   and the second half is still bare.
-
-I will pick sources that state each claim directly rather than reusing the
-nearest key in the file.
+This is one of the two `[section]` items. I will bring it as a diff against the
+current text, sentence by sentence, so nothing changes that does not need to.
 
 **Decision.**
 
 ---
 
-## T12. `AK` "membership inference far stronger than anything possible against the final model" is too strong
+## T9. `AK` Three contribution bullets are unclear `[line]` each
 
-Comment of 11 August, 3:32 pm: either support it with evidence or do not write
-it this strongly.
+Comments of 11 August, 7:06 and 7:07 pm, one per bullet: "nothing to subtract
+from" is unclear, "a label denies the linear solve that logits would permit" is
+unclear and was never introduced, and "two arrangements" was never defined.
 
-He is right, and the paper already has the evidence in a weaker form. Nasr et
-al. report 87 percent against the update stream falling to 54.5 percent against
-the final model on the same model and dataset. That supports "stronger on the
-settings that have been measured". It does not support "than anything possible",
-which quantifies over all attacks. Proposed repair: bind the claim to the
-measurement.
-
-This also touches the abstract, where the same phrasing appears.
+All three are the same defect. Each bullet ends on a consequence that needs a
+fact the reader does not have. The minimal fix is one clause per bullet, either
+a short definition inline or the consequence dropped. Not a rewrite of the list.
 
 **Decision.**
 
 ---
 
-## T13. `AK` Put more results in the abstract
+## T10. `AK` The evaluation paragraph repeats itself `[line]`
 
-Comment of 11 August, 3:21 pm: could we put more about results, performance
-during fine-tuning, against normal FL.
+Comment of 11 August, 7:09 pm, which also asks whether the cost accounting is
+itself a contribution and why it is not in the list.
 
-What we can add without a new run: the pooled reference, which is what normal
-centralised training reaches on the same setup, and the disclosed reference,
-which is what a released model reaches. Both are in
-`results/personal_adapter*/stratified/results.csv` already and both are already
-in Table II.
-
-What we cannot add without a new run: a comparison against multi-round federated
-learning on our own tasks. We do not have that arm. If the PIs want it, it is an
-experiment, see T21.
+**I propose the smaller answer**: delete the repeated sentence and leave the
+list at three items. Adding a fourth bullet adds structure, which is what ground
+rule 2 and the direction of 2026-08-19 both push against. If Küpçü presses, the
+accounting can be named in one clause inside the third bullet.
 
 **Decision.**
 
 ---
 
-# C. The method and security asks
+## T11. `AK` Two sentences in the introduction carry no citation `[word]`
 
-## T14. `AK` Move the Dirichlet sentence out of the method
-
-Comment of 12 August, 10:33 am: if it does not affect the method, its place is
-the start of the experiments section.
-
-Correct. The partition is an experimental choice and the protocol does not
-depend on it. I will move the sentence and check that nothing in Section III
-refers back to alpha.
+Comments of 3:29 and 3:30 pm on 11 August: "each would obtain a better model
+from the combination than from its own data alone", and "its privacy risk is
+concentrated at training time". Both need a source that states the claim
+directly.
 
 **Decision.**
 
 ---
 
-## T15. `AK` `SS` C3 and C4 read as contradictory
+## T12. `AK` "far stronger than anything possible against the final model" `[line]`
 
-Küpçü, 12 August, 10:39 am. Sav, 17 August, 11:16 am: C4 is fine, C3 needs to be
-clearer so the two do not look contradictory.
+Comment of 11 August, 3:32 pm: support it or do not write it this strongly. He
+is right. Nasr et al. measured 87 percent against the update stream falling to
+54.5 percent against the final model on one model and dataset. That supports a
+claim about what has been measured. It does not support a claim over all
+possible attacks. Bind the claim to the measurement. Same phrasing sits in the
+abstract, so this is two sentences in two places.
+
+**Decision.**
+
+---
+
+## T13. `AK` More about results in the abstract `[line]`
+
+Comment of 11 August, 3:21 pm, clarified on 2026-08-19: against
+cryptographically secure normal FL, what do we add on security, privacy and
+accuracy. No new experiments.
+
+We can answer that from what we already have. Encrypted multi-round FL protects
+the updates but discloses the model at the end, pays the cryptographic cost on
+every round, and cannot reach a pretrained backbone because the circuit grows
+with the network. POSEIDON's own numbers carry the last point, and they are
+already quoted in the introduction after note 9. One sentence in the abstract
+states the gain, and the accuracy references in Table II are already there.
+
+**Decision.**
+
+---
+
+# C. The method and security comments
+
+## T14. `AK` The Dirichlet sentence belongs in the experiments `[move]`
+
+Comment of 12 August, 10:33 am. Correct. The partition is an experimental choice
+and the protocol does not depend on it. The sentence moves and its wording does
+not change.
+
+**Decision.**
+
+---
+
+## T15. `AK` `SS` C3 and C4 look contradictory `[line]`
+
+Küpçü 12 August 10:39 am, Sav 17 August 11:16 am, who says C4 is fine and C3
+needs to be clearer.
 
 C3 says independently trained models do not combine linearly. C4 says the
-aggregation is a linear combination. Both are true and the resolution is that C3
-is about models trained from different starting points, while C4 applies after
-C3 has forced one common starting point. The text does not say that. Proposed
-repair: state the resolution in C4 explicitly, and tighten C3 to name the
-condition it depends on.
+aggregation is linear. Both hold, because C3 is about models trained from
+different starting points and C4 applies after C3 has forced one common start.
+One clause in C3 naming that condition removes the contradiction. C4 is not
+touched, per Sav.
 
 **Decision.**
 
 ---
 
-## T16. `AK` "everything the client runs is public" and four other unclear spots
+## T16. `AK` Four small unclear spots `[word]` or `[line]` each
 
-Four separate comments, each small:
-
-1. 12 August, 10:40 am. "everything the client runs is public" and does that
-   mean plaintext. Yes. The word should be plaintext, since public and plaintext
-   are being used for one property.
-2. 12 August, 10:47 am. Figure 1 is not explained in the text. Every figure
-   needs a sentence in the prose that walks the reader through it.
-3. 12 August, 10:49 am. The generation-scope sentence leaves the reader unsure
-   whether we evaluate generation. We do not. The sentence needs to say so
-   first and hedge second.
-4. 12 August, 10:50 am. "both halves of this claim" does not name its halves.
+1. 10:40 am. "everything the client runs is public". Yes, we mean plaintext. One
+   word.
+2. 10:47 am. The figure is never explained. Covered by T7.
+3. 10:49 am. Do we evaluate generation. We do not. The sentence hedges before it
+   answers, so it reads as though we might. Reverse the order.
+4. 10:50 am. "both halves of this claim" never names the halves. Name them.
 
 **Decision.**
 
 ---
 
-## T17. `SS` Move the threshold assumption out of the security section
+## T17. `SS` The threshold assumption is a preliminary `[move]`
 
-Comment of 17 August, 11:20 am: this is more like a preliminary, why give it
-here.
-
-Agreed. The threshold assumption is scheme background, and it belongs with the
-multiparty CKKS subsection in the method. Section IV then opens on the ideal
-functionality, which is what the section is for. The `\tc` notation is used in
-the method and the experiments already, so moving it earlier also fixes the
-order in which the reader meets it.
+Comment of 17 August, 11:20 am. Agreed. It is scheme background, so it moves to
+the multiparty CKKS subsection in the method, where `\tc` is first used anyway.
+The wording does not change, only the location. Section IV then opens on the
+ideal functionality, which is what the section is for.
 
 **Decision.**
 
 ---
 
-## T18. `SS` `MTG` Fix the form of the ideal functionality, and cite the work it follows
+## T18. `SS` `MTG` Simplify the ideal functionality, and cite what it follows `[para]`
 
-Three things that are one item.
-
-1. Sav, 17 August, 11:22 am: "No party receives theta star" is a requirement,
-   not an output, and she asks us to check the convention with Küpçü. She is
-   right that it sits in the wrong field. In the functionality form used by the
-   secure aggregation literature, that fact belongs in the description of what
-   the functionality stores, not under Outputs.
-2. `MTG`: find a prior work that gives an ideal functionality in the form ours
-   needs. Found. The FULLSA paper of Karakoç, Küpçü and Önen says, verbatim:
+1. Sav, 11:22 am. "No party receives $\thstar$" sits under Outputs and is a
+   requirement, not an output. She asks us to check the convention with Küpçü.
+   It belongs in what the functionality stores.
+2. The meeting's "merge train and aggregation" meant simplify the writing.
+   Step 1 already does both, so this is a wording pass over the functionality
+   body and nothing structural.
+3. The meeting also asked whether a prior work gives an ideal functionality in
+   the form we need. Found, and it is Küpçü's own. FULLSA states verbatim:
    "Similar to [18], we present an ideal functionality for secure aggregation
    that is fault-tolerant... Unlike [18], we also present the aggregator as an
    entity other than the functionality so that one can consider a malicious
-   aggregator as well." Putting the aggregator outside the functionality is
-   exactly what we do with the server and the serving party. Their [18] is ELSA,
-   Rathee, Shen, Wagh and Popa, IEEE S&P 2023.
-3. So we cite ELSA for the functionality form and FULLSA for the
-   outside-the-functionality construction. This also settles the question from
-   last session about whether to cite Karakoç et al. at all. The earlier use was
-   decorative and was withdrawn. This use is substantive.
-4. `MTG` also asks to merge training and aggregation in the functionality. Step 1
-   already does both. I need one sentence from the PIs on whether the comment
-   meant the functionality or the figures, which are still separate.
+   aggregator as well." Placing the aggregator outside the functionality is what
+   we do with the server and the serving party. Their [18] is ELSA, Rathee,
+   Shen, Wagh and Popa, IEEE S&P 2023.
+4. So one sentence cites ELSA for the form and FULLSA for the construction. This
+   also settles last session's question about citing Karakoç et al. The earlier
+   use was decorative and I withdrew it. This one is substantive.
 
 **Decision.**
 
 ---
 
-## T19. `SS` Shorten Section IV and rename its headings
+## T19. `SS` Shorten Section IV and fix four spots `[para]`
 
-Comment of 17 August, 11:23 am: shorten everything up to that point and rephrase
-the "Why blabla makes blabla" headings.
+Comment of 17 August, 11:23 am: shorten everything up to that point, and the
+"Why blabla makes blabla" headings should be rephrased. Two headings are
+questions in disguise. They become noun phrases.
 
-Two subsection titles are questions in disguise: "Why the Serving Party Is
-Assumed Honest" and the one before it. Our own voice rules say headings are noun
-phrases. Proposed: "Assumption on the Serving Party" and similar.
-
-Also in scope, three smaller comments of the same morning:
-
-- 11:19 am, "fixes" is unclear.
-- 11:20 am, "describes what a trusted party would do" is informal.
-- 11:21 am, the justification of the phase signals may not be needed where it
-  sits.
-- 11:24 am, "Read that way the peer group separates into three cases" is
-  unclear.
+Four smaller comments the same morning, one line each: "fixes" is unclear
+(11:19), "describes what a trusted party would do" is informal (11:20), the
+justification of the phase signals may not belong there (11:21), and "the peer
+group separates into three cases" is unclear (11:24).
 
 **Decision.**
 
 ---
 
-# D. Meeting items not covered above
+# D. Meeting items
 
-## T20. `MTG` Convert three result tables to plots
+## T20. `MTG` One table becomes a plot `[para]`
 
-Section V holds eight tables and one figure. The three that are naturally plots:
+Section V holds eight tables and one figure. **I propose converting one, not
+three**, because the other two work as tables and converting them is churn.
 
-1. The cost grid over ring degree and client count. Table VI and `fig:cost` say
-   overlapping things, so the table goes and the figure carries it.
-2. The sensitivity sweep on DBpedia, which is a line plot over alpha.
-3. The extraction budget, which is a fidelity against queries curve.
+The one that should go is the cost grid. Table VI and `fig:cost` already say
+overlapping things, so the table goes and the figure carries it. That is a
+deletion, which also helps the page count.
 
-Every one of these reads better as a plot and each returns some page.
+The sensitivity sweep and the extraction budget stay as tables unless the PIs
+ask otherwise.
 
 **Decision.**
 
 ---
 
-## T21. `MTG` Assess the experiments, and say what is missing
+## T21. `MTG` Assess the experiments, as a note, not as paper text `[none]`
 
-I propose to write this as a note under `docs/notes/`, not as paper text, so the
-PIs can decide what to run before anything is drafted. It will cover: every
-number checked against its record, the controls a reviewer will look for, and
-the arms we do not have.
+Written under `docs/notes/` so the PIs decide what to run before anything is
+drafted. Two weaknesses I already know:
 
-Two weaknesses I already know:
-
-1. Table IV's CIFAR-10 uses a 10,000 image subsample, because
-   `vm.load_vision` defaults to `max_train=10000`. The paper does not say so.
-   This must be disclosed or the run must be redone at full size.
+1. Table IV's CIFAR-10 uses a 10,000 image subsample, because `vm.load_vision`
+   defaults to `max_train=10000`. The paper does not say so. Either disclose it
+   or redo the run at full size.
 2. The client-count row has one seed. Everything else has three.
 
-Küpçü's abstract comment, T13, also lands here: we have no multi-round federated
-learning arm on our own tasks.
+Also open, and visible in the paper: Table II's CIFAR-100 pooled cell is a dash.
 
 **Decision.**
 
 ---
 
-## T22. `MTG` Communication cost, and a published number to sit beside it
+## T22. `MTG` The 5 MiB needs a published number beside it `[line]`
 
-The 5 MiB per query looks unmotivated on its own. Two published comparables are
-already extracted verbatim in `comparators/REPORTED_RESULTS.md`:
+Two comparables are already extracted verbatim in
+`comparators/REPORTED_RESULTS.md`. Hyb-Agg reports about 12 times expansion over
+plaintext and 6.3 MB of client uplink for a 65,536 dimension vector of doubles.
+POSEIDON reports 0.38 GB, units still to be confirmed from the caption.
 
-- Hyb-Agg reports a communication expansion factor of about 12 times over
-  plaintext, and 6.3 MB of client uplink for a 65,536 dimension vector of
-  doubles.
-- POSEIDON reports 0.38 GB, with units still needing caption confirmation.
-
-Proposed repair: state our expansion factor against the plaintext feature
-vector, in the same form Hyb-Agg uses, so the reader sees a property of the
-encryption scheme rather than an artifact of our protocol.
+One sentence stating our expansion factor in the same form makes 5 MiB read as a
+property of the encryption scheme rather than something our protocol chose.
 
 **Decision.**
 
 ---
 
-## T23. `MTG` Latency, and the one peer that is genuinely comparable
+## T23. `MTG` Latency, against the one genuinely comparable system `[line]`
 
-slytHErin is the closest published system: multiparty CKKS, model never
-decrypted, key switch only to the querier. Its Table 2 reports 245.58 seconds at
-3 parties rising to 354.17 at 20, and about 0.95 seconds per sample amortized at
-10 parties, batched, on 12 cores. Ours is 31.5 seconds per query at 4 classes
-and 113.2 at 100 classes, single threaded and unbatched.
+slytHErin is the closest published peer: multiparty CKKS, model never decrypted,
+key switch only to the querier. Its Table 2 reports 245.58 seconds at 3 parties
+and 354.17 at 20, about 0.95 seconds per sample amortized at 10 parties, batched
+on 12 cores. Ours is 31.5 seconds per query at 4 classes and 113.2 at 100
+classes, single threaded and unbatched.
 
-Any comparison must state two differences: they batch and we do not, and they
-return the score vector while we return only the label. By our own Section 5.6
-record, a score vector is a much cheaper extraction target than a label, so the
-interface difference cuts in our favour and should be said out loud.
+Two differences must be stated in the same sentence. They batch and we do not.
+They return the score vector and we return only the label, which by our own
+Section 5.6 record is a much harder extraction target.
 
 **Decision.**
 
 ---
 
-## T24. `MTG` Settle privacy against confidentiality
+## T24. `MTG` Privacy against confidentiality `[word]`
 
 Counts today: privacy 25, private 12, confidential 2, confidentiality 0. One
-word is doing two jobs.
-
-Proposed split: the cryptography provides *confidentiality* of the head and of
-the query. The threat model is about the *privacy* of the training data. I will
-apply the split once, everywhere, and list the sites.
+word is doing two jobs. Proposed split, applied once and listed site by site:
+the cryptography gives **confidentiality** of the head and the query, and the
+threat model is about the **privacy** of the training data.
 
 **Decision.**
 
 ---
 
-## T25. `MTG` Remove the takeaway headings and the differentiator pattern
+## T25. `MTG` Remove structure, do not add it `[para]`
 
-Two counts, both measured:
+Measured: 49 run-in `\paragraph{}` headings, of which five are the
+`\paragraph{Claim}` takeaway headings the meeting asked to remove. About 20
+instances of the "X, not Y" pattern, which our own rules ban and which Sav
+called AI smell.
 
-1. There are 49 run-in `\paragraph{}` headings, of which the five
-   `\paragraph{Claim}` blocks are the takeaway headings the meeting asked to
-   remove.
-2. There are about 20 instances of the "X, not Y" differentiator, which our own
-   voice rules already ban and which Sav flagged as AI smell in the
-   introduction.
+This item is the one that most directly serves the "too wordy, too much AI" note
+and it removes structure rather than adding it, so it sits well with ground rule
+2. Passive voice is not a real problem here. There are nine agentive passives in
+2,000 lines, so I propose to leave those alone.
 
-Passive voice is not actually a problem. There are 9 agentive passives in 2,000
-lines, so I propose to leave that alone rather than churn the text for it.
-
-**Decision.**
-
----
-
-## T26. `MTG` Look for attack papers that match our interface
-
-Section 5.6 measures label-only extraction and stands alone. There are three
-hard-label extraction papers in the bibliography already that are barely used.
-I propose one focused pass to see whether any of them, or a newer one, matches a
-label-only encrypted interface, and to cite it where 5.6 argues.
+Also in this pass, under ground rule 5: the elaborating colons and the
+semicolons.
 
 **Decision.**
 
 ---
 
-# E. Checklist compliance
+## T26. `MTG` Attack papers that match our interface `[line]`
 
-## T27. `CHK` Bibliography surgery
-
-Against the rules in the checklist, `refs.bib` today has 140 entries with 23
-`url`, 20 `doi`, 23 `note`, 15 `publisher`, 5 `series` and 2 `organization`
-fields, all of which the checklist says to remove. Twelve `@article` entries
-carry no volume and no pages. About 30 booktitles are in long form where the
-checklist asks for the short form, so "Proceedings of the 22nd ACM SIGSAC
-Conference on Computer and Communications Security" becomes "ACM CCS". Fourteen
-`@misc` entries need checking, because most are probably published by now and
-belong as `@article` or `@inproceedings`.
-
-This needs nothing from the PIs and it is a thing they will check directly. I
-would like to start here.
+Section 5.6 measures label-only extraction and cites nothing recent. Three hard
+label extraction papers already sit unused in the bibliography. One focused pass
+to see whether any matches a label-only encrypted interface, then one citation.
 
 **Decision.**
 
 ---
 
-## T28. `CHK` Abbreviations, unbacked quantifiers, and orphan sentences
+# E. Checklist
 
-Three mechanical passes from the checklist:
+## T27. `CHK` Bibliography surgery `[none, bib only]`
 
-1. Every abbreviation defined at first use. CKKS was one such case and note 12
-   fixed it. I will check the rest.
-2. No "most" or "majority" that we cannot back. Section 2.5 already had one of
-   these corrected to "Most of these systems".
-3. Checklist item 8: every sentence must have a goal. I will mark the candidates
-   rather than delete them, so the PIs choose.
+`refs.bib` has 140 entries. Against the checklist rules it carries 23 `url`, 20
+`doi`, 23 `note`, 15 `publisher`, 5 `series` and 2 `organization` fields to
+strip. Twelve `@article` entries have no volume and no pages. About 30
+booktitles are long form where the checklist wants short, so "Proceedings of the
+22nd ACM SIGSAC Conference on Computer and Communications Security" becomes
+"ACM CCS". Fourteen `@misc` entries need checking, since most are probably
+published by now.
 
-**Decision.**
-
----
-
-## T29. `CHK` Acknowledgements and submission rules
-
-The acknowledgement already lists both TÜBİTAK projects and the AI use
-statement. Two things to confirm with the PIs rather than decide:
-
-1. TNSE states a submission limit of 18 pages and says an appendix may be
-   included inside it. Our main body is 18 pages and the references and
-   biographies add 3. Confirm with the editorial office whether the limit counts
-   references and biographies.
-2. TNSE's one-resubmission rule applies to manuscripts rejected by TNSE. Ours
-   was rejected by TDSC, so the rule does not bind us. Worth stating to the PIs
-   once so nobody re-litigates it.
+No paper text changes. The PIs check this directly. I would like to start here.
 
 **Decision.**
 
 ---
 
-# F. Deferred by decision
+## T28. `CHK` Abbreviations and unbacked quantifiers `[word]`
+
+Two mechanical passes: every abbreviation defined at first use, and no "most" or
+"majority" we cannot back. I will list the sites rather than change them
+silently.
+
+**Decision.**
+
+---
+
+## T29. `CHK` Page count and the resubmission rule `[none]`
+
+Assume references count, per the direction of 2026-08-19. We are at 21 and the
+limit is 18, so three pages come out. The savings are in T8, T20 and T25, and
+none of them is a rewrite.
+
+TNSE's one-resubmission rule covers manuscripts rejected by TNSE. Ours was
+rejected by TDSC, so it does not bind us. Recorded so nobody re-opens it.
+
+**Decision.**
+
+---
+
+# F. Deferred
 
 ## T30. Membership inference to an appendix
 
-Deferred at the meeting. The page situation makes it moot for now. Recorded here
-so it is not lost.
+Deferred at the meeting, and moot while we are cutting pages.
 
 **Decision.**
 
 ---
 
-# Order I propose to work in
+# Order
 
-1. T1 to T5. Sync and correctness. Small, and T2 repairs a claim we cannot
-   defend as written.
-2. T27. Bibliography. Needs nothing from anyone and is checked directly.
-3. T5, then T14 to T19. The method and security comments, which are local edits
-   with clear answers.
-4. T6, T7, T9, T10. The introduction restructure, once accepted.
-5. T8. Related work and its summary table.
-6. T20, T22, T23, T24, T25. Presentation and vocabulary.
-7. T21. The experiments assessment, written as a note for the PIs to act on.
+1. T2, T3, T4, T5. Correctness. T2 repairs a claim we cannot defend.
+2. T27. Bibliography. Needs nothing from anyone.
+3. T14 to T19. Method and security. Small edits with clear answers.
+4. T6, T7, T9, T10, T11, T12, T13. The introduction comments.
+5. T8. Related work, which is where the three pages are.
+6. T20, T22, T23, T24, T25, T26. Presentation.
+7. T21. The experiments note.
 
-Items that need a PI answer before I can start: T6, T7, T13, T18 point 4, T29.
+Two items are `[section]` size and everything else is a word, a line, a
+paragraph or a move.
+
+# Paste list
+
+Replacement text lands in
+`docs/notes/PI_notes/overleaf-paste-2026-08-19.md`, one entry per accepted item,
+each saying which file, which sentence to search for, and what replaces it.
