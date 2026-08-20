@@ -41,6 +41,7 @@ methodology.
 | Table II, five-task accuracy | `results/personal_adapter*/stratified/results.csv` |
 | Table II, pooled column | `results/centralised_ceiling/results.csv`, `matched_total` rows |
 | Table III, client-count row | `results/personal_adapter/nsweep.csv` |
+| Table III, skew and local-step rows | `results/personal_adapter/sensitivity.csv` |
 | Table IV, matched CIFAR-10 | `results/personal_adapter_vision/cifar10_matched.csv` |
 | Table VI and Figure 4, cost | `results/fhe_serve/cost_grid.json` |
 | the argmax and query totals | `results/fhe_serve/argmax_tournament.csv` |
