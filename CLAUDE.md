@@ -123,6 +123,51 @@ What the paper now contains, all measured and all sourced from records in
 See `docs/plan/security-program.md` for the security and journal work, and
 `docs/plan/paper-rewrite.md` for the paper flow and what is still outstanding.
 
+## Carried forward, not started (recorded 2026-08-20)
+
+These are decided, unstarted, and easy to lose. Raise them once the paper is
+stable and the PIs have finished the current pass.
+
+**The noise defence is evaluated in a record and the paper says it is not.**
+`docs/paper/sections/experiments.tex`, the "Bounds on model extraction"
+paragraph, offers calibrated noise on returned labels as the fallback when a
+query allowance cannot work, says it "composes with the protocol without
+modification", and then says "We do not evaluate it".
+`results/extraction_defence/results.csv` does evaluate it, thirty runs per cell
+over three tasks and five budgets. The defence destroys the task: AG-News falls
+from 0.649 to 0.310 at eps=1, DBpedia from 0.788 to 0.111, Banking77 from 0.196
+to 0.014. **This is not bad news.** It is the argument for the query allowance
+being the right control, and it is sitting unused while the text leaves the
+opposite impression. Highest value of the items here, and it costs no compute.
+
+**The CUDA microbenchmarks have no record and no citation.** Section 5.4 states
+30 ms for a product and 29.5 ms for a rotation under a CUDA CKKS implementation
+at ring degree 2^16, and a claim about a mid-range inference card. Two
+independent passes flagged this. `yang2024phantom` sits in the bibliography
+cited nowhere and is plausibly the source. Attribute it or cut the passage. Do
+not guess.
+
+**Full test sets for the CIFAR tables.** `vm.load_vision` caps at
+`max_test=2000`. Table IV argues at length from a 0.005 gap, which is smaller
+than the standard error of a 2,000 image test set. Raising `max_test` needs no
+retraining and is under two hours on the `ai` partition.
+
+**One real end-to-end encrypted query.** Take a real head from
+`results/personal_adapter/artifacts/` through `fhe/serve_tournament.go`. CPU
+only, under an hour of compute. Nothing currently connects the PyTorch
+accuracies to the Lattigo costs, and this would, without adding a table.
+
+**Fold the twelve CIFAR-10 cells into Table V.** Free, no compute, and it turns
+the selection result from 13/15 into 24/27.
+
+**T30, membership inference to an appendix.** Deferred by the user. An appendix
+counts inside the TNSE 18 page limit, so it saves nothing until the page
+question is settled.
+
+**`temp_current_overleaf/` is still on disk.** The user asked for it to be
+deleted at the end of the session. It is the sync reference for the current
+paste round, so confirm before removing it.
+
 ## Venue (decided 2026-07-29)
 
 Target **journals**, not conferences. The three candidates differ, and the TDSC
