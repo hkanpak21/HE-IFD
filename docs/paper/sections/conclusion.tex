@@ -8,14 +8,14 @@ the model is being built, and from the further requirement that in some
 deployments the finished model may not be distributed either. Each client
 fine-tunes on a frozen public backbone, retains its adapter locally, and uploads a
 single encrypted head displacement. The server combines those displacements under
-multiparty CKKS and never decrypts the result. Queries are answered under
+multiparty CKKS and never decrypts the result; queries are answered under
 encryption, and a quorum of clients returns only the predicted label, addressed to
 the party that asked.
 
 Withholding the model constrains what may be shared. Since the querying party must
 form its query from components it can evaluate itself, those components must be
 public, and the shared trained quantity must therefore attach after the last
-nonlinearity of the network. This is the source of the design's three parts, the
+nonlinearity of the network. This is the source of the design's three parts: the
 partition of the trainable unit, inference on the encrypted head, and selection
 between candidate arrangements that no party can observe. Across four text
 classification tasks and one vision task, the protocol produces a model
@@ -26,7 +26,7 @@ few megabytes per query.
 
 Two directions follow. Robustness to actively malicious participants is outside
 the present guarantee, and reconciling robust aggregation with an encrypted
-contribution remains open. An upload-time norm bound enforced by a zero-knowledge
-proof is the most direct route. Serving a shared quantity that sits inside the
+contribution remains open; an upload-time norm bound enforced by a zero-knowledge
+proof is one route. Serving a shared quantity that sits inside the
 backbone, rather than after it, reduces to secure transformer inference, and the
 accuracy that would recover is quantified in \cref{tab:headline}.

@@ -5,23 +5,24 @@ Organizations adapt large public pretrained models to their own data by
 fine-tuning~\cite{bommasani2021opportunities,hu2022lora}. Often several
 organizations hold complementary data over the same task, different patient
 populations, fraud patterns, or customer bases, and each would obtain a better
-model from the combination than from its own data alone. They cannot pool that data, because data protection law restricts the sharing of
+model from the combination than from its own data alone~\cite{sheller2020federated}. They cannot pool that data, because data protection law restricts the sharing of
+
 confidential records across institutions~\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}. Competitive concerns
 point the same way, and handing the data to whoever operates the fine-tuning
 infrastructure raises the same objection~\cite{xiao2023offsite}.
 
 Federated learning (FL) enables collaboration~\cite{mcmahan2017communication,kairouz2021advances},
-and its privacy risk is concentrated at training time. The protocol exchanges model
-updates instead of data, but the updates are themselves the vulnerability. A
+and its privacy risk is concentrated at training time~\cite{nasr2019comprehensive,melis2019exploiting}. The protocol exchanges model
+updates instead of data, but the updates are themselves the vulnerability: A
 gradient permits reconstruction of the batch that produced
 it~\cite{zhu2019deep,geiping2020inverting}. An observer of the per-round updates
-mounts membership inference far stronger than anything possible against the
-final model. On the same model and dataset, an attack that reaches $87\%$
-accuracy against the update stream falls to $54.5\%$ against the final model
-alone~\cite{nasr2019comprehensive}. A server, free to choose the weights it
+mounts membership inference at $87\%$ accuracy on one model and dataset, where the
+same attack against the final model alone falls to
+$54.5\%$~\cite{nasr2019comprehensive}.
+ A server, free to choose the weights it
 broadcasts, can harvest client inputs
-outright~\cite{boenisch2023curious,fowl2022robbing}. Two things therefore set the attack surface, namely what a protocol reveals while
-training runs and how often it reveals it.
+outright~\cite{boenisch2023curious,fowl2022robbing}. Two things therefore set the attack surface: what a protocol reveals while training
+runs, and how often it reveals it.
 
 Two measures remove that surface together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
 there is no intermediate state for anyone to observe. Encrypting that single
@@ -39,7 +40,7 @@ adds noise to the very artifact it releases.
 encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and the direct route of training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
-circuit~\cite{sav2021poseidon,xu2022hercules,pirillo2025reboot}. That cost scales with the network being trained. POSEIDON trains a three-layer
+circuit~\cite{sav2021poseidon,xu2022hercules,pirillo2025reboot}. That cost scales with the network being trained: POSEIDON trains a three-layer
 network of sixty-four neurons per layer on handwritten digits at ten parties in
 $1.4$ hours~\cite{sav2021poseidon}, and its successors lower the constant without
 changing what sets it. Adapting a pretrained transformer by this route is out of
@@ -71,35 +72,43 @@ protocol.
 
 The querier must build its query from parts it can run itself, so those parts must
 be public. The shared trained quantity therefore sits after the last nonlinearity,
-which, in a transformer, is a single place. The three contributions below follow from
-that.
+which, in a transformer, is a single place. The three contributions below follow from that.
 
 
 \begin{itemize}
 \item \textbf{A split trainable unit.} Each client keeps its own adapter and never
   transmits it. Only the classifier head is federated, because a client can improve
   its own features alone but cannot recognize a class it has never seen. No adapter
-  aggregate exists, so a coalition of all but one client has nothing to subtract
-  from (\cref{sec:split}).
+  aggregate exists, so a coalition of all but one client cannot recover the last
+  client's adapter by subtracting its own contributions (\cref{sec:split}).
+
 \item \textbf{A serving path that never decrypts.} The querying client encrypts its
   own features, so the serving party cannot read the query. The serving party
   applies the encrypted head and takes the argmax under encryption, and a quorum
-  switches the result to the querier's key. Only a label leaves the protocol, and a
-  label denies the linear solve that logits would permit (\cref{sec:serving}).
+  switches the result to the querier's key. Only a label leaves the protocol, so a
+  client cannot collect the per-class scores that would let it solve for the head
+  (\cref{sec:serving}).
+
 \item \textbf{A selection rule that runs under encryption.} Two arrangements are
-  servable at the same cost, and which one is better depends on the task. Each
-  client scoring both on its own held-out data and voting estimates the wrong
-  quantity, and selects wrongly whenever the two differ. The estimator given here
-  corrects that, needs no fitted threshold, and reveals only which arrangement won
-  (\cref{sec:selection}).
+  servable at the same cost, the shared head over each client's own adapter and the
+  shared head over the bare public backbone. Which one is better depends on the
+  task. Each client scoring both on its own held-out data and voting estimates the
+  wrong quantity, and selects wrongly whenever the two quantities differ. The
+  estimator given here corrects that, needs no fitted threshold, and reveals only
+  which arrangement won (\cref{sec:selection}). We measure all three in real
+  multiparty CKKS, including the traffic every query costs (\cref{sec:exp-cost}).
+
+
 \end{itemize}
 
 
 \noindent We evaluate on four text classification tasks and one vision task, with
-frozen RoBERTa~\cite{liu2019roberta} and ViT~\cite{dosovitskiy2021vit} backbones,
+frozen RoBERTa~\cite{liu2019roberta} and vision transformer (ViT)~\cite{dosovitskiy2021vit} backbones,
 and we implement the cryptographic protocol in
-real multiparty CKKS rather than simulating it. We report what withholding the model costs, in accuracy against a disclosed model
-and in added communication and computation. Our accounting includes the traffic
-that recurs on every query.
+real multiparty CKKS rather than simulating it. We report what withholding the model costs, in accuracy against a disclosed
+model and in the communication and computation it adds, including the traffic that
+recurs on every query.
+
+
 
 % Each of these claims rests on a premise concerning where FL leaks, and on what existing work already provides. \Cref{sec:related} establishes both.
