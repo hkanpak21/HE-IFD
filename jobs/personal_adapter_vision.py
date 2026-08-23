@@ -50,6 +50,10 @@ import os as _os
 N     = int(_os.environ.get("PA_N", 10))
 ALPHA = float(_os.environ.get("PA_ALPHA", 0.1))
 K     = int(_os.environ.get("PA_K", 200))
+# Table IV argues from margins of a few thousandths, so the test set has to be
+# large enough to resolve them. vm.load_vision defaults to 2000 of CIFAR-10's
+# 10000. PA_MAXTEST raises it without touching the pre-pivot pipeline.
+MAXTEST = int(_os.environ.get("PA_MAXTEST", 2000))
 LR, BS, R = 5e-4, 32, 8
 SEEDS = [42, 43, 44]
 VAL_FRAC = 0.1
@@ -206,7 +210,7 @@ def record(rows, ds, C, seed, mode, accs, note=""):
 
 def run_ds(ds, seed, rows):
     print(f"\n=== {ds} seed={seed} ===", flush=True)
-    Xtr, ytr, Xte, yte, C = vm.load_vision(ds, seed=seed)
+    Xtr, ytr, Xte, yte, C = vm.load_vision(ds, max_test=MAXTEST, seed=seed)
     parts = usable(fi.dirichlet_partition(ytr, N, ALPHA, C, seed))
     tr_parts, va_parts = split_parts(parts, seed, ytr)
 
@@ -331,8 +335,9 @@ def main():
                 run_ds(ds, sd, rows)
             except Exception as e:
                 print(f"[FAIL] {ds} s{sd}: {type(e).__name__}: {e}", flush=True)
-            (OUTDIR / f"personal_adapter_{'_'.join(dss)}.json").write_text(
-                json.dumps(rows, indent=2))
+            stem = (f"personal_adapter_{'_'.join(dss)}"
+                    f"_N{N}_a{ALPHA}_K{K}_t{MAXTEST}")
+            (OUTDIR / f"{stem}.json").write_text(json.dumps(rows, indent=2))
 
     cols = ["dataset", "C", "seed", "mode", "n", "acc_mean", "acc_min",
             "acc_max", "note"]
