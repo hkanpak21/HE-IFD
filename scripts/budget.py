@@ -57,7 +57,9 @@ def unwrap(t, name):
 
 def words(path, report):
     t = path.read_text()
+    # comments render nothing, so they must not inflate the count
     t = "\n".join(l for l in t.split("\n") if not l.lstrip().startswith("%"))
+    t = re.sub(r"(?<!\\)%.*", "", t)
     drop, keep = ("paperonly", "tronly") if report else ("tronly", "paperonly")
     t = strip_conditional(t, drop)
     t = unwrap(t, keep)

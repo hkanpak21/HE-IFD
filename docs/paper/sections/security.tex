@@ -78,8 +78,7 @@ sent.
 \end{functionality}
 
 The sample counts sit in the leakage because the protocol uses them as public
-scalars. The phase signals sit there because anyone watching the network sees them.
-We prove security relative to both.
+scalars. We prove security relative to both.
 
 Three properties of $\Fhe$ are what the protocol must reproduce. No party ever
 holds $\thstar$. The only value the whole federation learns is one index. A
@@ -146,11 +145,18 @@ and position in advance.}
 
 \emph{Selection and serving.} The selection step decrypts one value. The
 simulator takes that index from $\Leak$ and produces the collective
+key-switching transcript for it.
+For each query of a corrupted client, the simulator holds the answer in
+$\mathsf{out}_{\mathcal{A}}$ and simulates the key switch in the
+same way. Queries by honest clients are simulated as key switches of encryptions of zero.
+
+\tronly{\emph{Selection and serving.} The selection step decrypts one value. The
+simulator takes that index from $\Leak$ and produces the collective
 key-switching transcript for it from that protocol's simulator.
 For each query of a corrupted client, the simulator holds the answer in
 $\mathsf{out}_{\mathcal{A}}$ and simulates the key switch to that client in the
 same way. Queries by honest clients are switched to keys the adversary does not
-hold, so their transcripts are simulated as key switches of encryptions of zero.
+hold, so their transcripts are simulated as key switches of encryptions of zero.}
 
 Composing the three parts gives a view computationally indistinguishable from
 the real one.
@@ -171,8 +177,7 @@ The adversary $\mathcal{A}$ corrupts $\tc-1$ clients. The server is honest. At l
 \item $\mathcal{A}$ outputs two datasets $D_0$ and $D_1$ with $|D_0|=|D_1|$.
 \item The challenger samples $b\in\{0,1\}$ and gives $D_b$ to client $h$.
 \item The protocol runs. $\mathcal{A}$ may deviate arbitrarily in the values its
-  clients upload, in the shares they contribute, and in the queries they ask, up
-  to the allowance of every client it controls.
+  clients upload, in the shares they contribute, and in the queries they ask.
 \item $\mathcal{A}$ outputs $b'$. Its advantage is $|\Pr[b'=b]-\tfrac12|$.
 \end{enumerate}
 \end{definition}
@@ -211,9 +216,8 @@ shares does not help, because a share that is not the prescribed one makes the
 reconstruction fail, which aborts the query and returns nothing.}
 
 What remains is the answers. These do depend on $b$, because $\thstar$ depends
-on client $h$'s displacement. That is the dependence of any prediction interface
-on its training data, and it is bounded by what $Q_{\mathrm{tot}}$ label queries
-reveal, which is $\delta(Q_{\mathrm{tot}})$ by definition.
+on client $h$'s displacement, and it is bounded by what $Q_{\mathrm{tot}}$ label queries
+reveal.
 \end{proof}
 
 The bound scales with the corruption threshold. A coalition of $\tc-1$ clients
@@ -223,15 +227,15 @@ commands $(\tc-1)Q$ queries whatever the size of the federation.
 \subsection{Necessity of an Honest Server}
 \label{sec:malicious-ext}
 
-\Cref{thm:malicious} keeps the server honest. That assumption is necessary,
-and the reason is worth stating, because it marks the boundary of what this
-message pattern can achieve.
-
-Decryption is a protocol the clients run on a ciphertext the server presents. A
+\Cref{thm:malicious} keeps the server honest. That assumption is necessary. Decryption is a protocol the clients run on a ciphertext the server presents. A
 deviating server can present a ciphertext of its own choosing, such as a row of
 $\thstar$, rather than the output of \cref{alg:serve}. The natural repair is to
 have an honest client refuse such a request. It cannot, and the obstacle is the
 encryption itself.
+
+\tronly{\Cref{thm:malicious} keeps the server honest. That assumption is necessary,
+and the reason is worth stating, because it marks the boundary of what this
+message pattern can achieve.}
 
 \begin{proposition}[No plaintext gate from a ciphertext]
 \label{prop:nogate}
@@ -259,8 +263,7 @@ honest parties.
 
 The serving circuit is a deterministic function of the encrypted head, the
 encrypted query, the evaluation keys and the public parameters, and its level
-restoration is deterministic as well, because the protocol restores levels under
-collectively generated bootstrapping keys rather than by collective refresh. A
+restoration is deterministic as well. A
 client can therefore recompute the prescribed output ciphertext and compare it as
 a string.
 
@@ -296,5 +299,4 @@ inherits it.
 
 The cryptographic claim is that the protocol adds nothing to the leakage of
 $\Fhe$. The operational claim is that $\Fhe$'s own leakage is bounded by the query
-allowance $Q$. The first rests on IND-CPA. The second rests on a measurement and
-on a deployment's ability to meter queries.
+allowance $Q$. The first rests on IND-CPA. The second rests on a measurement.

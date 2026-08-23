@@ -331,7 +331,7 @@ on data it holds back from its own training, entirely under encryption, and
 reports encrypted per-class counts. The counts are combined into one encrypted
 score per arrangement, the two scores are compared under encryption, and exactly
 one value is decrypted, which arrangement the federation adopts.
-\Cref{alg:select} states it.
+
 
 \paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
@@ -374,7 +374,7 @@ its own model, and classes it does not hold contribute no evidence at all. Scori
 those classes at zero makes $E$ a lower bound for the personal arrangement. There is no fitted threshold anywhere. The rule compares two
 numbers on the same absolute scale.
 
-\begin{algorithm}[t]
+\tronly{\begin{algorithm}[t]
 \caption{Choosing an arrangement without decrypting either. Nothing is revealed
 except the index of the winner.}
 \label{alg:select}
@@ -395,7 +395,7 @@ except the index of the winner.}
 \State compare the two encrypted scores
 \State \Return the decrypted index of the larger \Comment{one value}
 \end{algorithmic}
-\end{algorithm}
+\end{algorithm}}
 
 \paragraph{Requirements on the held-out split} The estimator needs an estimate of
 accuracy on classes a client has not seen, and its only local proxy is accuracy on
