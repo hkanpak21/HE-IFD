@@ -9,8 +9,7 @@ under encryption, so the shared head exists only as a ciphertext
 (\cref{fig:training}). In the second, a client computes the features of its query
 itself, encrypts them, and sends them to the server, which applies the
 encrypted head and reduces the encrypted logits to the index of the largest. A quorum of clients switches that index to the querying
-client, which decrypts one label. The federation also chooses between two servable
-arrangements under encryption, and decrypts only which one it adopts.
+client, which decrypts one label.
 
 \subsection{Setting}
 \label{sec:setting}
@@ -23,11 +22,10 @@ that works across the whole label space, and they cannot pool their data to buil
 one.
 
 Three requirements separate this setting from ordinary federated learning. (1) The
-protocol is \emph{one-shot}: each client uploads once, and there is no iterative
-exchange. (2) Confidentiality is \emph{cryptographic}. A client's contribution is never
-available in plaintext to any other party, and we do not consider differential privacy due to the accuracy loss incurred. (3) The resulting model is
+protocol is \emph{one-shot}: each client uploads once. (2) Confidentiality is \emph{cryptographic}. A client's contribution is never
+available in plaintext to any other party. (3) The resulting model is
 \emph{never disclosed}: no party, client or server, ever holds the trained
-classifier in plaintext. %The third requirement is the one that shapes everything below, and \cref{sec:threat} states precisely what it buys.
+classifier in plaintext.
 
 Each requirement forecloses a family of designs, and the remaining space is
 narrow. We record the chain of implications here.
@@ -100,9 +98,7 @@ adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
 head from the public initialiser and uploads it once. The server combines the
 encrypted displacements into a single shared head and never decrypts the result.
-The adapter is trained locally and never transmitted. In \cref{fig:training} the
-adapters stay inside the client boxes, only the head displacement crosses to the
-server, and the arrow that would carry an adapter aggregate does not exist.
+The adapter is trained locally and never transmitted.
 
 \paragraph{Necessity of the partition} The client that sends an inference query must compute
 the features of that query itself, by \textbf{C7}. If the shared trained
@@ -163,9 +159,8 @@ federation-wide per-class totals. It cannot be decrypted. Every client knows its
 own counts, so a coalition of $\Nc-1$ clients that learned the totals would
 subtract its own and read the remaining client's class histogram exactly. The reciprocal
 is therefore evaluated under encryption, using an inversion circuit over the
-positive domain whose refreshes are collective. This is the one deep operation in
-the construction of the shared head, and it is paid once, at aggregation, never per
-query. \Cref{sec:exp-cost} reports its measured cost.
+positive domain whose refreshes are collective. It is paid once, at aggregation, never per
+query.
 
 \begin{algorithm}[t]
 \caption{Building the shared head. All clients hold the same frozen public
@@ -203,8 +198,7 @@ client and no download of model parameters at all.
 features of its query with its own backbone and adapter, encrypts them, and sends
 the ciphertext to the server. The server applies the encrypted shared
 head to the encrypted features, obtains encrypted logits, and reduces them to the
-index of the largest entry under encryption. A quorum of clients then key-switches
-that index to the querying client, which decrypts one label.
+index of the largest entry under encryption.
 \Cref{alg:serve} states it.
 
 \paragraph{Encryption of the query} The server could be given the
@@ -233,7 +227,7 @@ through a deployed interface for a few tens of dollars~\cite{carlini2024stealing
 the largest entry places an adversary in the hard-label setting, where functionally
 equivalent extraction is markedly harder~\cite{chen2024hardlabel}. It does not make
 extraction impossible, and \cref{sec:threat} states the resulting bound
-as a bound on queries rather than a cryptographic hardness claim.
+as a bound on queries.
 
 \tronly{\paragraph{Restriction to the predicted label} Returning logits would defeat the
 construction. The head is a linear map on features the client computes itself, so a
@@ -279,14 +273,12 @@ public key. The other clients contribute shares and learn nothing.
 \end{algorithm}
 
 \paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
-that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
-minutes for a large label space. Packing the logits into one ciphertext and
+that is not shallow. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. The server is not trusted with anything. It
 holds the collective public key, the evaluation keys, and ciphertexts, so it
-computes but cannot decrypt, and it learns neither the model nor any client's
-data.
+computes but cannot decrypt.
 
 \tronly{\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
 that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
@@ -329,17 +321,15 @@ public backbone with no adapter at all. Which is better depends on the task, and
 the federation must choose without decrypting either. Each client evaluates both
 on data it holds back from its own training, entirely under encryption, and
 reports encrypted per-class counts. The counts are combined into one encrypted
-score per arrangement, the two scores are compared under encryption, and exactly
+score per arrangement, and exactly
 one value is decrypted, which arrangement the federation adopts.
-
 
 \paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
 procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, so pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
-models, and client $j$'s held-out data can only measure client $j$'s own model. A client's held-out set also
-contains only the classes that client holds. The measurement is systematically optimistic for
+models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimistic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
 chooses wrongly whenever the two differ.
 
@@ -367,12 +357,11 @@ p_c \;=\; \frac{\sum_j n_{j,c}}{\sum_j \nj},
 \end{equation}
 where $a_c$ is the accuracy on class $c$ and $p_c$ is that class's share of the
 federation's examples, taken from the per-class counts already used in
-\cref{eq:aggregate}. Two asymmetries follow from the setting. For the shared
+\cref{eq:aggregate}. For the shared
 arrangement there is one model, so per-class evidence from
 different clients concerns the same object and combines. For the personal arrangement each client's evidence concerns only
 its own model, and classes it does not hold contribute no evidence at all. Scoring
-those classes at zero makes $E$ a lower bound for the personal arrangement. There is no fitted threshold anywhere. The rule compares two
-numbers on the same absolute scale.
+those classes at zero makes $E$ a lower bound for the personal arrangement. There is no fitted threshold anywhere.
 
 \tronly{\begin{algorithm}[t]
 \caption{Choosing an arrangement without decrypting either. Nothing is revealed
@@ -416,9 +405,7 @@ requires no change to the cryptography.}
 
 \paragraph{Cost and disclosure} Every step is depth one except the comparisons,
 which are the same circuit already used for the argmax. One value is decrypted for the whole federation.
-The per-client per-class accuracies are not decrypted, and must not be. Together
-with the count matrix they would describe each client's label distribution
-alongside its model quality.
+The per-client per-class accuracies are not decrypted, and must not be.
 
 The threat model, the view each party has and what a coalition of clients can
 learn, is stated in \cref{sec:threat}.

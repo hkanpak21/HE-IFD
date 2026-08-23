@@ -22,8 +22,7 @@ AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
 $77$, using a frozen RoBERTa-base encoder~\cite{liu2019roberta}, and on CIFAR-100
 with a frozen ViT-B/16~\cite{dosovitskiy2021vit}. Data are partitioned across clients by a Dirichlet distribution over
 labels with concentration $\alpha$, the standard label-skew
-partition~\cite{hsu2019measuring,li2022niidbench}. A smaller $\alpha$ leaves each client a few
-dominant classes and almost none of the rest. Unless stated otherwise there are $\Nc=10$
+partition~\cite{hsu2019measuring}. Unless stated otherwise there are $\Nc=10$
 clients, $\alpha=0.1$, the local trajectory is $200$ steps, and every number is the
 mean over three seeds.
 
@@ -47,11 +46,9 @@ up to one tenth of its shard at random.}
 We write $\Asel$ for the accuracy of the servable arrangement that
 \cref{sec:exp-select} selects. Three reference points appear throughout, and none
 of them is servable under the threat model of \cref{sec:threat}. We write $\Aloc$
-for the accuracy a client obtains alone, with its own adapter and its own head and
-no federation. We write $\Adis$ for the accuracy of the disclosed model, in which
-the adapter and the head are both aggregated and decrypted, so that every party
-holds the result in plaintext. We write $\Apool$ for the accuracy of one model
-trained on the union of the clients' data at the same total number of steps.
+for the accuracy a client obtains alone. We write $\Adis$ for the accuracy of the disclosed model, in which
+the adapter and the head are both aggregated and decrypted. We write $\Apool$ for the accuracy of one model
+trained on the union of the clients' data.
 
 Two differences follow, and the paper reports both. The quantity
 $\Adis-\Asel$ is the price of never disclosing a model. The quantity
@@ -106,14 +103,13 @@ Second, the preferable arrangement changes with the size of the label space. On 
 adapter wins. The shared head collapses to
 $0.206$ while the personal adapter holds $0.686$. The collapse is a coverage
 failure. With $77$ classes and this skew each head row is decided by few clients
-or none. A locally adapted representation improves separability for every class the
-client will ever be asked about, including those it never observed.
+or none.
 
 Third, the two failure modes are complementary. The shared head
 fails when coverage is thin. The personal adapter fails when each client's
 representation drifts far enough that a common head no longer transfers.
 Neither arrangement dominates the other, so the federation must select between
-them, which is the subject of \cref{sec:exp-select}.
+them.
 
 \paragraph{Sensitivity} \Cref{fig:trends} varies the protocol axes around the
 default on DBpedia. Accuracy falls with skew, from $0.971$ at
@@ -182,8 +178,6 @@ theirs. We adopt two
 published partitions of CIFAR-10: $\Nc=5$ with $\alpha\in\{0.1,0.3\}$, the
 configuration of~\cite{zhang2022dense}, and $\Nc=20$ with
 $\alpha\in\{0.04,0.16\}$, the configuration of~\cite{hoech2022fedauxfdp}.
-\Cref{tab:peers} reports the quantities of \cref{sec:setup} on each, as the mean
-over three seeds.
 
 \begin{table}[t]
 \centering
@@ -206,10 +200,8 @@ $20$ & $0.16$ & $0.399$ & $0.952$ & $0.959$ & $0.007$ \\
 \end{table}
 
 At $\Nc=5$ and $\alpha=0.1$ we measure $\Asel=0.948$, against the $0.503$
-of~\cite{zhang2022dense} and the $0.406$ that the same paper reports
-for~\cite{lin2020feddf}. We do not present that margin as a result. Those methods train a ResNet-18 from scratch, whereas
-every client here fine-tunes a frozen public ViT-B/16, and the representation
-accounts for essentially all of the difference. Absolute accuracy across papers therefore measures
+of~\cite{zhang2022dense}. We do not present that margin as a result. Those methods train a ResNet-18 from scratch, whereas
+every client here fine-tunes a frozen public ViT-B/16. Absolute accuracy across papers therefore measures
 the backbone.
 
 What compares across papers is the
@@ -235,10 +227,7 @@ $\varepsilon=0.1$ and $0.626$ at $\varepsilon=0.01$~\cite{hoech2022fedauxfdp}.
 Our contribution is protected cryptographically, and that protection costs no
 accuracy, by construction, since the decrypted result
 matches the plaintext computation to the encoding precision of the scheme.
-Withholding the model is a separate charge, and no method above incurs it. At $\Nc=20$
-and $\alpha=0.16$ that charge is $\Adis-\Asel
-=0.007$, against the $0.006$ to $0.626$ that the same paper's mechanism costs as
-$\varepsilon$ falls from $1.0$ to $0.01$. Over \cref{tab:peers} the charge lies
+Withholding the model is a separate charge, and no method above incurs it. Over \cref{tab:peers} the charge lies
 between $-0.005$ and $0.014$, and over \cref{tab:headline} between $0.03$ and
 $0.14$.
 
@@ -351,8 +340,7 @@ one-time setup, and the recurring per-query traffic is a few megabytes.
 We do not simulate the cryptography. The protocol is implemented in real
 multiparty CKKS on Lattigo~\cite{lattigo,mouchet2021multiparty}. All figures use ring degree $2^{14}$ for the shallow operations
 and a deeper chain at ring degree $2^{15}$ for the circuits that need it. Timings
-are single-run wall clock on a commodity CPU and are reported as indicative.
-Communication figures are exact.
+are single-run wall clock on a commodity CPU. Communication figures are exact.
 
 \tronly{\paragraph{Cost of query encryption} Applying the head to an encrypted
 query costs $39.0$\,ms against $5.4$\,ms for a plaintext one, a factor of seven.
@@ -363,8 +351,7 @@ beside the argmax that follows.}
 \paragraph{What one query costs, end to end} On one core a query takes $31.5$\,s
 at four classes and $113.2$\,s at a hundred. The arithmetic and the key switch
 account for $0.24$\,s of that at every label-space size. Everything else is the
-encrypted argmax, which is therefore the only operation whose cost decides whether
-a deployment is practical. The
+encrypted argmax. The
 tournament costs about $16$\,s per round and needs
 $\lceil\log_2\Cc\rceil$ rounds, against the fourteenfold larger sequential fold
 (\cref{fig:trends}).
