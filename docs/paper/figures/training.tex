@@ -1,6 +1,78 @@
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_training.pdf}
-\caption{Building the shared head. Every client fine-tunes on the same frozen public backbone. The adapter is trained locally and never transmitted, so no aggregate of the adapters is ever formed and a coalition of clients has no sum from which to subtract its own contributions. Only the head displacement is encrypted and uploaded. The server adds the ciphertexts, weighting each by a public count, and divides by the per-class totals under encryption, holding no decryption key. The result is a shared head that no party decrypts.}
+\begin{tikzpicture}[
+  font=\footnotesize,
+  >={Latex[length=4pt,width=3pt]},
+  client/.style={draw=sanzotan!80!black, fill=sanzotanlt, rounded corners=2pt,
+                 minimum width=31mm, minimum height=10mm, inner sep=1pt},
+  frozen/.style={draw=sanzotangrey!80!black, fill=sanzotangrey!45, rounded corners=1pt,
+                 minimum width=12mm, minimum height=3.6mm, font=\scriptsize, inner sep=0.5pt},
+  local/.style={draw=sanzotan!70!black, fill=white, rounded corners=1pt,
+                minimum width=7.5mm, minimum height=3.6mm, font=\scriptsize, inner sep=0.5pt},
+  nm/.style={font=\scriptsize, inner sep=1pt},
+  srv/.style={draw=sanzobluegrey!70!black, fill=paperneutrallt!55, rounded corners=3pt},
+  op/.style={draw=paperblue, fill=blueA, rounded corners=1.5pt,
+             minimum height=4.8mm, align=center, font=\scriptsize, inner sep=2pt},
+  ct/.style={draw=paperblue, fill=blueC, text=white, rounded corners=1.5pt,
+             minimum height=4.8mm, align=center, font=\scriptsize, inner sep=2pt},
+  stage/.style={font=\scriptsize\bfseries, text=black!75},
+  note/.style={font=\scriptsize, text=black!65, align=center},
+  ar/.style={->, semithick, draw=paperblue!85!black},
+  gr/.style={->, semithick, draw=sanzotan!60!black},
+]
+
+% ---------- (1) local training ----------
+\foreach \i/\y/\lab in {1/0/{client $1$}, 2/-1.15/{client $2$}, 3/-2.75/{client $\Nc$}}{
+  \node[client] (c\i) at (0,\y) {};
+  \node[frozen] at ([xshift=-8.5mm,yshift=-2.6mm]c\i.north) {backbone};
+  \node[local]  at ([xshift=2.5mm,yshift=-2.6mm]c\i.north)  {adapter};
+  \node[local]  at ([xshift=11.5mm,yshift=-2.6mm]c\i.north) {head};
+  \node[nm] at ([yshift=2.2mm]c\i.south) {\lab};
+}
+\node at (0,-1.95) {$\vdots$};
+\node[stage] at (0,0.95) {1. train, locally};
+\node[note, text width=33mm] at (0,-3.75) {the adapter never leaves the client};
+
+% ---------- (2) merge and (3) serve, one server ----------
+\node[srv, minimum width=72mm, minimum height=31mm] (S) at (7.05,-1.35) {};
+\node[stage, anchor=north] at ([yshift=-1mm]S.north) {the server};
+\node[stage] at (5.2,0.95) {2. merge, encrypted};
+\node[stage] at (9.6,0.95) {3. serve, encrypted};
+
+\node[op] (sum)  at (5.0,-1.1) {$\sum_j g_j\odot\disp$};
+\node[op] (rec)  at (7.4,-1.1) {encrypted\\reciprocal};
+\node[ct] (head) at (9.6,-1.1) {$\mathsf{Enc}(\thstar)$};
+\node[op] (amax) at (9.6,-2.55) {argmax};
+\node[op] (sel)  at (5.0,-2.55) {select};
+
+\draw[ar] (sum) -- (rec);
+\draw[ar] (rec) -- (head);
+\draw[ar] (head) -- (amax);
+\draw[ar] (head.south west) -- (sel.north east);
+
+\draw[gr] (c1.east) -- node[above, font=\scriptsize, pos=0.62] {$\mathsf{Enc}(g_j\odot\disp)$} (sum.north west);
+\draw[gr] (c2.east) -- (sum.west);
+\draw[gr] (c3.east) -- (sum.south west);
+
+% ---------- the querying client ----------
+\node[client, minimum width=24mm] (q) at (14.25,-1.55) {};
+\node[frozen] at ([xshift=-4.5mm,yshift=-2.6mm]q.north) {backbone};
+\node[local]  at ([xshift=6.5mm,yshift=-2.6mm]q.north) {adapter};
+\node[nm] at ([yshift=2.2mm]q.south) {querying client};
+
+\draw[ar] ([yshift=2.5mm]q.west) -- node[above, font=\scriptsize] {$\mathsf{Enc}(\featx(x))$} ([yshift=2.5mm]S.east);
+\draw[ar] ([yshift=-2.5mm]S.east) -- node[below, font=\scriptsize] {one label} ([yshift=-2.5mm]q.west);
+
+\node[note, text width=33mm] at (14.25,-3.6) {a quorum switches the label to this client alone};
+\node[note] at (7.15,-3.35) {one index is decrypted, which arrangement is served};
+
+\end{tikzpicture}
+\caption{The protocol in three stages. Each client fine-tunes an adapter and a
+classifier head on the same frozen public backbone, keeps the adapter, and
+uploads one encrypted head displacement weighted by its per-class counts. The
+server adds the ciphertexts and divides by the per-class totals under
+encryption, holding no decryption key, so the shared head $\thstar$ exists only
+as a ciphertext. The same server answers queries, applying the encrypted head to
+encrypted features the querying client computed itself.}
 \label{fig:training}
 \end{figure*}
