@@ -120,7 +120,12 @@ def base_pool(ref, root):
             continue
         t = subprocess.run(["git", "show", f"{ref}:{f}"],
                            capture_output=True, text=True).stdout
-        pool += [(f, p) for p in paragraphs(t)]
+        ps = paragraphs(t)
+        pool += [(f, p) for p in ps]
+        # A blank line inside what is one LaTeX paragraph is a source artifact,
+        # and closing it up is not rewriting. Adjacent pairs join the pool so a
+        # repaired paragraph still matches.
+        pool += [(f, a + " " + b) for a, b in zip(ps, ps[1:])]
     return pool
 
 

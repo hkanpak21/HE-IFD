@@ -46,7 +46,7 @@ def main():
     ns = rows("results/personal_adapter/nsweep.csv")
     sn = rows("results/personal_adapter/sensitivity.csv")
 
-    fig, ax = hp.panels(4, ratio=0.78)
+    fig, ax = hp.panels(4, ratio=0.78, width="text")
 
     # (a) federation size. One seed, which the table already states.
     for m, name, mk in ((SEL, "selected", "o"), (DIS, "disclosed", "s"),
@@ -129,7 +129,7 @@ def main():
     # its legend sits above it, on the same line as the shared one.
     h4, l4 = ax[3].get_legend_handles_labels()
     fig.legend(h4, l4, loc="upper center", ncol=2, frameon=False,
-               bbox_to_anchor=(0.90, 1.17), columnspacing=1.2)
+               bbox_to_anchor=(0.86, 1.17), columnspacing=1.2)
     hp.save(fig, "fig_trends.pdf")
 
     # the numbers the caption and the prose must agree with

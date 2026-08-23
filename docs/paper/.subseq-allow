@@ -30,3 +30,13 @@ learn, is stated in \cref{sec:threat}.
 public per-client sample counts, and the evaluation keys. It holds no decryption
 key, and by \cref{sec:mhe} it cannot decrypt. The server additionally sees
 encrypted query features, which it cannot read and therefore cannot invert.
+%%
+# 2026-08-23, W7. One sentence is new, the last. Table VII carried the setup
+# figure and the table moved to the report, so without this the submission
+# would state a per-query cost and never say what the one-time key material
+# costs. 344 MiB is results/fhe_serve/comm_grid.json, the serving chain at
+# ring degree 2^15.
+The per-query total is $8.5 + 0.5\Nc$\,MiB, since the quorum returns one
+key-switching share each. It is $11.0$\,MiB at $\Nc=5$ and $18.5$\,MiB at
+$\Nc=20$, and it is $6.8$\,MiB at ring degree $2^{14}$ and $27.0$\,MiB at
+$2^{16}$. It does not vary with the number of classes. Setup costs $344$\,MiB per client, once.
