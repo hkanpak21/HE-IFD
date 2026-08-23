@@ -274,7 +274,8 @@ transfers unchanged.}
 reports them. Model in the clear says whether any party ends up holding the
 trained model in plaintext, and \emph{provider} means one party does while the
 querier does not. slytHErin and CryptPEFT serve a model they do not train, so
-their rounds cell is empty.}
+their rounds cell is empty. POSEIDON keeps the model under the collective key and
+states that the querier does not obtain the model's weights.}
 \label{tab:related}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -285,7 +286,7 @@ System & Rounds & Protection & \shortstack{Model in\\the clear} & \shortstack{Qu
 DENSE~\cite{zhang2022dense}          & one  & none & yes      & the model \\
 GH-OFL~\cite{turazza2026ghofl}       & one  & none & yes      & the model \\
 FedAUXfdp~\cite{hoech2022fedauxfdp}  & one  & DP   & yes      & the model \\
-POSEIDON~\cite{sav2021poseidon}      & many & HE   & yes      & the model \\
+POSEIDON~\cite{sav2021poseidon}      & many & HE   & no       & the prediction \\
 slytHErin~\cite{intoci2023slytherin} &      & HE   & no       & scores \\
 CryptPEFT~\cite{xia2026cryptpeft}    &      & 2PC  & provider & label \\
 \midrule

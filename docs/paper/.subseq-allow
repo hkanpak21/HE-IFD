@@ -63,3 +63,19 @@ frozen public backbone, retains the adapter locally, and uploads one encrypted
 head displacement that the server combines under multiparty CKKS and never
 decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $31.5$ to $113.2$\,s for $13.5$\,MiB of traffic.
 \end{abstract}
+%%
+# 2026-08-23. One clause is new, in the caption of Table I. The POSEIDON row
+# said the model ends up in the clear, which its own paper contradicts. Verified
+# against comparators/FL_comparator_papers/8_POSEIDON_arXiv2009.00349.pdf:
+# line 268, "the parties ... are interested in preserving the privacy of their
+# local data, the intermediate model updates, and the resulting model"; line 283,
+# "the querier should not obtain the model's weights"; line 288 defines Model
+# Confidentiality as a property the paper proves. The paper never says the
+# parties may decrypt the model, so the caption states only what it does say.
+# The old row also contradicted our own introduction four pages earlier.
+\caption{The closest systems on the four axes this paper turns on, as each paper
+reports them. Model in the clear says whether any party ends up holding the
+trained model in plaintext, and \emph{provider} means one party does while the
+querier does not. slytHErin and CryptPEFT serve a model they do not train, so
+their rounds cell is empty. POSEIDON keeps the model under the collective key and
+states that the querier does not obtain the model's weights.}
