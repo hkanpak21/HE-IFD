@@ -219,11 +219,13 @@ move to `\tronly`. Survivors keep their wording.
 1499 words to 540, grouped as the deck requires, in the form "there are works
 doing XYZ [c1...cn]". Table I stays, because it is the positioning and it is
 what a reviewer reads. The full survey lives in the report. Be generous to the
-competition and describe rather than judge.
+competition. Describe what each work does and where it says so, and do not
+judge it.
 
 ### W10. Citations `[bib]`
-Delete the 29 entries cited nowhere, except `kanpak2024cure`, which is the
-authors' own CURE and should be cited rather than deleted. Cut the used keys
+Delete the 29 entries cited nowhere. `kanpak2024cure` is the exception. It is
+the authors' own CURE, the rule would delete it, and it should be cited
+instead. Cut the used keys
 from 110 to about 55 by relevance to our story. One citation where a group gives
 common knowledge, chosen as the most recent and the best placed. Collapse the
 five regulation citations in the first paragraph to two. Run `lint.py --bib` for
