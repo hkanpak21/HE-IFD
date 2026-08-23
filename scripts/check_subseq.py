@@ -61,9 +61,17 @@ _AGREE = [
 ]
 
 
+# A cross-reference is machinery. Retargeting one, or adding one because a float
+# moved, is not rewriting, so the command and its argument are removed before
+# anything is compared. \cite is NOT in here, because dropping a citation is a
+# real change and must be visible.
+XREF = re.compile(r"\\(?:c|C)?ref\{[^}]*\}|\\trsee\{[^}]*\}")
+
+
 def paragraphs(text):
     text = "\n".join(l for l in text.split("\n") if not l.lstrip().startswith("%"))
     text = FLOAT.sub(" <FLOAT> ", text)
+    text = XREF.sub(" ", text)
     return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
@@ -84,7 +92,6 @@ def normalise(p, subs):
         p = re.sub(pat, rep, p, flags=re.I)
     for pat, rep in _AGREE:
         p = re.sub(pat, rep, p, flags=re.I)
-    p = re.sub(r"\\cref\{([^}]+)\}", r"\\trsee{\1}", p)
     for old, new in subs:
         p = p.replace(new, old)
     return p
@@ -142,7 +149,9 @@ def main():
             body = "\n".join(l for l in blk.split("\n")
                              if not l.lstrip().startswith("#")).strip()
             if body:
-                allowed_text.add(" ".join(body.split()))
+                # Compare on the same tokens the paragraphs use, so an entry
+                # does not stop matching when a cross-reference is retargeted.
+                allowed_text.add(tuple(words(XREF.sub(" ", body))))
 
     tally = dict.fromkeys(("identical", "deletions", "allowed", "accepted",
                            "REWRITTEN"), 0)
@@ -164,7 +173,7 @@ def main():
             if any(is_sub(wn, on) for _, on in pool_n):
                 tally["allowed"] += 1
                 continue
-            if " ".join(p.split()) in allowed_text:
+            if tuple(w) in allowed_text:
                 tally["accepted"] += 1
                 continue
             tally["REWRITTEN"] += 1
