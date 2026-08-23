@@ -32,13 +32,11 @@ task itself leaks.}
 \subsection{The Ideal Functionality}
 \label{sec:ideal}
 
-
 \Cref{func:ideal} defines the ideal functionality $\Fhe$ against which the
 protocol is measured. The server and the serving party are entities outside
 $\Fhe$, so either may be corrupt. The form of the functionality follows the
 secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and placing the
 aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
-
 
 \begin{functionality}[t]
 \caption{HE-OFT $\Fhe$}
@@ -82,14 +80,12 @@ sent.
 \end{functionality}
 
 The sample counts sit in the leakage because the protocol uses them as public
-scalars. The phase signals sit there because the parties need them to know when
-to proceed and anyone watching the network sees them. We prove security relative
-to both.
+scalars. The phase signals sit there because anyone watching the network sees them.
+We prove security relative to both.
 
 Three properties of $\Fhe$ are what the protocol must reproduce. No party ever
 holds $\thstar$. The only value the whole federation learns is one index. A
 client learns the labels it asks for, up to its allowance, and nothing else.
-
 
 \subsection{Security Against Semi-Honest Parties}
 \label{sec:semihonest}
@@ -111,10 +107,9 @@ where $\mathsf{out}_{\mathcal{A}}$ collects the answers $\Fhe$ returns to the
 corrupted clients.
 \end{definition}
 
-The simulator receives the answers because the protocol delivers them. A
+\tronly{The simulator receives the answers because the protocol delivers them. A
 definition that withheld them would be unachievable, and the theorem would say
-nothing about a system that answers questions.
-
+nothing about a system that answers questions.}
 
 \begin{theorem}[Semi-honest security]
 \label{thm:semihonest}
@@ -132,8 +127,7 @@ the corrupted clients receive. It proceeds in three parts.
 
 \emph{Setup.} The simulator runs the distributed key generation with the
 corrupted parties, playing the honest clients on uniformly chosen shares. That
-transcript is simulatable by the security of the key-generation protocol, and
-the collective public key is distributed identically.
+transcript is simulatable by the security of the key-generation protocol.
 
 \emph{Training.} For each honest client the simulator sends an encryption of
 zero in place of $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$. A hybrid
@@ -141,7 +135,7 @@ argument replaces the honest ciphertexts one at a time, and each neighbouring
 pair of hybrids is indistinguishable by IND-CPA against $\tc-1$ shares, the
 assumption of the theorem.
 
-The server's additions and its multiplication by the reciprocal are
+\tronly{The server's additions and its multiplication by the reciprocal are
 deterministic functions of those ciphertexts and of public scalars, so the
 simulator computes them as the server does. The encrypted reciprocal is not such
 a function. Its inversion circuit consumes levels and restores them by
@@ -150,8 +144,7 @@ contribute fresh randomness. The simulator therefore invokes the simulator of
 the refresh protocol for each of the two refreshes, playing the honest clients
 on that protocol's simulated shares. Both refreshes sit at fixed points in the
 circuit that do not depend on any plaintext, so the simulator knows their number
-and position in advance.
-
+and position in advance.}
 
 \emph{Selection and serving.} The selection step decrypts one value. The
 simulator takes that index from $\Leak$ and produces the collective
@@ -160,8 +153,6 @@ For each query of a corrupted client, the simulator holds the answer in
 $\mathsf{out}_{\mathcal{A}}$ and simulates the key switch to that client in the
 same way. Queries by honest clients are switched to keys the adversary does not
 hold, so their transcripts are simulated as key switches of encryptions of zero.
-Each $\mathsf{Done}$ message is a public signal at a fixed point, so the
-simulator emits it directly from $\Leak$.
 
 Composing the three parts gives a view computationally indistinguishable from
 the real one.
@@ -171,12 +162,9 @@ the real one.
 \label{sec:malicious}
 
 \Cref{thm:semihonest} assumes every party follows the protocol. We now let the
-clients deviate, and \cref{sec:malicious-ext} shows why the server and the
-serving party must stay honest. We bound what a deviating coalition learns about
-the data of a client that does not deviate. We do not claim correctness. A
-client that uploads a crafted displacement can bias the shared head, and
-\cref{sec:scope} discusses that.
-
+clients deviate, and \cref{sec:malicious-ext} shows why the server must stay
+honest. We bound what a deviating coalition learns about the data of a client
+that does not deviate. We do not claim correctness.
 
 \begin{definition}[Content game]
 \label{def:contentgame}
@@ -192,10 +180,9 @@ party are honest. At least one client $h$ stays honest.
 \end{enumerate}
 \end{definition}
 
-The equal-size restriction is necessary. The per-client sample counts are
+\tronly{The equal-size restriction is necessary. The per-client sample counts are
 public, so an adversary free to choose datasets of different sizes reads the
-answer off the counts without attacking anything.
-
+answer off the counts without attacking anything.}
 
 \begin{theorem}[Input privacy]
 \label{thm:malicious}
@@ -211,7 +198,9 @@ The adversary's view consists of the key-generation transcript, the honest
 clients' uploaded ciphertexts, the values the server computes, the
 key-switching transcripts, and the answers to its own queries.
 
-The first four are independent of $b$ up to $\negl(\lambda)$. The honest
+The first four are independent of $b$ up to $\negl(\lambda)$.
+
+\tronly{The first four are independent of $b$ up to $\negl(\lambda)$. The honest
 ciphertexts are indistinguishable from encryptions of zero by the hybrid
 argument of \cref{thm:semihonest}, which holds against an adversary with
 $\tc-1$ shares. The server is honest, so the values it computes are the
@@ -222,7 +211,7 @@ label the coalition does not choose. Deviating in the uploaded values does not
 help either, because the adversary already chooses those values in the real
 protocol and they carry no dependence on $b$. Deviating in the contributed
 shares does not help, because a share that is not the prescribed one makes the
-reconstruction fail, which aborts the query and returns nothing.
+reconstruction fail, which aborts the query and returns nothing.}
 
 What remains is the answers. These do depend on $b$, because $\thstar$ depends
 on client $h$'s displacement. That is the dependence of any prediction interface
@@ -231,23 +220,21 @@ reveal, which is $\delta(Q_{\mathrm{tot}})$ by definition.
 \end{proof}
 
 The bound scales with the corruption threshold. A coalition of $\tc-1$ clients
-commands $(\tc-1)Q$ queries whatever the size of the federation, so a deployment
-that lowers $\tc$ lowers the query budget an adversary can assemble, at the cost
-of making decryption easier to reach. \Cref{sec:exp-leak} measures $\delta$ and
-turns it into a bound on $Q$.
+commands $(\tc-1)Q$ queries whatever the size of the federation.
+\Cref{sec:exp-leak} measures $\delta$ and turns it into a bound on $Q$.
 
-\subsection{Necessity of an Honest Serving Party}
+\subsection{Necessity of an Honest Server}
 \label{sec:malicious-ext}
 
-\Cref{thm:malicious} keeps the serving party honest. That assumption is necessary,
+\Cref{thm:malicious} keeps the server honest. That assumption is necessary,
 and the reason is worth stating, because it marks the boundary of what this
 message pattern can achieve.
 
-Decryption is a protocol the clients run on a ciphertext the serving party
-presents. A deviating serving party can present a ciphertext of its own
-choosing, such as a row of $\thstar$, rather than the output of
-\cref{alg:serve}. The natural repair is to have an honest client refuse such a
-request. It cannot, and the obstacle is the encryption itself.
+Decryption is a protocol the clients run on a ciphertext the server presents. A
+deviating server can present a ciphertext of its own choosing, such as a row of
+$\thstar$, rather than the output of \cref{alg:serve}. The natural repair is to
+have an honest client refuse such a request. It cannot, and the obstacle is the
+encryption itself.
 
 \begin{proposition}[No plaintext gate from a ciphertext]
 \label{prop:nogate}
@@ -269,13 +256,18 @@ the scheme applies directly.
 \end{proof}
 
 An honest client therefore releases its share for both plaintexts or for
-neither. It cannot release one for a label and refuse one for a row of
-$\thstar$. No protocol of this message pattern realizes $\Fhe$ against a
-malicious serving party, which is why \cref{thm:malicious} places the serving
-party among the honest parties.
+neither. No protocol of this message pattern realizes $\Fhe$ against a
+malicious server, which is why \cref{thm:malicious} places the server among the
+honest parties.
 
+The serving circuit is a deterministic function of the encrypted head, the
+encrypted query, the evaluation keys and the public parameters, and its level
+restoration is deterministic as well, because the protocol restores levels under
+collectively generated bootstrapping keys rather than by collective refresh. A
+client can therefore recompute the prescribed output ciphertext and compare it as
+a string.
 
-Two mechanisms would remove the assumption, and we implement neither. The first
+\tronly{Two mechanisms would remove the assumption, and we implement neither. The first
 checks provenance rather than content. The serving circuit is a deterministic
 function of the encrypted head, the encrypted query, the evaluation keys and the
 public parameters, and its level restoration is deterministic as well, because
@@ -290,26 +282,22 @@ $(1-p)^{\Cc d}$, which at $p=0.01$ is below $10^{-13}$ on the smallest of our
 tasks. The second mechanism certifies which function the serving party
 evaluated, through a zero-knowledge proof of correct evaluation or verifiable
 homomorphic encryption~\cite{viand2023verifiable}. \Cref{sec:scope} records both
-as limitations.
+as limitations.}
 
 \subsection{Leakage Inherent to the Functionality}
 \label{sec:inherent}
 
-
-\Cref{thm:semihonest} shows the protocol reveals no more than $\Fhe$ reveals.
+\tronly{\Cref{thm:semihonest} shows the protocol reveals no more than $\Fhe$ reveals.
 That leaves the question of what $\Fhe$ itself reveals, and the answer is not
-nothing.
+nothing.}
 
 $\Fhe$ answers queries. Answers carry information about $\thstar$, and enough of
 them reconstruct it. \Cref{sec:exp-leak} measures the rate at three to five
-queries per parameter of the shared map for a functional copy. This is a
-property of the functionality, not of our instantiation of it. Any protocol that
-realizes $\Fhe$ inherits it, and no cryptographic assumption removes it, because
-the leakage is the service the functionality provides.
+queries per parameter for a functional copy. This is a property of the
+functionality, not of our instantiation of it. Any protocol that realizes $\Fhe$
+inherits it.
 
-Stating it this way separates two claims that are easy to confuse. The
-cryptographic claim is that the protocol adds nothing to the leakage of $\Fhe$.
-The operational claim is that $\Fhe$'s own leakage is bounded by the query
+The cryptographic claim is that the protocol adds nothing to the leakage of
+$\Fhe$. The operational claim is that $\Fhe$'s own leakage is bounded by the query
 allowance $Q$. The first rests on IND-CPA. The second rests on a measurement and
-on a deployment's ability to meter queries, and \cref{sec:exp-leak} reports both
-the measurement and the resulting bound on $Q$.
+on a deployment's ability to meter queries.

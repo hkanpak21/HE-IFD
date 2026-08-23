@@ -41,12 +41,14 @@ FLOAT = re.compile(
     r"\\end\{\1\}", re.S)
 _TOKEN = re.compile(r"\\[A-Za-z@]+|[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*")
 
+# \s+ rather than a literal space: LaTeX source wraps, and a newline between
+# "serving" and "party" would otherwise defeat the pattern silently.
 _MERGE = [
-    (r"\bthe server and the serving party\b", "the server"),
-    (r"\bthe serving party and the server\b", "the server"),
-    (r"\bthe aggregation server\b", "the server"),
-    (r"\bthe serving party\b", "the server"),
-    (r"\bserving party\b", "server"),
+    (r"\bthe\s+server\s+and\s+the\s+serving\s+party\b", "the server"),
+    (r"\bthe\s+serving\s+party\s+and\s+the\s+server\b", "the server"),
+    (r"\bthe\s+aggregation\s+server\b", "the server"),
+    (r"\bthe\s+serving\s+party\b", "the server"),
+    (r"\bserving\s+party\b", "server"),
     (r"\bhonest-but-curious\b", "semi-honest"),
 ]
 # Two parties becoming one forces these agreements and no others.
