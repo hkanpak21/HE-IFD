@@ -1,0 +1,14 @@
+% The section order. Related work comes after the solution, which is the deck's
+% rule, and Section II holds the preliminaries the method needs. Both drivers
+% input this file, so the order is stated once.
+%
+% scripts/check_split.py depends on these seven sections being identical and in
+% the same order in both documents. \trsee points at a section number and that
+% is what keeps it stable.
+\input{sections/intro}
+\input{sections/prelim}
+\input{sections/method}
+\input{sections/security}
+\input{sections/experiments}
+\input{sections/related}
+\input{sections/conclusion}

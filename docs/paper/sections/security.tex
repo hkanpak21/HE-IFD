@@ -1,13 +1,33 @@
 \section{Security}
 \label{sec:security}
 
-This section states what the protocol guarantees. \Cref{sec:ideal} gives an
+\label{sec:threat}
+
+The participants are $\Nc$ clients and a server. The server is semi-honest. It
+follows the protocol and may try to infer private information from what it
+observes. Clients may likewise be semi-honest and may collude. \Cref{sec:malicious}
+strengthens the client side of this model, and allows up to $\tc-1$ clients to
+deviate arbitrarily while the server stays honest. \Cref{sec:malicious-ext}
+explains why that assumption cannot be dropped.
+
+\paragraph{View of the server} Ciphertexts under the collective public key, the
+public per-client sample counts, and the evaluation keys. It holds no decryption
+key, and by \cref{sec:mhe} it cannot decrypt. The server additionally sees
+encrypted query features, which it cannot read and therefore cannot invert.
+
+The design is arranged so that no arithmetic shortcut evades it. No aggregate of
+the adapters exists, so there is no sum from which a coalition can subtract its
+own contributions. The shared head is never decrypted, so it cannot be inverted
+the same way. The per-class totals are never decrypted, so a coalition cannot
+recover the remaining client's class histogram.
+
+\tronly{This section states what the protocol guarantees. \Cref{sec:ideal} gives an
 ideal functionality. \Cref{sec:semihonest} proves that the protocol realizes it
 against semi-honest parties. \Cref{sec:malicious} bounds what a malicious client
 coalition learns about an honest client's data. \Cref{sec:malicious-ext} shows
-that the serving party must be honest and what would remove that requirement.
+that the server must be honest and what would remove that requirement.
 \Cref{sec:inherent} separates what the cryptography guarantees from what the
-task itself leaks.
+task itself leaks.}
 
 \subsection{The Ideal Functionality}
 \label{sec:ideal}

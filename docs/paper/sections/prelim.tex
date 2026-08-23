@@ -1,0 +1,77 @@
+\section{Preliminaries}
+\label{sec:prelim}
+
+\subsection{Notation}
+\label{sec:notation}
+
+\Cref{tab:notation} collects the symbols. Client indices are
+$j\in\{1,\dots,\Nc\}$ and class indices are $c\in\{1,\dots,\Cc\}$.
+
+\begin{table}[t]
+\centering
+\caption{Notation.}
+\label{tab:notation}
+\begin{tabular}{ll}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\Nc$ & number of participating clients \\
+$\Dj,\ \nj$ & client $j$'s dataset and its size $\nj=|\Dj|$ \\
+$\Cc$ & number of classes \\
+$n_{j,c}$ & examples of class $c$ held by client $j$ \\
+% $\alpha$ & Dirichlet concentration, the label-skew parameter \\
+$\featx$ & frozen public backbone, never trained or encrypted \\
+$A_j$ & client $j$'s adapter, trained locally and never transmitted \\
+$\varphi_j$ & client $j$'s feature map, the backbone composed with $A_j$ \\
+$\thz$ & public initialiser of the classifier head \\
+$h_j$ & client $j$'s trained head \\
+$\disp$ & head displacement $h_j-\thz$ \\
+$\wj$ & sample weight $\nj/\sum_i n_i$ \\
+$\thstar$ & shared head, held only as a ciphertext \\
+$\mathsf{Enc}(\cdot)$ & encryption under the collective public key \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Multiparty Homomorphic Encryption}
+\label{sec:mhe}
+
+We build on CKKS~\cite{cheon2017ckks}, a ring-learning-with-errors
+construction~\cite{lyubashevsky2010ideal} that performs approximate arithmetic on
+vectors of real numbers under encryption. CKKS packs many real slots into one
+ciphertext and supports addition of ciphertexts, multiplication of a ciphertext by
+a plaintext, and multiplication of two ciphertexts. It is a levelled scheme, so
+each multiplication consumes one level of a finite budget, and a depleted budget
+is restored by bootstrapping~\cite{cheon2018bootstrapping}.
+
+A single-key scheme would require one party to hold the secret key and therefore
+to be trusted with decryption. We use the multiparty variant of
+CKKS~\cite{mouchet2021multiparty}, where the secret key is shared among the
+clients through a distributed key-generation protocol that produces a collective
+public key without ever assembling the secret in one place. Any party, the server
+included, may compute on ciphertexts under the collective public key, but
+decryption requires the cooperation of a quorum of clients and is carried out as a
+collective key-switching protocol. Two further protocols of the same family are
+used below. The first is a key switch to a designated public key, which re-encrypts
+a result so that one chosen party can read it. The second is a collective refresh,
+which restores a depleted level budget and plays the role bootstrapping plays in
+the single-key setting.
+
+
+The construction is stated for a $\tc$-out-of-$\Nc$ threshold CKKS scheme with
+$2\le\tc\le\Nc$. Encryption is under a single collective public key. Decryption
+requires partial decryption shares from at least $\tc$ clients, and any set of at
+most $\tc-1$ clients learns nothing about a plaintext. Key generation,
+key switching and collective refresh are the threshold protocols of the same
+scheme.
+
+Two consequences follow, and the protocol uses both. Any $\tc$ clients form a
+quorum, so serving does not require every client to be online. Any $\tc-1$
+clients are powerless against a ciphertext, so $\tc-1$ is the corruption bound
+throughout \cref{sec:security}.
+
+Our implementation instantiates $\tc=\Nc$, which is the setting the multiparty
+CKKS library provides, and the measurements of \cref{sec:exp-cost} are taken
+there. Every statement in \cref{sec:security} holds for general $\tc$.
+
+%We state the reason for this choice. The aggregation of \cref{sec:split} uses only additions and multiplications by public scalars, so it consumes one level. What we need from the scheme is not depth but key structure: threshold decryption over a collectively generated key is the property the protocol cannot do without, and mature distributed key generation and collective key switching provide it directly. CKKS additionally packs thousands of real values into one ciphertext and multiplies them by public scalars natively. Additively homomorphic schemes offer neither packed real arithmetic at this width nor comparable multiparty tooling, and masking-based secure aggregation reveals the plaintext sum to the server, which this protocol never does.

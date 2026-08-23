@@ -1,0 +1,32 @@
+# Paragraphs the PIs have not read, each with the reason it exists.
+# scripts/check_subseq.py accepts these and flags anything else.
+# Separator is a line holding exactly %%
+#
+# Every entry here is a decision Halil took, dated, with the alternative named.
+
+# 2026-08-23, W1. The report needs a title that says what it is. The submission
+# title is unchanged, because \ifsubmission suppresses the suffix.
+\title{HE-OFT: Privacy-Preserving One-Shot Federated Fine-Tuning under Homomorphic Encryption\ifsubmission\else\\[2pt]\large Technical Report\fi}
+%%
+# 2026-08-23, W2. Section II is new, so its heading is new. The PI asked for
+# notation and CKKS to become preliminaries and this is the heading they sit
+# under. Nothing else in the section is new.
+\section{Preliminaries}
+\label{sec:prelim}
+%%
+# 2026-08-23, W2. This one sentence replaces 0.79 of a page. The threat model
+# left Method for Security, where Halil ruled it should go to remove the
+# overlap. Three of its five paragraphs were deleted outright because Section
+# IV-C, Section IV-E and Section V-C already say what they said.
+The threat model, the view each party has and what a coalition of clients can
+learn, is stated in \cref{sec:threat}.
+%%
+# 2026-08-23, W2. One word is new, "no". The original read "Neither holds a
+# decryption key", where "neither" ranged over the aggregation server and the
+# serving party. Those are one party now, and "neither" has no singular form
+# that keeps "a". Everything else in the paragraph is the original with the
+# clause naming the second party deleted.
+\paragraph{View of the server} Ciphertexts under the collective public key, the
+public per-client sample counts, and the evaluation keys. It holds no decryption
+key, and by \cref{sec:mhe} it cannot decrypt. The server additionally sees
+encrypted query features, which it cannot read and therefore cannot invert.

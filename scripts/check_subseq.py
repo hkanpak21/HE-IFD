@@ -1,34 +1,64 @@
 #!/usr/bin/env python3
 """Prove that a cut deleted text and did not rewrite it.
 
-The PIs have read the manuscript. Every new sentence is one they must read
-again, so the submission is cut by deleting and moving, never by rewriting.
-This script checks that claim paragraph by paragraph.
+The PIs read one specific version of the manuscript. Every sentence that is not
+in that version is a sentence they must read again, so the submission is cut by
+deleting and moving, never by rewriting. This checks that claim.
 
-    scripts/check_subseq.py OLD.tex NEW.tex
+    scripts/check_subseq.py --base cc1df39
 
-Each surviving paragraph is classified.
+The base is a git ref. Every paragraph now in docs/paper/sections is looked up
+against the pool of every paragraph the base had, across all files at once,
+because a cut moves text between files as well as out of them.
 
-  identical   byte for byte
-  deletions   the new word sequence is a subsequence of the old one
-  allowed     a subsequence once the three permitted substitutions are applied
-  REWRITTEN   contains words in an order the old paragraph does not have
+Each paragraph is classified.
 
-Only REWRITTEN needs a human. Exit 1 if any paragraph is REWRITTEN.
+  identical   present in the base, word for word
+  deletions   its words are a subsequence of some base paragraph's words
+  allowed     a subsequence once the permitted substitutions are applied
+  REWRITTEN   contains words in an order no base paragraph has
 
-The three permitted substitutions, and no others:
-  1. "the serving party" / "serving party" -> "the server" / "server"
-  2. a number that changed against its record (declare with --number OLD=NEW)
-  3. a cross-reference retargeted at the report (\\cref{x} -> \\trsee{x})
+Only REWRITTEN needs a human. Exit 1 if any paragraph is REWRITTEN and is not
+listed in --allow.
+
+The permitted substitutions, and no others:
+  1. "the serving party" / "the aggregation server" -> "the server"
+  2. agreement forced by 1, because two parties became one
+  3. "honest-but-curious" -> "semi-honest", the CONTEXT.md ruling of 2026-08-19
+  4. a cross-reference retargeted at the report, \\cref{x} -> \\trsee{x}
+  5. a number that changed against its record, declared with --number OLD=NEW
+
+Anything else is a rewrite and Halil decides it.
 """
 import argparse
-import difflib
 import re
+import subprocess
 import sys
+from pathlib import Path
 
 FLOAT = re.compile(
     r"\\begin\{(table\*?|figure\*?|functionality|algorithm|tabular)\}.*?"
     r"\\end\{\1\}", re.S)
+_TOKEN = re.compile(r"\\[A-Za-z@]+|[A-Za-z0-9]+(?:[-'][A-Za-z0-9]+)*")
+
+_MERGE = [
+    (r"\bthe server and the serving party\b", "the server"),
+    (r"\bthe serving party and the server\b", "the server"),
+    (r"\bthe aggregation server\b", "the server"),
+    (r"\bthe serving party\b", "the server"),
+    (r"\bserving party\b", "server"),
+    (r"\bhonest-but-curious\b", "semi-honest"),
+]
+# Two parties becoming one forces these agreements and no others.
+_AGREE = [
+    # "neither", ranging over two parties, becomes "it" when there is one.
+    (r"\b(?:they|it|them|neither|both|either)\b", "PRON"),
+    (r"\b(?:their|its)\b", "POSS"),
+    (r"\b(?:are|is)\b", "BE"), (r"\b(?:observe|observes)\b", "V"),
+    (r"\b(?:hold|holds)\b", "V"), (r"\b(?:follow|follows)\b", "V"),
+    (r"\b(?:stay|stays)\b", "V"), (r"\b(?:see|sees)\b", "V"),
+    (r"\b(?:can|cannot)\b", "MODAL"), (r"\blast\b", ""),
+]
 
 
 def paragraphs(text):
@@ -37,65 +67,118 @@ def paragraphs(text):
     return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
+# Conditionals are machinery. A paragraph wrapped in \tronly is the same
+# paragraph.
+_MACHINERY = {"\\tronly", "\\paperonly", "\\ifsubmission", "\\else", "\\fi"}
+
+
 def words(p):
-    return re.findall(r"\S+", p)
+    return [t.lower() for t in _TOKEN.findall(p) if t not in _MACHINERY]
 
 
 def normalise(p, subs):
-    p = re.sub(r"\bthe serving party\b", "the server", p)
-    p = re.sub(r"\bserving party\b", "server", p)
+    # Case-insensitive, because a deleted leading clause moves a word to the
+    # start of its sentence and capitalises it. "They follow" becoming "It
+    # follows" is the merge, not a rewrite.
+    for pat, rep in _MERGE:
+        p = re.sub(pat, rep, p, flags=re.I)
+    for pat, rep in _AGREE:
+        p = re.sub(pat, rep, p, flags=re.I)
     p = re.sub(r"\\cref\{([^}]+)\}", r"\\trsee{\1}", p)
     for old, new in subs:
         p = p.replace(new, old)
     return p
 
 
-def is_subsequence(new, old):
+def is_sub(new, old):
     it = iter(old)
     return all(w in it for w in new)
 
 
+# Machinery, not prose. preamble.tex is packages and macros, body.tex is an
+# \input list. Neither is text a PI reads.
+SKIP = {"preamble.tex", "body.tex"}
+
+
+def base_pool(ref, root):
+    files = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref, root],
+                           capture_output=True, text=True).stdout.split()
+    # The base kept the title, the abstract, the acknowledgment and the
+    # biographies in main.tex. W1 moved them into sections/, so the pool needs
+    # main.tex or every one of them reads as newly written.
+    files.append(str(Path(root).parent / "main.tex"))
+    pool = []
+    for f in files:
+        if not f.endswith(".tex"):
+            continue
+        t = subprocess.run(["git", "show", f"{ref}:{f}"],
+                           capture_output=True, text=True).stdout
+        pool += [(f, p) for p in paragraphs(t)]
+    return pool
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("old")
-    ap.add_argument("new")
-    ap.add_argument("--number", action="append", default=[],
-                    metavar="OLD=NEW", help="a number that changed, with its record")
+    ap.add_argument("--base", required=True, help="git ref the PIs read")
+    ap.add_argument("--root", default="docs/paper/sections")
+    ap.add_argument("--number", action="append", default=[], metavar="OLD=NEW")
+    ap.add_argument("--allow", default="docs/paper/.subseq-allow",
+                    help="file of accepted new paragraphs, one per line of reason")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args()
 
     subs = [tuple(s.split("=", 1)) for s in a.number]
-    O = paragraphs(open(a.old).read())
-    N = paragraphs(open(a.new).read())
+    pool = base_pool(a.base, a.root)
+    pool_w = [(f, words(p)) for f, p in pool]
+    pool_n = [(f, words(normalise(p, subs))) for f, p in pool]
+    exact = {p for _, p in pool}
 
-    tally = {"identical": 0, "deletions": 0, "allowed": 0, "REWRITTEN": 0}
-    rewritten = []
-    for i, p in enumerate(N):
-        if p in O:
-            tally["identical"] += 1
-            continue
-        # the old paragraph this one most plausibly came from
-        cand = difflib.get_close_matches(p, O, n=1, cutoff=0.0)
-        src = cand[0] if cand else ""
-        if is_subsequence(words(p), words(src)):
-            tally["deletions"] += 1
-            continue
-        if is_subsequence(words(normalise(p, subs)), words(normalise(src, subs))):
-            tally["allowed"] += 1
-            continue
-        tally["REWRITTEN"] += 1
-        rewritten.append((i, p, src))
+    allowed_text = set()
+    ap_path = Path(a.allow)
+    if ap_path.exists():
+        for blk in ap_path.read_text().split("\n%%\n"):
+            # The reason lives in # lines above the text it justifies. Strip
+            # them and keep what the paragraph actually is.
+            body = "\n".join(l for l in blk.split("\n")
+                             if not l.lstrip().startswith("#")).strip()
+            if body:
+                allowed_text.add(" ".join(body.split()))
 
-    print(f"{a.new}: {len(N)} paragraphs kept of {len(O)}, "
-          f"{len(O) - len(N)} deleted outright")
-    for k in ("identical", "deletions", "allowed", "REWRITTEN"):
+    tally = dict.fromkeys(("identical", "deletions", "allowed", "accepted",
+                           "REWRITTEN"), 0)
+    flagged = []
+    total = 0
+    for f in sorted(Path(a.root).glob("*.tex")):
+        if f.name in SKIP:
+            continue
+        for p in paragraphs(f.read_text()):
+            total += 1
+            if p in exact:
+                tally["identical"] += 1
+                continue
+            w = words(p)
+            if any(is_sub(w, ow) for _, ow in pool_w):
+                tally["deletions"] += 1
+                continue
+            wn = words(normalise(p, subs))
+            if any(is_sub(wn, on) for _, on in pool_n):
+                tally["allowed"] += 1
+                continue
+            if " ".join(p.split()) in allowed_text:
+                tally["accepted"] += 1
+                continue
+            tally["REWRITTEN"] += 1
+            flagged.append((f.name, p))
+
+    print(f"base {a.base}: {len(pool)} paragraphs.  now: {total}")
+    for k in ("identical", "deletions", "allowed", "accepted", "REWRITTEN"):
         print(f"  {k:10s} {tally[k]}")
-    if rewritten and not a.quiet:
-        print("\nthese need a human, with the reason stated:")
-        for i, p, src in rewritten:
-            print(f"\n--- new paragraph {i} ---\n{p[:400]}")
-            print(f"--- closest old ---\n{src[:400]}")
-    return 1 if tally["REWRITTEN"] else 0
+    if flagged and not a.quiet:
+        print(f"\n{len(flagged)} paragraph(s) the PIs have not read. State the reason "
+              f"for each, then add it to {a.allow} separated by a line of %%.")
+        for name, p in flagged:
+            print(f"\n--- {name} ---\n{p[:500]}")
+    return 1 if flagged else 0
 
 
 if __name__ == "__main__":
