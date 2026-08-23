@@ -2,11 +2,12 @@
 \label{sec:experiments}
 
 Each subsection below states a claim in one sentence, describes the experiment
-that tests it, and reports the result. The claims are, in order: that a federated
-head over private representations is a usable model; that its accuracy is
-competitive with one-shot federated learning on that literature's own partition;
-that the federation can choose between arrangements without decrypting either;
-that the cryptographic layer is affordable, including the traffic that recurs; and
+that tests it, and reports the result. The claims are, in order, that a federated
+head over local representations is a usable model
+, that its accuracy is
+competitive with one-shot federated learning on that literature's own partition,
+that the federation can choose between arrangements without decrypting either,
+that the cryptographic layer is affordable, including the traffic that recurs, and
 that what a participant can learn is bounded. \Cref{sec:exp-release} then states what
 disclosing the model would have bought, and \cref{sec:scope} records what the
 protocol does not cover.
@@ -17,7 +18,7 @@ protocol does not cover.
 Every client fine-tunes on the same frozen public backbone. The trainable unit is
 a rank-$8$ low-rank adapter with its down-projection frozen at a shared public
 initialisation, together with a classifier head. The adapter is trained locally and
-never transmitted; the head displacement is encrypted and uploaded once. No
+never transmitted. The head displacement is encrypted and uploaded once. No
 labelled public data is used anywhere in this paper, because the setting without
 one is the setting in which an encrypted one-shot protocol is required.
 
@@ -55,13 +56,14 @@ $\Apool-\Adis$ is the price of the partition.
 \label{sec:exp-split}
 
 Sharing only the classifier head, over representations that
-each client adapts privately, yields a model usable across the whole label space,
+each client adapts locally, yields a model usable across the whole label space,
 and the preferable arrangement depends on the size of the label space.
 
 \Cref{tab:headline} reports both servable arrangements and both reference points.
 The arrangement labelled \emph{shared head} gives every client the same model over
 the bare public backbone. The arrangement labelled \emph{personal adapter} gives
-each client the shared head over its own privately adapted representation.
+each client the shared head over its own locally adapted representation.
+
 
 \begin{table}[t]
 \centering
@@ -100,11 +102,12 @@ least of the label space.
 Second, the preferable arrangement changes with the size of the label space, and
 the mechanism is identifiable. On the small label spaces the shared head wins by a wide
 margin, $0.17$ on AG-News and $0.18$ on TREC. On the large ones the personal
-adapter wins, and on Banking77 it wins decisively: the shared head collapses to
+adapter wins, and on Banking77 it wins decisively. The shared head collapses to
 $0.206$ while the personal adapter holds $0.686$. The collapse is a coverage
 failure. With $77$ classes and this skew each head row is decided by few clients
 or none, and a head over the bare public backbone has nothing else to work
-with. A privately adapted representation improves separability for every class the
+with. A locally adapted representation improves separability for every class the
+
 client will ever be asked about, including those it never observed, which is what
 rescues the large label spaces.
 
@@ -130,7 +133,7 @@ The more informative reading concerns which arrangement is selected. The estimat
 chooses the shared head at $\alpha\in\{0.05,0.1\}$ and the personal adapter at
 $\alpha\in\{0.3,1.0\}$, on every seed in each case. The crossover is therefore not
 a property of the label space alone, as \cref{sec:exp-split} might suggest, but of
-coverage: the personal adapter is preferable once each client sees enough of the
+coverage. The personal adapter is preferable once each client sees enough of the
 label space for its own representation to transfer, and the shared head is
 preferable when it does not. The estimator locates that crossover from encrypted
 local evidence, with no test set and no fitted threshold.
@@ -208,14 +211,15 @@ either paper's authors chose. Absolute accuracy across papers therefore measures
 the backbone.
 
 What compares across papers is the
-accuracy each method gives up for its privacy mechanism, since every paper measures
+accuracy each method gives up for protecting the contribution, since every paper measures
+
 that against its own unprotected baseline on its own architecture, and the backbone
 cancels. Read that way the peer group falls into three cases. A method either
 leaves the contribution unprotected, protects it with differential privacy, or
 protects it cryptographically.
 
-DENSE and FedDF report no accuracy cost for privacy, because neither sets out to
-protect the contribution. What each client sends, a trained model in one case and
+DENSE and FedDF report no such cost, because neither sets out to protect the
+contribution. What each client sends, a trained model in one case and
 repeated predictions over many rounds in the other, is available to the server in
 plaintext, and by the evidence of \cref{sec:related-leakage} those are the
 quantities an adversary would target.
@@ -319,7 +323,7 @@ global-prior estimator, rare-class fill & $\mathbf{13/15}$ & $\mathbf{0.019}$ \\
 \end{table}
 
 Two properties of the estimator merit separate mention. The decisive case is
-Banking77, where choosing wrongly costs $0.48$; the estimator selects correctly on
+Banking77, where choosing wrongly costs $0.48$. The estimator selects correctly on
 all three seeds, by margins of $0.13$ to $0.24$. And the estimator responds to the
 data On the AG-News seed where the partition drops three
 clients and leaves the shared head at $0.402$ and the personal adapter genuinely
@@ -333,7 +337,8 @@ test set.
 
 \paragraph{Disclosure of the estimator} One value is decrypted for the whole
 federation, the index of the arrangement adopted. The per-client per-class
-accuracies are not decrypted, which matters: together with the count matrix they
+accuracies are not decrypted, and this matters. Together with the count matrix they
+
 would describe each client's label distribution alongside its model quality.
 
 \subsection{Cryptographic Cost}
@@ -347,8 +352,8 @@ generation, encryption under the collective public key, the head aggregation, th
 reciprocal under encryption, the encrypted argmax, and key switching to a
 designated party. All figures use ring degree $2^{14}$ for the shallow operations
 and a deeper chain at ring degree $2^{15}$ for the circuits that need it. Timings
-are single-run wall clock on a commodity CPU and are reported as indicative;
-communication figures are exact.
+are single-run wall clock on a commodity CPU and are reported as indicative.
+Communication figures are exact.
 
 % \begin{table}[t]
 % \centering
@@ -460,7 +465,7 @@ measurement over the whole grid. Left: the per-query arithmetic at $\Nc=10$,
 which the ring degree sets and the federation size does not touch. Right: the key
 switch that returns one label, which grows with both. Read in seconds, the left
 panel spans $0.0007$ to $0.18$\,s and the right panel spans $0.10$ to $1.7$\,s.
-Neither is the cost of a query: the encrypted argmax between them takes $31$\,s at
+Neither is the cost of a query. The encrypted argmax between them takes $31$\,s at
 four classes and $113$\,s at a hundred, so one query totals $31.5$\,s and
 $113.2$\,s, of which the argmax is more than $99$ per cent.}
 \label{fig:cost}
@@ -470,7 +475,7 @@ $113.2$\,s, of which the argmax is more than $99$ per cent.}
 the argmax is the only operation slow enough to matter, so the question is what
 specialised hardware does to it. Since the cost of a CKKS operation grows with the
 ring degree, the comparison is only meaningful at a fixed one. \Cref{fig:cost}
-gives our figures: $39.0$, $82.5$ and $174.9$\,ms for a ciphertext-by-ciphertext
+gives our figures, $39.0$, $82.5$ and $174.9$\,ms for a ciphertext-by-ciphertext
 product at ring degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $33.1$, $71.6$ and
 $149.7$\,ms for a rotation. Microbenchmarks of the same primitives under a CUDA
 implementation of CKKS, at ring degree $2^{16}$, put the product at $30$\,ms and
@@ -545,7 +550,7 @@ $15.5$\,MiB therefore replaces $1.6$\,GiB on every subsequent query.
 
 \paragraph{Correctness} The decrypted result matches the plaintext computation to
 a relative error at the level of the encoding precision of the scheme, and the
-encrypted argmax is exact: over label spaces from four to a hundred classes it
+encrypted argmax is exact. Over label spaces from four to a hundred classes it
 returns the same index as the plaintext argmax in every case tested. The accuracy
 figures of \cref{tab:headline} are therefore unaffected by the cryptography, which
 is the sense in which encryption costs no accuracy here.
@@ -582,7 +587,7 @@ model on held-out features. \Cref{tab:extract} reports the result.
 
 \begin{table}[t]
 \centering
-\caption{Label-only extraction of the served head: mean fidelity over three seeds
+\caption{Label-only extraction of the served head. Mean fidelity over three seeds
 and both arrangements, against the number of queries spent. The majority column
 is the share of the most common label, which is what a copy achieves for free.}
 \label{tab:extract}
@@ -603,7 +608,7 @@ Banking77  & 77 & $0.083$ & $0.174$ & $0.355$ & $0.592$ & $0.755$ & $0.900$ \\
 Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
 $2.0\times10^5$ on Banking77. Those figures track the size of the head rather than
-the task: the head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
+the task. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
 between three and five times that number of queries, with $0.80$ costing roughly
 $1.5$ times and $0.95$ roughly ten times. A deployment can therefore set its
 allowance from $\Cc$ and $d$ without repeating this experiment. A published
@@ -648,7 +653,7 @@ report the stronger of the two, which is also the simpler.
 degree. A participant holding the model in plaintext has fidelity $1$ at zero
 queries, may read the parameters directly rather than infer them, and is subject
 to no allowance because there is nothing to meter. Granting logits rather than
-labels would be nearly as generous: the head is linear in features the client
+labels would be nearly as generous. The head is linear in features the client
 computes itself, so $d+1$ logit queries recover it exactly by linear solve, which
 is $769$ queries here against the $1.2\times10^4$ to $2.0\times10^5$ that labels
 demand. We confirm this directly, recovering the head to fidelity $1.000$ from
@@ -668,7 +673,7 @@ price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
 $0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
 CIFAR-100. The price is largest in the middle of the label-space range and
 smallest at the extremes, and it is paid for a property that no accuracy figure
-can substitute for: after the protocol ends, there is no plaintext model anywhere.
+can substitute for. After the protocol ends, there is no plaintext model anywhere.
 
 The last column of
 \cref{tab:headline} isolates the second difference of \cref{sec:setup}. On three of
@@ -697,17 +702,18 @@ permitted.
 This is what \cref{sec:split} shows the never-disclosed requirement forces, and it
 is a real restriction. A shared adapter inside the backbone would adapt the
 representation for every participant rather than only for its owner, and
-\cref{tab:headline} shows on the small label spaces what a privately adapted
+\cref{tab:headline} shows on the small label spaces what a locally adapted
+
 representation gives up. Serving such an adapter reduces to secure transformer
 inference (\cref{sec:related-inference}) and composes with that literature at its
-cost; we do not attempt it here.
+cost, and we do not attempt it here.
 
 \paragraph{Bounds on model extraction} The query
 allowance of \cref{sec:exp-leak} is an operational control. Where honest use is
 intrinsically high-volume, so that no allowance separates it from extraction,
 calibrated noise added to the returned labels bounds cumulative leakage
 instead~\cite{mcsherry2007mechanism}. That mechanism composes with the protocol
-without modification, and it is orthogonal to it: the protocol protects the
+without modification, and it is orthogonal to it. The protocol protects the
 contributions cryptographically, and differential privacy would protect the answers
 statistically. We do not evaluate it, and every accuracy figure in this paper
 assumes it is not in use.
@@ -716,7 +722,7 @@ assumes it is not in use.
 honest-but-curious parties. A client that uploads a crafted head displacement can
 bias the shared head, and because contributions are encrypted the server cannot
 inspect them. Two directions are compatible with the encryption and are left to
-future work: an upload-time norm bound enforced by a zero-knowledge proof, which
+future work, an upload-time norm bound enforced by a zero-knowledge proof, which
 caps any single client's influence without revealing its contribution, and robust
 aggregation evaluated homomorphically. The one-shot structure shrinks the attack
 surface to a single exchange but removes the cross-round consistency checks a

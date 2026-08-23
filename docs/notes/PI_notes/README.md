@@ -34,9 +34,15 @@ An entry carries a status: proposed, pasted, or withdrawn.
 - **No em dash, and no en dash except between numerals.** Overleaf source uses
   `---` for an em dash and it is banned outright.
 - **No markdown bold in replacement text.** It is LaTeX, not chat.
-- Replacement prose follows the `academic-ste` register: no first person, the
-  actor is the system component, one idea per sentence, and a verb that matches
-  the evidence held.
+- Replacement prose follows the `research` skill's `references/kupcu-writing.md`.
+  The active voice, one idea per sentence, and a verb that matches the evidence
+  held. The first person is correct where the sentence has an author, and what
+  stays out is the agentless form that hides who acted.
+
+  Corrected 2026-08-22. This bullet used to say "no first person". That rule
+  came from the retired `academic-ste` register and never from a PI. Note 11 of
+  `PI_notes_2026-08-06.md` records the PI dictating the opposite, "In this work,
+  we present ... that enables ...".
 - **No number enters a replacement without a check against a record under
   `results/`.** Numbers already in the manuscript are re-derived, not trusted.
   Round 1 found the abstract's accuracy floor rounded the wrong way this way.

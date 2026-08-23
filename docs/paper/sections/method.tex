@@ -28,7 +28,7 @@ one.
 
 Three requirements separate this setting from ordinary federated learning. (1) The
 protocol is \emph{one-shot}: each client uploads once, and there is no iterative
-exchange. (2) Privacy is \emph{cryptographic}: a client's contribution is never
+exchange. (2) Confidentiality is \emph{cryptographic}. A client's contribution is never
 available in plaintext to any other party, and we do not consider differential privacy due to the accuracy loss incurred. (3) The resulting model is
 \emph{never disclosed}: no party, client or server, ever holds the trained
 classifier in plaintext. %The third requirement is the one that shapes everything below, and \cref{sec:threat} states precisely what it buys.
@@ -73,7 +73,7 @@ rest of this section can be read as consequences of the requirements.
 \end{itemize}
 
 %\noindent Constraints \textbf{C1} through \textbf{C6} are shared with any one-shot encrypted federation. \textbf{C7} is particular to never disclosing the model, and 
-The three contributions of this paper follow from these constraints: a partition of the
+The three contributions of this paper follow from these constraints, a partition of the
 trainable unit (\cref{sec:split}), a procedure for answering queries without decrypting the model
 (\cref{sec:serving}), and a procedure by which the federation selects between
 candidate arrangements it cannot observe (\cref{sec:selection}).
@@ -129,10 +129,11 @@ public key without ever assembling the secret in one place. Any party, the serve
 included, may compute on ciphertexts under the collective public key, but
 decryption requires the cooperation of a quorum of clients and is carried out as a
 collective key-switching protocol. Two further protocols of the same family are
-used below: a key switch to a designated public key, which re-encrypts a result so
-that one chosen party can read it, and a collective refresh, which restores a
-depleted level budget and plays the role bootstrapping plays in the single-key
-setting.
+used below. The first is a key switch to a designated public key, which re-encrypts
+a result so that one chosen party can read it. The second is a collective refresh,
+which restores a depleted level budget and plays the role bootstrapping plays in
+the single-key setting.
+
 
 The construction is stated for a $\tc$-out-of-$\Nc$ threshold CKKS scheme with
 $2\le\tc\le\Nc$. Encryption is under a single collective public key. Decryption
@@ -155,16 +156,17 @@ there. Every statement in \cref{sec:security} holds for general $\tc$.
 \subsection{Partitioning the Trainable Unit}
 \label{sec:split}
 
-\input{figures/training}
-
 \paragraph{The construction} Each client uses the same frozen public backbone
-$\featx$, and trains two things on its own data: a low-rank adapter $A_j$ that
+
+$\featx$, and trains two things on its own data, a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
 head from the public initialiser and uploads it once. The server combines the
 encrypted displacements into a single shared head and never decrypts the result.
-The adapter is trained locally and never transmitted. \Cref{fig:training} shows
-the arrangement.
+The adapter is trained locally and never transmitted. In \cref{fig:training} the
+adapters stay inside the client boxes, only the head displacement crosses to the
+server, and the arrow that would carry an adapter aggregate does not exist.
+
 
 \paragraph{Necessity of the partition} The client that sends an inference query must compute
 the features of that query itself, by \textbf{C7}. If the shared trained
@@ -190,7 +192,7 @@ would additionally require, including the restriction to greedy decoding that
 
 The adapter is relocated. Each client retains its own, so the
 representation still adapts to local data, and the federation shares the part
-where sharing is necessary. The distinction follows from coverage: a client
+where sharing is necessary. The distinction follows from coverage. A client
 can improve its own representation alone, but it cannot learn to recognise a class
 it has never observed. Coverage is a property of the head, which is exactly what
 the federation supplies. \Cref{sec:exp-split} measures both halves, how far a
@@ -236,7 +238,7 @@ backbone $\featx$ and the same public head initialiser $\thz$.}
 \State clients run distributed key generation, obtaining a collective public key
 \For{client $j=1,\dots,\Nc$ \textbf{in parallel}}
   \State train adapter $A_j$ and head $h_j$ on $\Dj$ \Comment{plaintext, local}
-  \State \textbf{keep} $A_j$; it is never transmitted
+  \State \textbf{keep} $A_j$, which is never transmitted
   \State send $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$,
          where $\disp=h_j-\thz$
 \EndFor
@@ -270,7 +272,7 @@ that index to the querying client, which decrypts one label.
 
 \paragraph{Encryption of the query} The serving party could be given the
 features in plaintext, which would make the head application cheaper. We encrypt
-them because features are invertible: a party holding $\varphi_j(x)$ and the public
+them because features are invertible. A party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
 would therefore hand the serving party the client's input, which is the thing the
 protocol exists to protect. The price is that the head is applied ciphertext by
@@ -281,7 +283,7 @@ what that costs.
 construction. The head is a linear map on features the client computes itself, so a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
-dimension~\cite{tramer2016stealing}. This is not a hypothetical concern: the same
+dimension~\cite{tramer2016stealing}. This is not a hypothetical concern. The same
 object, the final projection layer of a production transformer, has been recovered
 through a deployed interface for a few tens of dollars, using an interface that
 exposed log-probabilities and a logit bias, and the operators' response was to
@@ -325,7 +327,7 @@ that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it co
 minutes for a large label space. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
-result. None of this is particular to the multiparty setting: homomorphic
+result. None of this is particular to the multiparty setting. Homomorphic
 evaluation under a collectively generated key is identical to evaluation under a
 single key, and the schemes differ only in key generation and in decryption, so
 single-key results carry over. The serving party is not trusted with anything. It
@@ -338,7 +340,7 @@ certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.
 the features. Serving a trained quantity that sits inside the backbone is the
 problem that secure transformer inference addresses, and an encrypted shared
 adapter composes with any such system at that literature's cost. We do not
-re-solve it. One difference should be noted: those systems evaluate a plaintext
+re-solve it. One difference should be noted. Those systems evaluate a plaintext
 model on encrypted inputs, whereas here the shared weights are encrypted as well,
 so each adapter site would carry a ciphertext-by-ciphertext product. The dominant
 cost in that literature is the nonlinearities, which are unchanged, so the added
@@ -349,14 +351,14 @@ cost is the low-rank product per site rather than a different order of magnitude
 
 \input{figures/selection}
 
-\paragraph{The construction} Two arrangements are servable at the same cost: the
+\paragraph{The construction} Two arrangements are servable at the same cost, the
 shared head over each client's own adapter, and the shared head over the bare
 public backbone with no adapter at all. Which is better depends on the task, and
 the federation must choose without decrypting either. Each client evaluates both
 on data it holds back from its own training, entirely under encryption, and
 reports encrypted per-class counts. The counts are combined into one encrypted
 score per arrangement, the two scores are compared under encryption, and exactly
-one value is decrypted: which arrangement the federation adopts.
+one value is decrypted, which arrangement the federation adopts.
 \Cref{fig:selection} shows this, and \cref{alg:select} states it.
 
 \paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
@@ -390,7 +392,7 @@ by some client. For the personal arrangement each client's evidence concerns onl
 its own model, and classes it does not hold contribute no evidence at all. Scoring
 those classes at zero makes $E$ a lower bound for the personal arrangement, so the
 federation adopts it only when even a pessimistic estimate exceeds the accurately
-measured alternative. There is no fitted threshold anywhere: the rule compares two
+measured alternative. There is no fitted threshold anywhere. The rule compares two
 numbers on the same absolute scale.
 
 \begin{algorithm}[t]
@@ -431,7 +433,7 @@ which are the same circuit already used for the argmax. The client knows its own
 labels, so the mask that selects the true class is a public plaintext, and the
 per-class totals are the same aggregate already used in \cref{eq:aggregate}, so the
 weighting is by public scalars. One value is decrypted for the whole federation.
-The per-client per-class accuracies are not decrypted, and must not be: together
+The per-client per-class accuracies are not decrypted, and must not be. Together
 with the count matrix they would describe each client's label distribution
 alongside its model quality.
 
@@ -440,7 +442,7 @@ alongside its model quality.
 
 The participants are $\Nc$ clients, an aggregation server, and a serving party,
 the last of which may be the server. The server and the serving party are
-honest-but-curious: they follow the protocol and may try to infer private
+honest-but-curious. They follow the protocol and may try to infer private
 information from what they observe. Clients may likewise be honest-but-curious and
 may collude. \Cref{sec:malicious} strengthens the client side of this model, and
 allows up to $\tc-1$ clients to deviate arbitrarily while the server and the
