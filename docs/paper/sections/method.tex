@@ -205,7 +205,7 @@ the ciphertext to the server. The server applies the encrypted shared
 head to the encrypted features, obtains encrypted logits, and reduces them to the
 index of the largest entry under encryption. A quorum of clients then key-switches
 that index to the querying client, which decrypts one label.
-\Cref{fig:serving} shows the path, and \cref{alg:serve} states it.
+\Cref{alg:serve} states it.
 
 \paragraph{Encryption of the query} The server could be given the
 features in plaintext, which would make the head application cheaper. We encrypt
@@ -331,7 +331,7 @@ on data it holds back from its own training, entirely under encryption, and
 reports encrypted per-class counts. The counts are combined into one encrypted
 score per arrangement, the two scores are compared under encryption, and exactly
 one value is decrypted, which arrangement the federation adopts.
-\Cref{fig:selection} shows this, and \cref{alg:select} states it.
+\Cref{alg:select} states it.
 
 \paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
