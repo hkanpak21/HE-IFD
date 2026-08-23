@@ -4,12 +4,9 @@
 The protocol runs in two phases. In the first, each client fine-tunes an adapter
 and a classifier head on the same frozen public backbone, keeps the adapter, and
 uploads its head displacement once, weighted by its own per-class counts and
-encrypted. The server adds the ciphertexts and divides by the per-class totals
-under encryption, so the shared head exists only as a ciphertext
-(\cref{fig:training}). In the second, a client computes the features of its query
+encrypted. In the second, a client computes the features of its query
 itself, encrypts them, and sends them to the server, which applies the
-encrypted head and reduces the encrypted logits to the index of the largest. A quorum of clients switches that index to the querying
-client, which decrypts one label.
+encrypted head and reduces the encrypted logits to the index of the largest.
 
 \subsection{Setting}
 \label{sec:setting}
@@ -36,7 +33,7 @@ narrow. We record the chain of implications here.
   plaintext on the clients, and the server performs no learning.
 \item[\textbf{C2}] \emph{A server computing on ciphertexts cannot read its
   inputs.} \emph{Therefore}, the choice is deferred to the
-  clients, who make it without decrypting anything (\cref{sec:selection}).
+  clients (\cref{sec:selection}).
 \item[\textbf{C3}] \emph{Models trained from different starting points do not
   combine linearly.} \emph{Therefore}, every client starts its trainable unit
   from one public initializer on one frozen public backbone.
@@ -247,7 +244,7 @@ as a bound on queries rather than a cryptographic hardness claim.}
 other clients necessarily participate in producing an answer to a question they did
 not ask. Rather than decrypt the label collectively, which would reveal it to
 every participant, the quorum key-switches the ciphertext to the querying client's
-public key. The other clients contribute shares and learn nothing.
+public key.
 
 \begin{algorithm}[t]
 \caption{Answering one query. The shared head remains a ciphertext throughout.}

@@ -12,8 +12,8 @@ explains why that assumption cannot be dropped.
 
 \paragraph{View of the server} Ciphertexts under the collective public key, the
 public per-client sample counts, and the evaluation keys. It holds no decryption
-key, and by \cref{sec:mhe} it cannot decrypt. The server additionally sees
-encrypted query features, which it cannot read and therefore cannot invert.
+key. The server additionally sees
+encrypted query features, which it cannot read.
 
 The design is arranged so that no arithmetic shortcut evades it. No aggregate of
 the adapters exists, so there is no sum from which a coalition can subtract its
@@ -125,6 +125,7 @@ the corrupted clients receive.
 \emph{Setup.} The simulator runs the distributed key generation with the
 corrupted parties, playing the honest clients on uniformly chosen shares.
 
+
 \emph{Training.} For each honest client the simulator sends an encryption of
 zero in place of $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$. A hybrid
 argument replaces the honest ciphertexts one at a time, and each neighbouring
@@ -143,8 +144,7 @@ circuit that do not depend on any plaintext, so the simulator knows their number
 and position in advance.}
 
 \emph{Selection and serving.} The selection step decrypts one value. The
-simulator takes that index from $\Leak$ and produces the collective
-key-switching transcript for it.
+simulator takes that index from $\Leak$.
 For each query of a corrupted client, the simulator holds the answer in
 $\mathsf{out}_{\mathcal{A}}$. Queries by honest clients are simulated as key switches of encryptions of zero.
 
@@ -157,7 +157,7 @@ same way. Queries by honest clients are switched to keys the adversary does not
 hold, so their transcripts are simulated as key switches of encryptions of zero.}
 
 Composing the three parts gives a view computationally indistinguishable from
-the real one.
+the real one. \paperonly{\trsee{sec:security} gives every proof in full.}
 \end{proof}
 
 \subsection{Input Privacy Against Malicious Clients}

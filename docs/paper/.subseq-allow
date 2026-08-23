@@ -28,8 +28,8 @@ learn, is stated in \cref{sec:threat}.
 # clause naming the second party deleted.
 \paragraph{View of the server} Ciphertexts under the collective public key, the
 public per-client sample counts, and the evaluation keys. It holds no decryption
-key, and by \cref{sec:mhe} it cannot decrypt. The server additionally sees
-encrypted query features, which it cannot read and therefore cannot invert.
+key. The server additionally sees
+encrypted query features, which it cannot read.
 %%
 # 2026-08-23, W7. One sentence is new, the last. Table VII carried the setup
 # figure and the table moved to the report, so without this the submission
@@ -91,8 +91,7 @@ classifier head on the same frozen public backbone, keeps the adapter, and
 uploads one encrypted head displacement weighted by its per-class counts. The
 server adds the ciphertexts and divides by the per-class totals under
 encryption, holding no decryption key, so the shared head $\thstar$ exists only
-as a ciphertext. The same server answers queries, applying the encrypted head to
-encrypted features the querying client computed itself.
+as a ciphertext. The same server answers queries.
 %%
 # 2026-08-23, W7. Figure 2 is new, so its caption is new. It replaces the
 # sensitivity table and the cost figure, which move to the report. The caption

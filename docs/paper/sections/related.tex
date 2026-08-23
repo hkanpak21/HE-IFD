@@ -81,7 +81,7 @@ That cost scales with the network being trained, so adapting a pretrained
 transformer by this route is out of reach.}
 
 Several works encrypt only the aggregation step of an otherwise plaintext training
-loop~\cite{li2025shelora}.
+loop~\paperonly{\cite{li2025shelora}}\tronly{\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe,li2025shelora,kemmaka2025hybagg}}.
 All of them remain bound to the iterative protocol, so the encryption cost is paid
 on every round and what is protected is a per-round sum rather than a complete
 contribution. Single-key
@@ -294,12 +294,9 @@ HE-OFT                               & one  & HE   & no       & label \\
 
 \medskip
 \noindent\emph{Positioning.}
-\Cref{tab:related} places the closest systems on the axes that separate them. The
-multi-round cryptographic line protects every round but pays on every round. The one-shot line exposes its single
-contribution in plaintext, or noises it and pays in accuracy. The fine-tuning line
-communicates a small object but protects nothing. What remains unaddressed is a protocol that
+\Cref{tab:related} places the closest systems on the axes that separate them. What remains unaddressed is a protocol that
 exposes no training-time quantity, that exchanges anything at all only once, and
-that never discloses the model even to the parties that built it.
+that never discloses the model even to the parties that built it. \paperonly{\trsee{sec:related} surveys the field in full.}
 
 \tronly{\medskip
 \noindent\emph{Positioning.}

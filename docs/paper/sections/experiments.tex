@@ -15,14 +15,14 @@ protocol does not cover.}
 \subsection{Setup}
 \label{sec:setup}
 
-The trainable unit is a rank-$8$ low-rank adapter with its down-projection frozen at a shared public initialisation, together with a classifier head. No labelled public data is used anywhere in this paper.
+The trainable unit is a rank-$8$ low-rank adapter with its down-projection frozen at a shared public initialisation, together with a classifier head. No labelled public data is used anywhere.
 
 We evaluate on four text classification tasks of increasing label-space size,
 AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
 $77$, using a frozen RoBERTa-base encoder~\cite{liu2019roberta}, and on CIFAR-100
 with a frozen ViT-B/16~\cite{dosovitskiy2021vit}. Data are partitioned across clients by a Dirichlet distribution over
 labels with concentration $\alpha$, the standard label-skew
-partition~\cite{hsu2019measuring}. Unless stated otherwise there are $\Nc=10$
+partition~\cite{hsu2019measuring}. There are $\Nc=10$
 clients, $\alpha=0.1$, the local trajectory is $200$ steps, and every number is the
 mean over three seeds.
 
@@ -102,7 +102,7 @@ least of the label space.
 Second, the preferable arrangement changes with the size of the label space. On the small label spaces the shared head wins, $0.17$ on AG-News and $0.18$ on TREC. On the large ones the personal
 adapter wins. The shared head collapses to
 $0.206$ while the personal adapter holds $0.686$. The collapse is a coverage
-failure. With $77$ classes and this skew each head row is decided by few clients
+failure. With $77$ classes each head row is decided by few clients
 or none.
 
 Third, the two failure modes are complementary. The shared head
@@ -114,7 +114,7 @@ them.
 \paragraph{Sensitivity} \Cref{fig:trends} varies the protocol axes around the
 default on DBpedia. Accuracy falls with skew, from $0.971$ at
 $\alpha=1.0$ to $0.789$ at $\alpha=0.1$. Longer local
-training helps, from $0.718$ at $100$ steps to $0.870$ at $400$. Accuracy
+training helps. Accuracy
 rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
 $\Nc=50$.
 
@@ -260,7 +260,7 @@ Scoring both arrangements under the federation's own class prior, letting
 the shared arrangement pool evidence across clients and scoring the personal
 arrangement's unobserved classes at zero, selects correctly in $12$ of $15$ cells.
 Filling the unobserved classes from each client's rarest classes instead of with
-zero selects correctly in $13$.
+zero selects correctly in $13$. \paperonly{\trsee{sec:experiments} reports the estimator against the held-out vote on every cell.}
 
 \tronly{The direct procedure for choosing between the two
 arrangements fails systematically, and the estimator of \cref{sec:selection}
@@ -507,8 +507,7 @@ specifies the latter, at a one-time cost of $15.5$\,MiB of key material at ring
 degree $2^{16}$, generated collectively in $51$\,s. One key generation of
 $15.5$\,MiB therefore replaces $1.6$\,GiB on every subsequent query.}
 
-\paragraph{Correctness} The decrypted result matches the plaintext computation to
-a relative error at the level of the encoding precision of the scheme, and the
+\paragraph{Correctness} The
 encrypted argmax is exact. The accuracy
 figures of \cref{tab:headline} are therefore unaffected by the cryptography.
 
@@ -570,7 +569,7 @@ Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
 $2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
 between three and five times that number of queries. A deployment can therefore set its
-allowance from $\Cc$ and $d$ without repeating this experiment.
+allowance from $\Cc$ and $d$ without repeating this experiment. \paperonly{\trsee{sec:experiments} gives the extraction study in full.}
 
 \tronly{Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and

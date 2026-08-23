@@ -2,14 +2,14 @@
 \label{sec:intro}
 
 Organizations adapt large public pretrained models to their own data by
-fine-tuning~\cite{hu2022lora}. Often several
+fine-tuning~\paperonly{\cite{hu2022lora}}\tronly{\cite{bommasani2021opportunities,hu2022lora}}. Often several
 organizations hold complementary data over the same task, different patient
 populations, fraud patterns, or customer bases, and each would obtain a better
 model from the combination than from its own data alone~\cite{sheller2020federated}. They cannot pool that data, because data protection law restricts the sharing of
 
-confidential records across institutions~\cite{gdpr2016,hipaa}. Competitive concerns
+confidential records across institutions~\paperonly{\cite{gdpr2016}}\tronly{\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}}. \tronly{Competitive concerns
 point the same way, and handing the data to whoever operates the fine-tuning
-infrastructure raises the same objection~\cite{xiao2023offsite}. Three obstacles
+infrastructure raises the same objection~\cite{xiao2023offsite}.} Three obstacles
 stand between that setting and a protocol these organizations could deploy.
 
 Federated learning (FL) enables collaboration~\cite{mcmahan2017communication},
@@ -31,12 +31,12 @@ no intermediate training artifact is ever exposed.
  Prior work applies one of these
 measures at a time. One-shot FL~\cite{guha2019oneshot} sends its
 single contribution in
-plaintext~\cite{zhang2022dense,tang2024fusefl}, or protects it
+plaintext~\paperonly{\cite{zhang2022dense,tang2024fusefl}}\tronly{\cite{zhang2022dense,dai2024coboosting,tang2024fusefl}}, or protects it
 with differential privacy~\cite{hoech2022fedauxfdp}, which
 adds noise to the very artifact it releases.
  Encrypted FL runs many rounds of
 encrypted training or encrypted aggregation, paying the cryptographic cost on
-every round, and the direct route of training under encryption forces polynomial
+every round, and training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
 circuit~\cite{sav2021poseidon}. Adapting a pretrained transformer by this route is out of
 reach.
@@ -65,15 +65,13 @@ reach, and that is the case this paper addresses.}
 
 Applying both measures still leaves one artifact exposed, namely the model itself.
 One-shot protocols end by handing the final model to every participant, which is
-unacceptable when the model may not be distributed at all. Encrypted training does
-withhold it, but the cost just described puts a pretrained backbone out of reach. A model fine-tuned on
+unacceptable when the model may not be distributed at all. A model fine-tuned on
 confidential records can be a regulated artifact in high-risk domains such as
 health, biometrics, and credit~\cite{euaiact2024}.
 
 In this work, we present HE-OFT, the first one-shot federated fine-tuning protocol
 that enables several parties to adapt a pretrained model together and to query the
-result, without any of them ever holding it in plaintext. The parties fine-tune on a frozen public backbone, contribute once, and obtain a
-shared classifier. The contribution is encrypted under multiparty
+result, without any of them ever holding it in plaintext. The contribution is encrypted under multiparty
 CKKS~\cite{cheon2017ckks,mouchet2021multiparty}, a homomorphic encryption scheme
 whose secret key is split across the parties.
  The backbone stays public and in plaintext, so the cost of the cryptography does
@@ -88,9 +86,7 @@ adapter and a classifier head on the same frozen public backbone, keeps the
 adapter, and uploads one encrypted head displacement weighted by the classes it
 holds. The server adds the ciphertexts and divides by the per-class totals under
 encryption, so the shared head exists only as a ciphertext and the server holds no
-key to it. A client that wants a prediction computes the features of its query
-itself, encrypts them, and sends them to the server, which applies the
-encrypted head and takes the argmax under encryption.
+key to it.
 
 The querier must build its query from parts it can run itself, so those parts must
 be public. The shared trained quantity therefore sits after the last nonlinearity,
@@ -101,19 +97,16 @@ which, in a transformer, is a single place. The three contributions below follow
   transmits it. Only the classifier head is federated, because a client can improve
   its own features alone but cannot recognize a class it has never seen. No adapter
   aggregate exists, so a coalition of all but one client cannot recover the last
-  client's adapter by subtracting its own contributions (\cref{sec:split}).
+  client's adapter (\cref{sec:split}).
 
 \item \textbf{A serving path that never decrypts.} The querying client encrypts its
-  own features, so the server cannot read the query. The server
-  applies the encrypted head and takes the argmax under encryption, and a quorum
-  switches the result to the querier's key. Only a label leaves the protocol, so a
+  own features, so the server cannot read the query. Only a label leaves the protocol, so a
   client cannot collect the per-class scores that would let it solve for the head
   (\cref{sec:serving}).
 
 \item \textbf{A selection rule that runs under encryption.} Two arrangements are
   servable at the same cost, the shared head over each client's own adapter and the
-  shared head over the bare public backbone. Which one is better depends on the
-  task. Each client scoring both on its own held-out data and voting estimates the
+  shared head over the bare public backbone. Each client scoring both on its own held-out data and voting estimates the
   wrong quantity. The
   estimator given here corrects that, needs no fitted threshold, and reveals only
   which arrangement won (\cref{sec:selection}).
