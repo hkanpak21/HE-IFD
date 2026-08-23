@@ -106,3 +106,6 @@ REJECTED_PAPER/*.zip
 *.fls
 *.fdb_latexmk
 texput.log
+
+# figure smoke tests
+docs/paper/figures/_*.pdf

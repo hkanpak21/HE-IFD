@@ -130,6 +130,48 @@ The corollary is that the cut works at paragraph granularity. Most of the 8.5
 pages comes from deleting whole paragraphs and moving them to the report, not
 from shortening sentences.
 
+### The plot style
+
+Every plot in either document goes through `docs/paper/figures/heoft_plot.py`.
+One import, one palette, one figure size, so a font size is decided once and
+never in a plotting script.
+
+```python
+import sys; sys.path.insert(0, "docs/paper/figures")
+import heoft_plot as hp
+
+fig, ax = hp.panels(4)          # full width, four panels, 12.7% of a page
+ax[0].plot(x, y, color=hp.SERIES["selected"], label="selected")
+hp.label(ax[0], "a")            # panel letter, top left, caption size
+hp.save(fig, "fig_trends.pdf")  # saves and reports whether the fonts match
+```
+
+Sizes come from `docs/paper/.paper-meta.yml`, measured off IEEEtran with the
+journal option rather than guessed. `\the\columnwidth` is 252.0pt,
+`\the\textwidth` is 516.0pt, `\the\textheight` is 696.0pt.
+
+Three rules the module enforces, all of them Halil's ruling of 2026-08-23.
+
+**Every glyph is 8pt, the caption size.** The skill's `paper.mplstyle` drops
+ticks and legends to 7, which is the usual convention. Nothing in one of our
+plots is smaller than the caption beneath it. `figfont.py check <pdf> --target 8`
+verifies it and the smoke test passes with 0 of 33 spans outside tolerance.
+
+**The figure is saved at its final width and included with no width option.**
+Never `width=\linewidth` on one of these and never `\resizebox`. Both rescale
+the fonts and the plot stops matching the paper.
+
+**As little text inside a plot as possible.** A panel carries its axis labels
+and its data. Everything else goes to the legend or the caption. The caption
+states the comparison and the conditions and stops. Comment and analysis are
+body text.
+
+The palette is the SANZO block already in `sections/preamble.tex`, the same hex
+values, so a plot and a draw.io diagram on the same page use the same blue. One
+name for one thing extends to colour, so `selected` is `paperblue` in every
+panel of every figure, `alone` is the tan, `disclosed` is the sage and `pooled`
+is the blue-grey.
+
 ### What the linter gates
 
 `scripts/lint.py --paper` runs on the paragraphs `check_subseq.py` classifies as
@@ -192,7 +234,8 @@ the comparison with model disclosure. Rebuild the floats to Table II
 (accuracy), Table III (CIFAR-10 against the published partitions) and Figure 2,
 a four-panel `figure*` carrying accuracy against client count, against skew,
 against local steps, and query cost against ring degree. Every panel already has
-a record. Communication drops to three numbers in a sentence. Cryptographic cost
+a record, and every panel is drawn through `heoft_plot.py` at 12.7 per cent of
+a page for the four together. Communication drops to three numbers in a sentence. Cryptographic cost
 goes from 1.46 pages to 0.60.
 
 Two corrections ride with this work.

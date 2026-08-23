@@ -1,0 +1,45 @@
+\title{HE-OFT: Privacy-Preserving One-Shot Federated Fine-Tuning under Homomorphic Encryption\ifsubmission\else\\[2pt]\large Technical Report\fi}
+
+\author{
+Halil \.{I}brahim Kanpak\,\orcidlink{0009-0005-0284-5941},
+Sinem Sav\,\orcidlink{0000-0001-9096-8768},
+Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
+\thanks{Corresponding Author: Sinem Sav (sinem.sav@cs.bilkent.edu.tr)}%
+\thanks{Halil \.{I}brahim Kanpak is with the Department of Computer Engineering, Ko\c{c} University, İstanbul, Türkiye (e-mail: hkanpak21@ku.edu.tr).}%
+\thanks{Sinem Sav is with the Department of Computer Engineering, Bilkent University, Ankara, Türkiye (e-mail: sinem.sav@cs.bilkent.edu.tr).}%
+\thanks{Alptekin K\"up\c{c}\"u is with the Department of Computer Engineering, Ko\c{c} University, İstanbul, Türkiye (e-mail: akupcu@ku.edu.tr).}%
+\thanks{Manuscript received XX XX, XXXX; revised XX XX, XXXX.}%
+}
+
+\markboth{IEEE Transactions on Network Science and Engineering}%
+{Kanpak \MakeLowercase{\textit{et al.}}: Privacy-Preserving One-Shot Federated Fine-Tuning under Homomorphic Encryption}
+
+\maketitle
+
+\begin{abstract}
+Organizations holding complementary data over the same task would each gain from a
+jointly fine-tuned model, yet cannot pool their data to build one.
+Federated learning offers collaboration but concentrates its privacy risk at training time. Gradients
+and per-round updates permit reconstruction of training data, and published
+attacks infer membership from them far more accurately than from the final model.
+A one-shot protocol that exchanges a single encrypted contribution removes that surface,
+but it still ends by handing the final model to every participant, which is not
+permitted where the model is itself a regulated or proprietary asset. Multi-round
+encrypted training also withholds the model, but it pays a cryptographic cost on
+every round and cannot adapt a pretrained backbone. We present HE-OFT, the first
+cryptographically secure one-shot federated fine-tuning protocol, in which the
+final model is never disclosed to any party.
+Each client fine-tunes a low-rank adapter and a classifier head on a
+frozen public backbone, retains the adapter locally, and uploads one encrypted
+head displacement. The server combines these under multiparty CKKS and never
+decrypts the result. Queries are answered under encryption, and a quorum of
+clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, and it gives up $0.03$ to $0.14$ against a disclosed model. One query costs $31.5$\,s at four classes and $113.2$\,s at a hundred, and $13.5$\,MiB of traffic.
+
+
+
+\end{abstract}
+
+\begin{IEEEkeywords}
+Federated learning, one-shot federated learning, federated fine-tuning, homomorphic encryption,
+multiparty computation, privacy-preserving machine learning.
+\end{IEEEkeywords}

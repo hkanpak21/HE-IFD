@@ -1,0 +1,108 @@
+
+% packages
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{amsthm}
+\newtheorem{proposition}{Proposition}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{plain}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+\usepackage{orcidlink}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\usepackage{float}
+
+% Ideal-functionality float, ruled in the style used by the secure-aggregation
+% literature: rule, title, rule, body, rule. Numbered independently of figures.
+\floatstyle{ruled}
+\newfloat{functionality}{tbp}{lof}
+\floatname{functionality}{Functionality}
+\crefname{functionality}{Functionality}{Functionalities}
+\Crefname{functionality}{Functionality}{Functionalities}
+
+
+% SANZO palette (mirrors docs/paper/figures/make_figures.py and FL_TDSC/figures/sanzo.md)
+\definecolor{paperblue}{HTML}{5B7FA6}     % SANZO primary blue (borders / primary)
+\definecolor{paperbluelt}{HTML}{C9D6E3}   % light blue fill
+\definecolor{paperneutral}{HTML}{5B7B6E}  % SANZO dark sage (neutral / reference)
+\definecolor{paperneutrallt}{HTML}{C7D0D6}% SANZO light blue-grey (server fill)
+\definecolor{paperamber}{HTML}{D4826A}    % SANZO terracotta (contrast accent)
+% blue ramp (light -> dark)
+\definecolor{blueA}{HTML}{D3DEEA}
+\definecolor{blueB}{HTML}{A9BDD3}
+\definecolor{blueC}{HTML}{7B9BBF}
+\definecolor{blueD}{HTML}{5B7FA6}
+% SANZO tan family (clients / teachers) + sage + blue-grey
+\definecolor{sanzotan}{HTML}{C6A87D}
+\definecolor{sanzotanlt}{HTML}{D4C5A9}
+\definecolor{sanzotangrey}{HTML}{B5A88B}
+\definecolor{sanzobluegrey}{HTML}{8B9EA8}
+\definecolor{sanzosage}{HTML}{7B9E87}
+
+% notation macros (single source of truth; mirrors docs/paper/notation-and-terms.md)
+\newcommand{\Nc}{N}                                  % number of clients
+\newcommand{\Dj}{\mathcal{D}_j}                      % client j local dataset
+\newcommand{\nj}{n_j}                                % |D_j|
+\newcommand{\Cc}{C}                                  % number of classes
+\newcommand{\featx}{\varphi}                         % frozen feature extractor
+\newcommand{\headp}{\psi}                            % trainable head params
+\newcommand{\head}{h_{\headp}}                       % trainable head
+\newcommand{\model}{f_{\theta}}                      % student model
+\newcommand{\thz}{\theta_0}                          % shared loss basin / init
+\newcommand{\teacher}{t_j}                           % client teacher
+\newcommand{\Ksteps}{K}                              % bounded trajectory length
+\newcommand{\temp}{\tau}                             % distillation temperature
+\newcommand{\disp}{\Delta_j}                         % displacement
+\newcommand{\wj}{w_j}                                % sample weight
+\newcommand{\thstar}{\theta^{\star}}                 % aggregated global model
+\newcommand{\Kpc}{K_{\mathrm{pc}}}                   % samples per class per client
+\newcommand{\KL}{\mathrm{KL}}
+
+% security macros
+\newcommand{\tc}{t}                                  % decryption threshold
+\newcommand{\Fhe}{\mathcal{F}}                       % ideal functionality
+\newcommand{\Leak}{\mathcal{L}}                      % leakage the functionality allows
+\newcommand{\Dset}{\{\Dj\}_{j=1}^{\Nc}}              % all client datasets
+\newcommand{\negl}{\mathrm{negl}}                    % negligible function
+
+% measured accuracies
+\newcommand{\Asel}{A_{\mathrm{sel}}}                 % selected servable arrangement
+\newcommand{\Aloc}{A_{\mathrm{loc}}}                 % a client alone
+\newcommand{\Adis}{A_{\mathrm{dis}}}                 % disclosed model
+\newcommand{\Apool}{A_{\mathrm{pool}}}               % pooled model
+
+% DRAFT placeholders (replace when the runs land; \tbd marks a pending number)
+\newcommand{\tbd}{{\color{red}\textbf{??}}}
+\newcommand{\figtbd}[1]{\begin{center}\fbox{\parbox[c][2.6cm][c]{0.86\linewidth}{\centering\color{red}\itshape [figure placeholder: #1]}}\end{center}}
+
+% from-scratch discussion toggle: set \fromscratchfalse to exclude that part entirely
+\newif\iffromscratch\fromscratchtrue
+
+% ---------------------------------------------------------------------------
+% Two documents from one source.
+%   main.tex     sets \submissiontrue    the TNSE submission, 10 printed pages
+%   main-tr.tex  sets \submissionfalse   the arXiv technical report, no limit
+%
+% Both drivers input the same sections. The seven top-level sections are
+% identical in both and appear in the same order, so \ref on a section label
+% yields the same numeral in either document. That is what makes \trsee sound,
+% and scripts/check_split.py enforces it. A pointer therefore names a section
+% and never a subsection, because subsections do differ between the two.
+% ---------------------------------------------------------------------------
+\ifsubmission
+  \newcommand{\paperonly}[1]{#1}
+  \newcommand{\tronly}[1]{}
+  \newcommand{\trsee}[1]{Section~\ref{#1} of the technical report~\cite{heoft2026tr}}
+\else
+  \newcommand{\paperonly}[1]{}
+  \newcommand{\tronly}[1]{#1}
+  \newcommand{\trsee}[1]{\cref{#1}}
+\fi
+

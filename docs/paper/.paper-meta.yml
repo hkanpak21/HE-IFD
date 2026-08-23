@@ -1,0 +1,9 @@
+# Measured from IEEEtran with the journal option, not guessed.
+#   \the\columnwidth = 252.0pt   \the\textwidth = 516.0pt   \the\textheight = 696.0pt
+# body_pt is the class default for the journal option. caption_pt is what
+# IEEEtran sets for \caption, and it is the size every figure label matches.
+column_width_pt: 252.0
+text_width_pt: 516.0
+caption_pt: 8
+body_pt: 10
+font_family: Times New Roman
