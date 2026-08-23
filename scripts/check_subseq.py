@@ -77,16 +77,30 @@ _AGREE = [
 XREF = re.compile(r"\\(?:c|C)?ref\{[^}]*\}|\\trsee\{[^}]*\}")
 
 
+def _float_to_caption(m):
+    """A float's body is data, but its caption is prose and must be checked."""
+    cap = re.search(r"\\caption\{", m.group(0))
+    if not cap:
+        return " <FLOAT> "
+    i = cap.end()
+    d, j = 1, i
+    while j < len(m.group(0)) and d:
+        d += (m.group(0)[j] == "{") - (m.group(0)[j] == "}")
+        j += 1
+    return " <FLOAT> " + m.group(0)[i:j - 1] + " "
+
+
 def paragraphs(text):
     text = "\n".join(l for l in text.split("\n") if not l.lstrip().startswith("%"))
-    text = FLOAT.sub(" <FLOAT> ", text)
+    text = FLOAT.sub(_float_to_caption, text)
     text = XREF.sub(" ", text)
     return [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
 # Conditionals are machinery. A paragraph wrapped in \tronly is the same
 # paragraph.
-_MACHINERY = {"\\tronly", "\\paperonly", "\\ifsubmission", "\\else", "\\fi"}
+_MACHINERY = {"\\tronly", "\\paperonly", "\\ifsubmission", "\\else", "\\fi",
+              "FLOAT"}
 
 
 def words(p):
@@ -123,6 +137,9 @@ def base_pool(ref, root):
     # biographies in main.tex. W1 moved them into sections/, so the pool needs
     # main.tex or every one of them reads as newly written.
     files.append(str(Path(root).parent / "main.tex"))
+    files += [f for f in subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", ref, str(Path(root).parent / "figures")],
+        capture_output=True, text=True).stdout.split() if f.endswith(".tex")]
     pool = []
     for f in files:
         if not f.endswith(".tex"):
@@ -171,7 +188,9 @@ def main():
                            "REWRITTEN"), 0)
     flagged = []
     total = 0
-    for f in sorted(Path(a.root).glob("*.tex")):
+    scan = sorted(Path(a.root).glob("*.tex"))
+    scan += sorted((Path(a.root).parent / "figures").glob("*.tex"))
+    for f in scan:
         if f.name in SKIP:
             continue
         for p in paragraphs(f.read_text()):

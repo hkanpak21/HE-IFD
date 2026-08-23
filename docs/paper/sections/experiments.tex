@@ -181,7 +181,8 @@ $\alpha\in\{0.04,0.16\}$, the configuration of~\cite{hoech2022fedauxfdp}.
 
 \begin{table}[t]
 \centering
-\caption{CIFAR-10 on two published partitions, three seeds. The columns are the
+\caption{CIFAR-10 on two published partitions, three seeds, on the whole
+$10{,}000$-image test set. The columns are the
 quantities defined in \cref{sec:setup}, all measured on our protocol at the
 partition each prior paper published.}
 \label{tab:peers}
@@ -191,15 +192,15 @@ partition each prior paper published.}
 \toprule
 $\Nc$ & $\alpha$ & $\Aloc$ & $\Asel$ & $\Adis$ & $\Adis-\Asel$ \\
 \midrule
-$5$  & $0.10$ & $0.384$ & $0.948$ & $0.962$ & $0.013$ \\
-$5$  & $0.30$ & $0.569$ & $0.950$ & $0.964$ & $0.014$ \\
-$20$ & $0.04$ & $0.212$ & $0.948$ & $0.943$ & $-0.005$ \\
-$20$ & $0.16$ & $0.399$ & $0.952$ & $0.959$ & $0.007$ \\
+$5$  & $0.10$ & $0.384$ & $0.949$ & $0.963$ & $0.013$ \\
+$5$  & $0.30$ & $0.570$ & $0.952$ & $0.966$ & $0.015$ \\
+$20$ & $0.04$ & $0.212$ & $0.950$ & $0.947$ & $-0.003$ \\
+$20$ & $0.16$ & $0.397$ & $0.953$ & $0.961$ & $0.007$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-At $\Nc=5$ and $\alpha=0.1$ we measure $\Asel=0.948$, against the $0.503$
+At $\Nc=5$ and $\alpha=0.1$ we measure $\Asel=0.949$, against the $0.503$
 of~\cite{zhang2022dense}. We do not present that margin as a result. Those methods train a ResNet-18 from scratch, whereas
 every client here fine-tunes a frozen public ViT-B/16. Absolute accuracy across papers therefore measures
 the backbone.
@@ -228,12 +229,12 @@ Our contribution is protected cryptographically, and that protection costs no
 accuracy, by construction, since the decrypted result
 matches the plaintext computation to the encoding precision of the scheme.
 Withholding the model is a separate charge, and no method above incurs it. Over \cref{tab:peers} the charge lies
-between $-0.005$ and $0.014$, and over \cref{tab:headline} between $0.03$ and
+between $-0.003$ and $0.015$, and over \cref{tab:headline} between $0.03$ and
 $0.14$.
 
 \tronly{\paragraph{A partition at which the charge is negative} At $\Nc=20$ and
-$\alpha=0.04$ we measure $\Asel>\Adis$, by $0.005$ on average, on two seeds of
-three and by no margin on the third. The mechanism is the following. At that
+$\alpha=0.04$ we measure $\Asel>\Adis$, by $0.003$ on average, on two seeds of
+three. The mechanism is the following. At that
 concentration each client holds close to a single class, so the aggregate of the
 adapters moves the representation toward every local task at once and improves none
 of them. The arrangement that leaves the public backbone unchanged avoids this, and
@@ -244,7 +245,7 @@ rather than $20$.}
 
 One difference bounds the federation's own contribution independently of the
 backbone, because both of its terms are measured on the same backbone. At $\Nc=5$
-and $\alpha=0.1$ we measure $\Aloc=0.384$ against $\Asel=0.948$. That difference is
+and $\alpha=0.1$ we measure $\Aloc=0.384$ against $\Asel=0.949$. That difference is
 what the protocol supplies.
 
 \tronly{\paragraph{Selection on these partitions} The estimator of \cref{sec:exp-select}

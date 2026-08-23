@@ -73,9 +73,45 @@ decrypts, and a quorum of clients returns only the predicted label, addressed to
 # Confidentiality as a property the paper proves. The paper never says the
 # parties may decrypt the model, so the caption states only what it does say.
 # The old row also contradicted our own introduction four pages earlier.
-\caption{The closest systems on the four axes this paper turns on, as each paper
-reports them. Model in the clear says whether any party ends up holding the
+The closest systems on the four axes this paper turns on, as each paper
+reports them. The plaintext column says whether any party ends up holding the
 trained model in plaintext, and \emph{provider} means one party does while the
 querier does not. slytHErin and CryptPEFT serve a model they do not train, so
 their rounds cell is empty. POSEIDON keeps the model under the collective key and
-states that the querier does not obtain the model's weights.}
+states that the querier does not obtain the model's weights.
+%%
+# 2026-08-23, W3. A new figure needs a new caption. figures/training.tex was an
+# \includegraphics wrapper around a draw.io export of the training stage only.
+# It is now a TikZ drawing of all three stages with the server drawn once, which
+# is the entity merge made visible and the answer to the PI comment of 12 August
+# that the figure should be explained. It replaces figures/serving.tex and
+# figures/selection.tex, which move to the report.
+The protocol in three stages. Each client fine-tunes an adapter and a
+classifier head on the same frozen public backbone, keeps the adapter, and
+uploads one encrypted head displacement weighted by its per-class counts. The
+server adds the ciphertexts and divides by the per-class totals under
+encryption, holding no decryption key, so the shared head $\thstar$ exists only
+as a ciphertext. The same server answers queries, applying the encrypted head to
+encrypted features the querying client computed itself.
+%%
+# 2026-08-23, W7. Figure 2 is new, so its caption is new. It replaces the
+# sensitivity table and the cost figure, which move to the report. The caption
+# states the conditions and nothing else, per the ruling of the same day, and
+# it discloses the seed split the old table caption also disclosed.
+The protocol along four axes, one record behind each panel. Panels (a)
+to (c) vary the federation size, the label skew and the length of the local
+trajectory on DBpedia around the default of $\Nc=10$, $\alpha=0.1$ and $200$
+steps. Panel (a) and panel (c) are one seed and panel (b) is the mean over
+three. Panel (d) gives the cost of one encrypted argmax against the size of the
+label space, at $\Nc=10$ and ring degree $2^{15}$, for the tournament the
+protocol uses and for the sequential fold it replaces.
+%%
+# 2026-08-23. One clause is new in Table IV's caption. The cells were measured
+# on 2000 of CIFAR-10's 10000 test images, and the paper argues from a margin of
+# 0.003, so the caption has to say which test set. Jobs 1593568 to 1593571 on
+# the ai partition reran all four cells on the whole test set. Every cell holds
+# to within 0.003 and the negative charge survives at -0.003.
+CIFAR-10 on two published partitions, three seeds, on the whole
+$10{,}000$-image test set. The columns are the
+quantities defined in \cref{sec:setup}, all measured on our protocol at the
+partition each prior paper published.
