@@ -130,6 +130,20 @@ The corollary is that the cut works at paragraph granularity. Most of the 8.5
 pages comes from deleting whole paragraphs and moving them to the report, not
 from shortening sentences.
 
+### What the linter gates
+
+`scripts/lint.py --paper` runs on the paragraphs `check_subseq.py` classifies as
+rewritten, and on nothing else. The current text carries 13 errors and 165
+warnings, and 99 of the warnings are agentless passives that sit inside proofs
+and float captions the PIs have read and accepted. Fixing those is new writing,
+which is the thing this plan exists to avoid. A warning in text that survives
+unchanged is left alone. A warning in text I write is an error.
+
+The one exception is the 13 errors, which are mechanical and cheap. Five
+intensifiers, four identifiers in prose, one semicolon, one banned phrase, one
+filler, and one table that nothing references. Those are word-level fixes and
+they go in wherever the surrounding paragraph is already being touched.
+
 ## 4. The work, in order
 
 Sizes are `[word]`, `[line]`, `[para]`, `[move]`, `[section]`, `[figure]`.
@@ -262,7 +276,9 @@ plan time, and again on the finished draft.
 | Every submission rule met | Open | 10 printed pages is the target. TNSE's supplementary-file limit is unchecked and matters for whether the report can ride along |
 | Submission details and dates known before talking to the advisor | Open | TNSE submission window and the editorial office question about the resubmission policy |
 | Grammar and spelling checked strictly | To do at W13 | |
-| KOLT or the Writing Center consulted | Not done | Halil's call. It is on the advisor's list |
+| KOLT or the Writing Center consulted | Replaced by the linter | `references/writing.md` is the standard and `scripts/lint.py --paper` is the machine check. It decides dashes, semicolons, explanatory colons, banned words, intensifiers, filler, identifiers in prose, antithesis, agentless passives and unbacked quantifiers. Baseline on the current text is 13 errors and 165 warnings |
+| Plain technical English, no LLM register | Standing rule, W5 to W11 | Standard technical English and nothing else. No "not X but Y". No "load-bearing", "the real question is", "it is worth noting", "crucially", "fundamentally". No slogan and no closing sentence whose job is to sound good. `lint.py` catches antithesis, intensifiers, filler and the banned list. The rest is read by hand at W13 |
+| As little new writing as possible | Standing rule, W5 to W11 | The current text has been read by the PIs. Every new sentence is a sentence they must read again and answer questions about. The cut therefore deletes and moves, and writes only where a deletion leaves a sentence ungrammatical or a claim unsupported. `check_subseq.py` names every paragraph that needed a new sentence and each one is Halil's decision, not mine |
 | Acknowledgements checked | Met | TÜBİTAK 124E091 and 124N941 are in `main.tex`, and the LLM-use sentence is there |
 | Author version PDF per the copyright rules | Not yet | `references/copyright.md` at acceptance |
 

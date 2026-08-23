@@ -79,3 +79,14 @@ Halil, 2026-08-23.
 - Section order is Introduction, Preliminaries, Method, Security, Experiments,
   Related Work, Conclusion. Related work comes after the solution, which is the
   deck's rule. Halil, 2026-08-23.
+- Plain technical English and nothing else, in both documents. No "not X but
+  Y". No "load-bearing", "the real question is", "it is worth noting",
+  "crucially", "fundamentally". No slogan and no closing sentence whose job is
+  to sound good. `scripts/lint.py --paper` is the machine check and
+  `references/writing.md` is the standard. Halil, 2026-08-23.
+- As little new writing as possible. The current text has been read by the PIs,
+  so every new sentence is one they must read again. Delete and move. Write
+  only where a deletion leaves a sentence ungrammatical or a claim
+  unsupported. Halil, 2026-08-23.
+- The linter gates text written now, not text the PIs have approved. A warning
+  in a paragraph that survives unchanged is left alone. Halil, 2026-08-23.
