@@ -356,7 +356,7 @@ Communication figures are exact.
 
 \tronly{\paragraph{Cost of query encryption} Applying the head to an encrypted
 query costs $39.0$\,ms against $5.4$\,ms for a plaintext one, a factor of seven.
-That factor buys the property that the serving party never sees the feature vector
+That factor buys the property that the server never sees the feature vector
 and therefore cannot invert it to recover the client's input, and it is small
 beside the argmax that follows.}
 
@@ -386,7 +386,7 @@ single operation on a single ciphertext. It applies inside each primitive
 instead, across the residue moduli of the residue number system decomposition, and our
 single-threaded measurement uses none of it. Overlapping computation with
 communication raises throughput rather than lowering latency, because the level
-restorations lie on the critical path of one query, while a serving party that
+restorations lie on the critical path of one query, while the server that
 answers many queries can pipeline them. Hardware acceleration is the only lever
 that acts directly on the dominant term. The argmax is bootstrap-bound, which is
 where a GPU implementation helps most and, for the reason given below, where we
@@ -425,7 +425,7 @@ product measures $38.4$, $39.0$ and $39.2$\,ms at $\Nc=5$, $10$ and $20$.}
 \tronly{The key switch that returns a label answers to both, and doubles with each. It
 runs from $103$\,ms at the smallest setting to $1.73$\,s at the largest. Traffic
 follows the same law, at $2.0$\,MiB per participating client, because each
-contributes one independent share and the serving party only sums them. The
+contributes one independent share and the server only sums them. The
 encrypted reciprocal grows more slowly, $3.16$\,s at $\Nc=5$ against $6.30$\,s at
 $\Nc=20$, since only its two refreshes involve the clients.}
 
@@ -479,7 +479,7 @@ costs traffic per query.
 $2^{15}$ that the encrypted argmax requires. Share sizes do not depend on the
 number of clients. The per-query total does, because the quorum returns one
 key-switching share each, and it does not depend on the number of classes,
-because the level restorations are local to the serving party.}
+because the level restorations are local to the server.}
 \label{tab:comm}
 \footnotesize
 \begin{tabular}{llc}
@@ -512,7 +512,7 @@ because the alternative is two orders of magnitude more expensive. The argmax sp
 have them restored several times per query. Restoring them by a collective refresh
 would require a share from every client for every refresh, which at a hundred
 classes amounts to roughly $1.6$\,GiB of traffic for a single label. Generating
-bootstrapping keys once, collectively, and letting the serving party restore levels
+bootstrapping keys once, collectively, and letting the server restore levels
 on its own reduces that traffic to zero, because evaluation under a collectively
 generated key is identical to evaluation under a single key. The protocol therefore
 specifies the latter, at a one-time cost of $15.5$\,MiB of key material at ring

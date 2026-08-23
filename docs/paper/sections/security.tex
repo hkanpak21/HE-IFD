@@ -33,8 +33,7 @@ task itself leaks.}
 \label{sec:ideal}
 
 \Cref{func:ideal} defines the ideal functionality $\Fhe$ against which the
-protocol is measured. The server and the serving party are entities outside
-$\Fhe$, so either may be corrupt. The form of the functionality follows the
+protocol is measured. The server is an entity outside $\Fhe$, so it may be corrupt. The form of the functionality follows the
 secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and placing the
 aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
 
@@ -44,14 +43,13 @@ aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
 \footnotesize
 \noindent\textbf{\emph{Parameters.}} The client count $\Nc$, the decryption
 threshold $\tc$, the per-client query allowance $Q$, and the label space size
-$\Cc$. The parties are clients $P_1,\dots,P_{\Nc}$, an aggregation server $S$ and
-a serving party $V$, none of which is part of $\Fhe$. The functionality holds a
+$\Cc$. The parties are clients $P_1,\dots,P_{\Nc}$ and a server $S$, which is not
+part of $\Fhe$. The functionality holds a
 counter $q_j$ for each client, each initialised to $0$, and a store that is
 initially empty and that $\Fhe$ never sends to any party.
 
 \noindent\textbf{\emph{Inputs.}} Each client $P_j$ inputs its dataset $\Dj$, and
-later inputs queries $x$. The server $S$ inputs a selection request. The serving
-party $V$ inputs nothing.
+later inputs queries $x$. The server $S$ inputs a selection request.
 
 \noindent\textbf{\emph{Outputs.}} Every party receives the selected index
 $a^{\star}$ and the phase signals. Client $P_j$ receives one label for each of
@@ -70,7 +68,7 @@ its first $Q$ queries, and $\bot$ afterwards.
 \item \emph{Serving.} On $(\mathsf{Query},x)$ from client $P_j$, return $\bot$
   to $P_j$ if $q_j\ge Q$. Otherwise set $q_j\leftarrow q_j+1$, return
   $\hat y=\arg\max_c\,(\thstar\,\featx_j(x))_c$ to $P_j$ alone, and send
-  $(\mathsf{Done},\mathsf{query},j)$ to $V$.
+  $(\mathsf{Done},\mathsf{query},j)$ to $S$.
 \end{enumerate}
 
 \noindent\textbf{\emph{Leakage.}} $\Fhe$ reveals $\Leak$ to the adversary,
@@ -92,8 +90,8 @@ client learns the labels it asks for, up to its allowance, and nothing else.
 
 \begin{definition}[Semi-honest security]
 \label{def:semihonest}
-Let $\mathcal{A}$ corrupt a set of parties that may contain the server, the
-serving party, and at most $\tc-1$ clients. Write
+Let $\mathcal{A}$ corrupt a set of parties that may contain the server and at
+most $\tc-1$ clients. Write
 $\mathsf{view}_{\mathcal{A}}^{\Pi}(\Dset)$ for the corrupted parties' joint view
 of a protocol run on datasets $\Dset$. The protocol $\Pi$ securely realizes
 $\Fhe$ with leakage $\Leak$ if there is a probabilistic polynomial-time
@@ -116,8 +114,8 @@ nothing about a system that answers questions.}
 Assume the $\tc$-out-of-$\Nc$ threshold CKKS scheme is secure under chosen
 plaintext attack (IND-CPA) against an
 adversary holding $\tc-1$ key shares. Then the protocol securely realizes $\Fhe$
-with leakage $\Leak$ against any semi-honest adversary corrupting the server,
-the serving party, and at most $\tc-1$ clients, in the sense of
+with leakage $\Leak$ against any semi-honest adversary corrupting the server
+and at most $\tc-1$ clients, in the sense of
 \cref{def:semihonest}.
 \end{theorem}
 
@@ -168,8 +166,7 @@ that does not deviate. We do not claim correctness.
 
 \begin{definition}[Content game]
 \label{def:contentgame}
-The adversary $\mathcal{A}$ corrupts $\tc-1$ clients. The server and the serving
-party are honest. At least one client $h$ stays honest.
+The adversary $\mathcal{A}$ corrupts $\tc-1$ clients. The server is honest. At least one client $h$ stays honest.
 \begin{enumerate}
 \item $\mathcal{A}$ outputs two datasets $D_0$ and $D_1$ with $|D_0|=|D_1|$.
 \item The challenger samples $b\in\{0,1\}$ and gives $D_b$ to client $h$.
@@ -205,7 +202,7 @@ ciphertexts are indistinguishable from encryptions of zero by the hybrid
 argument of \cref{thm:semihonest}, which holds against an adversary with
 $\tc-1$ shares. The server is honest, so the values it computes are the
 prescribed deterministic functions of those ciphertexts and of public scalars.
-The serving party is honest, so every ciphertext presented for key switching is
+The server is honest, so every ciphertext presented for key switching is
 the prescribed output of \cref{alg:serve} on a query, and its plaintext is a
 label the coalition does not choose. Deviating in the uploaded values does not
 help either, because the adversary already chooses those values in the real
@@ -279,7 +276,7 @@ circuit verifiable. Checking a random fraction $p$ of queries suffices, because
 recovering the shared map needs on the order of $\Cc d$ deviating requests and a
 campaign of that length escapes a single checker with probability at most
 $(1-p)^{\Cc d}$, which at $p=0.01$ is below $10^{-13}$ on the smallest of our
-tasks. The second mechanism certifies which function the serving party
+tasks. The second mechanism certifies which function the server
 evaluated, through a zero-knowledge proof of correct evaluation or verifiable
 homomorphic encryption~\cite{viand2023verifiable}. \Cref{sec:scope} records both
 as limitations.}

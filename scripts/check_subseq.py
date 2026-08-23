@@ -60,6 +60,13 @@ _AGREE = [
     (r"\b(?:hold|holds)\b", "V"), (r"\b(?:follow|follows)\b", "V"),
     (r"\b(?:stay|stays)\b", "V"), (r"\b(?:see|sees)\b", "V"),
     (r"\b(?:can|cannot)\b", "MODAL"), (r"\blast\b", ""),
+    # Two parties becoming one forces the article and the number as well as the
+    # verb. "to a serving party" becomes "to the server", because there is now
+    # exactly one, and "are entities" becomes "is an entity". Both are narrow:
+    # the article rule fires only next to "server".
+    (r"\b(?:a|an|the)\s+server\b", "THESERVER"),
+    (r"\b(?:an?|the)\s+entit(?:y|ies)\b", "ENTITY"),
+    (r"\bentit(?:y|ies)\b", "ENTITY"),
 ]
 
 

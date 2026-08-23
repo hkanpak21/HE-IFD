@@ -9,7 +9,7 @@ uploads its head displacement once, weighted by its own per-class counts and
 encrypted. The server adds the ciphertexts and divides by the per-class totals
 under encryption, so the shared head exists only as a ciphertext
 (\cref{fig:training}). In the second, a client computes the features of its query
-itself, encrypts them, and sends them to the serving party, which applies the
+itself, encrypts them, and sends them to the server, which applies the
 encrypted head and reduces the encrypted logits to the index of the largest
 (\cref{fig:serving}). A quorum of clients switches that index to the querying
 client, which decrypts one label. The federation also chooses between two servable
@@ -189,17 +189,17 @@ the shared head.
 
 \paragraph{The construction} A client that wants a prediction computes the
 features of its query with its own backbone and adapter, encrypts them, and sends
-the ciphertext to a serving party. The serving party applies the encrypted shared
+the ciphertext to the server. The server applies the encrypted shared
 head to the encrypted features, obtains encrypted logits, and reduces them to the
 index of the largest entry under encryption. A quorum of clients then key-switches
 that index to the querying client, which decrypts one label.
 \Cref{fig:serving} shows the path, and \cref{alg:serve} states it.
 
-\paragraph{Encryption of the query} The serving party could be given the
+\paragraph{Encryption of the query} The server could be given the
 features in plaintext, which would make the head application cheaper. We encrypt
 them because features are invertible. A party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
-would therefore hand the serving party the client's input, which is the thing the
+would therefore hand the server the client's input, which is the thing the
 protocol exists to protect. The price is that the head is applied ciphertext by
 ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
 what that costs.
@@ -231,14 +231,14 @@ public key. The other clients contribute shares and learn nothing.
 \label{alg:serve}
 \small
 \begin{algorithmic}[1]
-\Require query $x$ at client $j$; $\mathsf{Enc}(\thstar)$ held by the serving party
+\Require query $x$ at client $j$; $\mathsf{Enc}(\thstar)$ held by the server
 \State client $j$ computes $\varphi_j(x)$ with its own backbone and adapter
        \Comment{plaintext, local}
 \State client $j$ sends $\mathsf{Enc}(\varphi_j(x))$
-\State \textbf{serving party} computes
+\State \textbf{server} computes
        $\mathsf{Enc}(\ell) \gets \mathsf{Enc}(\thstar)\,\mathsf{Enc}(\varphi_j(x))$
        \Comment{ciphertext by ciphertext}
-\State \textbf{serving party} reduces $\mathsf{Enc}(\ell)$ to
+\State \textbf{server} reduces $\mathsf{Enc}(\ell)$ to
        $\mathsf{Enc}(\hat{y})$, $\hat y=\arg\max_c \ell_c$, by a tournament of
        homomorphic comparisons~\cite{cheon2020comparison}
 \State a quorum of clients key-switches $\mathsf{Enc}(\hat y)$ to client $j$'s
@@ -247,7 +247,7 @@ public key. The other clients contribute shares and learn nothing.
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Cost and the role of the serving party} The argmax is the one operation in the protocol
+\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
 that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
 minutes for a large label space. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
@@ -255,7 +255,7 @@ $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. None of this is particular to the multiparty setting. Homomorphic
 evaluation under a collectively generated key is identical to evaluation under a
 single key, and the schemes differ only in key generation and in decryption, so
-single-key results carry over. The serving party is not trusted with anything. It
+single-key results carry over. The server is not trusted with anything. It
 holds the collective public key, the evaluation keys, and ciphertexts, so it
 computes but cannot decrypt, and it learns neither the model nor any client's
 data. It is trusted only for availability, and where honest computation must be

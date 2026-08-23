@@ -82,7 +82,7 @@ adapter, and uploads one encrypted head displacement weighted by the classes it
 holds. The server adds the ciphertexts and divides by the per-class totals under
 encryption, so the shared head exists only as a ciphertext and the server holds no
 key to it. A client that wants a prediction computes the features of its query
-itself, encrypts them, and sends them to the serving party, which applies the
+itself, encrypts them, and sends them to the server, which applies the
 encrypted head and takes the argmax under encryption. A quorum of clients then
 switches the result to that client alone, which decrypts one label.
 
@@ -100,7 +100,7 @@ which, in a transformer, is a single place. The three contributions below follow
   client's adapter by subtracting its own contributions (\cref{sec:split}).
 
 \item \textbf{A serving path that never decrypts.} The querying client encrypts its
-  own features, so the serving party cannot read the query. The serving party
+  own features, so the server cannot read the query. The server
   applies the encrypted head and takes the argmax under encryption, and a quorum
   switches the result to the querier's key. Only a label leaves the protocol, so a
   client cannot collect the per-class scores that would let it solve for the head
