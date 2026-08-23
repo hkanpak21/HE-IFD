@@ -31,10 +31,15 @@ The permitted substitutions, and no others:
 Anything else is a rewrite and Halil decides it.
 """
 import argparse
+import importlib.util
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+_spec = importlib.util.spec_from_file_location("budget", Path(__file__).resolve().parent / "budget.py")
+budget = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(budget)
 
 FLOAT = re.compile(
     r"\\begin\{(table\*?|figure\*?|functionality|algorithm|tabular)\}.*?"
@@ -90,7 +95,13 @@ def _float_to_caption(m):
     return " <FLOAT> " + m.group(0)[i:j - 1] + " "
 
 
-def paragraphs(text):
+def paragraphs(text, view="paper"):
+    """Paragraphs of ONE document. \paperonly and \tronly are resolved first,
+    so a conditional citation list is compared as the document prints it and
+    not as a superset of both."""
+    drop, keep = ("tronly", "paperonly") if view == "paper" else ("paperonly", "tronly")
+    text = budget.strip_conditional(text, drop)
+    text = budget.unwrap(text, keep)
     text = "\n".join(l for l in text.split("\n") if not l.lstrip().startswith("%"))
     text = FLOAT.sub(_float_to_caption, text)
     text = XREF.sub(" ", text)
@@ -130,7 +141,7 @@ def is_sub(new, old):
 SKIP = {"preamble.tex", "body.tex"}
 
 
-def base_pool(ref, root):
+def base_pool(ref, root, view="paper"):
     files = subprocess.run(["git", "ls-tree", "-r", "--name-only", ref, root],
                            capture_output=True, text=True).stdout.split()
     # The base kept the title, the abstract, the acknowledgment and the
@@ -146,7 +157,7 @@ def base_pool(ref, root):
             continue
         t = subprocess.run(["git", "show", f"{ref}:{f}"],
                            capture_output=True, text=True).stdout
-        ps = paragraphs(t)
+        ps = paragraphs(t, view)
         pool += [(f, p) for p in ps]
         # A blank line inside what is one LaTeX paragraph is a source artifact,
         # and closing it up is not rewriting. Adjacent pairs join the pool so a
@@ -162,11 +173,13 @@ def main():
     ap.add_argument("--number", action="append", default=[], metavar="OLD=NEW")
     ap.add_argument("--allow", default="docs/paper/.subseq-allow",
                     help="file of accepted new paragraphs, one per line of reason")
+    ap.add_argument("--view", choices=["paper", "report"], default="paper",
+                    help="which document to check; conditionals are resolved for it")
     ap.add_argument("--quiet", action="store_true")
     a = ap.parse_args()
 
     subs = [tuple(s.split("=", 1)) for s in a.number]
-    pool = base_pool(a.base, a.root)
+    pool = base_pool(a.base, a.root, a.view)
     pool_w = [(f, words(p)) for f, p in pool]
     pool_n = [(f, words(normalise(p, subs))) for f, p in pool]
     exact = {p for _, p in pool}
@@ -193,7 +206,7 @@ def main():
     for f in scan:
         if f.name in SKIP:
             continue
-        for p in paragraphs(f.read_text()):
+        for p in paragraphs(f.read_text(), a.view):
             total += 1
             if p in exact:
                 tally["identical"] += 1

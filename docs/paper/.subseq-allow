@@ -114,3 +114,30 @@ CIFAR-10 on two published partitions, three seeds, on the whole
 $10{,}000$-image test set. The columns are the
 quantities defined in \cref{sec:setup}, all measured on our protocol at the
 partition each prior paper published.
+%%
+# 2026-08-23. Four sentences are new, one per place where substantial material
+# moved to the technical report. Without them the report is orphaned and a
+# reviewer cannot find the proofs. Each is \paperonly, so the report never
+# points at itself. This entry and the three below carry the resolved text,
+# which is what the submission prints.
+Scoring both arrangements under the federation's own class prior, letting
+the shared arrangement pool evidence across clients and scoring the personal
+arrangement's unobserved classes at zero, selects correctly in $12$ of $15$ cells.
+Filling the unobserved classes from each client's rarest classes instead of with
+zero selects correctly in $13$. \trsee{sec:experiments} reports the estimator against the held-out vote on every cell.
+%%
+Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
+between three and five times that number of queries. A deployment can therefore set its
+allowance from $\Cc$ and $d$ without repeating this experiment. \trsee{sec:experiments} gives the extraction study in full.
+%%
+\medskip
+\noindent\emph{Positioning.}
+\Cref{tab:related} places the closest systems on the axes that separate them. What remains unaddressed is a protocol that
+exposes no training-time quantity, that exchanges anything at all only once, and
+that never discloses the model even to the parties that built it. \trsee{sec:related} surveys the field in full.
+%%
+Composing the three parts gives a view computationally indistinguishable from
+the real one. \trsee{sec:security} gives every proof in full.
+\end{proof}

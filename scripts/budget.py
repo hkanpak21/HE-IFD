@@ -15,9 +15,11 @@ from pathlib import Path
 FLOATS = ["table\\*", "table", "figure\\*", "figure", "functionality", "algorithm"]
 ORDER = ["intro", "prelim", "method", "security", "experiments", "related",
          "conclusion"]
-# Page targets ruled 2026-08-23, at about 900 prose words per page.
-TARGET = {"intro": 810, "prelim": 540, "method": 1890, "security": 513,
-          "experiments": 1000, "related": 540, "conclusion": 270}
+# What each section costs in the 10-page submission of 2026-08-23, measured off
+# the compiled PDF rather than assumed. The page count in scripts/gates.sh is
+# the gate; this table is for seeing where a future edit spends its words.
+TARGET = {"intro": 830, "prelim": 340, "method": 1780, "security": 1140,
+          "experiments": 1400, "related": 840, "conclusion": 250}
 
 
 def strip_conditional(t, name):
