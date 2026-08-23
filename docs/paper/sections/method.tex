@@ -136,9 +136,7 @@ it has never observed. Coverage is a property of the head, which is exactly what
 the federation supplies. \Cref{sec:exp-split} measures both halves.
 
 Retaining the adapter locally has a second consequence, which is cryptographic. No
-aggregate of the adapters is ever formed. A coalition of $\Nc-1$ clients therefore
-has no adapter sum from which to subtract its own contributions, and cannot
-recover the remaining client's adapter by arithmetic. \Cref{sec:threat} states
+aggregate of the adapters is ever formed. \Cref{sec:threat} states
 this precisely.
 
 \paragraph{The aggregation} Let $g_{j}\in\mathbb{R}^{\Cc}$ collect client $j$'s
@@ -162,7 +160,7 @@ is therefore evaluated under encryption, using an inversion circuit over the
 positive domain whose refreshes are collective. It is paid once, at aggregation, never per
 query.
 
-\begin{algorithm}[t]
+\tronly{\begin{algorithm}[t]
 \caption{Building the shared head. All clients hold the same frozen public
 backbone $\featx$ and the same public head initialiser $\thz$.}
 \label{alg:train}
@@ -181,7 +179,7 @@ backbone $\featx$ and the same public head initialiser $\thz$.}
        encryption and multiplies \Comment{once, not per query}
 \State \Return $\mathsf{Enc}(\thstar)$, which no party decrypts
 \end{algorithmic}
-\end{algorithm}
+\end{algorithm}}
 
 \paragraph{Cost} The server performs one ciphertext addition per client per
 ciphertext, one encrypted reciprocal, and one multiplication. The encrypted object

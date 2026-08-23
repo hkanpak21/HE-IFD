@@ -58,7 +58,7 @@ its first $Q$ queries, and $\bot$ afterwards.
 \noindent\textbf{\emph{Steps.}}
 \begin{enumerate}\itemsep2pt \parskip0pt \topsep3pt
 \item \emph{Training and aggregation.} On $(\mathsf{Train},\Dj)$ from every
-  client, run the local training of \cref{alg:train} on each $\Dj$ and store the
+  client, run the local training of \cref{sec:split} on each $\Dj$ and store the
   shared head $\thstar$ of \cref{eq:aggregate}. Send
   $(\mathsf{Done},\mathsf{train})$ to every party.
 \item \emph{Selection.} On $(\mathsf{Select})$ from $S$, evaluate the estimator
@@ -120,11 +120,10 @@ and at most $\tc-1$ clients, in the sense of
 
 \begin{proof}[Proof sketch]
 The simulator is given $\Leak$, the corrupted clients' datasets, and the answers
-the corrupted clients receive. It proceeds in three parts.
+the corrupted clients receive.
 
 \emph{Setup.} The simulator runs the distributed key generation with the
-corrupted parties, playing the honest clients on uniformly chosen shares. That
-transcript is simulatable by the security of the key-generation protocol.
+corrupted parties, playing the honest clients on uniformly chosen shares.
 
 \emph{Training.} For each honest client the simulator sends an encryption of
 zero in place of $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$. A hybrid
@@ -147,8 +146,7 @@ and position in advance.}
 simulator takes that index from $\Leak$ and produces the collective
 key-switching transcript for it.
 For each query of a corrupted client, the simulator holds the answer in
-$\mathsf{out}_{\mathcal{A}}$ and simulates the key switch in the
-same way. Queries by honest clients are simulated as key switches of encryptions of zero.
+$\mathsf{out}_{\mathcal{A}}$. Queries by honest clients are simulated as key switches of encryptions of zero.
 
 \tronly{\emph{Selection and serving.} The selection step decrypts one value. The
 simulator takes that index from $\Leak$ and produces the collective
@@ -166,8 +164,7 @@ the real one.
 \label{sec:malicious}
 
 \Cref{thm:semihonest} assumes every party follows the protocol. We now let the
-clients deviate, and \cref{sec:malicious-ext} shows why the server must stay
-honest. We bound what a deviating coalition learns about the data of a client
+clients deviate. We bound what a deviating coalition learns about the data of a client
 that does not deviate. We do not claim correctness.
 
 \begin{definition}[Content game]
@@ -197,8 +194,7 @@ $Q_{\mathrm{tot}}$ label queries to the served model.
 
 \begin{proof}[Proof sketch]
 The adversary's view consists of the key-generation transcript, the honest
-clients' uploaded ciphertexts, the values the server computes, the
-key-switching transcripts, and the answers to its own queries.
+clients' uploaded ciphertexts, the values the server computes, and the answers to its own queries.
 
 The first four are independent of $b$ up to $\negl(\lambda)$.
 
@@ -293,8 +289,8 @@ nothing.}
 
 $\Fhe$ answers queries. Answers carry information about $\thstar$, and enough of
 them reconstruct it. \Cref{sec:exp-leak} measures the rate at three to five
-queries per parameter for a functional copy. This is a property of the
-functionality, not of our instantiation of it. Any protocol that realizes $\Fhe$
+queries per parameter. This is a property of the
+functionality. Any protocol that realizes $\Fhe$
 inherits it.
 
 The cryptographic claim is that the protocol adds nothing to the leakage of

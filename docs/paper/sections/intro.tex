@@ -2,7 +2,7 @@
 \label{sec:intro}
 
 Organizations adapt large public pretrained models to their own data by
-fine-tuning~\cite{bommasani2021opportunities,hu2022lora}. Often several
+fine-tuning~\cite{hu2022lora}. Often several
 organizations hold complementary data over the same task, different patient
 populations, fraud patterns, or customer bases, and each would obtain a better
 model from the combination than from its own data alone~\cite{sheller2020federated}. They cannot pool that data, because data protection law restricts the sharing of
@@ -19,9 +19,7 @@ gradient permits reconstruction of the batch that produced
 it~\cite{zhu2019deep}. An observer of the per-round updates
 mounts membership inference at $87\%$ accuracy on one model and dataset, where the
 same attack against the final model alone falls to
-$54.5\%$~\cite{nasr2019comprehensive}. A server, free to choose the weights it
-broadcasts, can harvest client inputs
-outright~\cite{boenisch2023curious}. Two things therefore set the attack surface, namely what a protocol reveals while
+$54.5\%$~\cite{nasr2019comprehensive}. Two things therefore set the attack surface, namely what a protocol reveals while
 training runs and how often it reveals it.
 
 Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
@@ -41,7 +39,7 @@ encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and the direct route of training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
 circuit~\cite{sav2021poseidon}. Adapting a pretrained transformer by this route is out of
-reach, and that is the case this paper addresses.
+reach.
 
 \tronly{Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
 there is no intermediate state for anyone to observe. Encrypting that single
@@ -70,8 +68,7 @@ One-shot protocols end by handing the final model to every participant, which is
 unacceptable when the model may not be distributed at all. Encrypted training does
 withhold it, but the cost just described puts a pretrained backbone out of reach. A model fine-tuned on
 confidential records can be a regulated artifact in high-risk domains such as
-health, biometrics, and credit~\cite{euaiact2024}. Such deployments need a
-protocol that builds a model and never releases it.
+health, biometrics, and credit~\cite{euaiact2024}.
 
 In this work, we present HE-OFT, the first one-shot federated fine-tuning protocol
 that enables several parties to adapt a pretrained model together and to query the
@@ -80,9 +77,7 @@ shared classifier. The contribution is encrypted under multiparty
 CKKS~\cite{cheon2017ckks,mouchet2021multiparty}, a homomorphic encryption scheme
 whose secret key is split across the parties.
  The backbone stays public and in plaintext, so the cost of the cryptography does
-not grow with it. The classifier answers queries under encryption and
-returns a label, so a participant learns what the model predicts on its own inputs
-and nothing else about the model. There is no round in which a training artifact
+not grow with it. There is no round in which a training artifact
 is exposed, no plaintext contribution, and no plaintext model at any point in the
 protocol.
 
@@ -129,6 +124,4 @@ which, in a transformer, is a single place. The three contributions below follow
 \noindent We evaluate on four text classification tasks and one vision task, with
 frozen RoBERTa~\cite{liu2019roberta} and vision transformer (ViT)~\cite{dosovitskiy2021vit} backbones,
 and we implement the cryptographic protocol in
-real multiparty CKKS rather than simulating it. We report what withholding the model costs, in accuracy against a disclosed
-model and in the communication and computation it adds, including the traffic that
-recurs on every query.
+real multiparty CKKS rather than simulating it.

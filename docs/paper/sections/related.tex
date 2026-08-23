@@ -81,7 +81,7 @@ That cost scales with the network being trained, so adapting a pretrained
 transformer by this route is out of reach.}
 
 Several works encrypt only the aggregation step of an otherwise plaintext training
-loop~\cite{zhang2020batchcrypt,li2025shelora}.
+loop~\cite{li2025shelora}.
 All of them remain bound to the iterative protocol, so the encryption cost is paid
 on every round and what is protected is a per-round sum rather than a complete
 contribution. Single-key
@@ -92,7 +92,7 @@ that assumption.
 Transfer learning itself has been placed under encryption. Several works train a
 classifier head, a linear or logistic model, or a low-rank adapter on frozen
 features under
-CKKS~\cite{lee2023hetal,frery2025private}.
+CKKS~\cite{lee2023hetal}.
 These share our structural niche, a frozen public backbone with a small trainable
 unit, but they run an optimiser on ciphertexts, so multiplicative depth grows with
 the step count. Several of them are
@@ -115,7 +115,7 @@ must protect what they trained.}
 A parallel line collapses the many rounds into a single
 exchange~\cite{guha2019oneshot}. Genuinely single-round
 methods distil the clients' models through a generator or synthesised inputs, or
-fuse the models directly~\cite{zhang2022dense,dai2024coboosting,tang2024fusefl}.
+fuse the models directly~\cite{zhang2022dense,tang2024fusefl}.
 These establish that one round can produce a usable model, but they work in
 plaintext, and each client sends an entire model or a synthetic distillate of its
 data. A recent method sends no model at all, having each client upload per-class sufficient statistics
@@ -141,7 +141,7 @@ The one-shot methods that do address privacy use differential privacy. FedAUXfdp
 releases client contributions under a differentially private mechanism after
 distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and related
 approaches protect a diffusion-generated surrogate or a teacher
-ensemble~\cite{feddiff2024,li2021fedkt}. These are our natural quantitative
+ensemble~\cite{feddiff2024}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
 is added to the very artifact that is released. Several
 works apply the same trade-off to transfer learning, running noisy gradient descent
@@ -152,7 +152,7 @@ adapter~\cite{liu2023dplora}.
 releases client contributions under a differentially private mechanism after
 distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and related
 approaches protect a diffusion-generated surrogate or a teacher
-ensemble~\cite{feddiff2024,li2021fedkt}. These are our natural quantitative
+ensemble~\cite{feddiff2024}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
 is added to the very artifact that is released. Encryption makes a contribution computationally indistinguishable
 from random to every party without the key and costs the model nothing. Several
@@ -165,7 +165,7 @@ They pay a budget-dependent accuracy tax on the model they release, and they are
 releases client contributions under a differentially private mechanism after
 distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and related
 approaches protect a diffusion-generated surrogate or a teacher
-ensemble~\cite{feddiff2024,li2021fedkt}, or apply a noise-free mechanism to the
+ensemble~\cite{feddiff2024}, or apply a noise-free mechanism to the
 distillation itself~\cite{sun2021fedmdnfdp}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
 is added to the very artifact that is released. Differential privacy proves a
@@ -211,7 +211,7 @@ of this line protects the contributions, which is our subject.}
 
 Answering queries from a model that stays encrypted is the subject of secure
 inference. Several works evaluate a transformer under encryption, and in each case the nonlinearities of attention dominate the
-cost~\cite{zhang2025nexus,pang2024bolt}. The map served here is linear in the features, so serving a
+cost~\cite{zhang2025nexus}. The map served here is linear in the features, so serving a
 trained map that sits inside the backbone instead would reduce to exactly the
 problem these systems address.
 
