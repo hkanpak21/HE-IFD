@@ -93,10 +93,8 @@ Transfer learning itself has been placed under encryption. Several works train a
 classifier head, a linear or logistic model, or a low-rank adapter on frozen
 features under
 CKKS~\cite{lee2023hetal}.
-These share our structural niche, a frozen public backbone with a small trainable
-unit, but they run an optimiser on ciphertexts, so multiplicative depth grows with
-the step count. Several of them are
-also single-party.
+These share our structural niche, but they run an optimiser on ciphertexts, so multiplicative depth grows with
+the step count.
 
 \tronly{Transfer learning itself has been placed under encryption. Several works train a
 classifier head, a linear or logistic model, or a low-rank adapter on frozen
@@ -186,8 +184,7 @@ adapter rather than a model. FedIT averages the adapters round by
 round~\cite{zhang2024fedit}, but per-factor averaging is biased.
 FFA-LoRA instead freezes the randomly initialised down-projection and trains only
 the up-projection, so that averaging the trained factor is
-exact~\cite{sun2024ffalora}. Combining displacements from a shared initialiser is
-task-vector merging~\cite{ilharco2023editing}. None
+exact~\cite{sun2024ffalora}. None
 of this line protects the contributions, which is our subject.
 
 \tronly{A recent line federates parameter-efficient fine-tuning, communicating a low-rank
@@ -230,8 +227,8 @@ which is the serving setting of \cref{sec:serving}~\cite{intoci2023slytherin}. I
 homomorphically, which is why the models it reports are a twenty-layer and a
 fifty-layer network on a handwritten-digit task rather than a pretrained encoder.
 And it returns the prediction vector, so the querier receives scores, which
-\cref{sec:exp-leak} shows is a materially cheaper target for extraction than a
-label is.
+\cref{sec:exp-leak} shows is a cheaper target for extraction than a
+label.
 
 \tronly{Two systems sit closer. slytHErin evaluates a network under CKKS with the model
 held under a multiparty key, and it key-switches the prediction to the querier,
