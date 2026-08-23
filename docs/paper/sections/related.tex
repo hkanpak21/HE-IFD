@@ -34,7 +34,7 @@ too~\cite{takahashi2023breaching,yang2023fdleaks,gu2023ldia,shi2025unveiling}.}
 
 Attacks that see only the final model are consistently weaker, and the field
 survey draws that separation explicitly~\cite{kairouz2021advances}. Against models that generalise well they identify few members, and only at
-very low false-positive rates~\cite{carlini2022membership}. A protocol that never sends an update, and that
+low false-positive rates~\cite{carlini2022membership}. A protocol that never sends an update, and that
 sends anything only once, therefore leaves every adversary with the weaker
 attack.
 
@@ -268,7 +268,7 @@ transfers unchanged.}
 \begin{table}[t]
 \centering
 \caption{The closest systems on the four axes this paper turns on, as each paper
-reports them. Model in the clear says whether any party ends up holding the
+reports them. The plaintext column says whether any party ends up holding the
 trained model in plaintext, and \emph{provider} means one party does while the
 querier does not. slytHErin and CryptPEFT serve a model they do not train, so
 their rounds cell is empty. POSEIDON keeps the model under the collective key and
@@ -278,7 +278,7 @@ states that the querier does not obtain the model's weights.}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccc}
 \toprule
-System & Rounds & Protection & \shortstack{Model in\\the clear} & \shortstack{Querier\\receives} \\
+System & Rounds & Protection & \shortstack{Model in\\plaintext} & \shortstack{Querier\\receives} \\
 \midrule
 DENSE~\cite{zhang2022dense}          & one  & none & yes      & the model \\
 GH-OFL~\cite{turazza2026ghofl}       & one  & none & yes      & the model \\
