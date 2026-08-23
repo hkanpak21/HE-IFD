@@ -40,3 +40,26 @@ The per-query total is $8.5 + 0.5\Nc$\,MiB, since the quorum returns one
 key-switching share each. It is $11.0$\,MiB at $\Nc=5$ and $18.5$\,MiB at
 $\Nc=20$, and it is $6.8$\,MiB at ring degree $2^{14}$ and $27.0$\,MiB at
 $2^{16}$. It does not vary with the number of classes. Setup costs $344$\,MiB per client, once.
+
+%%
+# 2026-08-23, W5. The abstract goes from eleven sentences to six, which is
+# the ceiling Kupcu's deck sets, in CGI-E order. Nine of the eleven survive
+# as deletions. Two joins are new: the head displacement clause takes "that
+# the server combines" where the original started a new sentence, and the
+# evidence sentence takes "gives up" and "answers one query in" where the
+# original had three sentences. Both exist to reach six.
+# The passive "Queries are answered under encryption" is gone with them.
+\begin{abstract}
+Organizations holding complementary data over the same task would each gain from a
+jointly fine-tuned model, yet cannot pool their data to build one.
+Federated learning offers collaboration but concentrates its privacy risk at training time.
+A one-shot protocol that exchanges a single encrypted contribution removes that surface,
+but it still ends by handing the final model to every participant, which is not
+permitted where the model is itself a regulated or proprietary asset. We present HE-OFT, the first
+cryptographically secure one-shot federated fine-tuning protocol, in which the
+final model is never disclosed to any party.
+Each client fine-tunes a low-rank adapter and a classifier head on a
+frozen public backbone, retains the adapter locally, and uploads one encrypted
+head displacement that the server combines under multiparty CKKS and never
+decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $31.5$ to $113.2$\,s for $13.5$\,MiB of traffic.
+\end{abstract}

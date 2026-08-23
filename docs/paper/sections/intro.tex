@@ -7,27 +7,43 @@ organizations hold complementary data over the same task, different patient
 populations, fraud patterns, or customer bases, and each would obtain a better
 model from the combination than from its own data alone~\cite{sheller2020federated}. They cannot pool that data, because data protection law restricts the sharing of
 
-confidential records across institutions~\cite{gdpr2016,hipaa,kvkk2016,pipl2021,dpdp2023}. Competitive concerns
+confidential records across institutions~\cite{gdpr2016,hipaa}. Competitive concerns
 point the same way, and handing the data to whoever operates the fine-tuning
 infrastructure raises the same objection~\cite{xiao2023offsite}. Three obstacles
 stand between that setting and a protocol these organizations could deploy.
 
-
-Federated learning (FL) enables collaboration~\cite{mcmahan2017communication,kairouz2021advances},
+Federated learning (FL) enables collaboration~\cite{mcmahan2017communication},
 and its privacy risk is concentrated at training time~\cite{nasr2019comprehensive,melis2019exploiting}. The protocol exchanges model
 updates instead of data, but the updates are themselves the vulnerability. A
 gradient permits reconstruction of the batch that produced
-it~\cite{zhu2019deep,geiping2020inverting}. An observer of the per-round updates
+it~\cite{zhu2019deep}. An observer of the per-round updates
 mounts membership inference at $87\%$ accuracy on one model and dataset, where the
 same attack against the final model alone falls to
-$54.5\%$~\cite{nasr2019comprehensive}.
- A server, free to choose the weights it
+$54.5\%$~\cite{nasr2019comprehensive}. A server, free to choose the weights it
 broadcasts, can harvest client inputs
-outright~\cite{boenisch2023curious,fowl2022robbing}. Two things therefore set the attack surface, namely what a protocol reveals while
+outright~\cite{boenisch2023curious}. Two things therefore set the attack surface, namely what a protocol reveals while
 training runs and how often it reveals it.
 
-
 Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
+there is no intermediate state for anyone to observe. Encrypting that single
+contribution means that the one thing that is exchanged is never available in
+plaintext.
+ In this paper, one-shot does not mean the parties stop communicating. It means that
+no intermediate training artifact is ever exposed.
+ Prior work applies one of these
+measures at a time. One-shot FL~\cite{guha2019oneshot} sends its
+single contribution in
+plaintext~\cite{zhang2022dense,tang2024fusefl}, or protects it
+with differential privacy~\cite{hoech2022fedauxfdp}, which
+adds noise to the very artifact it releases.
+ Encrypted FL runs many rounds of
+encrypted training or encrypted aggregation, paying the cryptographic cost on
+every round, and the direct route of training under encryption forces polynomial
+replacements of every activation and a deep, repeatedly bootstrapped
+circuit~\cite{sav2021poseidon}. Adapting a pretrained transformer by this route is out of
+reach, and that is the case this paper addresses.
+
+\tronly{Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
 there is no intermediate state for anyone to observe. Encrypting that single
 contribution means that the one thing that is exchanged is never available in
 plaintext.
@@ -47,19 +63,15 @@ circuit~\cite{sav2021poseidon,xu2022hercules,pirillo2025reboot}. That cost scale
 network of sixty-four neurons per layer on handwritten digits at ten parties in
 $1.4$ hours~\cite{sav2021poseidon}, and its successors lower the constant without
 changing what sets it. Adapting a pretrained transformer by this route is out of
-reach, and that is the case this paper addresses.
-
+reach, and that is the case this paper addresses.}
 
 Applying both measures still leaves one artifact exposed, namely the model itself.
 One-shot protocols end by handing the final model to every participant, which is
 unacceptable when the model may not be distributed at all. Encrypted training does
 withhold it, but the cost just described puts a pretrained backbone out of reach. A model fine-tuned on
 confidential records can be a regulated artifact in high-risk domains such as
-health, biometrics, and credit~\cite{euaiact2024}, and it can be the asset the
-participants are least willing to give to each other. Such deployments need a
+health, biometrics, and credit~\cite{euaiact2024}. Such deployments need a
 protocol that builds a model and never releases it.
-
-
 
 In this work, we present HE-OFT, the first one-shot federated fine-tuning protocol
 that enables several parties to adapt a pretrained model together and to query the
@@ -83,14 +95,12 @@ holds. The server adds the ciphertexts and divides by the per-class totals under
 encryption, so the shared head exists only as a ciphertext and the server holds no
 key to it. A client that wants a prediction computes the features of its query
 itself, encrypts them, and sends them to the server, which applies the
-encrypted head and takes the argmax under encryption. A quorum of clients then
-switches the result to that client alone, which decrypts one label.
+encrypted head and takes the argmax under encryption.
 
 The querier must build its query from parts it can run itself, so those parts must
 
 be public. The shared trained quantity therefore sits after the last nonlinearity,
 which, in a transformer, is a single place. The three contributions below follow from that.
-
 
 \begin{itemize}
 \item \textbf{A split trainable unit.} Each client keeps its own adapter and never
@@ -110,14 +120,11 @@ which, in a transformer, is a single place. The three contributions below follow
   servable at the same cost, the shared head over each client's own adapter and the
   shared head over the bare public backbone. Which one is better depends on the
   task. Each client scoring both on its own held-out data and voting estimates the
-  wrong quantity, and selects wrongly whenever the two quantities differ. The
+  wrong quantity. The
   estimator given here corrects that, needs no fitted threshold, and reveals only
-  which arrangement won (\cref{sec:selection}). We measure all three in real
-  multiparty CKKS, including the traffic every query costs (\cref{sec:exp-cost}).
-
+  which arrangement won (\cref{sec:selection}).
 
 \end{itemize}
-
 
 \noindent We evaluate on four text classification tasks and one vision task, with
 frozen RoBERTa~\cite{liu2019roberta} and vision transformer (ViT)~\cite{dosovitskiy2021vit} backbones,
@@ -125,7 +132,3 @@ and we implement the cryptographic protocol in
 real multiparty CKKS rather than simulating it. We report what withholding the model costs, in accuracy against a disclosed
 model and in the communication and computation it adds, including the traffic that
 recurs on every query.
-
-
-
-% Each of these claims rests on a premise concerning where FL leaks, and on what existing work already provides. \Cref{sec:related} establishes both.
