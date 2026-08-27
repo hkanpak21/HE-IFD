@@ -12,6 +12,18 @@ the way it does. This folder does.
 | file | what it holds |
 |---|---|
 | `PI_notes_<date>.md` | one review round: every comment, why it was made, and the replacement text proposed |
+| `pastes/` | find-and-paste lists, one per round, every anchor verified unique |
+
+Rounds so far: `2026-08-06`, `2026-08-19`, and `2026-08-21`, which is the
+meeting that set the ten-page split into a submission and a technical report.
+The work that round asked for is done and recorded in
+`docs/notes/plan-submission-2026-08-23.md`.
+
+**Delivery changed on 2026-08-23.** The round after 2026-08-21 reaches Overleaf
+as a whole-file replacement, not as pasted blocks, because every section was cut
+by roughly half and two of them changed position. `pastes/slop-pass-2026-08-23.md`
+is still a find-and-paste list, and it applies only to a copy that already has
+the restructure.
 
 ## How a round is recorded
 
