@@ -22,7 +22,7 @@ same attack against the final model alone falls to
 $54.5\%$~\cite{nasr2019comprehensive}. Two things therefore set the attack surface, namely what a protocol reveals while
 training runs and how often it reveals it.
 
-Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
+\paperonly{Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
 there is no intermediate state for anyone to observe. Encrypting that single
 contribution means that the one thing that is exchanged is never available in
 plaintext.
@@ -39,7 +39,7 @@ encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and training under encryption forces polynomial
 replacements of every activation and a deep, repeatedly bootstrapped
 circuit~\cite{sav2021poseidon}. Adapting a pretrained transformer by this route is out of
-reach.
+reach.}
 
 \tronly{Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
 there is no intermediate state for anyone to observe. Encrypting that single

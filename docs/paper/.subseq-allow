@@ -293,3 +293,98 @@ how delicate those polynomial activations
 are~\cite{garimella2021sisyphus,baruch2022methodology,agamennone2025polynomial,alhossain2025training,ibarrondo2021fhebn}.
 That cost scales with the network being trained, so adapting a pretrained
 transformer by this route is out of reach.
+%%
+# 2026-08-27, the client-to-client privacy subsection. Ten new paragraphs, all
+# of them report-only, all of them inside \tronly, so the submission is
+# unchanged and gate 3 still reports 0 rewritten. They exist because Theorem 2
+# bounds a coalition by negl + delta and never says what delta is, which lets a
+# reviewer read the theorem as vacuous. The subsection names delta and bounds
+# it. The heading is new because the subsection is new. Appended at the end of
+# Section IV so no shared section label changes number, which check_split.py
+# requires.
+\subsection{What a Fellow Client Learns}
+\label{sec:c2c}
+%%
+# 2026-08-27, as above. States what the subsection settles.
+\Cref{thm:malicious} bounds a deviating coalition by
+$\negl(\lambda)+\delta(Q_{\mathrm{tot}})$ and leaves $\delta$ unnamed. We name it
+here. A coalition of clients is the one adversary the cryptography does not
+silence, because its members hold key shares, run the backbone themselves, and
+receive answers by design.
+%%
+# 2026-08-27, as above. Enumerates the fellow client's view in its own terms.
+# Every item restates what Functionality 1's leakage already allows, and the
+# two negatives restate what Section III-B and Section III-A already build.
+A client outside the coalition contributes four things to what the
+coalition sees. It contributes the public sample count $\nj$, which the protocol
+uses as a public scalar. It contributes the ciphertexts it uploads, which are
+computationally independent of what they encrypt. It contributes its share of the
+announced index $a^{\star}$ and of the phase signals. It contributes its part of
+every answer the coalition is given. It contributes no per-class total, because
+\cref{sec:split} inverts those under encryption and never decrypts them, and it
+contributes no adapter, because no adapter aggregate exists.
+%%
+# 2026-08-27, as above. Concedes the objection that the allowance is not a
+# membership bound, and says what is bounded instead. The citation is
+# choquettechoo2021labelonly, which was already in refs.bib and cited nowhere.
+The allowance alone does not bound what the answers reveal. Membership
+inference from predicted labels is an established attack on a classifier that
+answers queries~\cite{choquettechoo2021labelonly}, and its cost is not a function
+the allowance controls. We therefore bound the channel at the head rather than at
+the budget.
+%%
+# 2026-08-27, as above. The statement. It is a reduction, so it needs no
+# measurement and it holds at every budget.
+\begin{proposition}[The query channel is no stronger than the head]
+\label{prop:c2c}
+Let $\mathcal{A}$ corrupt at most $\tc-1$ clients in \cref{def:contentgame}, with
+the server honest, and let it ask at most $Q_{\mathrm{tot}}=(\tc-1)Q$ queries.
+Then there is an adversary $\mathcal{B}$ that receives $\thstar$ in plaintext
+together with $\Leak$, asks no query, and satisfies
+\[
+  \mathsf{Adv}(\mathcal{A})\;\le\;\mathsf{Adv}(\mathcal{B})+\negl(\lambda).
+\]
+\end{proposition}
+%%
+# 2026-08-27, as above. Proof, first of three paragraphs. It reuses the view
+# decomposition of Theorem 2's own proof rather than establishing a new one.
+\begin{proof}
+The proof of \cref{thm:malicious} splits the view of $\mathcal{A}$ into the
+key-generation transcript, the honest clients' ciphertexts, the values the honest
+server computes, and the answers to its own queries. The first three are
+independent of $b$ up to $\negl(\lambda)$, and $\mathcal{B}$ produces them from
+$\Leak$ and from encryptions of zero exactly as the simulator of
+\cref{thm:semihonest} does.
+%%
+# 2026-08-27, as above. Proof, second paragraph. The step that does the work is
+# that the querying client is corrupt, so the adversary already holds the
+# adapter that defines the feature map.
+Each answer is $\arg\max_c(\thstar\,\varphi_j(x_i))_c$ for a query $x_i$ that
+$\mathcal{A}$ asks at one of its own clients $j$. The map $\varphi_j$ composes the
+public backbone with the adapter of client $j$. That client is corrupt, so
+$\mathcal{B}$ holds its adapter, and $\mathcal{B}$ holds $\thstar$ by assumption.
+It computes every answer itself.
+%%
+# 2026-08-27, as above. Proof, third paragraph.
+$\mathcal{B}$ therefore runs $\mathcal{A}$, answers each query as the server would,
+and returns whatever $\mathcal{A}$ returns. The simulation is exact outside the
+negligible event on which the first three parts of the view differ.
+\end{proof}
+%%
+# 2026-08-27, as above. The corollary, which is the sentence the report needs.
+# It makes Theorem 2 non-vacuous without any measurement, and it says what the
+# allowance does control, which is cost.
+Write $\delta_{\mathrm{wb}}$ for the advantage of the best
+polynomial-time adversary that holds $\thstar$. \Cref{prop:c2c} gives
+$\delta(Q_{\mathrm{tot}})\le\delta_{\mathrm{wb}}$ at every budget. What a
+coalition learns about an honest client is capped by what the shared head itself
+reveals, and that cap does not depend on the allowance. The allowance prices the
+cost of approaching the cap, and \cref{sec:exp-leak} measures that cost.
+%%
+# 2026-08-27, as above. What the deployment does with it. This replaces nothing
+# and it is what makes the threshold discussion in Section V-G precise, since
+# the threshold moves the cost and not the cap.
+Two consequences follow for a deployment. Lowering the threshold $\tc$
+raises $Q_{\mathrm{tot}}$ and moves a coalition along the curve toward the cap,
+and it does not move the cap. Raising the allowance does the same. Neither choice
+changes what is ultimately learnable, so both are decisions about cost.

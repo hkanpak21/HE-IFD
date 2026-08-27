@@ -17,14 +17,14 @@ protocol does not cover.}
 
 The trainable unit is a rank-$8$ low-rank adapter with its down-projection frozen at a shared public initialisation, together with a classifier head. We use no labelled public data anywhere.
 
-We evaluate on four text classification tasks of increasing label-space size,
+\paperonly{We evaluate on four text classification tasks of increasing label-space size,
 AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
 $77$, using a frozen RoBERTa-base encoder~\cite{liu2019roberta}, and on CIFAR-100
 with a frozen ViT-B/16~\cite{dosovitskiy2021vit}. Data are partitioned across clients by a Dirichlet distribution over
 labels with concentration $\alpha$, the standard label-skew
 partition~\cite{hsu2019measuring}. There are $\Nc=10$
 clients, $\alpha=0.1$, the local trajectory is $200$ steps, and every number is the
-mean over three seeds.
+mean over three seeds.}
 
 \tronly{We evaluate on four text classification tasks of increasing label-space size,
 AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
@@ -256,11 +256,11 @@ $0.945$ and the other reaches $0.953$.}
 \subsection{Accuracy of the Selection Rule}
 \label{sec:exp-select}
 
-Scoring both arrangements under the federation's own class prior, letting
+\paperonly{Scoring both arrangements under the federation's own class prior, letting
 the shared arrangement pool evidence across clients and scoring the personal
 arrangement's unobserved classes at zero, selects correctly in $12$ of $15$ cells.
 Filling the unobserved classes from each client's rarest classes instead of with
-zero selects correctly in $13$. \paperonly{\trsee{sec:experiments} reports the estimator against the held-out vote on every cell.}
+zero selects correctly in $13$. \trsee{sec:experiments} reports the estimator against the held-out vote on every cell.}
 
 \tronly{The direct procedure for choosing between the two
 arrangements fails systematically, and the estimator of \cref{sec:selection}
@@ -514,9 +514,9 @@ figures of \cref{tab:headline} are therefore unaffected by the cryptography.
 \subsection{Residual Leakage}
 \label{sec:exp-leak}
 
-The protocol exposes no training-time artifact and no model,
+\paperonly{The protocol exposes no training-time artifact and no model,
 so the only remaining channel is the sequence of answers the served model returns,
-and that channel is bounded by the query allowance rather than eliminated.
+and that channel is bounded by the query allowance rather than eliminated.}
 
 \tronly{The protocol exposes no training-time artifact and no model,
 so the only remaining channel is the sequence of answers the served model returns,
@@ -565,11 +565,11 @@ Banking77  & 77 & $0.083$ & $0.174$ & $0.355$ & $0.592$ & $0.755$ & $0.900$ \\
 \end{tabular}
 \end{table}}
 
-Reaching fidelity $0.90$ takes
+\paperonly{Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
 $2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
 between three and five times that number of queries. A deployment can therefore set its
-allowance from $\Cc$ and $d$ without repeating this experiment. \paperonly{\trsee{sec:experiments} gives the extraction study in full.}
+allowance from $\Cc$ and $d$ without repeating this experiment. \trsee{sec:experiments} gives the extraction study in full.}
 
 \tronly{Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
@@ -613,9 +613,9 @@ across several decision boundaries~\cite{tramer2016stealing}. The two
 exceptions are AG-News at the two largest budgets, where it wins by $0.003$. We
 report the stronger of the two, which is also the simpler.}
 
-\paragraph{Comparison with a released model} A participant holding the model in plaintext has fidelity $1$ at zero
+\paperonly{\paragraph{Comparison with a released model} A participant holding the model in plaintext has fidelity $1$ at zero
 queries, may read the parameters directly rather than infer them, and is subject
-to no allowance because there is nothing to meter.
+to no allowance because there is nothing to meter.}
 
 \tronly{\paragraph{Comparison with a released model} The contrast is not a matter of
 degree. A participant holding the model in plaintext has fidelity $1$ at zero
@@ -636,10 +636,10 @@ offers~\cite{carlini2024stealing}.}
 \subsection{Comparison with Model Disclosure}
 \label{sec:exp-release}
 
-Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
+\paperonly{Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
 price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
 $0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
-CIFAR-100. After the protocol ends, there is no plaintext model anywhere.
+CIFAR-100. After the protocol ends, there is no plaintext model anywhere.}
 
 \tronly{Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
 price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
@@ -678,8 +678,8 @@ representation for every participant rather than only for its owner. Serving suc
 inference (\cref{sec:related-inference}) and composes with that literature at its
 cost.
 
-\paragraph{Bounds on model extraction} The query
-allowance of \cref{sec:exp-leak} is an operational control.
+\paperonly{\paragraph{Bounds on model extraction} The query
+allowance of \cref{sec:exp-leak} is an operational control.}
 
 \tronly{\paragraph{Bounds on model extraction} The query
 allowance of \cref{sec:exp-leak} is an operational control. Where honest use is

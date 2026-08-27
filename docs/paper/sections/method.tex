@@ -106,13 +106,13 @@ homomorphically, which is the cost this design exists to avoid. The trained
 quantity that is shared must therefore attach after the last nonlinearity, and in
 a transformer, the only such point is the final linear map. That is the head.
 
-The requirement
+\paperonly{The requirement
 constrains the \emph{position} of the shared map, not the task it serves. Any
 trained linear map that sits after the last nonlinearity satisfies it, provided
 the querying client can compute the features that enter the map. A classifier
 head is one such map. The vocabulary projection of an autoregressive decoder is
 another. We evaluate
-classification only.
+classification only.}
 
 \tronly{The requirement
 constrains the \emph{position} of the shared map, not the task it serves. Any
@@ -196,12 +196,12 @@ head to the encrypted features, obtains encrypted logits, and reduces them to th
 index of the largest entry under encryption.
 \Cref{alg:serve} states it.
 
-\paragraph{Encryption of the query} The client could send the
+\paperonly{\paragraph{Encryption of the query} The client could send the
 features in plaintext, which would make the head application cheaper. We encrypt
 them because features are invertible. A party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
 would therefore hand the server the client's input, which is the thing the
-protocol exists to protect.
+protocol exists to protect.}
 
 \tronly{\paragraph{Encryption of the query} The client could send the
 features in plaintext, which would make the head application cheaper. We encrypt
@@ -212,7 +212,7 @@ protocol exists to protect. The price is that the server applies the head cipher
 ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
 what that costs.}
 
-\paragraph{Restriction to the predicted label} Returning logits would defeat the
+\paperonly{\paragraph{Restriction to the predicted label} Returning logits would defeat the
 construction. The head is a linear map on features the client computes itself, so a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
@@ -222,7 +222,7 @@ through a deployed interface for a few tens of dollars~\cite{carlini2024stealing
 the largest entry places an adversary in the hard-label setting, where functionally
 equivalent extraction is markedly harder~\cite{chen2024hardlabel}. It does not make
 extraction impossible, and \cref{sec:threat} states the resulting bound
-as a bound on queries.
+as a bound on queries.}
 
 \tronly{\paragraph{Restriction to the predicted label} Returning logits would defeat the
 construction. The head is a linear map on features the client computes itself, so a
@@ -267,13 +267,13 @@ public key.
 \end{algorithmic}
 \end{algorithm}
 
-\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
+\paperonly{\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
 that is not shallow. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. The server is not trusted with anything. It
 holds the collective public key, the evaluation keys, and ciphertexts, so it
-computes but cannot decrypt.
+computes but cannot decrypt.}
 
 \tronly{\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
 that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
@@ -289,11 +289,11 @@ computes but cannot decrypt, and it learns neither the model nor any client's
 data. It is trusted only for availability, and where honest computation must be
 certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.}
 
-\paragraph{Scope} This construction serves a trained quantity that is linear in
+\paperonly{\paragraph{Scope} This construction serves a trained quantity that is linear in
 the features. Serving a trained quantity that sits inside the backbone is the
 problem that secure transformer inference addresses, and an encrypted shared
 adapter composes with any such system at that literature's cost. We do not
-re-solve it.
+re-solve it.}
 
 \tronly{\paragraph{Scope} This construction serves a trained quantity that is linear in
 the features. Serving a trained quantity that sits inside the backbone is the
@@ -319,14 +319,14 @@ reports encrypted per-class counts. The counts are combined into one encrypted
 score per arrangement, and exactly
 one value is decrypted, which arrangement the federation adopts.
 
-\paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
+\paperonly{\paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
 procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, so pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
 models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimistic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
-chooses wrongly whenever the two differ.
+chooses wrongly whenever the two differ.}
 
 \tronly{\paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
@@ -381,12 +381,12 @@ except the index of the winner.}
 \end{algorithmic}
 \end{algorithm}}
 
-\paragraph{Requirements on the held-out split} The estimator needs an estimate of
+\paperonly{\paragraph{Requirements on the held-out split} The estimator needs an estimate of
 accuracy on classes a client has not seen, and its only local proxy is accuracy on
 classes it has barely seen. Each
 client therefore reserves at least one held-out example from every class it holds
 before carving the remainder at random. This costs a negligible amount of training data and
-requires no change to the cryptography.
+requires no change to the cryptography.}
 
 \tronly{\paragraph{Requirements on the held-out split} The estimator needs an estimate of
 accuracy on classes a client has not seen, and its only local proxy is accuracy on
