@@ -495,6 +495,26 @@ key-switching share each. It is $11.0$\,MiB at $\Nc=5$ and $18.5$\,MiB at
 $\Nc=20$, and it is $6.8$\,MiB at ring degree $2^{14}$ and $27.0$\,MiB at
 $2^{16}$. It does not vary with the number of classes. Setup costs $344$\,MiB per client, once.
 
+\tronly{\paragraph{How this scales in the federation} Every per-party quantity in
+\cref{tab:comm} is independent of the client count. We measured the grid at
+$\Nc\in\{5,10,20\}$, at ring degrees $2^{14}$, $2^{15}$ and $2^{16}$, and on both
+the aggregation and the serving chain, and the collective public key share, the
+relinearization key share, the rotation key share, the ciphertext sizes and the
+key-switching share are the same at every client count. This is what the structure
+of the scheme predicts, since a party's share is a function of the ring and the
+modulus chain and not of how many parties there are, and the measurement confirms
+it rather than discovering it.}
+
+\tronly{Two consequences set the cost of a large federation. What a client sends
+does not grow as clients are added, so setup stays at $344$\,MiB for each of them
+and the federation's total key-generation traffic grows linearly in $\Nc$, which is
+$3.4$\,GiB at $\Nc=10$ and $17$\,GiB at $\Nc=50$. A query costs the querier a fixed
+$8.5$\,MiB and the quorum one key-switching share each, so per-query traffic grows
+linearly in $\tc$ and not in $\Nc$. A deployment that lowers the threshold for
+availability therefore also lowers the traffic on every query, and
+\cref{sec:c2c} states what it costs in privacy, which is a shorter distance to the
+same cap rather than a higher cap.}
+
 \tronly{One design decision governs the recurring figure, and we state it explicitly
 because the alternative is two orders of magnitude more expensive. The argmax spends its levels and must
 have them restored several times per query. Restoring them by a collective refresh
@@ -613,6 +633,58 @@ across several decision boundaries~\cite{tramer2016stealing}. The two
 exceptions are AG-News at the two largest budgets, where it wins by $0.003$. We
 report the stronger of the two, which is also the simpler.}
 
+\tronly{\paragraph{Noise on the returned label} The query allowance is one way to
+price extraction. Perturbing the answer is the other, and it is what a reader who
+knows differential privacy will ask for first. We measure it. The server flips the
+returned label under randomised response at budget $\varepsilon$, which is the
+label-level mechanism~\cite{mcsherry2007mechanism}, and we record both what the
+copy reaches and what the served model still scores.
+\Cref{tab:defence} reports the result.}
+
+\tronly{\begin{table}[t]
+\centering
+\caption{Randomised response on the returned label. Copy fidelity after
+$10^5$ label queries, against the accuracy the served model retains, at each
+budget $\varepsilon$. Mean over three seeds. The majority share a constant
+predictor achieves is $0.488$ on AG-News, $0.250$ on DBpedia and $0.083$ on
+Banking77.}
+\label{tab:defence}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llcccccc}
+\toprule
+Task & & $\infty$ & $8$ & $4$ & $2$ & $1$ & $0.5$ \\
+\midrule
+AG-News   & fidelity & $0.989$ & $0.986$ & $0.954$ & $0.889$ & $0.774$ & $0.598$ \\
+          & accuracy & $0.649$ & $0.648$ & $0.620$ & $0.494$ & $0.372$ & $0.303$ \\
+\midrule
+DBpedia   & fidelity & $0.956$ & $0.946$ & $0.831$ & $0.571$ & $0.268$ & $0.139$ \\
+          & accuracy & $0.789$ & $0.785$ & $0.640$ & $0.297$ & $0.150$ & $0.103$ \\
+\midrule
+Banking77 & fidelity & $0.777$ & $0.722$ & $0.364$ & $0.052$ & $0.020$ & $0.016$ \\
+          & accuracy & $0.206$ & $0.203$ & $0.092$ & $0.028$ & $0.018$ & $0.015$ \\
+\bottomrule
+\end{tabular}
+\end{table}}
+
+\tronly{The mechanism does not separate the two quantities. At $\varepsilon=8$ it
+moves neither, costing AG-News $0.001$ of accuracy and the copy $0.003$ of
+fidelity. Below that both fall together. On AG-News the budget that first costs
+the copy a fifth of its fidelity is $\varepsilon=1$, where the copy still reaches
+$0.774$ and the served model has fallen to $0.372$, under the $0.488$ share of its
+most common class. On DBpedia accuracy falls by a larger fraction than fidelity at
+every budget below $\varepsilon=8$. On Banking77 the copy does degrade faster than
+the task below $\varepsilon=4$, and only after accuracy has reached $0.028$
+against a majority share of $0.083$, so the model the noise protects is already
+worse than a constant predictor.}
+
+\tronly{This is the argument for metering queries rather than perturbing answers.
+Noise on the label is charged to every honest query and to every extraction query
+at the same rate, and the extraction campaign spends $10^5$ queries where an
+honest client spends one. The allowance charges the two differently, which is the
+property the mechanism lacks. We therefore state the operational bound as a bound
+on queries, and we do not add noise to the answers.}
+
 \paperonly{\paragraph{Comparison with a released model} A participant holding the model in plaintext has fidelity $1$ at zero
 queries, may read the parameters directly rather than infer them, and is subject
 to no allowance because there is nothing to meter.}
@@ -688,7 +760,7 @@ calibrated noise added to the returned labels bounds cumulative leakage
 instead~\cite{mcsherry2007mechanism}. That mechanism composes with the protocol
 without modification, and it is orthogonal to it. The protocol protects the
 contributions cryptographically, and differential privacy would protect the answers
-statistically. We do not evaluate it, and every accuracy figure in this paper
+statistically. Every accuracy figure in this paper
 assumes it is not in use.}
 
 \paragraph{Malicious participants} The cryptographic guarantees assume
@@ -707,3 +779,20 @@ $\tc$, and it tightens the query allowance, because the bound of
 \cref{sec:exp-leak} scales with the largest coalition that cannot decrypt. Which
 point on that trade-off a deployment wants is a deployment question. We did not
 measure any point other than $\tc=\Nc$.}
+
+\tronly{The liveness cost of that choice should be stated plainly. The scheme
+admits any $\tc$ with $2\le\tc\le\Nc$, and at a general threshold a query needs
+$\tc$ clients rather than all of them, which is what makes serving survive an
+offline participant. Our implementation sets $\tc=\Nc$, so in the configuration we
+measured a single unavailable client blocks every query until it returns. A
+deployment that needs serving to continue through churn sets $\tc<\Nc$ and accepts
+coalitions of that size.}
+
+\tronly{\Cref{sec:c2c} makes the price of that choice smaller than it appears.
+Lowering $\tc$ raises the coalition's total allowance $(\tc-1)Q$, so a coalition
+reaches a given fidelity sooner. It does not raise the ceiling
+$\delta_{\mathrm{wb}}$ on what a coalition can learn about an honest client, since
+that ceiling is a property of the shared head. The threshold therefore trades
+availability against the cost of an attack rather than against what the attack can
+ultimately achieve, and a deployment can buy liveness with a proportionate
+reduction in $Q$.}
