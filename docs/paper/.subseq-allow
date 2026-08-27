@@ -141,3 +141,155 @@ that never discloses the model even to the parties that built it. \trsee{sec:rel
 Composing the three parts gives a view computationally indistinguishable from
 the real one. \trsee{sec:security} gives every proof in full.
 \end{proof}
+
+%%
+# 2026-08-23, the no-ai-slop and Kupcu-deck pass. Every entry below is ONE
+# sentence changed where it stood. No paragraph moved and no section changed.
+# Two authorities, and they agree.
+#
+# The deck's voice table, received 2026-08-21, gives four pairs and all four
+# are about the agentless form: "34 tests were run" becomes "We ran 34
+# tests". Eight sentences in the submission and six more in the report hid
+# who acted. Naming the actor is what the PI asked for, so these move the
+# text toward his instruction and not away from it. The Kerkouche sentence
+# fixes two of his rules at once, because naming the authors is also the
+# "be generous to the competition" rule.
+#
+# The no-ai-slop skill's colon-reveal rule, and CONTEXT.md rule 7
+# independently, ban a noun phrase, a colon, then a lowercase reveal. Three
+# of those became a full stop and a plain sentence, which changes punctuation
+# and nothing else.
+#
+# Also here: two faux-insight setups, one empty adverb "honestly", one
+# lowercase-after-full-stop typo that had been in the report since before
+# this session, and the caption of figures/serving.tex, which the entity
+# merge of this morning never reached and which still said "serving party".
+#
+# What I left, and why. Five passives that name their agent, because the deck
+# forbids the agentless form and not the passive itself. "The simulator is
+# given L", which is the fixed idiom of simulation-based proofs. Ten
+# "rather than" constructions, all comparative with both halves carrying
+# content, where the skill targets "This is not X. It's Y.". Two uses of
+# "robust", where "robust aggregation" is the term of art. And three
+# "e-mail:" colons, which the label-colon rule allows.
+The trainable unit is a rank-$8$ low-rank adapter with its down-projection frozen at a shared public initialisation, together with a classifier head. We use no labelled public data anywhere.
+%%
+One difference bounds the federation's own contribution independently of the
+backbone, because we measure both of its terms on the same backbone. At $\Nc=5$
+and $\alpha=0.1$ we measure $\Aloc=0.384$ against $\Asel=0.949$. That difference is
+what the protocol supplies.
+%%
+The cryptographic cost of the protocol is dominated by
+one-time setup, and the recurring per-query traffic is a few megabytes.
+We do not simulate the cryptography. We implement the protocol in real
+multiparty CKKS on Lattigo~\cite{lattigo,mouchet2021multiparty}. All figures use ring degree $2^{14}$ for the shallow operations
+and a deeper chain at ring degree $2^{15}$ for the circuits that need it. Timings
+are single-run wall clock on a commodity CPU. Communication figures are exact.
+%%
+\paragraph{Necessity of the partition} The client that sends an inference query must compute
+the features of that query itself, by \textbf{C7}. If the shared trained
+quantity were an adapter placed inside the backbone, the features would depend on
+it, and computing them would require evaluating the backbone with encrypted
+weights. The client would then have to evaluate every nonlinearity of the network
+homomorphically, which is the cost this design exists to avoid. The trained
+quantity that is shared must therefore attach after the last nonlinearity, and in
+a transformer, the only such point is the final linear map. That is the head.
+%%
+\paragraph{Encryption of the query} The client could send the
+features in plaintext, which would make the head application cheaper. We encrypt
+them because features are invertible. A party holding $\varphi_j(x)$ and the public
+backbone can reconstruct an approximation of $x$. Sending features in plaintext
+would therefore hand the server the client's input, which is the thing the
+protocol exists to protect.
+%%
+A single-key scheme would require one party to hold the secret key and therefore
+to be trusted with decryption. We use the multiparty variant of
+CKKS~\cite{mouchet2021multiparty}, where the secret key is shared among the
+clients through a distributed key-generation protocol that produces a collective
+public key without ever assembling the secret in one place. Any party, the server
+included, may compute on ciphertexts under the collective public key, but
+decryption requires the cooperation of a quorum of clients. We use two further protocols of the same family
+below. The first is a key switch to a designated public key, which re-encrypts
+a result so that one chosen party can read it. The second is a collective refresh,
+which restores a depleted level budget and plays the role bootstrapping plays in
+the single-key setting.
+%%
+Secure aggregation lets the server learn only the sum of the clients' updates,
+using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It
+protects one round's sum inside an iterative protocol, and the
+Kerkouche et al. show that the revealed per-round sums themselves leak across
+rounds~\cite{kerkouche2023client}. POSEIDON runs encrypted
+stochastic gradient descent under multiparty CKKS, with activations replaced by
+polynomial approximations~\cite{sav2021poseidon}. The approach is iterative and encrypted nonlinearity costs
+a deep multiplicative circuit with repeated bootstrapping.
+That cost scales with the network being trained, so adapting a pretrained
+transformer by this route is out of reach.
+%%
+defines the ideal functionality $\Fhe$ against which we
+measure the protocol. The server is an entity outside $\Fhe$, so it may be corrupt. The form of the functionality follows the
+secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and placing the
+aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
+%%
+We evaluate on four text classification tasks of increasing label-space size,
+AG-News with $4$ classes, TREC with $6$, DBpedia with $14$ and Banking77 with
+$77$, using a frozen RoBERTa-base encoder~\cite{liu2019roberta}, and on CIFAR-100
+with a frozen ViT-B/16~\cite{dosovitskiy2021vit}. Each text task draws at most
+$20{,}000$ training and $5{,}000$ test examples under the seed, and each vision
+task at most $10{,}000$ and $2{,}000$. Only TREC and Banking77 fall below these
+caps, and we use those whole. Data are partitioned across clients by a Dirichlet distribution over
+labels with concentration $\alpha$, the standard label-skew
+partition~\cite{hsu2019measuring,li2022niidbench}, which induces label-distribution
+skew in the usual taxonomy~\cite{kairouz2021advances} and holds the feature
+distribution fixed across clients. A smaller $\alpha$ leaves each client a few
+dominant classes and almost none of the rest. Unless stated otherwise there are $\Nc=10$
+clients, $\alpha=0.1$, the local trajectory is $200$ steps, and every number is the
+mean over three seeds. Each client reserves at least one held-out example from
+every class it holds, as   requires, and tops the held-out set
+up to one tenth of its shard at random.
+%%
+The more informative reading concerns which arrangement the estimator selects. The estimator
+chooses the shared head at $\alpha\in\{0.05,0.1\}$ and the personal adapter at
+$\alpha\in\{0.3,1.0\}$, on every seed in each case. The crossover is therefore not
+a property of the label space alone, as   might suggest, but of
+coverage. The personal adapter is preferable once each client sees enough of the
+label space for its own representation to transfer, and the shared head is
+preferable when it does not. The estimator locates that crossover from encrypted
+local evidence, with no test set and no fitted threshold.
+%%
+The failure is structural. The shared arrangement is one
+model, and the union of the clients' data is the whole training set, so pooled
+held-out measurements estimate its accuracy on the global distribution to within
+$0.02$ on average. The personal arrangement is $\Nc$ different models, and client $j$'s
+held-out data measures only client $j$'s own model, on client $j$'s own
+distribution, which is the distribution that model was fitted to. Its measured
+accuracy exceeds its true global accuracy by $0.28$ on average. A client's
+held-out set also contains only the classes that client holds, so the very
+quantity that decides the comparison, accuracy on classes the client has never
+seen, the client cannot measure locally at all. The procedure compares an accurate number
+against an optimistic one, so it is not close to correct and it does not become
+correct with more held-out data.
+%%
+\paragraph{Encryption of the query} The client could send the
+features in plaintext, which would make the head application cheaper. We encrypt
+them because features are invertible. A party holding $\varphi_j(x)$ and the public
+backbone can reconstruct an approximation of $x$. Sending features in plaintext
+would therefore hand the server the client's input, which is the thing the
+protocol exists to protect. The price is that the server applies the head ciphertext by
+ciphertext rather than ciphertext by plaintext, and   reports
+what that costs.
+%%
+Secure aggregation lets the server learn only the sum of the clients' updates,
+using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It is
+lossless, but it protects one round's sum inside an iterative protocol, and the
+Kerkouche et al. and So et al. show that the revealed per-round sums themselves leak across
+rounds~\cite{so2023securing,kerkouche2023client}. Homomorphic encryption goes
+further by computing on contributions that stay encrypted. POSEIDON runs encrypted
+stochastic gradient descent under multiparty CKKS, with activations replaced by
+polynomial approximations so that the server can evaluate them
+homomorphically~\cite{sav2021poseidon}. The guarantee is strong and the model
+loses no accuracy, but the approach is iterative and encrypted nonlinearity costs
+a deep multiplicative circuit with repeated bootstrapping. Several works measure
+how delicate those polynomial activations
+are~\cite{garimella2021sisyphus,baruch2022methodology,agamennone2025polynomial,alhossain2025training,ibarrondo2021fhebn}.
+That cost scales with the network being trained, so adapting a pretrained
+transformer by this route is out of reach.

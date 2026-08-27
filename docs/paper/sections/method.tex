@@ -19,9 +19,9 @@ that works across the whole label space, and they cannot pool their data to buil
 one.
 
 Three requirements separate this setting from ordinary federated learning. (1) The
-protocol is \emph{one-shot}: each client uploads once. (2) Confidentiality is \emph{cryptographic}. A client's contribution is never
+protocol is \emph{one-shot}. Each client uploads once. (2) Confidentiality is \emph{cryptographic}. A client's contribution is never
 available in plaintext to any other party. (3) The resulting model is
-\emph{never disclosed}: no party, client or server, ever holds the trained
+\emph{never disclosed}. No party, client or server, ever holds the trained
 classifier in plaintext.
 
 Each requirement forecloses a family of designs, and the remaining space is
@@ -101,7 +101,7 @@ The adapter is trained locally and never transmitted.
 the features of that query itself, by \textbf{C7}. If the shared trained
 quantity were an adapter placed inside the backbone, the features would depend on
 it, and computing them would require evaluating the backbone with encrypted
-weights. Every nonlinearity of the network would then have to be evaluated
+weights. The client would then have to evaluate every nonlinearity of the network
 homomorphically, which is the cost this design exists to avoid. The trained
 quantity that is shared must therefore attach after the last nonlinearity, and in
 a transformer, the only such point is the final linear map. That is the head.
@@ -196,19 +196,19 @@ head to the encrypted features, obtains encrypted logits, and reduces them to th
 index of the largest entry under encryption.
 \Cref{alg:serve} states it.
 
-\paragraph{Encryption of the query} The server could be given the
+\paragraph{Encryption of the query} The client could send the
 features in plaintext, which would make the head application cheaper. We encrypt
 them because features are invertible. A party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
 would therefore hand the server the client's input, which is the thing the
 protocol exists to protect.
 
-\tronly{\paragraph{Encryption of the query} The server could be given the
+\tronly{\paragraph{Encryption of the query} The client could send the
 features in plaintext, which would make the head application cheaper. We encrypt
 them because features are invertible. A party holding $\varphi_j(x)$ and the public
 backbone can reconstruct an approximation of $x$. Sending features in plaintext
 would therefore hand the server the client's input, which is the thing the
-protocol exists to protect. The price is that the head is applied ciphertext by
+protocol exists to protect. The price is that the server applies the head ciphertext by
 ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
 what that costs.}
 
@@ -237,7 +237,7 @@ the largest entry is the same restriction imposed by construction rather than by
 policy. It places an adversary in the hard-label setting, where functionally
 equivalent extraction is markedly harder and has only recently been achieved for
 general networks~\cite{chen2024hardlabel,carlini2025hardlabel}. It does not make
-extraction impossible, and \cref{sec:threat} states the resulting bound honestly,
+extraction impossible, and \cref{sec:threat} states the resulting bound
 as a bound on queries rather than a cryptographic hardness claim.}
 
 \paragraph{Directed decryption} Decryption needs a quorum, so

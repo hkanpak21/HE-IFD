@@ -37,9 +37,17 @@ def mean_by(rs, key, mode):
     return sorted((k, sum(v) / len(v)) for k, v in acc.items())
 
 
+# The deck asks for figures that stay readable in black and white. In greyscale
+# the blue of "selected" and the sage of "disclosed" land on the same mid-grey,
+# so each series carries a line style as well as a colour.
+DASH = {"selected": "-", "disclosed": (0, (5, 2)), "alone": (0, (1, 1.6)),
+        "pooled": (0, (3, 1.5, 1, 1.5)), "cost": (0, (5, 2))}
+
+
 def line(ax, pts, name, marker):
     x, y = zip(*pts)
-    ax.plot(x, y, marker=marker, color=hp.SERIES[name], label=name)
+    ax.plot(x, y, marker=marker, color=hp.SERIES[name], label=name,
+            linestyle=DASH.get(name, "-"))
 
 
 def main():
@@ -106,7 +114,8 @@ def main():
                               (trn, "cost", "o", "tournament")):
         ax[3].plot([int(r["C"]) for r in rs],
                    [float(r["argmax_total_ms"]) / 1000 for r in rs],
-                   marker=mk, color=hp.SERIES[name], label=lab)
+                   marker=mk, color=hp.SERIES[name], label=lab,
+                   linestyle=DASH.get(name, "-"))
     ax[3].set_xscale("log")
     ax[3].set_yscale("log")
     ax[3].set_xticks([4, 14, 100])

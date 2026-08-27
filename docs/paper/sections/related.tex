@@ -56,7 +56,7 @@ attack.}
 Secure aggregation lets the server learn only the sum of the clients' updates,
 using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It
 protects one round's sum inside an iterative protocol, and the
-revealed per-round sums have themselves been shown to leak across
+Kerkouche et al. show that the revealed per-round sums themselves leak across
 rounds~\cite{kerkouche2023client}. POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
 polynomial approximations~\cite{sav2021poseidon}. The approach is iterative and encrypted nonlinearity costs
@@ -67,11 +67,11 @@ transformer by this route is out of reach.
 \tronly{Secure aggregation lets the server learn only the sum of the clients' updates,
 using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It is
 lossless, but it protects one round's sum inside an iterative protocol, and the
-revealed per-round sums have themselves been shown to leak across
+Kerkouche et al. and So et al. show that the revealed per-round sums themselves leak across
 rounds~\cite{so2023securing,kerkouche2023client}. Homomorphic encryption goes
 further by computing on contributions that stay encrypted. POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
-polynomial approximations so that they can be evaluated
+polynomial approximations so that the server can evaluate them
 homomorphically~\cite{sav2021poseidon}. The guarantee is strong and the model
 loses no accuracy, but the approach is iterative and encrypted nonlinearity costs
 a deep multiplicative circuit with repeated bootstrapping. Several works measure

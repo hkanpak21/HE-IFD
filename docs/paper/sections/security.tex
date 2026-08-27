@@ -32,8 +32,8 @@ task itself leaks.}
 \subsection{The Ideal Functionality}
 \label{sec:ideal}
 
-\Cref{func:ideal} defines the ideal functionality $\Fhe$ against which the
-protocol is measured. The server is an entity outside $\Fhe$, so it may be corrupt. The form of the functionality follows the
+\Cref{func:ideal} defines the ideal functionality $\Fhe$ against which we
+measure the protocol. The server is an entity outside $\Fhe$, so it may be corrupt. The form of the functionality follows the
 secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and placing the
 aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
 
@@ -229,9 +229,7 @@ $\thstar$, rather than the output of \cref{alg:serve}. The natural repair is to
 have an honest client refuse such a request. It cannot, and the obstacle is the
 encryption itself.
 
-\tronly{\Cref{thm:malicious} keeps the server honest. That assumption is necessary,
-and the reason is worth stating, because it marks the boundary of what this
-message pattern can achieve.}
+\tronly{\Cref{thm:malicious} keeps the server honest. That assumption is necessary.}
 
 \begin{proposition}[No plaintext gate from a ciphertext]
 \label{prop:nogate}
