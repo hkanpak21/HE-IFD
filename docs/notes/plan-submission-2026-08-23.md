@@ -8,6 +8,31 @@ The paper as it stands is `docs/paper`, commit `cc1df39`, taken from the
 Overleaf copy the PIs have read. It builds to 20 pages with no undefined
 citation, no undefined reference and no overfull box.
 
+## 0. The goal
+
+Two documents from one source, and the submission is cut by deleting and moving.
+
+`main.pdf` fits ten printed pages, references and biographies counted. Every
+claim it makes is supported inside it, or by a pointer to a section of
+`main-tr.pdf`. `main-tr.pdf` carries everything the submission drops and reads
+start to finish with no jump to an appendix.
+
+Done means all seven of these hold at once.
+
+| Gate | Command | Target |
+| --- | --- | --- |
+| length | `pdfinfo docs/paper/main.pdf` | 10 pages or fewer |
+| prose budget | `scripts/budget.py` | 5,563 words or fewer |
+| nothing rewritten | `scripts/check_subseq.py --base cc1df39` | 0 REWRITTEN, every acceptance carrying a reason |
+| the two documents agree | `scripts/check_split.py docs/paper` | OK |
+| bibliography | `lint.py --bib` and a key count | 55 keys or fewer, 0 mechanical errors |
+| both compile | `pdflatex` on each driver | 0 undefined citations, 0 undefined references, 0 overfull boxes |
+| voice | `lint.py --paper` | no error in any paragraph written now |
+
+The last gate is the one that protects the PIs. The linter runs on what
+`check_subseq.py` reports as new, and on nothing else, because the rest is text
+they have already approved.
+
 ## 1. What was decided
 
 | Question | Ruling |
