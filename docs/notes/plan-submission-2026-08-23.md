@@ -8,6 +8,39 @@ The paper as it stands is `docs/paper`, commit `cc1df39`, taken from the
 Overleaf copy the PIs have read. It builds to 20 pages with no undefined
 citation, no undefined reference and no overfull box.
 
+## Update, 2026-08-27. The report session ran
+
+Worked overnight on the report only. The submission is unchanged and verified so.
+Commits `610b3f3` and `d0f2cef`. The full account is
+`docs/notes/TR-propositions-2026-08-27.md` and the ledger is
+`docs/notes/GATES-privacy-tr-2026-08-27.md`.
+
+What changed. Thirty-one paragraphs that rendered twice in the report now render
+once, which took it from 20 pages to 19. Section IV gained a report-only
+subsection carrying Proposition 2, which caps the coalition's membership
+advantage at what the head itself reveals and so makes Theorem 2's $\delta$
+non-vacuous without any measurement. The noise-on-labels defence is measured and
+reported. Communication against the client count is stated. The liveness cost of
+$\tc=\Nc$ is stated. The stale membership suite is labelled as pre-pivot.
+
+**A correction to W7 in this file.** The noise-defence figures quoted below, 0.310
+on AG-News, 0.111 on DBpedia and 0.014 on Banking77 at $\varepsilon=1$, do not
+match `results/extraction_defence/results.csv`. Recomputed on 2026-08-27 the
+$\varepsilon=1$ means are 0.372, 0.150 and 0.018, and the Banking77 baseline is
+0.206 rather than 0.196. The quoted set mixes $\varepsilon=1$ with
+$\varepsilon=0.5$. The report uses the file. The finding is unchanged and
+sharper.
+
+**W12 is smaller than it was.** Proposition 2 makes the membership measurement a
+white-box attack on the true merged head rather than an extract-then-attack
+pipeline, because the white-box advantage is a ceiling on every query budget.
+
+Three claim changes are open and are Halil's, all in section 3 of the
+propositions file. The introduction misattributes two numbers to
+`nasr2019comprehensive`. Theorem 1 assumes IND-CPA where an approximate scheme
+that releases decryptions needs IND-CPA-D with smudging. The reported latency and
+the reported per-query traffic describe two different level-restoration designs.
+
 ## Where this stands, 2026-08-23 end of day
 
 Every work item W1 to W10 is done and committed. The submission is 10 pages with

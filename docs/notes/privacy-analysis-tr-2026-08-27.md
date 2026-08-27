@@ -19,13 +19,21 @@ interface never emits. The correct analysis has one empirical target, the
 client-to-client channel, because the server-to-client channel is closed by
 proof already in `security.tex` and needs no experiment. Client-to-client
 inference under this interface is not blocked by the label restriction. It is
-made expensive by it. A linear head over public features is reconstructible from
-labels alone in polynomially many queries (Lowd and Meek, KDD 2005, proven),
-after which the white-box membership attacks apply to the reconstruction. The
+made expensive by it. A multiclass softmax head over public features is
+reconstructible from labels alone to above 99.9 per cent agreement in $100C(d+1)$
+queries (Tramer et al., USENIX Security 2016, Section 6.2, empirical), after which
+the white-box membership attacks apply to the reconstruction. The
 report therefore measures how much a coalition of $\tc-1$ clients learns about an
 honest client at the real budget $(\tc-1)Q$, which is the quantity $\delta$ that
-Theorem 2 leaves abstract and that `sec:exp-leak` promises to measure. That
-measurement is the missing anchor without which Theorem 2's bound is vacuous.
+Theorem 2 leaves abstract and that `sec:exp-leak` promises to measure.
+
+Superseded in part on 2026-08-27, and the supersession is an improvement.
+Proposition 2 of `security.tex` now shows $\delta(Q_{\mathrm{tot}})$ is capped at
+every budget by $\delta_{\mathrm{wb}}$, the advantage of an adversary holding the
+head. Theorem 2 is therefore no longer vacuous without the measurement, and the
+measurement's job is to put a number on the ceiling rather than to rescue the
+theorem. It also becomes a white-box attack on the true head instead of an
+extract-then-attack pipeline.
 
 ## 1. The existing membership suite measures a deleted threat model
 
@@ -131,9 +139,10 @@ the one-shot merge and raise the label-only signal.
 The structural subtlety, and the reason the label restriction is a cost and not
 a wall, is that when the map is linear the boundary distance is closed-form once
 $W$ is known, $\lvert w_c^\top\phi(x)\rvert/\lVert w_c\rVert$, so Strategy A
-collapses into Strategy B. Proven, Lowd and Meek (KDD 2005): a linear classifier
-is reconstructible from label-only membership queries in polynomially many
-queries. The label interface hides the confidence, not the hyperplane.
+collapses into Strategy B. Empirical, Tramer et al. (USENIX Security 2016,
+Section 6.2): a multiclass softmax model is recovered from class labels alone to
+above 99.9 per cent agreement in $100C(d+1)$ queries by adaptive retraining. The
+label interface hides the confidence, not the hyperplane.
 
 ### 3.3 Strategy B, extract then attack
 
@@ -193,7 +202,9 @@ The rewire of `mia/`, W12, in one pass.
    $(\tc-1)Q$, not an unmetered external querier. The server-to-client surface
    produces no experiment, only the citation to the proof.
 4. Keep the plaintext white-box LiRA and RMIA on the reconstructed head as the
-   headline, since after Lowd and Meek the reconstruction is the real interface.
+   headline. Proposition 2 makes this the ceiling on every budget, so the
+   white-box attack on the true head is the measurement and the extraction
+   pipeline does not have to be built to obtain a bound.
    Report TPR at 0.1 and 1 percent FPR and AUC, the metric LiRA and RMIA fix.
 5. Sweep the budget, so the output is a curve of membership advantage against
    spent queries, which is $\delta$ as a function of $Q_{\mathrm{tot}}$ and is
@@ -208,8 +219,12 @@ already in `refs.bib` and cited nowhere.
 
 Essential and load-bearing:
 
-- Lowd and Meek, KDD 2005. Proven reconstruction of a linear classifier from
-  label queries. The reason the label interface is a cost, not a guarantee.
+- Tramer et al., USENIX Security 2016, Section 6.2. Label-only extraction of a
+  multiclass softmax model at $100C(d+1)$ queries. The reason the label interface
+  is a cost, not a guarantee. Already cited by the paper, and verified against the
+  USENIX proceedings on 2026-08-27 as supporting exactly the sentence
+  `experiments.tex` attributes to it. Lowd and Meek, KDD 2005, is *not* the right
+  citation here and was withdrawn, because their result is for the binary case.
 - Choquette-Choo et al., ICML 2021, and Li and Zhang, CCS 2021. The label-only
   membership threat class.
 - OSLO, NeurIPS 2024, or YOQO, ICLR 2024. Single-query label-only membership

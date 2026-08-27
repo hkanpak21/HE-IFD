@@ -1,5 +1,26 @@
 # `mia/` — Membership-inference suite (issue 021)
 
+> **STALE as of 2026-08-27. This suite attacks a threat model the protocol no
+> longer has.** It targets a released plaintext model θ⋆ and a Phase-0 prototype
+> channel. The current method releases no model and builds no prototype channel,
+> and `mia/target.py` still composes `src.phase0`, `src.distill` and
+> `src.aggregate`, which is the retired distillation pipeline. Every attack in
+> `mia/attacks.py` reads a per-example loss, confidence or prototype distance
+> that the label-only serving interface never emits.
+>
+> Its numbers are a correct measurement of the protocol this construction
+> declines to build. They may be cited only as the disclosure counterfactual,
+> labelled as such, never as leakage of the current method.
+>
+> What replaces it is specified in `docs/notes/TR-propositions-2026-08-27.md`,
+> proposition P4, and the reason is in
+> `docs/notes/privacy-analysis-tr-2026-08-27.md`. The short version: the
+> quantity to measure is δ_wb, the advantage of an adversary holding the merged
+> head, which Proposition 2 of `docs/paper/sections/security.tex` shows is a
+> ceiling on what any coalition reaches through the label interface at any query
+> budget. That makes the measurement a white-box attack on the true head and
+> removes the need to implement extraction-then-attack to obtain the bound.
+
 A self-contained suite that measures the **residual leakage** of the HE-IFD
 protocol's *released* artefacts. The protocol protects client contributions
 cryptographically, but after threshold decryption every party holds the global
