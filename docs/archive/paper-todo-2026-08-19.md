@@ -1,3 +1,6 @@
+> **Superseded 2026-08-23.** Every item here was carried into
+> `docs/notes/plan-submission-2026-08-23.md` or completed. Provenance only.
+
 # Paper TODO, 2026-08-19
 
 Revision 2. Rewritten after the direction of 2026-08-19: make the smallest

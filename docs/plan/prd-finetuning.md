@@ -1,3 +1,8 @@
+> **Stale header, 2026-08-23.** Its status line still says the paper is being
+> refactored from the pre-pivot draft. The method is settled and lives in
+> `docs/paper/sections/method.tex`. Read this for the product reasoning behind
+> the fine-tuning framing, not for the current protocol or the current plan.
+
 # PRD — HE-IFD: One-Shot Federated Fine-Tuning of Pretrained Models under HE
 
 **Status:** active

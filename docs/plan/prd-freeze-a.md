@@ -1,3 +1,7 @@
+> **Stale header, 2026-08-23.** Its status is `needs-triage` and its source of
+> truth is a superseded results file. The freeze-A decision it argues for is
+> settled and is in the paper. Read it for why, not for what to do next.
+
 # PRD — Freeze-A era: method-improvement program + claim-calibrated TNSE resubmission
 
 **Status:** active — `needs-triage`

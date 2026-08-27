@@ -90,3 +90,28 @@ Halil, 2026-08-23.
   unsupported. Halil, 2026-08-23.
 - The linter gates text written now, not text the PIs have approved. A warning
   in a paragraph that survives unchanged is left alone. Halil, 2026-08-23.
+- Name who acted. The deck's voice table is four pairs and all four are about
+  the agentless form, "34 tests were run" against "We ran 34 tests". A passive
+  that names its agent is fine, and so is "The simulator is given $\Leak$",
+  which is the fixed idiom of simulation-based proofs. What is forbidden is the
+  sentence that hides the actor. Halil, 2026-08-23, acting on the deck.
+- Figures stay readable in black and white, which the deck requires. Colour is
+  never the only thing separating two series, so a line style carries the
+  difference as well. Checked by rendering the PDF with `pdftoppm -gray`.
+  2026-08-23, after Figure 2's two central series were found to collapse to the
+  same mid-grey.
+- No colon reveal. A noun phrase, a colon, then a lowercase dramatic reveal is
+  banned by rule 7 above and by the `no-ai-slop` skill independently. A colon
+  before a list, a label, or a formal statement is still correct, and so is
+  "e-mail:". 2026-08-23.
+- The submission is checked as it prints. `scripts/check_subseq.py`,
+  `scripts/budget.py` and `scripts/lint_view.py` all resolve `\paperonly` and
+  `\tronly` first, and all three read float captions, which they did not until
+  2026-08-23. A tool that reads the raw source lies about both documents.
+
+## how a session ends
+
+Update `docs/notes/plan-submission-2026-08-23.md` with what was done, add any
+resolved term to the table above with its date and who ruled it, and run
+`bash scripts/gates.sh`. A gate that fails and is left failing is recorded in
+the plan with the reason, never left for the next session to rediscover.

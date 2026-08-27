@@ -6,54 +6,60 @@ Read this first when you (Claude) attach to this repo. It tells you how the user
 
 You have no conversation history. Your ground truth, in order:
 
-0. **`docs/notes/PI_notes/`** — if your task touches the paper at all, read the
-   README there and the current dated file FIRST. The PIs are reviewing on
-   Overleaf, and that folder records every comment, why it was made, and the
-   replacement text agreed. The section text does not explain itself; those
-   notes do.
-1. **`docs/plan/paper-rewrite.md`** — the current plan: the paper's flow, the
-   figure and table standard, the voice rules, and the experiments still
-   outstanding. Read it fully.
-2. **`docs/paper/sections/method.tex`** — the method as it actually stands. This
-   is authoritative for the protocol.
-3. **This file** — operations: how to run compute, where things live, what not to
+0. **`docs/notes/plan-submission-2026-08-23.md`** — the live plan. The goal, the
+   nine gates, the measured page budget, the thirteen work items and what is
+   left. Read it fully before touching the paper.
+1. **`docs/CONTEXT.md`** — the terminology ledger. One name for one thing, every
+   entry dated and attributed. Read it before writing a sentence.
+2. **`docs/notes/PI_notes/`** — if your task touches the paper, read the README
+   there and the current dated file. That folder records every PI comment, why
+   it was made, and the replacement text agreed. The section text does not
+   explain itself; those notes do.
+3. **`docs/paper/sections/method.tex`** — the method as it stands. Authoritative
+   for the protocol. `docs/paper/notation-and-terms.md` is where a symbol is
+   looked up.
+4. **This file** — operations: how to run compute, where things live, what not to
    touch.
-4. **`docs/issues/<your-issue>.md`** — your task, if one was assigned.
+5. **`docs/issues/<your-issue>.md`** — your task, if one was assigned.
 
 If a document disagrees with `method.tex`, the document is stale. Anything under
 `docs/archive/` is superseded by definition and must not be mined for
-methodology.
+methodology. `docs/plan/` now holds only two PRDs, both with stale headers, both
+read for reasoning and never for what to do next.
 
-## Source of truth (updated 2026-08-06)
+## Source of truth (updated 2026-08-23)
 
-- **PI review of the paper** -> **`docs/notes/PI_notes/`**. Read the README and
-  the current dated file before editing any section they cover. Replacement text
-  is proposed in chat and pasted into Overleaf by the user, never applied to
-  `docs/paper/` locally.
+- **The plan** -> **`docs/notes/plan-submission-2026-08-23.md`**.
+- **Terminology** -> **`docs/CONTEXT.md`**. It is the authority on which word
+  names which thing, and every ruling carries its date and who made it.
+- **PI review** -> **`docs/notes/PI_notes/`**.
 - **Method and protocol** -> **`docs/paper/sections/method.tex`**.
-- **Security claims** -> **`docs/paper/sections/security.tex`**, with the
-  reasoning in `docs/notes/malicious-security.md`.
-- **Plan, standards, outstanding experiments** -> **`docs/plan/paper-rewrite.md`**.
+- **Security claims** -> **`docs/paper/sections/security.tex`**. The reasoning
+  the submission compresses is in the technical report, `main-tr.pdf`, not in a
+  note.
+- **Symbols** -> **`docs/paper/notation-and-terms.md`**, rewritten 2026-08-23.
+  The version before that described the retired distillation protocol.
 - **Numbers.** Every figure in the paper traces to one of these:
 
 | paper element | record |
 |---|---|
-| Table II, five-task accuracy | `results/personal_adapter*/stratified/results.csv` |
-| Table II, pooled column | `results/centralised_ceiling/results.csv`, `matched_total` rows |
-| Table III, client-count row | `results/personal_adapter/nsweep.csv` |
-| Table III, skew and local-step rows | `results/personal_adapter/sensitivity.csv` |
-| Table IV, matched CIFAR-10 | `results/personal_adapter_vision/cifar10_matched_full.csv`, the full 10,000-image test set |
-| Table VI and Figure 4, cost | `results/fhe_serve/cost_grid.json` |
-| the argmax and query totals | `results/fhe_serve/argmax_tournament.csv` |
-| Table VII, communication | `results/fhe_serve/comm_grid.json`, the `serving` chain at `log_n` 15 |
+| the five-task accuracy table | `results/personal_adapter*/stratified/results.csv` |
+| its pooled column | `results/centralised_ceiling/results.csv`, `matched_total` rows |
+| the CIFAR-10 table, against the published partitions | `results/personal_adapter_vision/cifar10_matched_full.csv`, the full 10,000-image test set |
+| Figure 2, panels (a) to (c) | `results/personal_adapter/nsweep.csv` and `sensitivity.csv`, plus `stratified/results.csv` for the default cell |
+| Figure 2, panel (d) | `results/fhe_serve/argmax_tournament.csv` and `argmax_cost.csv` |
+| the per-query cost and the argmax | `results/fhe_serve/cost_grid.json`, `argmax_tournament.csv` |
+| communication | `results/fhe_serve/comm_grid.json`, the `serving` chain at `log_n` 15 |
 | the bootstrapping key size and its generation time | `results/fhe_serve/btp_keys.json` |
-| Table VIII, extraction | `results/extraction_budget/results.csv` |
-| the extraction scaling law | `results/extraction_scale/results.csv` |
-| the noise-defence note | `results/extraction_defence/results.csv` |
+| extraction, report only | `results/extraction_budget/results.csv` |
+| the extraction scaling law, report only | `results/extraction_scale/results.csv` |
+| the noise defence, report only | `results/extraction_defence/results.csv` |
+| the selection table, report only | `results/personal_adapter/nsweep.csv` and `sensitivity.csv` |
 
 **Deprecated. Do NOT mine for methodology, equations, or threat model:**
-- `docs/archive/` — superseded notes and issue briefs, kept only for provenance.
-- `src/v1/`, `src/v2/`, `archive/` — earlier simulations.
+- `docs/archive/` — superseded notes, plans and issue briefs, provenance only.
+- `archive/` — earlier simulations. `src/v1/` and `src/v2/` are gone; the
+  consolidation left one flat `src/` package.
 - **`FL_TDSC/` — REJECTED TDSC SUBMISSION.** The protocol there (encrypted
   intermediate-feature distillation, polynomial activations, server-side encrypted
   SGD) is not the current method. Historical and audit-only.
@@ -100,94 +106,132 @@ classifier head is one such map. A decoder's vocabulary projection is another.
 The construction fixes the *position* of the map, not the task. Say this when
 scope comes up, and say we evaluate classification only, because we do.
 
-**Current state (2026-08-02). The paper is with the PIs.** It is 21 pages,
-compiles clean, and the user has moved it to Overleaf. **Do not edit
-`docs/paper/` without explicit direction.** Local edits will diverge from the
-Overleaf copy the PIs are reading.
+**Current state (2026-08-23). The paper is two documents at ten pages and
+twenty.** `docs/paper` is the source of truth and it is ahead of Overleaf.
+Editing it is expected now, under the rules below.
 
-What the paper now contains, all measured and all sourced from records in
+**Overleaf still holds the pre-restructure paper.** The delivery is a whole-file
+replacement, decided 2026-08-23, and it has not happened yet. Until it does, do
+not build a find-and-paste list against Overleaf's copy, because the surrounding
+text there no longer exists locally.
+
+**The submission cuts by deleting and moving, never by rewriting.** The PIs read
+commit `cc1df39`. Every paragraph that survives must be a subsequence of what it
+replaces. Three substitutions are permitted and no others: a number that changed
+against its record, "the serving party" becoming "the server", and a
+cross-reference retargeted at the report. `scripts/check_subseq.py` enforces it
+and `docs/paper/.subseq-allow` records every accepted exception with its reason
+and date. If your edit lands in the rewritten bucket, it is a decision for the
+user, not for you.
+
+What the submission contains, all measured and all sourced from records in
 `results/`:
 
-- A separate security section: an ideal functionality, a semi-honest theorem, a
-  content game for input privacy, an impossibility result showing the strict
-  functionality is out of reach against a deviating serving party, and a
-  subsection of extensions that would recover it.
+- Seven sections. Introduction, Preliminaries, Method, Security, Experiments,
+  Related Work, Conclusion. Related work sits after the solution because
+  Küpçü's deck requires it.
+- A security section with an ideal functionality, a semi-honest theorem with a
+  proof sketch, an input-privacy theorem, and an impossibility proposition with
+  its proof. Every proof in full is in the report.
 - Accuracy on five tasks, with four quantities per task: selected, alone,
   disclosed and pooled. The paper argues in that notation.
-- CIFAR-10 on the DENSE and FedAUXfdp partitions, under the actual protocol.
-- Cryptographic cost over the full grid of ring degree and client count, with
-  the per-query total stated in seconds.
-- Extraction cost, the scaling law, and the separation between fidelity and
-  knowledge of client data.
+- CIFAR-10 on the DENSE and FedAUXfdp partitions, on the full 10,000-image test
+  set as of 2026-08-23.
+- One four-panel figure and two tables. The cryptographic cost is four numbers
+  in prose.
 
-See `docs/plan/security-program.md` for the security and journal work, and
-`docs/plan/paper-rewrite.md` for the paper flow and what is still outstanding.
+## The build: two documents from one source
 
-## Carried forward, not started (recorded 2026-08-20)
+| file | what it is |
+|---|---|
+| `docs/paper/main.tex` | the TNSE submission, `\submissiontrue`, ten printed pages |
+| `docs/paper/main-tr.tex` | the arXiv technical report, `\submissionfalse`, no limit |
+| `docs/paper/sections/` | everything else, shared, including the preamble and the front and back matter |
 
-These are decided, unstarted, and easy to lose. Raise them once the paper is
-stable and the PIs have finished the current pass.
+`\paperonly{...}` and `\tronly{...}` switch content. `\trsee{sec:x}` renders in
+the submission as "Section IV of the technical report [26]" and in the report as
+a plain `\cref`. Both documents carry the same seven top-level sections in the
+same order, which is what makes a pointer stable, so **a pointer names a section
+and never a subsection**. `scripts/check_split.py` enforces it.
 
-**The noise defence is evaluated in a record and the paper says it is not.**
-`docs/paper/sections/experiments.tex`, the "Bounds on model extraction"
-paragraph, offers calibrated noise on returned labels as the fallback when a
-query allowance cannot work, says it "composes with the protocol without
-modification", and then says "We do not evaluate it".
-`results/extraction_defence/results.csv` does evaluate it, thirty runs per cell
-over three tasks and five budgets. The defence destroys the task: AG-News falls
-from 0.649 to 0.310 at eps=1, DBpedia from 0.788 to 0.111, Banking77 from 0.196
-to 0.014. **This is not bad news.** It is the argument for the query allowance
-being the right control, and it is sitting unused while the text leaves the
-opposite impression. Highest value of the items here, and it costs no compute.
+Run `bash scripts/gates.sh` before sending anything anywhere. Nine gates.
 
-**The CUDA microbenchmarks have no record and no citation.** Section 5.4 states
-30 ms for a product and 29.5 ms for a rotation under a CUDA CKKS implementation
-at ring degree 2^16, and a claim about a mid-range inference card. Two
-independent passes flagged this. `yang2024phantom` sits in the bibliography
-cited nowhere and is plausibly the source. Attribute it or cut the passage. Do
-not guess.
+| script | what it decides |
+|---|---|
+| `scripts/gates.sh` | all nine, one command |
+| `scripts/check_subseq.py` | did anything get rewritten, per document |
+| `scripts/check_split.py` | do the two documents number their sections alike |
+| `scripts/budget.py` | prose words per section, conditionals resolved |
+| `scripts/lint_view.py` | the writing linter on the resolved view, not on the raw source |
 
-**Full test sets for the CIFAR tables.** `vm.load_vision` caps at
-`max_test=2000`. Table IV argues at length from a 0.005 gap, which is smaller
-than the standard error of a 2,000 image test set. Raising `max_test` needs no
-retraining and is under two hours on the `ai` partition.
+**The arXiv identifier is a placeholder.** `refs.bib` carries
+`arXiv:XXXX.XXXXX`. The report goes to arXiv first, its identifier replaces the
+placeholder, then the paper goes out. Gate 9 counts the placeholder and it must
+not survive submission.
 
-**One real end-to-end encrypted query.** Take a real head from
-`results/personal_adapter/artifacts/` through `fhe/serve_tournament.go`. CPU
-only, under an hour of compute. Nothing currently connects the PyTorch
-accuracies to the Lattigo costs, and this would, without adding a table.
+## Carried forward, not started (updated 2026-08-23)
 
-**Fold the twelve CIFAR-10 cells into Table V.** Free, no compute, and it turns
-the selection result from 13/15 into 24/27.
+Decided, unstarted, easy to lose. Everything on the 2026-08-20 list that is now
+done has been removed, so this list is short and true.
 
-**T30, membership inference to an appendix.** Deferred by the user. An appendix
-counts inside the TNSE 18 page limit, so it saves nothing until the page
-question is settled.
+**The membership-inference work.** Deferred by the user to a later session on the
+technical report. `mia/target.py` still composes `src.phase0`, `src.distill` and
+`src.aggregate` and attacks a released model that no longer exists, so the
+target needs rewiring, not the attacks. `mia/attacks.py` holds Yeom 2018, LiRA
+and GLiRA, all published, all fine. Open the session with a fresh literature
+search, because the setting changed from a released model to a label-only query
+interface and heads recovered by extraction, and `choquettechoo2021labelonly`
+is already in `refs.bib` cited nowhere. The submission carries one paragraph and
+a pointer.
 
-**`temp_current_overleaf/` is still on disk.** The user asked for it to be
-deleted at the end of the session. It is the sync reference for the current
-paste round, so confirm before removing it.
+**One real end-to-end encrypted query.** `fhe/main.go` has no flag that loads a
+real head, so every serving benchmark runs on synthetic vectors. Making one
+query real needs a Python exporter for a head out of
+`results/personal_adapter/artifacts/` and about a hundred lines of Go. The
+compute is minutes. Nothing in the submission depends on it, so it belongs to
+the report session.
 
-## Venue (decided 2026-07-29)
+**Fold the twelve CIFAR-10 cells into the selection table.** Free, no compute,
+and it turns the selection result from 13/15 into 24/27. That table is
+report-only now, so this is report work.
 
-Target **journals**, not conferences. The three candidates differ, and the TDSC
-rejection matters differently to each.
+**The CUDA microbenchmarks.** 30 ms for a product and 29.5 ms for a rotation
+under a CUDA CKKS implementation at ring degree 2^16 carried no record and no
+citation, so they left the submission on 2026-08-23. `yang2024phantom` sits in
+the bibliography and is plausibly the source. The report either attributes them
+after checking or drops them. Do not guess.
 
-- **IEEE TNSE** is the cleanest. Its one-resubmission rule covers TNSE's own
-  rejections only, so the TDSC rejection does not block it.
-- **IEEE TIFS** costs more. Signal Processing Society policy allows one
-  resubmission of a manuscript rejected by *any* journal, requires disclosing
-  the rejection, and requires verbatim quotation of every previous review with
-  responses. It also states a 13-page limit. We are at 19.
-- **IEEE TDSC** publishes no resubmission policy. Ask the editorial office
-  before assuming either way.
+**The TDSC editorial office.** Nobody has asked whether a rejected manuscript
+may return. Open since 2026-07-29. It does not block TNSE.
+
+## Venue (decided 2026-07-29, reconfirmed 2026-08-23)
+
+**IEEE TNSE**, and the technical report goes to arXiv first so the paper can
+cite it by a real identifier.
+
+TNSE's one-resubmission rule covers its own rejections only, so the TDSC
+rejection does not block it. IEEE bills above **ten printed pages** at $220
+each and the count includes references and biographies, which is where the
+ten-page target comes from and why the split into two documents exists.
+
+The two candidates not taken are in
+`docs/notes/plan-submission-2026-08-23.md` under the venue table. TIFS would
+require disclosing the rejection and quoting every previous review verbatim.
+TDSC publishes no resubmission policy at all.
 
 ## The plan
 
-`docs/plan/security-program.md` holds the security proofs, the journal rules,
-and the generation scope. `docs/plan/paper-rewrite.md` holds the paper flow and
-the figure and table standard. Paper writing is done with the user (HITL); all
-compute is AFK.
+`docs/notes/plan-submission-2026-08-23.md` is the only live plan. It holds the
+goal, the nine gates, the page budget measured off the compiled PDF, the
+thirteen work items and what is left. `docs/CONTEXT.md` holds the terminology
+and the standing writing rules, each dated and attributed.
+
+`docs/plan/` now holds two PRDs and nothing else. Both carry stale headers and
+both are read for the reasoning behind a decision, never for what to do next.
+The paper flow, the security programme and the 2026-08-19 TODO are all in
+`docs/archive/`.
+
+Paper writing is done with the user (HITL); all compute is AFK.
 
 ## The workflow
 
@@ -297,11 +341,17 @@ this date assumes it. Prefer `ai`.
   and seeds as positional arguments, and reads `PA_N`, `PA_ALPHA` and `PA_K` from
   the environment. Run a matched partition with
   `PA_N=5 PA_ALPHA=0.1 sbatch jobs/personal_adapter_vision.sh cifar10 42`.
-  About 22 min per cell on a T4 for CIFAR-10, 43 min for CIFAR-100.
-  **Its per-dataset JSON name carries no N or alpha**, so parallel configs
-  overwrite it. The authoritative output is the CSV block printed to the `.out`
-  log, which is what `results/personal_adapter_vision/cifar10_matched.csv` was
-  built from.
+  About 22 min per cell on a T4 for CIFAR-10, 43 min for CIFAR-100, and 30 to
+  108 min on an A40 at the full test set.
+  Its summary JSON now carries N, alpha, K and the test size, fixed 2026-08-23,
+  so parallel configs no longer overwrite each other. The authoritative output
+  is still the CSV block printed to the `.out` log.
+- **`PA_MAXTEST` sets the test-set size and defaults to 2000.** `vm.load_vision`
+  caps there, so every vision number before 2026-08-23 was measured on a fifth
+  of CIFAR-10's test set. `jobs/cifar_fulltest.sh` runs one config per
+  submission at `PA_MAXTEST=10000`, four cells at once on the `ai` partition,
+  and `results/personal_adapter_vision/cifar10_matched_full.csv` is what it
+  produced. Every cell reproduced to within 0.003.
 - **`fhe` has `-cost-grid`**, which measures every protocol operation over the
   cross product of ring degree and client count in one run. Prefer it to
   `-ring-sweep` and `-protocol-cost`, which each cover one axis and whose
@@ -381,26 +431,35 @@ fhe/                                 # Lattigo (Go) real-FHE validation (M2)
 mia/                                 # membership-inference attack suite (M2)
 
 jobs/                                # sbatch wrappers — the ONLY entrypoints that run python
+scripts/                             the gates, committed and runnable
+  gates.sh                             all nine gates, one command
+  check_subseq.py                      did anything get rewritten, per document
+  check_split.py                       do the two documents number sections alike
+  budget.py                            prose words per section, conditionals resolved
+  lint_view.py                         the writing linter on the resolved view
+
 docs/
-  README.md                            what lives where
-  paper/                               the manuscript (main.tex, sections/, figures/)
-    sections/security.tex              ideal functionality + both theorems
+  README.md                            what lives where, start here
+  CONTEXT.md                           the terminology ledger, dated and attributed
+  notes/plan-submission-2026-08-23.md  THE PLAN: goal, gates, budget, work items
+  paper/
+    main.tex                           the TNSE submission, \submissiontrue
+    main-tr.tex                        the arXiv technical report, \submissionfalse
+    sections/                          shared by both, including preamble and matter
     figures/drawio/                    editable figure sources
-  plan/paper-rewrite.md                THE PLAN: flow, standards, voice, experiments
-  plan/security-program.md             security proofs, journal rules, generation scope
-  notes/extraction-attack.md           the attack, the four defence cases, literature
-  notes/generation-scope.md            autoregressive scope, costs, Gumbel sampling
-  notes/malicious-security.md          the impossibility, the realizable functionality,
-                                       recomputation and spot-checking
+    notation-and-terms.md              where a symbol is looked up
+    .subseq-allow                      every accepted new paragraph, with its reason
+  notes/PI_notes/                      every PI comment and the text agreed
+  plan/                                two PRDs, stale headers, reasoning only
   design/                              why a decision was made
   issues/                              per-task agent briefs
-  notes/                               walkthroughs and session records
-  archive/                             superseded, provenance only
+  archive/                             superseded, provenance only, never mined
 comparators/
   REPORTED_RESULTS.md                  per-paper extracted tables, paper-verbatim
   fedmd/ feddf/ dense/ coboosting/ feddiff/ fedkt/ poseidon/   audit-only
 
 results/<case>/                      # case = <method>_<model>_<dataset>_<axis> (no version prefix)
+#   artifacts/ and ckpt/ under results/ are gitignored and live only on VALAR
   README.md                            3-sentence description + auto-populated table
   results.csv                          long-form rows (auto)
   partition_diagnostic.jsonl           per-client per-class counts (auto)
@@ -448,7 +507,15 @@ results/colab_results/               # the authoritative notebook + exported tab
 - **Never say clients learn "nothing at all."** They learn the labels they query.
 - **Never commit LaTeX build artifacts.** `.aux`, `.log`, `.out`, `.blg`, `.bbl`
   are gitignored; `main.pdf` stays tracked.
-- **Never edit `FL_TDSC/*.tex` or the paper without explicit user direction.** Paper writing is HITL.
+- **Never edit `FL_TDSC/*.tex`.** It is the rejected submission, audit-only.
+- **Never rewrite a paragraph of the paper.** The PIs read commit `cc1df39`.
+  Cut by deleting and moving. `scripts/check_subseq.py` decides, and anything it
+  reports as rewritten is the user's call, not yours. Paper writing is HITL.
+- **Never send anything without `bash scripts/gates.sh`.** Nine gates, and gate 9
+  exists because `refs.bib` still carries the placeholder `arXiv:XXXX.XXXXX`.
+- **Never edit a figure caption or a table cell without checking.**
+  `check_subseq.py` reads float captions too, and it did not until 2026-08-23,
+  which is how three changed captions went unnoticed.
 
 ## Common operations cheatsheet
 

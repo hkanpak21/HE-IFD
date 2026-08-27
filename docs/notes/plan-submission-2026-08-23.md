@@ -8,6 +8,64 @@ The paper as it stands is `docs/paper`, commit `cc1df39`, taken from the
 Overleaf copy the PIs have read. It builds to 20 pages with no undefined
 citation, no undefined reference and no overfull box.
 
+## Where this stands, 2026-08-23 end of day
+
+Every work item W1 to W10 is done and committed. The submission is 10 pages with
+41 references. The technical report is 20 pages with 110, from the same source.
+`bash scripts/gates.sh` runs all nine gates and all nine pass.
+
+| item | done |
+| --- | --- |
+| W1 build scaffolding | two drivers, `\paperonly` `\tronly` `\trsee`, the split changed no rendered text |
+| W2 section reorder | Preliminaries at II, Related Work at VI, the threat model into Security |
+| W3 system figure | one draw.io figure, three stages, the server drawn once, 8pt calibrated |
+| W4 entity merge | one server everywhere, neither theorem changed |
+| W5 abstract | eleven sentences to six, CGI-E |
+| W6 security | three statements, one proof sketch, the proofs to the report |
+| W7 experiments | 5299 words to 1435, two tables and one four-panel figure |
+| W8 method | 3510 words to 1791 |
+| W9 related work | 1518 words to 864, grouped |
+| W10 citations | 110 keys to 41 in the submission, 110 kept in the report |
+| the slop pass | 21 sentences against no-ai-slop and the deck |
+
+Against `cc1df39`, which is what the PIs read: 58 identical paragraphs, 79
+deletions-only, 13 allowed by the entity merge, 22 accepted with a written
+reason, and 0 rewritten. The report view is the same at 0 rewritten.
+
+Three things remain before anything is sent.
+
+**Overleaf still holds the pre-restructure paper.** The delivery is a whole-file
+replacement, decided 2026-08-23, and it has not happened yet.
+
+**The arXiv identifier is a placeholder.** `refs.bib` carries
+`arXiv:XXXX.XXXXX` and gate 9 counts it. The report goes to arXiv first, its
+identifier replaces the placeholder, then the paper goes out. Confirmed
+2026-08-23.
+
+**The membership-inference work is a later session.** Rewire `mia/target.py`,
+which still composes the retired distillation pipeline, and open with a fresh
+literature search, because the setting changed from a released model to a
+label-only interface and heads recovered by extraction.
+
+## The venue, and what the TDSC rejection costs each candidate
+
+Read on 2026-07-29 from the ComSoc TNSE information page, the SPS information
+for authors, and the IEEE Computer Society author resources page. Folded here
+from `docs/archive/security-program.md`, which is superseded.
+
+| Journal | Society | What the TDSC rejection costs |
+| --- | --- | --- |
+| IEEE TNSE | ComSoc | Nothing. Its one-resubmission rule covers TNSE's own rejections only |
+| IEEE TIFS | Signal Processing | Disclose the rejection and quote every previous review verbatim with a response to each |
+| IEEE TDSC | Computer Society | No public policy. Ask the editorial office |
+
+TNSE is the target, reconfirmed 2026-08-23. IEEE bills above ten printed pages
+at $220 each, which is where the ten-page target comes from, and the count
+includes references and biographies.
+
+One item is still open from that meeting. Nobody has asked the TDSC editorial
+office whether a rejected manuscript may return. It does not block TNSE.
+
 ## 0. The goal
 
 Two documents from one source, and the submission is cut by deleting and moving.

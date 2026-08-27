@@ -1,3 +1,8 @@
+> **Superseded 2026-08-23.** `docs/notes/plan-submission-2026-08-23.md`
+> is the live plan. This file is provenance. Do not mine it for the paper
+> flow, the page budget, or the voice rules, all of which changed. Its
+> voice rules still permit semicolons, which were banned on 2026-08-19.
+
 # Security program and journal plan
 
 Opened 2026-07-29 after the PI meeting. This file holds the work the meeting
