@@ -673,16 +673,49 @@ satisfies the condition needs a larger scale and modulus, and every cost in
   would move with them. We report the configuration we
 measured and state the gap rather than claim a guarantee we did not instantiate.
 %%
-# 2026-08-29, as above. Why meeting the requirement is a parameter change rather
-# than a constant, since the required smudging exceeds the plaintext scale.
-One further axis deserves a countermeasure even though it does not
-threaten the allowance. The serving circuit is deterministic, so a client that
-resubmits an identical query obtains the same ciphertext while every honest
-client draws fresh smudging noise. Averaging enough such repetitions reduces the
-noise on the shares until the value beneath it can be read off. The number of
-repetitions is between $10^5$ and $10^8$ depending on which key-switch protocol
-runs, against an allowance two to five orders of magnitude smaller, so the axis
-is not reachable at the budgets we consider. It closes completely at no cost by
-refusing to key-switch the same ciphertext twice, which the server enforces by
-storing a hash of every ciphertext presented. We recommend it and we do not rely
-on it.
+# 2026-08-29, corrected the same day. Why meeting the flooding requirement is a
+# parameter change rather than a constant, and that the tension is recorded in
+# the literature rather than particular to us. Threshold CKKS is insecure under
+# this notion with no smudging, and flooding sized to the rule is expected to
+# cost the precision of the result, so the gap is a known open tension.
+Meeting the stated requirement is not a matter of raising one constant.
+At a plaintext scale of $2^{45}$ the required smudging exceeds the scale itself,
+so it would destroy the answer rather than protect it. A configuration that
+satisfies the condition needs a larger scale and modulus, and every cost in
+  would move with them. The tension is recorded in the
+literature rather than particular to us. Threshold CKKS is insecure under this
+notion when no smudging is applied, and flooding sized to the rule is expected
+to cost the precision of the decrypted result~\cite{checri2024threshold}. We
+report the configuration we measured and state the gap rather than claim a
+guarantee we did not instantiate.
+%%
+# 2026-08-29, replacing an earlier paragraph of the same day that was wrong. The
+# first version said averaging repeated queries reduces the noise until the value
+# beneath it can be read off. That is false. Repetition resamples the smudging
+# and not the ciphertext noise, which is fixed once the query is fixed, so the
+# averaging converges on a ring element that still carries the circuit noise and
+# is a hard instance at our ring degree. Repetition reaches the position of an
+# implementation with no smudging, and no further.
+Repeating a query bears on this and is worth stating precisely, because
+the obvious reading of it is wrong. The serving circuit is deterministic, so a
+client that resubmits an identical query obtains the same ciphertext while every
+honest client draws fresh smudging noise. Averaging those repetitions removes the
+smudging, since only the smudging is resampled. It does not remove the noise of
+the ciphertext, which is fixed once the query is fixed. What the averaging
+converges on is therefore the observation the smudging was hiding, and that
+observation is a ring element carrying the circuit noise, which at our ring
+degree is a hard instance of the underlying problem. Repetition reaches the
+position of an implementation that omits smudging altogether. It does not by
+itself yield a key.
+%%
+# 2026-08-29, as above. The control that actually matches the axis is a query
+# budget with the flooding sized for it and rekeying when it is spent, at half a
+# bit per doubling. Refusing to key-switch a ciphertext twice is recommended and
+# supplementary, because re-randomizing a query defeats any such check.
+The control that matches this is a query budget rather than a check on
+duplicates. Sizing the flooding noise for $q$ decryptions costs half a bit for
+each doubling of $q$, and the budget is refreshed by rekeying once it is
+spent~\cite{limicciancio2022dp}. Refusing to key-switch a ciphertext twice is
+cheap and we recommend it, and it is a supplementary control rather than a
+substitute, because a client can re-randomize a query by adding an encryption of
+zero and present a ciphertext that is fresh to any such check.
