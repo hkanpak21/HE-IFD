@@ -11,9 +11,20 @@ serve-only design.
 The priority claim, approved wording, copied never paraphrased:
 
 > the first cryptographically secure one-shot federated fine-tuning protocol
-> in which the final model is never disclosed to any party
+> in which no party receives the trained result
 
-Ruling: Halil, 2026-08-19, after the agent noted that the unqualified form is
+Ruling: Halil, 2026-08-29, replacing the closing clause of the 2026-08-19 form,
+which read "in which the final model is never disclosed to any party". The
+qualifiers "cryptographically secure" and "one-shot" are untouched and remain
+load-bearing. The change is to how the withheld object is named, from the final
+model to the trained result, because the protocol withholds the result of the
+federation rather than a model any party ever held.
+
+Note that "never disclosed" survives as the name of the third requirement in
+\cref{sec:setting} and in the chain of implications. The claim sentence and the
+requirement are two different objects and only the claim changed.
+
+Earlier ruling: Halil, 2026-08-19, after the agent noted that the unqualified form is
 broken by FedIT and the federated LoRA line. "Cryptographically secure" and
 "one-shot" are both load-bearing. No "first" claim wider than this appears
 anywhere (abstract, introduction, related work close, conclusion). Ruling of

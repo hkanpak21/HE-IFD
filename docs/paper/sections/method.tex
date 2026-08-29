@@ -34,17 +34,18 @@ narrow. We record the chain of implications here.
   inputs.} \emph{Therefore}, the choice is deferred to the
   clients (\cref{sec:selection}).
 \item[\textbf{C3}] \emph{Models trained from different starting points do not
-  combine linearly.} \emph{Therefore}, every client starts its trainable unit
-  from one public initializer on one frozen public backbone.
-\item[\textbf{C4}] \emph{Multiplicative depth dominates homomorphic cost.}
-  \emph{Therefore}, the aggregation is a linear combination.
-\item[\textbf{C5}] \emph{Intermediate training signals are the strongest attack
+  combine linearly, and multiplicative depth dominates homomorphic cost.}
+  \emph{Therefore}, every client starts its trainable unit from one public
+  initializer on one frozen public backbone, and the server combines what the
+  clients return by a linear combination. The clients carry the training and the
+  server's work stays linear in what it receives.
+\item[\textbf{C4}] \emph{Intermediate training signals are the strongest attack
   surface.} \emph{Therefore},
   the protocol is one-shot, and its single artifact is a ciphertext.
-\item[\textbf{C6}] \emph{No single party may be able to decrypt.} \emph{Therefore}, the secret
+\item[\textbf{C5}] \emph{No single party may be able to decrypt.} \emph{Therefore}, the secret
   key is generated and held distributively, under multiparty CKKS
   (\cref{sec:mhe}).
-\item[\textbf{C7}] \emph{The model is never disclosed, yet it must answer
+\item[\textbf{C6}] \emph{The model is never disclosed, yet it must answer
   queries.} \emph{Therefore}, the client runs the backbone
   and its own adapter in plaintext, and the trained quantity that is shared cannot
   sit inside the backbone.}
@@ -59,22 +60,23 @@ narrow. We record the chain of implications here.
   data-dependent aggregation rule. \emph{Therefore}, the choice is deferred to the
   clients, who make it without decrypting anything (\cref{sec:selection}).
 \item[\textbf{C3}] \emph{Models trained from different starting points do not
-  combine linearly.} In the parameter space of a deep network they occupy
-  incomparable regions. \emph{Therefore}, every client starts its trainable unit
-  from one public initializer on one frozen public backbone, and the linear
-  combination of \textbf{C4} applies only after that common start.
-\item[\textbf{C4}] \emph{Multiplicative depth dominates homomorphic cost.}
-  \emph{Therefore}, the aggregation is a linear combination, and the design is
-  arranged so that this cheapest operation is exactly the one the method needs.
-\item[\textbf{C5}] \emph{Intermediate training signals are the strongest attack
+  combine linearly, and multiplicative depth dominates homomorphic cost.} In the
+  parameter space of a deep network they occupy incomparable regions.
+  \emph{Therefore}, every client starts its trainable unit from one public
+  initializer on one frozen public backbone, and the server combines what the
+  clients return by a linear combination, which applies only after that common
+  start. The clients carry the training and the server's work stays linear in what
+  it receives, which is the cheapest operation the scheme offers and exactly the
+  one the method needs.
+\item[\textbf{C4}] \emph{Intermediate training signals are the strongest attack
   surface.} Each exposed round is a fresh training-time artifact, far more
   revealing than a finished model (\cref{sec:related-leakage}). \emph{Therefore},
   the protocol is one-shot, and its single artifact is a ciphertext.
-\item[\textbf{C6}] \emph{No single party may be able to decrypt.} The parties are
+\item[\textbf{C5}] \emph{No single party may be able to decrypt.} The parties are
   mutually distrustful and the server is semi-honest. \emph{Therefore}, the secret
   key is generated and held distributively, under multiparty CKKS
   (\cref{sec:mhe}).
-\item[\textbf{C7}] \emph{The model is never disclosed, yet it must answer
+\item[\textbf{C6}] \emph{The model is never disclosed, yet it must answer
   queries.} A query is formed from features, and the client that asks the query must be able
   to compute those features itself. \emph{Therefore}, the client runs the backbone
   and its own adapter in plaintext, and the trained quantity that is shared cannot
@@ -96,7 +98,7 @@ encrypted displacements into a single shared head and never decrypts the result.
 The adapter is trained locally and never transmitted.
 
 \paragraph{Necessity of the partition} The client that sends an inference query must compute
-the features of that query itself, by \textbf{C7}. If the shared trained
+the features of that query itself, by \textbf{C6}. If the shared trained
 quantity were an adapter placed inside the backbone, the features would depend on
 it, and computing them would require evaluating the backbone with encrypted
 weights. The client would then have to evaluate every nonlinearity of the network

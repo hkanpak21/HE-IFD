@@ -17,14 +17,14 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 \maketitle
 
 \begin{abstract}
-Organizations holding complementary data over the same task would each gain from a
-jointly fine-tuned model, yet cannot pool their data to build one.
-Federated learning offers collaboration but concentrates its privacy risk at training time.
+Several parties hold data on the same task and want one model built from all of
+it, without pooling the data.
+Federated learning does that and concentrates the privacy risk at training time.
 A one-shot protocol that exchanges a single encrypted contribution removes that surface,
-but it still ends by handing the final model to every participant, which is not
+but it still ends by handing the trained result to every participant, which is not
 permitted where the model is itself a regulated or proprietary asset. We present HE-OFT, the first
-cryptographically secure one-shot federated fine-tuning protocol, in which the
-final model is never disclosed to any party.
+cryptographically secure one-shot federated fine-tuning protocol in which no
+party receives the trained result.
 Each client fine-tunes a low-rank adapter and a classifier head on a
 frozen public backbone, retains the adapter locally, and uploads one encrypted
 head displacement that the server combines under multiparty CKKS and never

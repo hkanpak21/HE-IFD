@@ -42,28 +42,6 @@ $\Nc=20$, and it is $6.8$\,MiB at ring degree $2^{14}$ and $27.0$\,MiB at
 $2^{16}$. It does not vary with the number of classes. Setup costs $344$\,MiB per client, once.
 
 %%
-# 2026-08-23, W5. The abstract goes from eleven sentences to six, which is
-# the ceiling Kupcu's deck sets, in CGI-E order. Nine of the eleven survive
-# as deletions. Two joins are new: the head displacement clause takes "that
-# the server combines" where the original started a new sentence, and the
-# evidence sentence takes "gives up" and "answers one query in" where the
-# original had three sentences. Both exist to reach six.
-# The passive "Queries are answered under encryption" is gone with them.
-\begin{abstract}
-Organizations holding complementary data over the same task would each gain from a
-jointly fine-tuned model, yet cannot pool their data to build one.
-Federated learning offers collaboration but concentrates its privacy risk at training time.
-A one-shot protocol that exchanges a single encrypted contribution removes that surface,
-but it still ends by handing the final model to every participant, which is not
-permitted where the model is itself a regulated or proprietary asset. We present HE-OFT, the first
-cryptographically secure one-shot federated fine-tuning protocol, in which the
-final model is never disclosed to any party.
-Each client fine-tunes a low-rank adapter and a classifier head on a
-frozen public backbone, retains the adapter locally, and uploads one encrypted
-head displacement that the server combines under multiparty CKKS and never
-decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $31.5$ to $113.2$\,s for $13.5$\,MiB of traffic.
-\end{abstract}
-%%
 # 2026-08-23. One clause is new, in the caption of Table I. The POSEIDON row
 # said the model ends up in the clear, which its own paper contradicts. Verified
 # against comparators/FL_comparator_papers/8_POSEIDON_arXiv2009.00349.pdf:
@@ -489,22 +467,6 @@ availability against the cost of an attack rather than against what the attack c
 ultimately achieve, and a deployment can buy liveness with a proportionate
 reduction in $Q$.
 %%
-# 2026-08-29, A3. Halil ruled the selected accuracy goes in the caption rather
-# than a new column, because on three of five tasks it equals the bolded value and
-# a column of repeats reads badly. Two sentences of the caption are unchanged. The
-# figures are from results/personal_adapter*/stratified/results.csv, mode
-# sel_gp_rarefill. Without this the stated prices cannot be obtained by
-# subtracting the printed columns on AG-News or CIFAR-100.
-Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
-Both servable arrangements are shown, together with what a client obtains alone,
-what a disclosed model would reach, and what one model trained on the pooled data
-reaches at the same total number of steps. Neither reference is servable under
-the threat model of  . We did not run the pooled reference on
-CIFAR-100. On one seed the Dirichlet draw assigns fewer than twenty samples to some
-clients, which cannot train, so the effective federation is seven on AG-News and
-nine on TREC. The estimator selects per seed, so the selected accuracy is $0.669$
-on AG-News, $0.756$ on CIFAR-100, and the bolded value elsewhere.
-%%
 # 2026-08-29, F. Halil asked for the machine to be named simply. Commodity CPU
 # becomes one core of a VALAR CPU node. Nothing else in the paragraph changes.
 The cryptographic cost of the protocol is dominated by
@@ -522,25 +484,6 @@ are single-run wall clock on one core of a VALAR CPU node. Communication figures
 of  . No intermediate training artifact is ever exposed. It is not
 silent. Key generation precedes it, selection costs at most $2\Nc\Cc$ encrypted comparisons, once, and serving
 costs traffic per query.
-%%
-# 2026-08-29, D3 and D4. Fidelity and the feature dimension were used in the
-# submission and defined only in the report. Halil asked for a short definition in
-# place rather than a pointer. Two clauses.
-\emph{Fidelity} is the rate at which a copy agrees with the served
-model. Reaching fidelity $0.90$ takes
-about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
-$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
-feature dimension, and in each case fidelity $0.90$ costs
-between three and five times that number of queries. A deployment can therefore set its
-allowance from $\Cc$ and $d$ without repeating this experiment.   gives the extraction study in full.
-%%
-# 2026-08-29, D2. The setup promises the paper reports both differences and the
-# submission reported one. Halil ruled a pointer. One sentence.
-Never disclosing the model costs accuracy, and   allows the
-price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
-$0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
-CIFAR-100. After the protocol ends, there is no plaintext model anywhere.
-  reports $\Apool-\Adis$.
 %%
 # 2026-08-29, A1 and the gradient sentence. Halil ruled the numbers corrected and
 # the gradient-reconstruction sentence deleted, the latter because a USENIX
@@ -752,3 +695,199 @@ on its own under the collectively generated keys.   measures that
 variant. It costs about thirteen times the latency, so the figures above are the
 latency of the collective-refresh variant and we do not claim them for the
 variant the protocol specifies.
+%%
+# 2026-08-29, Halil's notes. Table I's caption was too long. It now says what the
+# scenario is and what the servable and reference columns mean, and stops. The
+# seed detail and the missing pooled cell move into a \tronly tail of the same
+# caption, so the report keeps them.
+Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
+The servable columns are the two arrangements the protocol answers queries from.
+The reference columns are not servable under the threat model of
+ . The estimator selects per seed, so the selected accuracy is
+$0.669$ on AG-News, $0.756$ on CIFAR-100, and the bolded value
+elsewhere.
+%%
+# 2026-08-29, Halil's notes. The heading reads End-to-end query cost. Nothing
+# else in the paragraph changes.
+\paragraph{End-to-end query cost} On one core a query takes $31.5$\,s
+at four classes and $113.2$\,s at a hundred. The arithmetic and the key switch
+account for $0.24$\,s of that at every label-space size. Everything else is the
+encrypted argmax. The
+tournament costs about $16$\,s per round and needs
+$\lceil\log_2\Cc\rceil$ rounds, against the fourteenfold larger sequential fold
+( ).
+%%
+# 2026-08-29, Halil's notes. The disclosure comparison shrinks to three sentences
+# and a pointer, because a disclosed model does not satisfy Functionality 1 and
+# discussing it at length in the submission argues against our own ideal
+# functionality. The per-task figures move to the report.
+Never disclosing the model costs accuracy. The quantity $\Adis-\Asel$
+runs from $0.029$ to $0.136$ across the five tasks. A disclosed model does not
+satisfy  , so we do not offer it as a configuration of this
+protocol.   gives the comparison per task.
+%%
+# 2026-08-29, Halil's notes. Scope and limitations shrinks to one sentence and a
+# pointer. All three limitations survive in full in the report, each in its own
+# paragraph, so nothing is lost and the submission stops spending a third of a
+# page on caveats.
+Three limitations bound the construction. The shared quantity must be
+linear in the features, the query allowance is an operational control rather than
+cryptographic hardness, and the guarantees assume semi-honest parties.
+  states each one in full.
+%%
+# 2026-08-29, Halil's notes. The abstract's opening is simplified to parties who
+# hold data on one task and want one model from all of it. The priority claim's
+# wording changes with it, from the final model is never disclosed to any party,
+# to no party receives the trained result, which is what Halil asked for. That
+# wording is the approved claim, so docs/CONTEXT.md is updated with the new form
+# and the date.
+\begin{abstract}
+Several parties hold data on the same task and want one model built from all of
+it, without pooling the data.
+Federated learning does that and concentrates the privacy risk at training time.
+A one-shot protocol that exchanges a single encrypted contribution removes that surface,
+but it still ends by handing the trained result to every participant, which is not
+permitted where the model is itself a regulated or proprietary asset. We present HE-OFT, the first
+cryptographically secure one-shot federated fine-tuning protocol in which no
+party receives the trained result.
+Each client fine-tunes a low-rank adapter and a classifier head on a
+frozen public backbone, retains the adapter locally, and uploads one encrypted
+head displacement that the server combines under multiparty CKKS and never
+decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $31.5$ to $113.2$\,s for $13.5$\,MiB of traffic.
+\end{abstract}
+%%
+# 2026-08-29, Halil's notes. C3 and C4 read as design choices rather than
+# consequences, so they merge into one item that names the problem they solve.
+# The public initialiser on a frozen public backbone and the linear combination
+# together defer the divergence between separately trained clients, the clients
+# carry the training, and the server's work stays linear. C5 to C7 renumber to C4
+# to C6 with no other change.
+\begin{itemize}
+\item[\textbf{C1}] \emph{Optimization cannot run under encryption at acceptable
+  cost.} \emph{Therefore}, all learning happens in
+  plaintext on the clients, and the server performs no learning.
+\item[\textbf{C2}] \emph{A server computing on ciphertexts cannot read its
+  inputs.} \emph{Therefore}, the choice is deferred to the
+  clients ( ).
+\item[\textbf{C3}] \emph{Models trained from different starting points do not
+  combine linearly, and multiplicative depth dominates homomorphic cost.}
+  \emph{Therefore}, every client starts its trainable unit from one public
+  initializer on one frozen public backbone, and the server combines what the
+  clients return by a linear combination. The clients carry the training and the
+  server's work stays linear in what it receives.
+\item[\textbf{C4}] \emph{Intermediate training signals are the strongest attack
+  surface.} \emph{Therefore},
+  the protocol is one-shot, and its single artifact is a ciphertext.
+\item[\textbf{C5}] \emph{No single party may be able to decrypt.} \emph{Therefore}, the secret
+  key is generated and held distributively, under multiparty CKKS
+  ( ).
+\item[\textbf{C6}] \emph{The model is never disclosed, yet it must answer
+  queries.} \emph{Therefore}, the client runs the backbone
+  and its own adapter in plaintext, and the trained quantity that is shared cannot
+  sit inside the backbone.
+%%
+# 2026-08-29, as above. The one cross-reference into the chain moves with the
+# renumbering, from C7 to C6.
+\paragraph{Necessity of the partition} The client that sends an inference query must compute
+the features of that query itself, by \textbf{C6}. If the shared trained
+quantity were an adapter placed inside the backbone, the features would depend on
+it, and computing them would require evaluating the backbone with encrypted
+weights. The client would then have to evaluate every nonlinearity of the network
+homomorphically, which is the cost this design exists to avoid. The trained
+quantity that is shared must therefore attach after the last nonlinearity, and in
+a transformer, the only such point is the final linear map. That is the head.
+%%
+# 2026-08-29, Halil's notes. CKKS is cited and not re-explained, since a reader of
+# this venue knows it. Packing, the three operations and bootstrapping leave the
+# submission, and bootstrapping stays in the report.
+We build on CKKS~\cite{cheon2017ckks}, which performs approximate arithmetic on
+packed vectors of real numbers under encryption. It is
+levelled, so each multiplication spends one
+level of a finite budget.
+%%
+# 2026-08-29, as above. The multiparty motivation keeps one sentence and states
+# the threshold immediately, which the old text deferred to a later paragraph.
+A single-key scheme would require one party to hold the secret key and therefore
+to be trusted with decryption. We use the multiparty
+variant~\cite{mouchet2021multiparty}, stated here for a $\tc$-out-of-$\Nc$
+threshold with $2\le\tc\le\Nc$.
+%%
+# 2026-08-29, as above, and this is where the space went. The threshold setting
+# now gets four named requirements instead of a list of protocol names: what key
+# generation must produce, what decryption must take and withhold, what a key
+# switch must redirect, and what a collective refresh must restore.
+That setting asks four things of the scheme, and the protocol uses all four. Key
+generation produces one collective public key and the evaluation keys from the
+clients' shares, and never assembles the secret in one place, so any party may
+compute on ciphertexts and none may read them. Decryption takes partial shares
+from at least $\tc$ clients, and any $\tc-1$ of them learn nothing about a
+plaintext. A key switch to a designated public key redirects a result so that one
+chosen party reads it and no other does. A collective refresh restores a spent
+level budget, and plays the part bootstrapping plays under a single key.
+%%
+# 2026-08-29, Halil's notes, report view of the same caption. The submission form
+# plus the \tronly tail that keeps the seed detail and the missing pooled cell.
+Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
+The servable columns are the two arrangements the protocol answers queries from.
+The reference columns are not servable under the threat model of
+ . The estimator selects per seed, so the selected accuracy is
+$0.669$ on AG-News, $0.756$ on CIFAR-100, and the bolded value
+elsewhere. We did not run the pooled reference on CIFAR-100. On one seed
+the Dirichlet draw assigns fewer than twenty samples to some clients, which cannot
+train, so the effective federation is seven on AG-News and nine on TREC.
+%%
+# 2026-08-29, Halil's notes, report view of the merged chain. Same merge of C3 and
+# C4 as the submission, keeping the report's fuller explanations, and the same
+# renumbering of C5 to C7 into C4 to C6.
+\begin{itemize}
+\item[\textbf{C1}] \emph{Optimization cannot run under encryption at acceptable
+  cost.} Gradient steps, softmax, and adaptive curvature require deep, repeatedly
+  bootstrapped homomorphic circuits. \emph{Therefore}, for efficiency, all learning happens in
+  plaintext on the clients, and the server performs no learning.
+\item[\textbf{C2}] \emph{A server computing on ciphertexts cannot read its
+  inputs.} It cannot inspect, compare, or branch, so it cannot select a
+  data-dependent aggregation rule. \emph{Therefore}, the choice is deferred to the
+  clients, who make it without decrypting anything ( ).
+\item[\textbf{C3}] \emph{Models trained from different starting points do not
+  combine linearly, and multiplicative depth dominates homomorphic cost.} In the
+  parameter space of a deep network they occupy incomparable regions.
+  \emph{Therefore}, every client starts its trainable unit from one public
+  initializer on one frozen public backbone, and the server combines what the
+  clients return by a linear combination, which applies only after that common
+  start. The clients carry the training and the server's work stays linear in what
+  it receives, which is the cheapest operation the scheme offers and exactly the
+  one the method needs.
+\item[\textbf{C4}] \emph{Intermediate training signals are the strongest attack
+  surface.} Each exposed round is a fresh training-time artifact, far more
+  revealing than a finished model ( ). \emph{Therefore},
+  the protocol is one-shot, and its single artifact is a ciphertext.
+\item[\textbf{C5}] \emph{No single party may be able to decrypt.} The parties are
+  mutually distrustful and the server is semi-honest. \emph{Therefore}, the secret
+  key is generated and held distributively, under multiparty CKKS
+  ( ).
+\item[\textbf{C6}] \emph{The model is never disclosed, yet it must answer
+  queries.} A query is formed from features, and the client that asks the query must be able
+  to compute those features itself. \emph{Therefore}, the client runs the backbone
+  and its own adapter in plaintext, and the trained quantity that is shared cannot
+  sit inside the backbone.
+%%
+# 2026-08-29, Halil's notes, report view of the Preliminaries. The report keeps
+# bootstrapping and the ring-learning-with-errors citation inside \tronly, so the
+# paragraph differs from the submission's and needs its own entry.
+We build on CKKS~\cite{cheon2017ckks}, which performs approximate arithmetic on
+packed vectors of real numbers under encryption. It is
+levelled~\cite{lyubashevsky2010ideal}, so each multiplication spends one
+level of a finite budget, and a depleted budget is restored by
+bootstrapping~\cite{cheon2018bootstrapping}.
+%%
+# 2026-08-29, D3 and D4, re-added after I dropped it in error while pruning
+# superseded entries. Fidelity and the feature dimension were used in the
+# submission and defined only in the report. Halil asked for a short definition
+# in place rather than a pointer. Two clauses, unchanged since.
+\emph{Fidelity} is the rate at which a copy agrees with the served
+model. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
+feature dimension, and in each case fidelity $0.90$ costs
+between three and five times that number of queries. A deployment can therefore set its
+allowance from $\Cc$ and $d$ without repeating this experiment.   gives the extraction study in full.
