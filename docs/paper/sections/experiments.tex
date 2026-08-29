@@ -515,17 +515,50 @@ availability therefore also lowers the traffic on every query, and
 \cref{sec:c2c} states what it costs in privacy, which is a shorter distance to the
 same cap rather than a higher cap.}
 
-\tronly{One design decision governs the recurring figure, and we state it explicitly
-because the alternative is two orders of magnitude more expensive. The argmax spends its levels and must
-have them restored several times per query. Restoring them by a collective refresh
-would require a share from every client for every refresh, which at a hundred
-classes amounts to roughly $1.6$\,GiB of traffic for a single label. Generating
-bootstrapping keys once, collectively, and letting the server restore levels
-on its own reduces that traffic to zero, because evaluation under a collectively
-generated key is identical to evaluation under a single key. The protocol therefore
-specifies the latter, at a one-time cost of $15.5$\,MiB of key material at ring
-degree $2^{16}$, generated collectively in $51$\,s. One key generation of
-$15.5$\,MiB therefore replaces $1.6$\,GiB on every subsequent query.}
+\tronly{One design decision governs the recurring figure. The argmax spends its
+levels and must have them restored several times per query. Restoring them by a
+collective refresh requires a share from every client for every refresh, which at
+a hundred classes amounts to roughly $1.6$\,GiB of traffic for a single label.
+Generating bootstrapping keys once, collectively, and letting the server restore
+levels on its own reduces that traffic to zero, because evaluation under a
+collectively generated key is identical to evaluation under a single key. The
+protocol specifies the latter. We have now measured both, and the trade is not
+one-sided.}
+
+\tronly{\Cref{tab:btp} reports the specified design beside the one the earlier
+figures were taken on. Restoring levels at the server costs about thirteen times
+the latency at every label-space size, from $400.8$\,s against $31.2$\,s at four
+classes to $1468.3$\,s against $113.0$\,s at a hundred. The bootstrapping keys
+cost $8.70$\,GiB, generated collectively in $46$\,s, against a stored figure of
+$15.5$\,MiB that measured the extended secret key rather than the key set the
+server evaluates with. The saving is real and it is in traffic. One key
+generation of $8.70$\,GiB removes about $1.6$\,GiB from every subsequent query,
+so the two designs break even near the sixth query and the specified one wins
+after it. Precision moves as well. The collective refresh reproduces the
+plaintext maximum exactly, and the server-side bootstrap agrees to $7.3\times
+10^{-5}$.}
+
+\tronly{\begin{table}[t]
+\centering
+\caption{The two level-restoration mechanisms at $\Nc=10$, evaluation at ring
+degree $2^{15}$. The specified design restores levels at the server under
+collectively generated bootstrapping keys at ring degree $2^{16}$. The measured
+alternative restores them by a collective refresh, which costs a share from every
+client. Latency is single-run wall clock on one core of a VALAR CPU node.}
+\label{tab:btp}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+$\Cc$ & 4 & 6 & 14 & 77 & 100 \\
+\midrule
+collective refresh, s & $31.2$ & $47.3$ & $63.7$ & $112.4$ & $113.0$ \\
+server bootstrap, s & $400.8$ & $612.5$ & $832.4$ & $1473.0$ & $1468.3$ \\
+bootstraps & $17$ & $26$ & $35$ & $62$ & $62$ \\
+error, server bootstrap & \multicolumn{5}{c}{$1.3$ to $7.3\times10^{-5}$, against exact for the refresh} \\
+\bottomrule
+\end{tabular}
+\end{table}}
 
 \tronly{\paragraph{Which mechanism produced the reported latency} The figures
 above were measured with collective-refresh-backed level restoration, and not
@@ -534,12 +567,10 @@ collective refreshes at four classes and thirty-four at a hundred, and those
 refreshes account for $12.3$\,s of the $31.5$\,s and for $46.3$\,s of the
 $113.2$\,s. The remaining $19.0$\,s and $66.6$\,s are local evaluation, which
 both mechanisms pay alike. Under the specified design the server restores levels
-on its own under the collectively generated keys, which replaces the refresh
-component by a server-side bootstrap that we have not timed. The ring degree
-differs as well, since we take the timings at $2^{15}$ and generate the
-bootstrapping keys at $2^{16}$. We therefore report these figures as the latency
-of the collective-refresh variant, and we do not claim them for the variant the
-protocol specifies.}
+on its own under the collectively generated keys. \Cref{tab:btp} measures that
+variant. It costs about thirteen times the latency, so the figures above are the
+latency of the collective-refresh variant and we do not claim them for the
+variant the protocol specifies.}
 
 \paragraph{Correctness} The
 encrypted argmax is exact. The accuracy

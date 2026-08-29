@@ -489,30 +489,6 @@ availability against the cost of an attack rather than against what the attack c
 ultimately achieve, and a deployment can buy liveness with a proportionate
 reduction in $Q$.
 %%
-# 2026-08-27, which mechanism produced the reported latency. Report-only, added
-# on Halil's instruction to correct the timing. The reported 31.5 s and 113.2 s
-# come from results/fhe_serve/argmax_tournament.csv, which the case README
-# records as collective-refresh-backed. The paragraph above specifies the other
-# mechanism, server-side restoration under collectively generated bootstrapping
-# keys, and that variant has never been timed. Without this the document reports
-# a latency for one design and a per-query traffic figure for the other. Every
-# number is from that CSV: 9 and 34 refreshes, 12273.3 ms and 46319.7 ms in
-# refresh, 18970.1 ms and 66649.9 ms in local evaluation. The ring degrees are
-# from the same CSV and from btp_keys.json.
-\paragraph{Which mechanism produced the reported latency} The figures
-above were measured with collective-refresh-backed level restoration, and not
-with the bootstrapping keys the protocol specifies. The tournament spends nine
-collective refreshes at four classes and thirty-four at a hundred, and those
-refreshes account for $12.3$\,s of the $31.5$\,s and for $46.3$\,s of the
-$113.2$\,s. The remaining $19.0$\,s and $66.6$\,s are local evaluation, which
-both mechanisms pay alike. Under the specified design the server restores levels
-on its own under the collectively generated keys, which replaces the refresh
-component by a server-side bootstrap that we have not timed. The ring degree
-differs as well, since we take the timings at $2^{15}$ and generate the
-bootstrapping keys at $2^{16}$. We therefore report these figures as the latency
-of the collective-refresh variant, and we do not claim them for the variant the
-protocol specifies.
-%%
 # 2026-08-29, A3. Halil ruled the selected accuracy goes in the caption rather
 # than a new column, because on three of five tasks it equals the bolded value and
 # a column of repeats reads badly. Two sentences of the caption are unchanged. The
@@ -719,3 +695,60 @@ spent~\cite{limicciancio2022dp}. Refusing to key-switch a ciphertext twice is
 cheap and we recommend it, and it is a supplementary control rather than a
 substitute, because a client can re-randomize a query by adding an encryption of
 zero and present a ciphertext that is fresh to any such check.
+%%
+# 2026-08-29. Report-only. The design paragraph is corrected against job
+# 1612017, which measured the mechanism the protocol specifies for the first
+# time. Two figures in the old version were wrong. The bootstrapping keys are
+# 8.70 GiB and not 15.5 MiB, because the stored figure in btp_keys.json measured
+# the extended secret key rather than the key set the server evaluates with. And
+# the framing that the alternative is two orders of magnitude more expensive is
+# dropped, because the alternative is cheaper in latency and dearer only in
+# traffic.
+One design decision governs the recurring figure. The argmax spends its
+levels and must have them restored several times per query. Restoring them by a
+collective refresh requires a share from every client for every refresh, which at
+a hundred classes amounts to roughly $1.6$\,GiB of traffic for a single label.
+Generating bootstrapping keys once, collectively, and letting the server restore
+levels on its own reduces that traffic to zero, because evaluation under a
+collectively generated key is identical to evaluation under a single key. The
+protocol specifies the latter. We have now measured both, and the trade is not
+one-sided.
+%%
+# 2026-08-29, as above. What the measurement says. Thirteen times the latency at
+# every label-space size, keys of 8.70 GiB generated in 46 s, break-even against
+# the refresh near the sixth query, and a loss of exactness. Every figure is from
+# results/fhe_serve/argmax_tournament_btp.csv.
+reports the specified design beside the one the earlier
+figures were taken on. Restoring levels at the server costs about thirteen times
+the latency at every label-space size, from $400.8$\,s against $31.2$\,s at four
+classes to $1468.3$\,s against $113.0$\,s at a hundred. The bootstrapping keys
+cost $8.70$\,GiB, generated collectively in $46$\,s, against a stored figure of
+$15.5$\,MiB that measured the extended secret key rather than the key set the
+server evaluates with. The saving is real and it is in traffic. One key
+generation of $8.70$\,GiB removes about $1.6$\,GiB from every subsequent query,
+so the two designs break even near the sixth query and the specified one wins
+after it. Precision moves as well. The collective refresh reproduces the
+plaintext maximum exactly, and the server-side bootstrap agrees to $7.3\times
+10^{-5}$.
+%%
+# 2026-08-29, as above. The caption of the new table.
+The two level-restoration mechanisms at $\Nc=10$, evaluation at ring
+degree $2^{15}$. The specified design restores levels at the server under
+collectively generated bootstrapping keys at ring degree $2^{16}$. The measured
+alternative restores them by a collective refresh, which costs a share from every
+client. Latency is single-run wall clock on one core of a VALAR CPU node.
+%%
+# 2026-08-29, as above, replacing the paragraph written earlier the same day that
+# said the specified variant had not been timed. It has now been timed and the
+# sentence points at the table instead.
+\paragraph{Which mechanism produced the reported latency} The figures
+above were measured with collective-refresh-backed level restoration, and not
+with the bootstrapping keys the protocol specifies. The tournament spends nine
+collective refreshes at four classes and thirty-four at a hundred, and those
+refreshes account for $12.3$\,s of the $31.5$\,s and for $46.3$\,s of the
+$113.2$\,s. The remaining $19.0$\,s and $66.6$\,s are local evaluation, which
+both mechanisms pay alike. Under the specified design the server restores levels
+on its own under the collectively generated keys.   measures that
+variant. It costs about thirteen times the latency, so the figures above are the
+latency of the collective-refresh variant and we do not claim them for the
+variant the protocol specifies.
