@@ -108,7 +108,19 @@ func runIndexSuite(jsonOut string) {
 			r.IndexAbsErr, r.OneHotSum, r.Gap)
 	}
 	if jsonOut != "" {
-		b, err := json.MarshalIndent(rows, "", "  ")
+		// A row that has no index, or no one-hot, carries NaN so the CSV shows the
+		// field is absent. JSON has no NaN, so those become zero here.
+		clean := make([]indexRow, len(rows))
+		copy(clean, rows)
+		for i := range clean {
+			if math.IsNaN(clean[i].DecodedIndex) {
+				clean[i].DecodedIndex = 0
+			}
+			if math.IsNaN(clean[i].OneHotSum) {
+				clean[i].OneHotSum = 0
+			}
+		}
+		b, err := json.MarshalIndent(clean, "", "  ")
 		check(err)
 		check(os.WriteFile(jsonOut, b, 0o644))
 		fmt.Printf("\nwrote %s\n", jsonOut)
