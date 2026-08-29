@@ -75,7 +75,8 @@ reaches at the same total number of steps. Neither reference is servable under
 the threat model of \cref{sec:threat}. We did not run the pooled reference on
 CIFAR-100. On one seed the Dirichlet draw assigns fewer than twenty samples to some
 clients, which cannot train, so the effective federation is seven on AG-News and
-nine on TREC.}
+nine on TREC. The estimator selects per seed, so the selected accuracy is $0.669$
+on AG-News, $0.756$ on CIFAR-100, and the bolded value elsewhere.}
 \label{tab:headline}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
@@ -340,7 +341,7 @@ one-time setup, and the recurring per-query traffic is a few megabytes.
 We do not simulate the cryptography. We implement the protocol in real
 multiparty CKKS on Lattigo~\cite{lattigo,mouchet2021multiparty}. All figures use ring degree $2^{14}$ for the shallow operations
 and a deeper chain at ring degree $2^{15}$ for the circuits that need it. Timings
-are single-run wall clock on a commodity CPU. Communication figures are exact.
+are single-run wall clock on one core of a VALAR CPU node. Communication figures are exact.
 
 \tronly{\paragraph{Cost of query encryption} Applying the head to an encrypted
 query costs $39.0$\,ms against $5.4$\,ms for a plaintext one, a factor of seven.
@@ -457,7 +458,7 @@ would say more about which number was drawn than about this protocol.}
 
 \paragraph{Communication} The protocol is one-shot in the sense
 of \cref{sec:intro}. No intermediate training artifact is ever exposed. It is not
-silent. Key generation precedes it, selection costs a bounded exchange, and serving
+silent. Key generation precedes it, selection costs at most $2\Nc\Cc$ encrypted comparisons, once, and serving
 costs traffic per query.
 
 \tronly{\begin{table}[t]
@@ -598,9 +599,11 @@ Banking77  & 77 & $0.083$ & $0.174$ & $0.355$ & $0.592$ & $0.755$ & $0.900$ \\
 \end{tabular}
 \end{table}}
 
-\paperonly{Reaching fidelity $0.90$ takes
+\paperonly{\emph{Fidelity} is the rate at which a copy agrees with the served
+model. Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
-$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
+$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
+feature dimension, and in each case fidelity $0.90$ costs
 between three and five times that number of queries. A deployment can therefore set its
 allowance from $\Cc$ and $d$ without repeating this experiment. \trsee{sec:experiments} gives the extraction study in full.}
 
@@ -724,7 +727,8 @@ offers~\cite{carlini2024stealing}.}
 \paperonly{Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
 price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
 $0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
-CIFAR-100. After the protocol ends, there is no plaintext model anywhere.}
+CIFAR-100. After the protocol ends, there is no plaintext model anywhere.
+\trsee{sec:experiments} reports $\Apool-\Adis$.}
 
 \tronly{Never disclosing the model costs accuracy, and \cref{tab:headline} allows the
 price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,

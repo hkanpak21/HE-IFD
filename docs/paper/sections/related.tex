@@ -138,7 +138,8 @@ totals are exactly what \cref{sec:split} keeps encrypted.}
 \paperonly{The one-shot methods that do address privacy use differential privacy. FedAUXfdp
 releases client contributions under a differentially private mechanism after
 distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and related
-approaches protect a diffusion-generated surrogate~\cite{feddiff2024}. These are our natural quantitative
+approaches protect a diffusion-generated surrogate or a teacher
+ensemble~\cite{feddiff2024,li2021fedkt}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
 is added to the very artifact that is released. Several
 works apply the same trade-off to transfer learning, running noisy gradient descent
@@ -149,7 +150,7 @@ adapter~\cite{liu2023dplora}.}
 releases client contributions under a differentially private mechanism after
 distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and related
 approaches protect a diffusion-generated surrogate or a teacher
-ensemble~\cite{feddiff2024}, or apply a noise-free mechanism to the
+ensemble~\cite{feddiff2024,li2021fedkt}, or apply a noise-free mechanism to the
 distillation itself~\cite{sun2021fedmdnfdp}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
 is added to the very artifact that is released. Differential privacy proves a
@@ -280,7 +281,8 @@ HE-OFT                               & one  & HE   & no       & label \\
 
 \paperonly{\medskip
 \noindent\emph{Positioning.}
-\Cref{tab:related} places the closest systems on the axes that separate them. What remains unaddressed is a protocol that
+\Cref{tab:related} places the closest systems on the axes that separate them. One prior scheme is one-shot, federated and encrypted, for a
+closed-form learner only~\cite{fedheonn2023}. What remains unaddressed is a protocol that
 exposes no training-time quantity, that exchanges anything at all only once, and
 that never discloses the model even to the parties that built it. \trsee{sec:related} surveys the field in full.}
 

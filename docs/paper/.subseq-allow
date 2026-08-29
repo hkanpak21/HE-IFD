@@ -512,3 +512,100 @@ differs as well, since we take the timings at $2^{15}$ and generate the
 bootstrapping keys at $2^{16}$. We therefore report these figures as the latency
 of the collective-refresh variant, and we do not claim them for the variant the
 protocol specifies.
+%%
+# 2026-08-29, A3. Halil ruled the selected accuracy goes in the caption rather
+# than a new column, because on three of five tasks it equals the bolded value and
+# a column of repeats reads badly. Two sentences of the caption are unchanged. The
+# figures are from results/personal_adapter*/stratified/results.csv, mode
+# sel_gp_rarefill. Without this the stated prices cannot be obtained by
+# subtracting the printed columns on AG-News or CIFAR-100.
+Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
+Both servable arrangements are shown, together with what a client obtains alone,
+what a disclosed model would reach, and what one model trained on the pooled data
+reaches at the same total number of steps. Neither reference is servable under
+the threat model of  . We did not run the pooled reference on
+CIFAR-100. On one seed the Dirichlet draw assigns fewer than twenty samples to some
+clients, which cannot train, so the effective federation is seven on AG-News and
+nine on TREC. The estimator selects per seed, so the selected accuracy is $0.669$
+on AG-News, $0.756$ on CIFAR-100, and the bolded value elsewhere.
+%%
+# 2026-08-29, F. Halil asked for the machine to be named simply. Commodity CPU
+# becomes one core of a VALAR CPU node. Nothing else in the paragraph changes.
+The cryptographic cost of the protocol is dominated by
+one-time setup, and the recurring per-query traffic is a few megabytes.
+We do not simulate the cryptography. We implement the protocol in real
+multiparty CKKS on Lattigo~\cite{lattigo,mouchet2021multiparty}. All figures use ring degree $2^{14}$ for the shallow operations
+and a deeper chain at ring degree $2^{15}$ for the circuits that need it. Timings
+are single-run wall clock on one core of a VALAR CPU node. Communication figures are exact.
+%%
+# 2026-08-29, C6. The submission said selection costs a bounded exchange, with no
+# number and no record. Halil asked for a number. The bound is the circuit of
+# alg:select, which is one encrypted comparison per held-out example per
+# arrangement, capped by one example per class per client.
+\paragraph{Communication} The protocol is one-shot in the sense
+of  . No intermediate training artifact is ever exposed. It is not
+silent. Key generation precedes it, selection costs at most $2\Nc\Cc$ encrypted comparisons, once, and serving
+costs traffic per query.
+%%
+# 2026-08-29, D3 and D4. Fidelity and the feature dimension were used in the
+# submission and defined only in the report. Halil asked for a short definition in
+# place rather than a pointer. Two clauses.
+\emph{Fidelity} is the rate at which a copy agrees with the served
+model. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
+feature dimension, and in each case fidelity $0.90$ costs
+between three and five times that number of queries. A deployment can therefore set its
+allowance from $\Cc$ and $d$ without repeating this experiment.   gives the extraction study in full.
+%%
+# 2026-08-29, D2. The setup promises the paper reports both differences and the
+# submission reported one. Halil ruled a pointer. One sentence.
+Never disclosing the model costs accuracy, and   allows the
+price to be read directly. The quantity $\Adis-\Asel$ is $0.071$ on AG-News,
+$0.104$ on TREC, $0.136$ on DBpedia, $0.075$ on Banking77 and $0.029$ on
+CIFAR-100. After the protocol ends, there is no plaintext model anywhere.
+  reports $\Apool-\Adis$.
+%%
+# 2026-08-29, A1 and the gradient sentence. Halil ruled the numbers corrected and
+# the gradient-reconstruction sentence deleted, the latter because a USENIX
+# Security 2025 SoK contradicts it for a semi-honest server. The membership
+# figures now come from FedMIA, CVPR 2025, whose Table 1 carries both halves of
+# the contrast in one run and one metric. Nasr and Melis stay on the sentence
+# before, which is the claim they support.
+Federated learning (FL) enables collaboration~\cite{mcmahan2017communication},
+and its privacy risk is concentrated at training time~\cite{nasr2019comprehensive,melis2019exploiting}. The protocol exchanges model
+updates instead of data, but the updates are themselves the vulnerability. An adversary aggregating a client's per-round
+updates mounts membership inference at $25.3\%$ true positive rate at $0.1\%$
+false positive rate, against $0.18\%$ from a single snapshot~\cite{zhu2025fedmia}. Two things therefore set the attack surface, namely what a protocol reveals while
+training runs and how often it reveals it.
+%%
+# 2026-08-29, C2. The claim that a coalition cannot recover the last client's
+# adapter is not proved anywhere. Halil ruled it weakened to what the construction
+# gives, which is that no aggregate exists to subtract from.
+\begin{itemize}
+\item \textbf{A split trainable unit.} Each client keeps its own adapter and never
+  transmits it. Only the classifier head is federated, because a client can improve
+  its own features alone but cannot recognize a class it has never seen. No adapter
+  aggregate exists, so a coalition of all but one client has no sum from which to
+  subtract its own contributions ( ).
+%%
+# 2026-08-29, D5. The one prior scheme that is at once one-shot, federated and
+# encrypted was named only in the report, while the submission carries the novelty
+# claim. Halil ruled it restored simply. One sentence.
+\medskip
+\noindent\emph{Positioning.}
+  places the closest systems on the axes that separate them. One prior scheme is one-shot, federated and encrypted, for a
+closed-form learner only~\cite{fedheonn2023}. What remains unaddressed is a protocol that
+exposes no training-time quantity, that exchanges anything at all only once, and
+that never discloses the model even to the parties that built it.   surveys the field in full.
+%%
+# 2026-08-29, C3. Proposition 1 concludes that no protocol of this message pattern
+# works against a malicious server, and the next paragraph exhibits one, so the
+# submission read as a contradiction. Halil ruled the framing restored simply.
+# Four words.
+A second mechanism checks provenance.
+The serving circuit is a deterministic function of the encrypted head, the
+encrypted query, the evaluation keys and the public parameters, and its level
+restoration is deterministic as well. A
+client can therefore recompute the prescribed output ciphertext and compare it as
+a string.

@@ -13,12 +13,9 @@ stand between that setting and a protocol these organizations could deploy.
 
 Federated learning (FL) enables collaboration~\cite{mcmahan2017communication},
 and its privacy risk is concentrated at training time~\cite{nasr2019comprehensive,melis2019exploiting}. The protocol exchanges model
-updates instead of data, but the updates are themselves the vulnerability. A
-gradient permits reconstruction of the batch that produced
-it~\cite{zhu2019deep}. An observer of the per-round updates
-mounts membership inference at $87\%$ accuracy on one model and dataset, where the
-same attack against the final model alone falls to
-$54.5\%$~\cite{nasr2019comprehensive}. Two things therefore set the attack surface, namely what a protocol reveals while
+updates instead of data, but the updates are themselves the vulnerability. An adversary aggregating a client's per-round
+updates mounts membership inference at $25.3\%$ true positive rate at $0.1\%$
+false positive rate, against $0.18\%$ from a single snapshot~\cite{zhu2025fedmia}. Two things therefore set the attack surface, namely what a protocol reveals while
 training runs and how often it reveals it.
 
 \paperonly{Removing that surface takes two measures together. Making the protocol \emph{one-shot}, so that each client contributes once, means that
@@ -95,8 +92,8 @@ which, in a transformer, is a single place. The three contributions below follow
 \item \textbf{A split trainable unit.} Each client keeps its own adapter and never
   transmits it. Only the classifier head is federated, because a client can improve
   its own features alone but cannot recognize a class it has never seen. No adapter
-  aggregate exists, so a coalition of all but one client cannot recover the last
-  client's adapter (\cref{sec:split}).
+  aggregate exists, so a coalition of all but one client has no sum from which to
+  subtract its own contributions (\cref{sec:split}).
 
 \item \textbf{A serving path that never decrypts.} The querying client encrypts its
   own features, so the server cannot read the query. Only a label leaves the protocol, so a

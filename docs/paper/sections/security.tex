@@ -218,7 +218,8 @@ reveal.
 
 The bound scales with the corruption threshold. A coalition of $\tc-1$ clients
 commands $(\tc-1)Q$ queries whatever the size of the federation.
-\Cref{sec:exp-leak} measures $\delta$ and turns it into a bound on $Q$.
+\paperonly{\trsee{sec:experiments} measures $\delta$ and turns it into a bound on $Q$.}
+\tronly{\Cref{sec:exp-leak} measures $\delta$ and turns it into a bound on $Q$.}
 
 \subsection{Necessity of an Honest Server}
 \label{sec:malicious-ext}
@@ -253,7 +254,8 @@ neither. No protocol of this message pattern realizes $\Fhe$ against a
 malicious server, which is why \cref{thm:malicious} places the server among the
 honest parties.
 
-\paperonly{The serving circuit is a deterministic function of the encrypted head, the
+\paperonly{A second mechanism checks provenance.
+The serving circuit is a deterministic function of the encrypted head, the
 encrypted query, the evaluation keys and the public parameters, and its level
 restoration is deterministic as well. A
 client can therefore recompute the prescribed output ciphertext and compare it as
