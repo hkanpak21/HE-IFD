@@ -360,3 +360,65 @@ cost of approaching the cap, and \cref{sec:exp-leak} measures that cost.}
 raises $Q_{\mathrm{tot}}$ and moves a coalition along the curve toward the cap,
 and it does not move the cap. Raising the allowance does the same. Neither choice
 changes what is ultimately learnable, so both are decisions about cost.}
+
+\tronly{\subsection{What a Decryption Carries}
+\label{sec:cpad}}
+
+\tronly{The protocol decrypts twice. The selection step decrypts one scalar, and
+each answer is key-switched to the client that asked for it. Both are intended
+outputs. In an exact scheme that would end the discussion, because a decryption
+returns the message and nothing else. CKKS is approximate, so a decryption
+returns the message together with an error term, and that term is a function of
+the secret key and of the values the circuit consumed. Li and Micciancio show
+that an adversary which observes decryption results recovers the key that
+produced them~\cite{limicciancio2021approximate}.}
+
+\tronly{Their attack does not need the message. It reads the ring element
+$c_0+c_1 s$ out of the decoded output and inverts it, so an argument that the
+adversary cannot predict what the circuit should have produced does not answer
+it. The reason the attack does not reach us is structural. It recovers whichever
+key performed the decryption. Every decryption here happens after a collective
+key switch that moves the ciphertext off the collective key, so the key it
+recovers is the querying client's own, which that client already holds. The
+collective key $s$ never appears in a relation the coalition can invert, and
+$\mathsf{Enc}(\thstar)$ is never decrypted at all.}
+
+\tronly{The published threshold attack does not reach us either, for a separate
+reason. It identifies ciphertexts whose noise is exactly zero and reads a linear
+equation in the key off each one~\cite{checri2024threshold}. Detecting a
+zero-noise ciphertext requires a rounding step whose success can be observed,
+which exact schemes have and CKKS does not. Their statement about threshold CKKS
+covers the case where no smudging is applied.}
+
+\tronly{What remains is a condition rather than an attack, and we state it because
+our parameters do not meet it. The key-switch simulator of the multiparty scheme
+we build on is correct when the smudging noise dominates the noise of the
+ciphertext being switched, which is what lets it produce an honest client's share
+without knowing that noise~\cite{mouchet2021multiparty}. That scheme sets the
+requirement at $2^{\lambda/2}$ times the ciphertext noise. Our implementation
+smudges at eight times the fresh-encryption noise, which is the value the library
+uses in its own tests, and the serving circuit leaves a ciphertext noise several
+orders of magnitude larger than that. The simulation step of
+\cref{thm:semihonest} therefore rests on a hypothesis our measured configuration
+does not satisfy. What the step would otherwise hide is the circuit noise, which
+depends on the honest clients' displacements. Whether that is exploitable is
+open, and the scheme's authors record it as open as well.}
+
+\tronly{Meeting the stated requirement is not a matter of raising one constant.
+At a plaintext scale of $2^{45}$ the required smudging exceeds the scale itself,
+so it would destroy the answer rather than protect it. A configuration that
+satisfies the condition needs a larger scale and modulus, and every cost in
+\cref{sec:exp-cost} would move with them. We report the configuration we
+measured and state the gap rather than claim a guarantee we did not instantiate.}
+
+\tronly{One further axis deserves a countermeasure even though it does not
+threaten the allowance. The serving circuit is deterministic, so a client that
+resubmits an identical query obtains the same ciphertext while every honest
+client draws fresh smudging noise. Averaging enough such repetitions reduces the
+noise on the shares until the value beneath it can be read off. The number of
+repetitions is between $10^5$ and $10^8$ depending on which key-switch protocol
+runs, against an allowance two to five orders of magnitude smaller, so the axis
+is not reachable at the budgets we consider. It closes completely at no cost by
+refusing to key-switch the same ciphertext twice, which the server enforces by
+storing a hash of every ciphertext presented. We recommend it and we do not rely
+on it.}
