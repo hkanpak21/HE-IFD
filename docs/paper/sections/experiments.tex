@@ -527,6 +527,20 @@ specifies the latter, at a one-time cost of $15.5$\,MiB of key material at ring
 degree $2^{16}$, generated collectively in $51$\,s. One key generation of
 $15.5$\,MiB therefore replaces $1.6$\,GiB on every subsequent query.}
 
+\tronly{\paragraph{Which mechanism produced the reported latency} The figures
+above were measured with collective-refresh-backed level restoration, and not
+with the bootstrapping keys the protocol specifies. The tournament spends nine
+collective refreshes at four classes and thirty-four at a hundred, and those
+refreshes account for $12.3$\,s of the $31.5$\,s and for $46.3$\,s of the
+$113.2$\,s. The remaining $19.0$\,s and $66.6$\,s are local evaluation, which
+both mechanisms pay alike. Under the specified design the server restores levels
+on its own under the collectively generated keys, which replaces the refresh
+component by a server-side bootstrap that we have not timed. The ring degree
+differs as well, since we take the timings at $2^{15}$ and generate the
+bootstrapping keys at $2^{16}$. We therefore report these figures as the latency
+of the collective-refresh variant, and we do not claim them for the variant the
+protocol specifies.}
+
 \paragraph{Correctness} The
 encrypted argmax is exact. The accuracy
 figures of \cref{tab:headline} are therefore unaffected by the cryptography.

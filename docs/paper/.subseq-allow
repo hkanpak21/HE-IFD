@@ -488,3 +488,27 @@ that ceiling is a property of the shared head. The threshold therefore trades
 availability against the cost of an attack rather than against what the attack can
 ultimately achieve, and a deployment can buy liveness with a proportionate
 reduction in $Q$.
+%%
+# 2026-08-27, which mechanism produced the reported latency. Report-only, added
+# on Halil's instruction to correct the timing. The reported 31.5 s and 113.2 s
+# come from results/fhe_serve/argmax_tournament.csv, which the case README
+# records as collective-refresh-backed. The paragraph above specifies the other
+# mechanism, server-side restoration under collectively generated bootstrapping
+# keys, and that variant has never been timed. Without this the document reports
+# a latency for one design and a per-query traffic figure for the other. Every
+# number is from that CSV: 9 and 34 refreshes, 12273.3 ms and 46319.7 ms in
+# refresh, 18970.1 ms and 66649.9 ms in local evaluation. The ring degrees are
+# from the same CSV and from btp_keys.json.
+\paragraph{Which mechanism produced the reported latency} The figures
+above were measured with collective-refresh-backed level restoration, and not
+with the bootstrapping keys the protocol specifies. The tournament spends nine
+collective refreshes at four classes and thirty-four at a hundred, and those
+refreshes account for $12.3$\,s of the $31.5$\,s and for $46.3$\,s of the
+$113.2$\,s. The remaining $19.0$\,s and $66.6$\,s are local evaluation, which
+both mechanisms pay alike. Under the specified design the server restores levels
+on its own under the collectively generated keys, which replaces the refresh
+component by a server-side bootstrap that we have not timed. The ring degree
+differs as well, since we take the timings at $2^{15}$ and generate the
+bootstrapping keys at $2^{16}$. We therefore report these figures as the latency
+of the collective-refresh variant, and we do not claim them for the variant the
+protocol specifies.
