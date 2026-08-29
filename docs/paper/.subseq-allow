@@ -589,16 +589,6 @@ training runs and how often it reveals it.
   aggregate exists, so a coalition of all but one client has no sum from which to
   subtract its own contributions ( ).
 %%
-# 2026-08-29, D5. The one prior scheme that is at once one-shot, federated and
-# encrypted was named only in the report, while the submission carries the novelty
-# claim. Halil ruled it restored simply. One sentence.
-\medskip
-\noindent\emph{Positioning.}
-  places the closest systems on the axes that separate them. One prior scheme is one-shot, federated and encrypted, for a
-closed-form learner only~\cite{fedheonn2023}. What remains unaddressed is a protocol that
-exposes no training-time quantity, that exchanges anything at all only once, and
-that never discloses the model even to the parties that built it.   surveys the field in full.
-%%
 # 2026-08-29, C3. Proposition 1 concludes that no protocol of this message pattern
 # works against a malicious server, and the next paragraph exhibits one, so the
 # submission read as a contradiction. Halil ruled the framing restored simply.
