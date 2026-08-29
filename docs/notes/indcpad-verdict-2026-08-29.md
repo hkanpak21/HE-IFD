@@ -237,3 +237,31 @@ figures. That is a bigger decision and it is worth taking deliberately.
 The index step is separate and I think it should be done regardless, because it is
 the gap between what we specify and what we measured, and a reviewer who opens the
 code will find it.
+
+# Ruling, Halil, 2026-08-29
+
+Two corrections to this document, both from Halil and both accepted.
+
+**The rounding argument is withdrawn.** I claimed the querier can round the
+decrypted value to an integer and subtract to recover the CKKS noise. That
+assumed the served plaintext is an integer carrying nothing but CKKS noise.
+Neither holds. The circuit we benchmark returns the maximum logit, which is a
+learned real number, and shown two nearby reals no adversary can say which is
+the circuit's output and which is perturbed, because that requires knowing
+$\thstar$, which exists in plaintext nowhere. Training is not deterministic
+either, so re-running it does not recover the comparison value. Even for a true
+argmax index the residual after rounding is the polynomial approximation error
+plus the CKKS noise, and the approximation term is orders of magnitude larger and
+depends on the logits, hence on $\thstar$.
+
+The structural form of the objection is the cleanest. The attack's oracle shape
+requires the adversary to encrypt a message it chose and then see it decrypted,
+so that it knows the ideal answer exactly. This protocol never does that. Every
+decryption is of a value computed from data the adversary does not hold.
+
+**Scope.** What survives is the narrow point that Mouchet's key-switch simulator
+assumes the smudging dominates the circuit noise and our parameters do not meet
+it, which bears on whether we may cite their lemma rather than on any break.
+Halil ruled that this does not belong in the submission. It goes in the technical
+report, with at most one sentence in the submission pointing here for the
+discussion. Nothing about it is written until the outstanding check returns.
