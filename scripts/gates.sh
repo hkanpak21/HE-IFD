@@ -10,7 +10,8 @@ P=docs/paper
 NUM=(--number 0.948=0.949 --number 0.962=0.963 --number 0.569=0.570
      --number 0.950=0.952 --number 0.964=0.966 --number 0.014=0.015
      --number 0.943=0.947 --number=-0.005=-0.003 --number 0.399=0.397
-     --number 0.952=0.953 --number 0.959=0.961 --number 0.005=0.003)
+     --number 0.952=0.953 --number 0.959=0.961 --number 0.005=0.003
+     --number 0.971=0.970)
 
 pages () { python3 -c "
 import subprocess,sys

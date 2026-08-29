@@ -216,7 +216,7 @@ the single-key setting.
 %%
 Secure aggregation lets the server learn only the sum of the clients' updates,
 using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It
-protects one round's sum inside an iterative protocol, and the
+protects one round's sum inside an iterative protocol, and
 Kerkouche et al. show that the revealed per-round sums themselves leak across
 rounds~\cite{kerkouche2023client}. POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
@@ -280,7 +280,7 @@ what that costs.
 %%
 Secure aggregation lets the server learn only the sum of the clients' updates,
 using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It is
-lossless, but it protects one round's sum inside an iterative protocol, and the
+lossless, but it protects one round's sum inside an iterative protocol, and
 Kerkouche et al. and So et al. show that the revealed per-round sums themselves leak across
 rounds~\cite{so2023securing,kerkouche2023client}. Homomorphic encryption goes
 further by computing on contributions that stay encrypted. POSEIDON runs encrypted

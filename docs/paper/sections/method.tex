@@ -14,7 +14,6 @@ encrypted head and reduces the encrypted logits to the index of the largest.
 We consider $\Nc$ clients holding private labeled data over a common label space
 of $\Cc$ classes. Client $j$ holds data $\Dj$ of size $\nj$. The class proportions
 differ across clients, and a client may hold no example of a class. The clients want a classifier
-
 that works across the whole label space, and they cannot pool their data to build
 one.
 
@@ -89,7 +88,6 @@ narrow. We record the chain of implications here.
 \label{sec:split}
 
 \paragraph{The construction} Each client uses the same frozen public backbone
-
 $\featx$, and trains two things on its own data, a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its

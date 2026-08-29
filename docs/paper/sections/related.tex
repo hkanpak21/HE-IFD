@@ -55,7 +55,7 @@ attack.}
 
 \paperonly{Secure aggregation lets the server learn only the sum of the clients' updates,
 using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It
-protects one round's sum inside an iterative protocol, and the
+protects one round's sum inside an iterative protocol, and
 Kerkouche et al. show that the revealed per-round sums themselves leak across
 rounds~\cite{kerkouche2023client}. POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
@@ -66,7 +66,7 @@ transformer by this route is out of reach.}
 
 \tronly{Secure aggregation lets the server learn only the sum of the clients' updates,
 using masks that cancel in the aggregate~\cite{bonawitz2017practical}. It is
-lossless, but it protects one round's sum inside an iterative protocol, and the
+lossless, but it protects one round's sum inside an iterative protocol, and
 Kerkouche et al. and So et al. show that the revealed per-round sums themselves leak across
 rounds~\cite{so2023securing,kerkouche2023client}. Homomorphic encryption goes
 further by computing on contributions that stay encrypted. POSEIDON runs encrypted
@@ -90,7 +90,7 @@ not collude~\cite{li2025shelora}. The threshold structure of \cref{sec:mhe} remo
 that assumption.
 
 \paperonly{Transfer learning itself has been placed under encryption. Several works train a
-classifier head, a linear or logistic model, or a low-rank adapter on frozen
+classifier head, a linear or logistic model on frozen
 features under
 CKKS~\cite{lee2023hetal}.
 These share our structural niche, but they run an optimiser on ciphertexts, so multiplicative depth grows with
@@ -138,8 +138,7 @@ totals are exactly what \cref{sec:split} keeps encrypted.}
 \paperonly{The one-shot methods that do address privacy use differential privacy. FedAUXfdp
 releases client contributions under a differentially private mechanism after
 distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and related
-approaches protect a diffusion-generated surrogate or a teacher
-ensemble~\cite{feddiff2024}. These are our natural quantitative
+approaches protect a diffusion-generated surrogate~\cite{feddiff2024}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
 is added to the very artifact that is released. Several
 works apply the same trade-off to transfer learning, running noisy gradient descent
