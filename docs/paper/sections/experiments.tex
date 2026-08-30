@@ -441,28 +441,16 @@ product at ring degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $33.1$, $71.6$ and
 $149.7$\,ms for a rotation. Microbenchmarks of the same primitives under
 Phantom, a CUDA implementation of CKKS~\cite{yang2024phantom}, at ring degree
 $2^{16}$, put the product at $30$\,ms and the rotation at $29.5$\,ms, so the ratio at matched ring degree is about $5$ for
-the rotation and about $6$ for the product. Two things make that a conservative figure. The GPU numbers are taken at
-a deeper level budget than ours, and a deeper budget makes every operation more
-expensive. They are also measured on a mid-range inference card, whereas the
-GPU homomorphic-encryption libraries are tuned for current datacentre parts.}
+the rotation and about $6$ for the product.}
 
-\tronly{The projection from a per-primitive ratio to the protocol is unusually safe here,
-and the reason is the shape of the circuit. Serving a query is a fixed sequence, one ciphertext-by-ciphertext product, then $\lceil\log_2\Cc\rceil$ rounds of comparison, then one key switch.
-There is no data-dependent control flow, no attention pattern whose cost depends on
-the input, and no scheduling problem across layers, so a speedup on the primitives
-carries through to the whole rather than being absorbed by effects that dominate in
-deep encrypted inference.}
-
-\tronly{The circuit is bootstrap-bound, so the accelerated figure follows from one
-number. Level restoration is $97$ per cent of a query, and on one core each
-restoration takes $23.1$\,s at every label-space size. We measure one restoration
-of this circuit at $2.28$\,s under Phantom on an NVIDIA H100, at the ring degree
-$2^{16}$ the protocol restores at, and the measurement reproduces to within $0.3$
-per cent. Substituting it, and leaving the local evaluation on the processor,
-gives $48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a
-hundred, against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. Restoration
-falls by a factor of ten, and the local evaluation, which we did not port, becomes
-the larger half of a query at every size above four classes.}
+\tronly{The circuit is bootstrap-bound, so one number sets the accelerated figure.
+Level restoration is $97$ per cent of a query and costs $23.1$\,s on one core at
+every label-space size. We measure one restoration under Phantom on an NVIDIA
+H100 at $2.28$\,s, at the ring degree $2^{16}$ the protocol restores at, a factor
+of ten. Substituting it, and leaving the local evaluation on the processor, gives
+$48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
+against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. The local evaluation,
+which we did not port, is then the larger half of a query above four classes.}
 
 \paragraph{Communication} The protocol is one-shot in the sense
 of \cref{sec:intro}. No intermediate training artifact is ever exposed. It is not

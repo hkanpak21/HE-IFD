@@ -28,7 +28,7 @@ party receives the trained result.
 Each client fine-tunes a low-rank adapter and a classifier head on a
 frozen public backbone, retains the adapter locally, and uploads one encrypted
 head displacement that the server combines under multiparty CKKS and never
-decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $400.8$ to $1468.3$\,s for $13.5$\,MiB of traffic.
+decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $400.8$ to $1468.3$\,s on one core, or $48.9$ to $176.6$\,s with GPU acceleration, for $13.5$\,MiB of traffic.
 \end{abstract}
 
 \begin{IEEEkeywords}
