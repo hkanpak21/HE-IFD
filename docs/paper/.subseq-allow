@@ -1056,3 +1056,38 @@ without addressing how mutually distrustful parties would build the unit at all.
 It reports one inference in $2.26$\,s on CIFAR-100. It is two-party and the
 adapter is one party's plaintext, so it evaluates no ciphertext-by-ciphertext
 product and restores no levels.
+%%
+# 2026-08-29. Report-only. The GPU paragraph stopped at a ratio and refused an
+# end-to-end figure, on the ground that published bootstrapping times span two
+# orders of magnitude with the ring degree. That objection is answered by a
+# bootstrap measured at OUR ring degree, 2^16, at 2.28 s on one GPU with keys
+# streamed, reproduced to 0.3 per cent. Substituting it into our own bootstrap
+# counts gives 48.9 to 176.6 s. Reported as a substitution and not as a
+# measurement of this system, with both conditions stated: a different circuit,
+# and streamed rather than resident keys.
+The circuit is bootstrap-bound, so the accelerated figure follows from one
+number. Level restoration is $97$ per cent of a query, and on one core each
+restoration takes $23.1$\,s at every label-space size. One bootstrap at ring
+degree $2^{16}$, the degree this protocol restores at, takes $2.28$\,s on a single
+datacentre GPU with the keys streamed from host memory, measured on the hardware
+described below and reproduced independently to within $0.3$ per cent. Substituting
+it leaves the local evaluation on the processor and gives $48.9$\,s at four classes,
+$100.1$\,s at fourteen and $176.6$\,s at a hundred, against the $400.8$\,s and
+$1468.3$\,s of  . The restoration falls by a factor of ten and the
+local evaluation, which we did not port, becomes the larger half of the query at
+every size above four classes.
+%%
+# 2026-08-29. Report-only. The GPU paragraph stopped at a ratio and refused an
+# end-to-end figure, on the ground that published bootstrapping times span two
+# orders of magnitude with the ring degree. That objection is answered by a
+# bootstrap measured at OUR ring degree, 2^16, at 2.28 s on one GPU with keys
+# streamed, reproduced to 0.3 per cent. Substituting it into our own bootstrap
+# counts gives 48.9 to 176.6 s. Reported as a substitution and not as a
+# measurement of this system, with both conditions stated: a different circuit,
+# and streamed rather than resident keys.
+Two conditions bound that figure and neither is cosmetic. The bootstrap was
+measured on a different circuit from ours, so it prices the primitive and not the
+protocol, and we report it as a substitution rather than as a measurement of this
+system. And it was taken with the keys streamed from host memory, because at ring
+degree $2^{16}$ the key set does not fit one device. A build that holds them
+resident would be faster and we have not measured one.

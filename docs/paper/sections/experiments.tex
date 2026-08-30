@@ -451,11 +451,26 @@ and the reason is the shape of the circuit. Serving a query is a fixed sequence,
 There is no data-dependent control flow, no attention pattern whose cost depends on
 the input, and no scheduling problem across layers, so a speedup on the primitives
 carries through to the whole rather than being absorbed by effects that dominate in
-deep encrypted inference. We none the less stop at the ratio rather than quoting an
-end-to-end accelerated latency, because the argmax is bootstrap-bound and reported
-bootstrapping times on GPUs span more than two orders of magnitude with the ring
-degree, the packing and the implementation. A single number drawn from that range
-would say more about which number was drawn than about this protocol.}
+deep encrypted inference.}
+
+\tronly{The circuit is bootstrap-bound, so the accelerated figure follows from one
+number. Level restoration is $97$ per cent of a query, and on one core each
+restoration takes $23.1$\,s at every label-space size. One bootstrap at ring
+degree $2^{16}$, the degree this protocol restores at, takes $2.28$\,s on a single
+datacentre GPU with the keys streamed from host memory, measured on the hardware
+described below and reproduced independently to within $0.3$ per cent. Substituting
+it leaves the local evaluation on the processor and gives $48.9$\,s at four classes,
+$100.1$\,s at fourteen and $176.6$\,s at a hundred, against the $400.8$\,s and
+$1468.3$\,s of \cref{tab:btp}. The restoration falls by a factor of ten and the
+local evaluation, which we did not port, becomes the larger half of the query at
+every size above four classes.}
+
+\tronly{Two conditions bound that figure and neither is cosmetic. The bootstrap was
+measured on a different circuit from ours, so it prices the primitive and not the
+protocol, and we report it as a substitution rather than as a measurement of this
+system. And it was taken with the keys streamed from host memory, because at ring
+degree $2^{16}$ the key set does not fit one device. A build that holds them
+resident would be faster and we have not measured one.}
 
 \paragraph{Communication} The protocol is one-shot in the sense
 of \cref{sec:intro}. No intermediate training artifact is ever exposed. It is not
