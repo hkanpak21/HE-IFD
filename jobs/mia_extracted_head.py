@@ -140,13 +140,20 @@ def merge(theta0_W, theta0_b, heads, counts):
     return theta0_W + numW / den[:, None], theta0_b + numb / den
 
 
-def shadow_federation(F, y, parts, C, theta0_W, theta0_b, rng):
-    """One shadow: every client trains on a random half of its own examples."""
+def shadow_federation(F, y, pools, C, theta0_W, theta0_b, rng):
+    """One shadow: every client trains on a random half of its own pool.
+
+    The pool is that client's training AND held-out examples together. Sampling
+    from the training split alone would leave every non-member OUT of every
+    shadow, so its IN distribution would be empty and LiRA would have nothing to
+    compare against. Randomising over the whole pool is what makes a candidate a
+    member in about half the shadows, which is the condition the attack needs.
+    """
     heads, counts, inmask = [], [], np.zeros(len(y), dtype=bool)
-    for p in parts:
+    for p in pools:
         take = rng.random(len(p)) < 0.5
         idx = p[take]
-        if len(idx) < 4 or len(np.unique(y[idx])) < 1:
+        if len(idx) < 4:
             idx = p[:max(4, len(p) // 2)]
         inmask[idx] = True
         heads.append(train_head(F[idx], y[idx], C, theta0_W, theta0_b))
@@ -227,6 +234,9 @@ def run(task, seed, rows):
         print(f"  [skip] {task} s{seed}: only {n} usable candidates "
               f"({len(members)} members, {len(nonmembers)} non-members)", flush=True)
         return
+    # the shadow world randomises membership over each client's whole pool
+    pools = [np.concatenate([np.asarray(a), np.asarray(v)])
+             for a, v in zip(tr_parts, va_parts)]
     rng = np.random.default_rng(seed)
     members = rng.choice(members, n, replace=False)
     nonmembers = rng.choice(nonmembers, n, replace=False)
@@ -262,7 +272,7 @@ def run(task, seed, rows):
         s_in = [[] for _ in range(len(cand))]
         s_out = [[] for _ in range(len(cand))]
         for s in range(SHADOWS):
-            Ws, bs_, inmask = shadow_federation(F_all, y, tr_parts, C, t0W, t0b, srng)
+            Ws, bs_, inmask = shadow_federation(F_all, y, pools, C, t0W, t0b, srng)
             st = logit_stat(Ws, bs_, F_cand, y[cand])
             for i, c in enumerate(cand):
                 (s_in if inmask[c] else s_out)[i].append(st[i])

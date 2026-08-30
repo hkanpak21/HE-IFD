@@ -22,14 +22,16 @@ WHAT THIS MEASURES
 Whether that ratio points anywhere useful, as a function of how many clients
 hold the class and how many examples the holder has. Two quantities per class:
 
-  cos_mean   cosine between the recovered ratio and the mean feature of the
-             class-c training examples of the clients holding c. High means the
-             row identifies what that class looked like to its holders.
-  hit_at_1   whether the single nearest training feature under cosine to the
-             ratio is an example of class c belonging to a holder. This is the
-             record-level question, and a low value is a negative result worth
-             reporting: the row would then carry a class direction and not a
-             record.
+  cos_mean        cosine between the ratio and the mean feature of the class-c
+                  training examples of the clients holding c. High means the row
+                  identifies what that class looked like to its holders.
+  cos_top1        cosine to the single best-matching such example. If this sits
+                  close to cos_mean the ratio is a class direction that every
+                  class-c example matches about equally, and there is no record
+                  in it. That is a negative result worth reporting.
+  cos_top1_other  the same against the best example that is NOT class c held by
+                  a holder. If cos_top1 does not exceed it, the row carries no
+                  class signal either.
 
 The adversary is assumed to hold the row already, which is the strongest case:
 it is what Proposition 2 hands its reduction. Whether extraction from label-only
@@ -40,10 +42,14 @@ REPORTED, one row per (task, seed, arrangement, class)
 ------------------------------------------------------
   holders    clients holding the class, the coverage that decides the row
   n_holder   training examples of that class across its holders
-  cos_mean, cos_rand, hit_at_1
+  cos_mean, cos_top1, cos_top1_other, cos_rand
 
-`cos_rand` is the same cosine against a random feature direction, so `cos_mean`
-can be read against a baseline rather than against zero.
+`cos_rand` is the same cosine against random directions, so every figure can be
+read against a baseline rather than against zero.
+
+The informative cells are classes held by one or two clients, where the merge
+does not dilute. AG-News at N=10 has every class held by four or more clients
+and shows none of them; Banking77, with 77 classes, is where they appear.
 
 Usage:  python jobs/row_leakage.py [task ...] [seed ...]
 """
@@ -121,25 +127,33 @@ def run(task, seed, rows):
             if len(mine) < 2:
                 continue
             ratio = dW[c] / db[c]
+            sims = cosine(ratio, F)
             cm = float(cosine(ratio, F[mine].mean(0, keepdims=True))[0])
             cr = float(np.abs(cosine(ratio, rng.normal(size=(64, F.shape[1])))).mean())
-            sims = cosine(ratio, F)
-            nn = int(np.argmax(sims))
-            hit = int(y[nn] == c and owner[nn] in holders)
+            # the record-level question: does the ratio single out one example,
+            # or is it a class direction that every class-c example matches
+            # about equally well? If cos_top1 is close to cos_mean there is no
+            # record in it.
+            ct1 = float(sims[mine].max())
+            other = np.flatnonzero(~((y == c) & np.isin(owner, holders)))
+            cot = float(sims[other].max()) if len(other) else float("nan")
             rows.append(dict(task=task, C=C, seed=seed, arrangement=arrangement,
                              cls=c, holders=int(len(holders)),
                              n_holder=int(len(mine)),
-                             cos_mean=round(cm, 4), cos_rand=round(cr, 4),
-                             hit_at_1=hit))
+                             cos_mean=round(cm, 4), cos_top1=round(ct1, 4),
+                             cos_top1_other=round(cot, 4), cos_rand=round(cr, 4)))
         got = [r_ for r_ in rows if r_["seed"] == seed and r_["task"] == task
                and r_["arrangement"] == arrangement]
         if got:
-            sing = [r_ for r_ in got if r_["holders"] == 1]
+            few = [r_ for r_ in got if r_["holders"] <= 2]
             print(f"  {task} s{seed} {arrangement}: {len(got)} classes, "
-                  f"{len(sing)} held by one client, "
-                  f"mean cos {np.mean([r_['cos_mean'] for r_ in got]):.4f} "
-                  f"against baseline {np.mean([r_['cos_rand'] for r_ in got]):.4f}, "
-                  f"hit@1 {np.mean([r_['hit_at_1'] for r_ in got]):.3f}", flush=True)
+                  f"{len(few)} held by at most two clients. "
+                  f"cos to class mean {np.mean([r_['cos_mean'] for r_ in got]):.4f}, "
+                  f"to the best single example {np.mean([r_['cos_top1'] for r_ in got]):.4f}, "
+                  f"to the best other-class example "
+                  f"{np.nanmean([r_['cos_top1_other'] for r_ in got]):.4f}, "
+                  f"random baseline {np.mean([r_['cos_rand'] for r_ in got]):.4f}",
+                  flush=True)
 
 
 def main():
@@ -154,7 +168,7 @@ def main():
         raise SystemExit("no rows produced")
 
     cols = ["task", "C", "seed", "arrangement", "cls", "holders", "n_holder",
-            "cos_mean", "cos_rand", "hit_at_1"]
+            "cos_mean", "cos_top1", "cos_top1_other", "cos_rand"]
     out = OUTDIR / "results.csv"
     with out.open("w") as f:
         f.write(",".join(cols) + "\n")
