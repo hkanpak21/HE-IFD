@@ -79,11 +79,12 @@ as a ciphertext. The same server answers queries.
 # it discloses the seed split the old table caption also disclosed.
 # Trimmed 2026-08-29 on Halil's note that captions were overexplained. The
 # per-panel seed detail moves into a \tronly tail.
+# Panel (d) now names its restoration mechanism, 2026-08-29.
 The protocol along four axes. Panels (a) to (c) vary the federation
 size, the label skew and the local trajectory on DBpedia around $\Nc=10$,
 $\alpha=0.1$ and $200$ steps. Panel (d) gives the cost of one encrypted argmax
-against the label space, at $\Nc=10$ and ring degree $2^{15}$, for the tournament
-and for the sequential fold it replaces. Panels (a) and (c) are one seed
+against the label space, at $\Nc=10$ and ring degree $2^{15}$ under collective
+refresh, for the tournament and for the sequential fold it replaces. Panels (a) and (c) are one seed
 and panel (b) is the mean over three.
 %%
 # 2026-08-23. One clause is new in Table IV's caption. The cells were measured
@@ -911,11 +912,12 @@ the party that asked.
 # 2026-08-29. The submission form of Figure 2's caption, which is the report
 # form with the \tronly seed sentence resolved away. Both views need an entry
 # because the checker compares each view separately.
+# Panel (d) now names its restoration mechanism, 2026-08-29.
 The protocol along four axes. Panels (a) to (c) vary the federation
 size, the label skew and the local trajectory on DBpedia around $\Nc=10$,
 $\alpha=0.1$ and $200$ steps. Panel (d) gives the cost of one encrypted argmax
-against the label space, at $\Nc=10$ and ring degree $2^{15}$, for the tournament
-and for the sequential fold it replaces.
+against the label space, at $\Nc=10$ and ring degree $2^{15}$ under collective
+refresh, for the tournament and for the sequential fold it replaces.
 %%
 # 2026-08-29. The submission form of Table I's caption, same reason. The
 # per-row commentary is \tronly and so absent here.
@@ -923,3 +925,99 @@ The closest systems on the four axes this paper turns on, as each paper
 reports them. The plaintext column says whether any party ends up holding the
 trained model in plaintext, and \emph{provider} means one party does while the
 querier does not.
+%%
+# 2026-08-29. The abstract's latency becomes the specified design's, 400.8 to
+# 1468.3 s, measured by job 1612017. It previously reported the collective-refresh
+# variant while the traffic figure priced this one, so the sentence described two
+# designs at once. Halil chose the specified design on 2026-08-29, because the
+# protocol delegates the work to the server and because moving gigabytes to the
+# clients on every query is the wrong trade for a networks venue.
+\begin{abstract}
+Several parties hold data on the same task and want one model built from all of
+it, without pooling the data.
+Federated learning does that and concentrates the privacy risk at training time.
+A one-shot protocol that exchanges a single encrypted contribution removes that surface,
+but it still ends by handing the trained result to every participant, which is not
+permitted where the model is itself a regulated or proprietary asset. We present HE-OFT, the first
+cryptographically secure one-shot federated fine-tuning protocol in which no
+party receives the trained result.
+Each client fine-tunes a low-rank adapter and a classifier head on a
+frozen public backbone, retains the adapter locally, and uploads one encrypted
+head displacement that the server combines under multiparty CKKS and never
+decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $400.8$ to $1468.3$\,s for $13.5$\,MiB of traffic.
+\end{abstract}
+%%
+# 2026-08-29, as above. The headline cost paragraph carries the same numbers and
+# names where they go, which is the server restoring levels, 17 times at four
+# classes and 62 at a hundred, and 97 per cent of the argmax. The
+# tournament-versus-fold comparison keeps its ratio and drops the absolute
+# seconds, since those were measured under the other mechanism.
+\paragraph{End-to-end query cost} On one core a query takes $400.8$\,s
+at four classes and $1468.3$\,s at a hundred. The arithmetic and the key switch
+account for $0.24$\,s of that at every label-space size. Everything else is the
+encrypted argmax, and $97$ per cent of the argmax is the server restoring levels,
+which it does $17$ times at four classes and $62$ times at a hundred. The
+tournament needs $\lceil\log_2\Cc\rceil$ rounds against the $\Cc-1$ of the
+sequential fold it replaces ( ).
+%%
+# 2026-08-29, as above. The exactness claim was true of the collective refresh and
+# is not true of the specified design, which agrees to 7.3e-05. The sentence now
+# states the agreement and why it does not change the selected class.
+\paragraph{Correctness} The encrypted argmax agrees with the plaintext maximum to
+$7.3\times10^{-5}$, which is far below the gap between adjacent logits, so it
+selects the same class. The accuracy
+figures of   are therefore unaffected by the cryptography.
+%%
+# 2026-08-29. Report view of a paragraph changed today when the reported
+# latency moved to the specified design. Same change as the submission view,
+# with the report's extra sentences.
+Against the closest published system, slytHErin evaluates a twenty-layer network
+under the same multiparty arrangement in $245.58$\,s at three parties and
+$354.17$\,s at twenty, batched on twelve cores and returning the score
+vector~\cite{intoci2023slytherin}, where our $400.8$\,s and $1468.3$\,s cover one
+unbatched query on one core and return only the label, which  
+shows costs an adversary between $16$ and $260$ times more to recover. Their batch
+amortizes to about $0.95$\,s per sample at ten parties, and their cost lies in the
+network where ours lies in the argmax, so the two figures size the setting rather
+than rank the systems.
+%%
+# 2026-08-29. Report view of a paragraph changed today when the reported
+# latency moved to the specified design. Same change as the submission view,
+# with the report's extra sentences.
+\paragraph{The argmax} The argmax is the one operation in the protocol that is
+not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it takes about
+$16$\,s per comparison, which is roughly twenty-six minutes at a hundred classes.
+Packing the logits into one ciphertext and reducing them by a tournament lowers the
+number of sequential comparisons from $\Cc-1$ to $\lceil\log_2\Cc\rceil$ and
+brings the same computation to under two minutes at a hundred classes, a
+fourteenfold reduction. Both figures restore levels by collective refresh, so the
+ratio measures the reduction and not the mechanism. Because
+homomorphic evaluation under a collectively generated key is identical to
+evaluation under a single key, single-key results carry over, and GPU
+implementations of the same reduction report a full-vocabulary argmax in well under
+a second~\cite{zhang2025nexus}.
+%%
+# 2026-08-29. Report view of a paragraph changed today when the reported
+# latency moved to the specified design. Same change as the submission view,
+# with the report's extra sentences.
+Per-operation cost against the two axes that set it, from one
+measurement over the whole grid. Left: the per-query arithmetic at $\Nc=10$,
+which the ring degree sets and the federation size does not touch. Right: the key
+switch that returns one label, which grows with both. Read in seconds, the left
+panel spans $0.0007$ to $0.18$\,s and the right panel spans $0.10$ to $1.7$\,s.
+Neither is the cost of a query. The encrypted argmax between them takes $400$\,s at
+four classes and $1468$\,s at a hundred, so one query totals $400.8$\,s and
+$1468.3$\,s, of which the argmax is more than $99$ per cent.
+%%
+# 2026-08-29. Report view of a paragraph changed today when the reported
+# latency moved to the specified design. Same change as the submission view,
+# with the report's extra sentences.
+\paragraph{Which mechanism produced the reported latency} Every latency
+above is the specified design, in which the server restores levels on its own
+under the collectively generated keys.   sets it beside the
+collective refresh, which is about thirteen times faster and costs a share from
+every client at every restoration. We report the specified design because it is
+the one the method describes, and because a protocol that moved gigabytes to the
+clients on every query would not be servable at the federation sizes this paper
+considers. Every figure is single-core, and the restoration is the part that
+would gain most from threads.
