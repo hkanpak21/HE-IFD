@@ -51,9 +51,11 @@ here because the backbone is frozen and public: a shadow is N clients each
 taking K gradient steps on cached 768-dimensional features, then the
 coverage-weighted merge. No backbone forward pass is repeated.
 
-Members are an honest client's training examples. Non-members are that same
-client's held-out examples, so member and non-member come from one client's own
-distribution and the test measures membership rather than distribution shift.
+Members are the clients' training examples and non-members their own held-out
+examples, so both sides come from the same clients' data and the test measures
+membership rather than distribution shift. The holdout is stratified by class and
+is small per client, so the default pools every client; MIA_TARGET restricts it
+to one.
 
 REPORTED
 --------
@@ -61,7 +63,8 @@ REPORTED
   auc                          for completeness only, per their Table I caption
 
 Usage:  python jobs/mia_extracted_head.py [task ...] [seed ...]
-Env:    MIA_SHADOWS (default 64), MIA_TARGET (client index, default 0)
+Env:    MIA_SHADOWS (default 64), MIA_NCAND (default 1000),
+        MIA_TARGET (client index; the default -1 pools every client)
 """
 import os
 import sys
@@ -83,7 +86,8 @@ TASKS = ["ag_news", "dbpedia_14", "banking77"]
 SEEDS = [42, 43, 44]
 BUDGETS = [2000, 20000, 200000]
 SHADOWS = int(os.environ.get("MIA_SHADOWS", 64))
-TARGET = int(os.environ.get("MIA_TARGET", 0))
+TARGET = int(os.environ.get("MIA_TARGET", -1))   # -1 pools every client
+N_CAND = int(os.environ.get("MIA_NCAND", 1000))
 K_STEPS, LR = 200, 5e-4
 
 
@@ -204,22 +208,32 @@ def run(task, seed, rows):
     y = np.asarray(ytr)
     parts = pa.usable(fi.dirichlet_partition(y, N, ALPHA, C, seed))
     tr_parts, va_parts = pa.split_parts(parts, seed, y)
-    if TARGET >= len(parts):
-        print(f"  [skip] {task} s{seed}: target {TARGET} beyond {len(parts)} clients",
-              flush=True)
-        return
-
-    members = np.asarray(tr_parts[TARGET])
-    nonmembers = np.asarray(va_parts[TARGET])
-    n = min(len(members), len(nonmembers))
-    if n < 20:
-        print(f"  [skip] {task} s{seed}: only {n} usable candidates", flush=True)
+    # TARGET < 0 pools every client, which is the quantity Proposition 2 caps:
+    # what a coalition learns about the training set it does not hold. A single
+    # client's stratified holdout is a handful of examples, too few for a
+    # low-false-positive-rate measurement.
+    if TARGET < 0:
+        members = np.concatenate([np.asarray(p) for p in tr_parts])
+        nonmembers = np.concatenate([np.asarray(p) for p in va_parts])
+    else:
+        if TARGET >= len(parts):
+            print(f"  [skip] {task} s{seed}: target {TARGET} beyond {len(parts)}",
+                  flush=True)
+            return
+        members = np.asarray(tr_parts[TARGET])
+        nonmembers = np.asarray(va_parts[TARGET])
+    n = min(len(members), len(nonmembers), N_CAND)
+    if n < 50:
+        print(f"  [skip] {task} s{seed}: only {n} usable candidates "
+              f"({len(members)} members, {len(nonmembers)} non-members)", flush=True)
         return
     rng = np.random.default_rng(seed)
     members = rng.choice(members, n, replace=False)
     nonmembers = rng.choice(nonmembers, n, replace=False)
     cand = np.concatenate([members, nonmembers])
     label = np.concatenate([np.ones(n, bool), np.zeros(n, bool)])
+    print(f"  {task} s{seed}: {n} members and {n} non-members over "
+          f"{len(parts)} clients", flush=True)
 
     for arrangement in ("A", "B"):
         tag = "r0" if arrangement == "A" else "r8"
