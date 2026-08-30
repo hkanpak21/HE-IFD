@@ -1122,3 +1122,22 @@ is correct once. The estimator is correct eleven times, and its one error costs
 $0.006$. The failure of the vote is not a matter of close calls. A client measures
 the personal arrangement on its own data, where that arrangement is at its best,
 and the vote is the sum of twelve such measurements.
+%%
+# 2026-08-30, Halil's ruling in the grill session, "you can report that in the
+# technical report". The training row of Table VI said "a few MiB", the only
+# unquantified cell in the cost section. fhe/main.go ran the aggregation
+# benchmark at d=5130 and d=7700 only, both ten-class heads, so no measurement
+# exists at Banking77 or CIFAR-100 head sizes. The figures here are computed
+# from the measured 4.00 MiB aggregation-chain ciphertext in
+# results/fhe_serve/comm_grid.json at log_n 15 and the head shape
+# nn.Linear(768, C) in jobs/finetune_improve.py:145. Report only. Halil chose
+# computing over rerunning the benchmark.
+The training upload is the one row that moves with the number of classes.
+A head displacement is $\Cc$ rows of $768$ values and a bias, and a ciphertext at
+ring degree $2^{15}$ carries $16{,}384$ slots, so a client sends
+$\lceil 769\Cc/16{,}384\rceil$ ciphertexts for each of the two arrangements and
+one further ciphertext for its per-class counts. On the eight-modulus chain the
+aggregation needs, a ciphertext is $4.0$\,MiB. That is three ciphertexts and
+$12$\,MiB for AG-News, TREC, CIFAR-10 and DBpedia, nine and $36$\,MiB for
+Banking77, and eleven and $44$\,MiB for CIFAR-100. It is paid once and it is
+smaller than the rotation keys of the setup in every case.

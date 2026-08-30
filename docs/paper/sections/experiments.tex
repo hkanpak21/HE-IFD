@@ -484,7 +484,7 @@ setup, once & collective public key share & $4.25$\,MiB \\
             & relinearization key share & $102.0$\,MiB \\
             & rotation keys, seven of them & $238.0$\,MiB \\
 \midrule
-training, once & encrypted head displacement & a few MiB \\
+training, once & encrypted head displacements & $12$ to $44$\,MiB \\
 \midrule
 per query & encrypted features, uploaded & $7.5$\,MiB \\
           & encrypted label, returned & $1.0$\,MiB \\
@@ -495,6 +495,16 @@ per query & encrypted features, uploaded & $7.5$\,MiB \\
 \end{tabular}
 
 \end{table}}
+
+\tronly{The training upload is the one row that moves with the number of classes.
+A head displacement is $\Cc$ rows of $768$ values and a bias, and a ciphertext at
+ring degree $2^{15}$ carries $16{,}384$ slots, so a client sends
+$\lceil 769\Cc/16{,}384\rceil$ ciphertexts for each of the two arrangements and
+one further ciphertext for its per-class counts. On the eight-modulus chain the
+aggregation needs, a ciphertext is $4.0$\,MiB. That is three ciphertexts and
+$12$\,MiB for AG-News, TREC, CIFAR-10 and DBpedia, nine and $36$\,MiB for
+Banking77, and eleven and $44$\,MiB for CIFAR-100. It is paid once and it is
+smaller than the rotation keys of the setup in every case.}
 
 The per-query total is $8.5 + 0.5\Nc$\,MiB, since the quorum returns one
 key-switching share each. It is $11.0$\,MiB at $\Nc=5$ and $18.5$\,MiB at
