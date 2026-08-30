@@ -41,7 +41,7 @@ survey draws that separation explicitly~\cite{kairouz2021advances}. Several work
 infer membership from a released model, or invert it from released
 confidences~\cite{shokri2017membership,yeom2018privacy,salem2019ml,fredrikson2015model,hitaj2017deep},
 and against models that generalise well they identify few members, and only at
-very low false-positive rates~\cite{carlini2022membership}. The reason for the gap
+low false-positive rates~\cite{carlini2022membership}. The reason for the gap
 is simple. An update is a detailed view of one client's data and arrives every
 round, where the final model is a single average that generalisation moves away
 from any one training example. A protocol that never sends an update, and that
@@ -281,13 +281,13 @@ HE-OFT                               & one  & HE   & no       & label \\
 \end{table}
 
 \paperonly{\medskip
-\noindent\emph{Positioning.}
+\noindent\textbf{Positioning.}
 \Cref{tab:related} places the closest systems on the axes that separate them. What remains unaddressed is a protocol that
 exposes no training-time quantity, that exchanges anything at all only once, and
 that never discloses the model even to the parties that built it. \trsee{sec:related} surveys the field in full.}
 
 \tronly{\medskip
-\noindent\emph{Positioning.}
+\noindent\textbf{Positioning.}
 \Cref{tab:related} places the closest systems on the axes that separate them. The
 multi-round cryptographic line protects every round but pays on every round, and
 what it protects is a per-round sum. The one-shot line exposes its single

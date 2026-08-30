@@ -115,7 +115,7 @@ between three and five times that number of queries. A deployment can therefore 
 allowance from $\Cc$ and $d$ without repeating this experiment. \trsee{sec:experiments} gives the extraction study in full.
 %%
 \medskip
-\noindent\emph{Positioning.}
+\noindent\textbf{Positioning.}
 \Cref{tab:related} places the closest systems on the axes that separate them. What remains unaddressed is a protocol that
 exposes no training-time quantity, that exchanges anything at all only once, and
 that never discloses the model even to the parties that built it. \trsee{sec:related} surveys the field in full.
@@ -516,7 +516,7 @@ training runs and how often it reveals it.
 # works against a malicious server, and the next paragraph exhibits one, so the
 # submission read as a contradiction. Halil ruled the framing restored simply.
 # Four words.
-A second mechanism checks provenance.
+A mechanism checks provenance.
 The serving circuit is a deterministic function of the encrypted head, the
 encrypted query, the evaluation keys and the public parameters, and its level
 restoration is deterministic as well. A
@@ -1273,3 +1273,47 @@ shares it contributes, and its proof disposes of that deviation for decryption
 shares, where a wrong share aborts the query. Key-generation shares are not
 covered by that argument, and a deployment that omits the commitment round is
 outside the theorem.
+%%
+# 2026-08-30, Halil's ruling 1.2 in the writing pass. CONTEXT.md and CLAUDE.md
+# both forbid calling the shared object a model. The theorem statement said
+# "the served model". One word, model to head. Submission and report.
+\begin{theorem}[Input privacy]
+\label{thm:malicious}
+Assume the conditions of \cref{thm:semihonest}. Then the advantage of
+$\mathcal{A}$ in \cref{def:contentgame} is at most
+$\negl(\lambda)+\delta(Q_{\mathrm{tot}})$, where
+$Q_{\mathrm{tot}}=(\tc-1)Q$ and $\delta$ is the advantage available from
+$Q_{\mathrm{tot}}$ label queries to the served head.
+\end{theorem}
+%%
+# 2026-08-30, Halil's ruling 1.3, the same slip. The sentence names the
+# arrangement "shared head" and then called it a model in the next clause.
+# One word. Submission and report.
+\Cref{tab:headline} reports both servable arrangements and both reference points.
+The arrangement labelled \emph{shared head} gives every client the same head over
+the bare public backbone. \emph{Personal adapter} gives
+each client the shared head over its own locally adapted representation.
+%%
+# 2026-08-30, Halil's ruling 3, keep it simple and follow the writing rules.
+# The linter flagged "very" as a banned intensifier and was right here, unlike
+# the "very artifact" uses elsewhere where the word is the adjective meaning
+# that same. Deleted. Submission and report.
+survey draws that separation explicitly~\cite{kairouz2021advances}. Against models that generalise well they identify few members, and only at
+low false-positive rates~\cite{carlini2022membership}. A protocol that never sends an update, and that
+sends anything only once, therefore leaves every adversary with the weaker
+%%
+# 2026-08-30, Halil's ruling 3, the report form of the same run-in label.
+# Italics are reserved for a term's definition, so the label is bold instead.
+# Report only; the submission form is recorded above.
+\medskip
+\noindent\textbf{Positioning.}
+\Cref{tab:related} places the closest systems on the axes that separate them. The
+multi-round cryptographic line protects every round but pays on every round, and
+what it protects is a per-round sum. The one-shot line exposes its single
+contribution in plaintext, or noises it and pays in accuracy. The fine-tuning line
+communicates a small object but protects nothing. A single prior scheme is at once one-shot, federated and
+encrypted, but only for a single-layer closed-form learner that cannot adapt a deep
+representation~\cite{fedheonn2023}. What remains unaddressed is a protocol that
+exposes no training-time quantity, that exchanges anything at all only once, and
+that never discloses the model even to the parties that built it. \Cref{sec:method}
+works out what that forces, and the rest of the paper measures what it costs.
