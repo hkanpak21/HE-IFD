@@ -421,22 +421,55 @@ to cost the precision of the decrypted result~\cite{checri2024threshold}. We
 report the configuration we measured and state the gap rather than claim a
 guarantee we did not instantiate.}
 
-\tronly{Repeating a query bears on this and is worth stating precisely, because
-the obvious reading of it is wrong. The serving circuit is deterministic, so a
-client that resubmits an identical query obtains the same ciphertext while every
-honest client draws fresh smudging noise. Averaging those repetitions removes the
-smudging, since only the smudging is resampled. It does not remove the noise of
-the ciphertext, which is fixed once the query is fixed. What the averaging
-converges on is therefore the observation the smudging was hiding, and that
-observation is a ring element carrying the circuit noise, which at our ring
-degree is a hard instance of the underlying problem. Repetition reaches the
-position of an implementation that omits smudging altogether. It does not by
-itself yield a key.}
+\tronly{Repeating a query turns that gap into a key recovery, and we state the
+arithmetic because it decides which control the deployment needs. Write the
+served ciphertext as $(c_0,c_1)$ under the collective key $s$. The querier
+decrypts $c_0+c_1s+E$, where $E$ collects the honest parties' smudging terms. The
+serving circuit is deterministic, so a client that resubmits an identical query
+receives the same $c_0$ and $c_1$ and a freshly drawn $E$. Averaging $k$
+repetitions drives $E$ to zero and converges on $c_0+c_1s$ exactly. The noise of
+the ciphertext is not a term outside that expression. It is inside it, because
+$c_0+c_1s$ is the plaintext together with that noise. An adversary that holds
+$c_0$ and $c_1$ subtracts and rounds, obtains $c_1s$, and recovers $s$ by one
+ring inversion. The server holds $c_0$ and $c_1$, and \cref{def:semihonest}
+corrupts the server together with $\tc-1$ clients, so this view is inside the
+model rather than outside it. Resubmitting a query is also what the protocol
+permits, so the adversary is semi-honest.}
 
-\tronly{The control that matches this is a query budget rather than a check on
-duplicates. Sizing the flooding noise for $q$ decryptions costs half a bit for
-each doubling of $q$, and the budget is refreshed by rekeying once it is
-spent~\cite{limicciancio2022dp}. Refusing to key-switch a ciphertext twice is
-cheap and we recommend it, and it is a supplementary control rather than a
-substitute, because a client can re-randomize a query by adding an encryption of
-zero and present a ciphertext that is fresh to any such check.}
+\tronly{The cost is the number of repetitions that drives the averaged error
+below half a unit in each of the $2^{15}$ coefficients, which is on the order of
+$81\sigma^2$ for a resampled part of standard deviation $\sigma$. At eight times
+the fresh-encryption noise and a quorum of ten that is about $5\times10^{5}$
+repetitions, which is the same order as the query budgets \cref{sec:exp-leak}
+already contemplates. A duplicate check is therefore a required control and not a
+supplementary one. Re-randomizing a query defeats the check but not the control,
+because a re-randomized query is a different ciphertext and yields one
+independent sample rather than a repetition, and independent samples are the
+regime the flooding is sized for. Sizing that flooding for $q$ decryptions costs
+half a bit for each doubling of $q$, and the budget is refreshed by rekeying once
+it is spent~\cite{limicciancio2022dp}.}
+
+\tronly{Raising the smudging is the second control and it is free on every axis
+the deployment measures. The values this protocol decrypts are one index and one
+label, so the precision the answer needs is a handful of bits against a plaintext
+scale of $2^{45}$. Moving the smudging from eight times the fresh-encryption
+noise to $2^{25}$ multiplies the required repetitions by roughly $2^{40}$ and
+still leaves twenty bits of the scale. It costs nothing in latency, nothing in
+traffic, and nothing in the accuracy of \cref{sec:exp-acc}, because the label is
+an argmax and not a score. It does not meet the $2^{\lambda/2}$ rule, and we do
+not claim that it does. It removes the attack above at no price, which is a
+different and weaker statement, and it is the configuration we recommend.}
+
+\tronly{One deviation the theorems do not cover belongs here as well. Collective
+key generation has each party publish a share of the public key, and the shares
+are summed. A party that publishes last, after seeing the others, can subtract
+their contribution and leave a public key whose secret it holds alone. Every
+ciphertext uploaded under that key is then readable by that party, and the
+deviation is detected only later, when the honest decryption shares fail to
+reconstruct, by which time the uploads have been read. The standard remedy is to
+commit the shares before opening them, which costs one round and is independent
+of the ring parameters. \Cref{thm:malicious} lets a coalition deviate in the
+shares it contributes, and its proof disposes of that deviation for decryption
+shares, where a wrong share aborts the query. Key-generation shares are not
+covered by that argument, and a deployment that omits the commitment round is
+outside the theorem.}
