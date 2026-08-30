@@ -243,7 +243,10 @@ alone~\cite{xia2026cryptpeft}. Confining encrypted computation to a small unit
 after the representation is the motivation for our design as well. It is a
 two-party protocol, the trained unit is the provider's plaintext, and there is no
 training protocol, so it establishes that the serving arrangement is practical
-without addressing how mutually distrustful parties would build the unit at all.}
+without addressing how mutually distrustful parties would build the unit at all.
+It reports one inference in $2.26$\,s on CIFAR-100. It is two-party and the
+adapter is one party's plaintext, so it evaluates no ciphertext-by-ciphertext
+product and restores no levels.}
 
 \tronly{Constructions for the encrypted maximum faster than the tournament of
 \cref{sec:serving} exist, both for ranking and order statistics at constant

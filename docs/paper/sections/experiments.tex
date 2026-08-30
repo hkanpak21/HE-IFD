@@ -363,7 +363,9 @@ unbatched query on one core and return only the label, which \cref{sec:exp-leak}
 shows costs an adversary between $16$ and $260$ times more to recover. Their batch
 amortizes to about $0.95$\,s per sample at ten parties, and their cost lies in the
 network where ours lies in the argmax, so the two figures size the setting rather
-than rank the systems.}
+than rank the systems. They return a score vector, so they stop before the
+reduction that is $97$ per cent of our query. A system that returned a label
+would pay it.}
 
 \tronly{Three levers apply to that figure, and they differ in what they move. Multi-core
 execution does not shorten the circuit, because the rounds are sequential by

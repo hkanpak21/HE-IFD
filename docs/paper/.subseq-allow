@@ -1021,3 +1021,38 @@ the one the method describes, and because a protocol that moved gigabytes to the
 clients on every query would not be servable at the federation sizes this paper
 considers. Every figure is single-core, and the restoration is the part that
 would gain most from threads.
+%%
+# 2026-08-29, Halil's two comparison points, stated plainly. slytHErin stops
+# before the reduction that is 97 per cent of our query, so a label-returning
+# version would pay it. CryptPEFT is two-party with the adapter in one party's
+# plaintext, so it has no ciphertext-by-ciphertext product and no level
+# restoration. Report-only.
+Against the closest published system, slytHErin evaluates a twenty-layer network
+under the same multiparty arrangement in $245.58$\,s at three parties and
+$354.17$\,s at twenty, batched on twelve cores and returning the score
+vector~\cite{intoci2023slytherin}, where our $400.8$\,s and $1468.3$\,s cover one
+unbatched query on one core and return only the label, which  
+shows costs an adversary between $16$ and $260$ times more to recover. Their batch
+amortizes to about $0.95$\,s per sample at ten parties, and their cost lies in the
+network where ours lies in the argmax, so the two figures size the setting rather
+than rank the systems. They return a score vector, so they stop before the
+reduction that is $97$ per cent of our query. A system that returned a label
+would pay it.
+%%
+# 2026-08-29, Halil's two comparison points, stated plainly. slytHErin stops
+# before the reduction that is 97 per cent of our query, so a label-returning
+# version would pay it. CryptPEFT is two-party with the adapter in one party's
+# plaintext, so it has no ciphertext-by-ciphertext product and no level
+# restoration. Report-only.
+CryptPEFT divides the work as we do and reaches the opposite conclusion about who
+holds the secret. A public frozen backbone runs in plaintext on the client, the
+client encrypts the resulting features, only the adapter is evaluated under
+encryption, and the client receives the predicted label
+alone~\cite{xia2026cryptpeft}. Confining encrypted computation to a small unit
+after the representation is the motivation for our design as well. It is a
+two-party protocol, the trained unit is the provider's plaintext, and there is no
+training protocol, so it establishes that the serving arrangement is practical
+without addressing how mutually distrustful parties would build the unit at all.
+It reports one inference in $2.26$\,s on CIFAR-100. It is two-party and the
+adapter is one party's plaintext, so it evaluates no ciphertext-by-ciphertext
+product and restores no levels.
