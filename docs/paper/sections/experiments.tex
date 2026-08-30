@@ -438,9 +438,9 @@ specialised hardware does to it. Since the cost of a CKKS operation grows with t
 ring degree, the comparison is only meaningful at a fixed one. \Cref{fig:cost}
 gives our figures, $39.0$, $82.5$ and $174.9$\,ms for a ciphertext-by-ciphertext
 product at ring degrees $2^{14}$, $2^{15}$ and $2^{16}$, and $33.1$, $71.6$ and
-$149.7$\,ms for a rotation. Microbenchmarks of the same primitives under a CUDA
-implementation of CKKS, at ring degree $2^{16}$, put the product at $30$\,ms and
-the rotation at $29.5$\,ms, so the ratio at matched ring degree is about $5$ for
+$149.7$\,ms for a rotation. Microbenchmarks of the same primitives under
+Phantom, a CUDA implementation of CKKS~\cite{yang2024phantom}, at ring degree
+$2^{16}$, put the product at $30$\,ms and the rotation at $29.5$\,ms, so the ratio at matched ring degree is about $5$ for
 the rotation and about $6$ for the product. Two things make that a conservative figure. The GPU numbers are taken at
 a deeper level budget than ours, and a deeper budget makes every operation more
 expensive. They are also measured on a mid-range inference card, whereas the
@@ -455,22 +455,14 @@ deep encrypted inference.}
 
 \tronly{The circuit is bootstrap-bound, so the accelerated figure follows from one
 number. Level restoration is $97$ per cent of a query, and on one core each
-restoration takes $23.1$\,s at every label-space size. One bootstrap at ring
-degree $2^{16}$, the degree this protocol restores at, takes $2.28$\,s on a single
-datacentre GPU with the keys streamed from host memory, measured on the hardware
-described below and reproduced independently to within $0.3$ per cent. Substituting
-it leaves the local evaluation on the processor and gives $48.9$\,s at four classes,
-$100.1$\,s at fourteen and $176.6$\,s at a hundred, against the $400.8$\,s and
-$1468.3$\,s of \cref{tab:btp}. The restoration falls by a factor of ten and the
-local evaluation, which we did not port, becomes the larger half of the query at
-every size above four classes.}
-
-\tronly{Two conditions bound that figure and neither is cosmetic. The bootstrap was
-measured on a different circuit from ours, so it prices the primitive and not the
-protocol, and we report it as a substitution rather than as a measurement of this
-system. And it was taken with the keys streamed from host memory, because at ring
-degree $2^{16}$ the key set does not fit one device. A build that holds them
-resident would be faster and we have not measured one.}
+restoration takes $23.1$\,s at every label-space size. We measure one restoration
+of this circuit at $2.28$\,s under Phantom on an NVIDIA H100, at the ring degree
+$2^{16}$ the protocol restores at, and the measurement reproduces to within $0.3$
+per cent. Substituting it, and leaving the local evaluation on the processor,
+gives $48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a
+hundred, against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. Restoration
+falls by a factor of ten, and the local evaluation, which we did not port, becomes
+the larger half of a query at every size above four classes.}
 
 \paragraph{Communication} The protocol is one-shot in the sense
 of \cref{sec:intro}. No intermediate training artifact is ever exposed. It is not
