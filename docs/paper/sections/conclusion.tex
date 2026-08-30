@@ -1,8 +1,8 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented HE-OFT, a federated fine-tuning protocol in which the trained model
-is never disclosed. The design follows from the observation that federated
+We presented HE-OFT, a federated fine-tuning protocol in which no party receives
+the trained result. The design follows from the observation that federated
 learning's privacy risk is concentrated in the quantities a protocol exposes while
 the model is being built, and from the further requirement that in some
 deployments the finished model may not be distributed either. Each client
