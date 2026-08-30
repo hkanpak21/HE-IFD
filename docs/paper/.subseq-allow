@@ -1088,3 +1088,37 @@ of ten. Substituting it, and leaving the local evaluation on the processor, give
 $48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
 against the $400.8$\,s and $1468.3$\,s of  . The local evaluation,
 which we did not port, is then the larger half of a query above four classes.
+%%
+# 2026-08-30, Halil's ruling in the grill session. The twelve CIFAR-10 cells of
+# results/personal_adapter_vision/cifar10_matched_full.csv already ran the same
+# selection rule on the full 10,000-image test set and sat outside the claim.
+# Folding them in makes the table nine settings rather than five tasks, so the
+# caption has to say what a cell counts over. Report only. The submission does
+# not carry this table.
+Choosing between the two servable arrangements without decrypting either.
+Cells are counted over the five tasks and the four CIFAR-10 partitions, at three
+seeds each. Regret is the accuracy given up
+by a wrong choice, averaged over seeds and summed over the nine settings.
+%%
+# 2026-08-30, as above. The calibration figure was a single mean over fifteen
+# cells. The CIFAR-10 cells have their own calibration, 0.005 mean and 0.009
+# worst over the twelve, computed from the E_A and true A recorded in the same
+# CSV. Averaging the two into one number would hide that the vision cells are
+# the better-calibrated half, so the sentence reports them separately.
+The estimator yields a calibrated accuracy estimate, not only a ranking. Its estimate of the
+shared arrangement's global accuracy is within $0.019$ on average across the
+fifteen cells of the five tasks and within $0.005$ across the twelve CIFAR-10
+cells, computed entirely from encrypted local evidence with no access to a
+test set.
+%%
+# 2026-08-30, Halil's ruling, "fold in and name the vote". The held-out vote is
+# correct in 1 of the 12 CIFAR-10 cells against the estimator's 11, which is the
+# sharpest evidence in the paper that the vote is structurally wrong rather than
+# unlucky. It was sitting unused in the CSV. Report only.
+The twelve CIFAR-10 cells separate the two rules more sharply than the five
+tasks do. The shared head over the bare backbone wins in eleven of them, and the
+majority of held-out accuracies chooses the personal adapter in all twelve, so it
+is correct once. The estimator is correct eleven times, and its one error costs
+$0.006$. The failure of the vote is not a matter of close calls. A client measures
+the personal arrangement on its own data, where that arrangement is at its best,
+and the vote is the sum of twelve such measurements.
