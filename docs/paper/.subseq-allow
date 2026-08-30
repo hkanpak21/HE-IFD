@@ -1141,3 +1141,63 @@ aggregation needs, a ciphertext is $4.0$\,MiB. That is three ciphertexts and
 $12$\,MiB for AG-News, TREC, CIFAR-10 and DBpedia, nine and $36$\,MiB for
 Banking77, and eleven and $44$\,MiB for CIFAR-100. It is paid once and it is
 smaller than the rotation keys of the setup in every case.
+%%
+# 2026-08-30, Halil's approval in the grill session, "if its text only you can
+# proceed... if you need to change something in ideal func and also the proofs
+# slightly thats fine". Functionality 1 step 3 returned the argmax under
+# \featx_j regardless of a*, so the ideal party announced a winner and then
+# always served the personal-adapter arrangement. The protocol honours a*, so
+# on every run where A wins the two differed, and Theorem 1 proved the wrong
+# statement. In 11 of 12 CIFAR-10 cells and 8 of 15 text and CIFAR-100 cells
+# the estimator picks A, so that is the common branch. Step 1 now stores both
+# heads, because step 3 cannot serve what step 1 did not build. No protocol
+# change and no re-measurement; jobs/personal_adapter_test.py:250 and :291
+# already build both.
+Three properties of $\Fhe$ are what the protocol must reproduce. No party ever
+holds either shared head. The only value the whole federation learns is one index. A
+client learns the labels it asks for, up to its allowance, and nothing else.
+%%
+# 2026-08-30, as above. The simulator has to produce one displacement
+# ciphertext per arrangement rather than one in total. The count is a function
+# of the public parameters, so the simulator knows it and the hybrid argument
+# is unchanged in form. Nothing else in the proof moves.
+\emph{Training.} For each honest client the simulator sends an encryption of
+zero in place of $\mathsf{Enc}(g_j\odot\disp)$, once for each of the two
+arrangements, and in place of $\mathsf{Enc}(g_j)$, which the two share. The number
+of ciphertexts follows from the public parameters, so the simulator knows it. A hybrid
+argument replaces the honest ciphertexts one at a time, and each neighbouring
+pair of hybrids is indistinguishable by IND-CPA against $\tc-1$ shares, the
+assumption of the theorem.
+%%
+# 2026-08-30, as above. Proposition 2 hands the reduction the head in
+# plaintext, and there are two heads. Report only.
+\begin{proposition}[The query channel is no stronger than the head]
+\label{prop:c2c}
+Let $\mathcal{A}$ corrupt at most $\tc-1$ clients in \cref{def:contentgame}, with
+the server honest, and let it ask at most $Q_{\mathrm{tot}}=(\tc-1)Q$ queries.
+Then there is an adversary $\mathcal{B}$ that receives both shared heads in
+plaintext together with $\Leak$, asks no query, and satisfies
+\[
+  \mathsf{Adv}(\mathcal{A})\;\le\;\mathsf{Adv}(\mathcal{B})+\negl(\lambda).
+\]
+\end{proposition}
+%%
+# 2026-08-30, as above. The proof now branches with the functionality. Under
+# arrangement A the feature map is entirely public, so the reduction needs
+# strictly less than before, and the proposition holds on both branches.
+# Report only.
+Each answer is $\arg\max_c(\thstar_{a^{\star}}\,\featx^{a^{\star}}_j(x_i))_c$ for a
+query $x_i$ that $\mathcal{A}$ asks at one of its own clients $j$. Under
+$a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$ it composes the
+backbone with the adapter of client $j$, and that client is corrupt, so
+$\mathcal{B}$ holds the adapter. $\mathcal{B}$ holds both heads by assumption and
+reads $a^{\star}$ from $\Leak$. It computes every answer itself.
+%%
+# 2026-08-30, as above. The white-box advantage is defined against what the
+# reduction holds, which is both heads. Report only.
+Write $\delta_{\mathrm{wb}}$ for the advantage of the best
+polynomial-time adversary that holds both shared heads. \Cref{prop:c2c} gives
+$\delta(Q_{\mathrm{tot}})\le\delta_{\mathrm{wb}}$ at every budget. What a
+coalition learns about an honest client is capped by what the shared head itself
+reveals, and that cap does not depend on the allowance. The allowance prices the
+cost of approaching the cap, and \cref{sec:exp-leak} measures that cost.

@@ -58,16 +58,19 @@ its first $Q$ queries, and $\bot$ afterwards.
 \noindent\textbf{\emph{Steps.}}
 \begin{enumerate}\itemsep2pt \parskip0pt \topsep3pt
 \item \emph{Training and aggregation.} On $(\mathsf{Train},\Dj)$ from every
-  client, run the local training of \cref{sec:split} on each $\Dj$ and store the
-  shared head $\thstar$ of \cref{eq:aggregate}. Send
+  client, run the local training of \cref{sec:split} on each $\Dj$ in both
+  servable arrangements and store the two shared heads $\thstar_{A}$ and
+  $\thstar_{B}$ of \cref{eq:aggregate}. Send
   $(\mathsf{Done},\mathsf{train})$ to every party.
 \item \emph{Selection.} On $(\mathsf{Select})$ from $S$, evaluate the estimator
-  of \cref{eq:estimator} for both servable arrangements, send the index
-  $a^{\star}$ of the larger to every party, and send
+  of \cref{eq:estimator} on each of the two stored heads, send the index
+  $a^{\star}\in\{A,B\}$ of the larger to every party, and send
   $(\mathsf{Done},\mathsf{select})$ to every party.
 \item \emph{Serving.} On $(\mathsf{Query},x)$ from client $P_j$, return $\bot$
   to $P_j$ if $q_j\ge Q$. Otherwise set $q_j\leftarrow q_j+1$, return
-  $\hat y=\arg\max_c\,(\thstar\,\featx_j(x))_c$ to $P_j$ alone, and send
+  $\hat y=\arg\max_c\,(\thstar_{a^{\star}}\,\featx^{a^{\star}}_j(x))_c$ to
+  $P_j$ alone, where $\featx^{A}_j=\featx$ is the public backbone and
+  $\featx^{B}_j=\featx_j$ is the backbone composed with $P_j$'s adapter, and send
   $(\mathsf{Done},\mathsf{query},j)$ to $S$.
 \end{enumerate}
 
@@ -81,7 +84,7 @@ The sample counts sit in the leakage because the protocol uses them as public
 scalars. We prove security relative to both.
 
 Three properties of $\Fhe$ are what the protocol must reproduce. No party ever
-holds $\thstar$. The only value the whole federation learns is one index. A
+holds either shared head. The only value the whole federation learns is one index. A
 client learns the labels it asks for, up to its allowance, and nothing else.
 
 \subsection{Security Against Semi-Honest Parties}
@@ -127,7 +130,9 @@ corrupted parties, playing the honest clients on uniformly chosen shares.
 
 
 \emph{Training.} For each honest client the simulator sends an encryption of
-zero in place of $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$. A hybrid
+zero in place of $\mathsf{Enc}(g_j\odot\disp)$, once for each of the two
+arrangements, and in place of $\mathsf{Enc}(g_j)$, which the two share. The number
+of ciphertexts follows from the public parameters, so the simulator knows it. A hybrid
 argument replaces the honest ciphertexts one at a time, and each neighbouring
 pair of hybrids is indistinguishable by IND-CPA against $\tc-1$ shares, the
 assumption of the theorem.
@@ -323,8 +328,8 @@ the budget.}
 \label{prop:c2c}
 Let $\mathcal{A}$ corrupt at most $\tc-1$ clients in \cref{def:contentgame}, with
 the server honest, and let it ask at most $Q_{\mathrm{tot}}=(\tc-1)Q$ queries.
-Then there is an adversary $\mathcal{B}$ that receives $\thstar$ in plaintext
-together with $\Leak$, asks no query, and satisfies
+Then there is an adversary $\mathcal{B}$ that receives both shared heads in
+plaintext together with $\Leak$, asks no query, and satisfies
 \[
   \mathsf{Adv}(\mathcal{A})\;\le\;\mathsf{Adv}(\mathcal{B})+\negl(\lambda).
 \]
@@ -338,11 +343,12 @@ independent of $b$ up to $\negl(\lambda)$, and $\mathcal{B}$ produces them from
 $\Leak$ and from encryptions of zero exactly as the simulator of
 \cref{thm:semihonest} does.
 
-Each answer is $\arg\max_c(\thstar\,\varphi_j(x_i))_c$ for a query $x_i$ that
-$\mathcal{A}$ asks at one of its own clients $j$. The map $\varphi_j$ composes the
-public backbone with the adapter of client $j$. That client is corrupt, so
-$\mathcal{B}$ holds its adapter, and $\mathcal{B}$ holds $\thstar$ by assumption.
-It computes every answer itself.
+Each answer is $\arg\max_c(\thstar_{a^{\star}}\,\featx^{a^{\star}}_j(x_i))_c$ for a
+query $x_i$ that $\mathcal{A}$ asks at one of its own clients $j$. Under
+$a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$ it composes the
+backbone with the adapter of client $j$, and that client is corrupt, so
+$\mathcal{B}$ holds the adapter. $\mathcal{B}$ holds both heads by assumption and
+reads $a^{\star}$ from $\Leak$. It computes every answer itself.
 
 $\mathcal{B}$ therefore runs $\mathcal{A}$, answers each query as the server would,
 and returns whatever $\mathcal{A}$ returns. The simulation is exact outside the
@@ -350,7 +356,7 @@ negligible event on which the first three parts of the view differ.
 \end{proof}}
 
 \tronly{Write $\delta_{\mathrm{wb}}$ for the advantage of the best
-polynomial-time adversary that holds $\thstar$. \Cref{prop:c2c} gives
+polynomial-time adversary that holds both shared heads. \Cref{prop:c2c} gives
 $\delta(Q_{\mathrm{tot}})\le\delta_{\mathrm{wb}}$ at every budget. What a
 coalition learns about an honest client is capped by what the shared head itself
 reveals, and that cap does not depend on the allowance. The allowance prices the
