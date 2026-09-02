@@ -1,18 +1,33 @@
 # real_query — one query answered end to end, against a real trained head
 
-**No real head has been served yet.** VALAR was unreachable on 2026-09-02 (the Koç
-VPN was down), and the trained heads live only there, under
-`results/personal_adapter/artifacts/`. What is finished is the whole path: the
-exporter, the Go serving mode, the two job wrappers, and a mechanism check that
-runs the encrypted path start to finish on vectors of the right shape. What is
-missing is one `sbatch` on the real artifacts. The two commands are at the bottom.
+**Thirty-two queries out of thirty-two agree.** The label the querier decrypts
+after the encrypted serving path is the label the plaintext head gives, on every
+query of both servable arrangements, at ring degree 2^15 and scale 2^45 with a
+ten-party quorum. There were no disagreements. Data in `real_query.csv`.
+
+VALAR jobs, 2026-09-02: **1618537** wrote the exports (GPU, 23 s), **1618540**
+answered arrangement A and **1618541** arrangement B (CPU, 11 min each, on the
+`ai` partition).
+
+| arrangement | queries | agree | gamma | smallest scaled margin | largest index error |
+|---|---|---|---|---|---|
+| A, shared head on the bare backbone | 16 | 16 | 0.18076980 | 0.006771 | 4.3e-08 |
+| B, shared head over client 0's adapter | 16 | 16 | 0.08636835 | 0.046024 | 3.2e-08 |
+
+Both read the recorded artifact `ag_news_s42.pt` (roberta-base, N=10, alpha=0.1,
+K=200, C=4, d=768), sixteen test examples drawn at random per arrangement.
+
+Per query, at N=10: about 5.5 s to apply the encrypted head, about 34 s for the
+encrypted argmax at 11 collective refreshes, and about 0.6 s to key-switch the
+label to the querier. Forty seconds in total, which is the tracked-index cost of
+`argmax_index.csv` plus the head application the earlier benchmarks omitted.
 
 ## What the path does
 
 The rest of `results/fhe_serve/` measures the cryptographic cost on synthetic
 vectors: a random head, uniform logits, and whatever top-1/top-2 gap the seed
 produced. None of it says the encrypted path answers a real query the way the
-plaintext model does. This directory is for that comparison.
+plaintext model does. This directory is that comparison.
 
 1. `jobs/fhe_export_head.py` rebuilds the served head (W, b) from a recorded
    artifact with `head_of`, computes real test features under the same frozen
@@ -47,36 +62,39 @@ every row. It is never tuned per query. Setting it in a deployment needs a publi
 bound on the head norm, which this benchmark takes from the export instead; that
 is the one place where the benchmark knows something the serving party would not.
 
-## Mechanism check, on synthetic vectors — NOT a result
+## What the run does and does not establish
 
-`mechanism_check_synthetic.csv` is the path running end to end on a random head
-at the real shape (C=4, d=768) with three random queries, N=3, ring degree 2^15,
-scale 2^45, on an Apple-silicon laptop. It exists to show the code works, not to
-say anything about the method. **Do not cite it and do not put it in the paper.**
+It establishes that the circuit resolved every margin it was given. The hardest
+case was arrangement A on test example 3257: a plaintext top-1/top-2 gap of
+0.037456, which gamma takes to 0.006771, decoded to an index within 3.0e-08 of
+the integer. That is tighter than any gap in the synthetic index runs of
+`argmax_index.csv`, whose smallest was 0.006242.
 
-Three of three queries agreed. The index decoded to within 4e-8 of an integer in
-every case, including one query whose plaintext margin was 7.1e-4 and whose
-scaled margin was 2.6e-4. Head application took about 2.0 s, the encrypted argmax
-about 8.2 s and the key switch to the querier about 0.09 s, at 11 collective
-refreshes per query.
+It does not establish where the circuit fails, because nothing failed. The
+resolution limit is bounded from below by 0.006771 and is not bounded from above
+by this run.
 
-## To finish it
+The encrypted answers say nothing about accuracy. Arrangement B answers class 2
+on thirteen of its sixteen queries and gets half of them right, which is a
+plaintext property of client 0's adapter on a Dirichlet shard at alpha=0.1, not a
+property of the encryption. Read `plaintext_label` against `true_label` for that,
+and `encrypted_label` against `plaintext_label` for what this directory measures.
+
+## Reproducing
 
 ```sh
-# VALAR, once the VPN is up
 cd /scratch/hkanpak21/HE_IFD
 git fetch origin master && git checkout origin/master -- jobs fhe scripts
-sbatch jobs/fhe_export_head.sh ag_news 42          # GPU, minutes
+sbatch jobs/fhe_export_head.sh ag_news 42          # GPU
 sbatch jobs/fhe_serve_real.sh \
   /scratch/hkanpak21/HE_IFD/results/fhe_serve/real_query/ag_news_s42_A.json
 ```
 
 The second job is CPU-only and has no `--gres`, so it schedules beside GPU work.
-It exits non-zero if any query disagrees. At C=4, N=10 and ring degree 2^15 the
-recorded tracked-index cost is about 32 s per query, so sixteen queries is about
-nine minutes.
+It exits non-zero if any query disagrees. The exports themselves are not
+committed: each is about 0.34 MB of float64 features and regenerates from the
+artifact in under a minute.
 
-The run writes its CSV to the `.out` log and its JSON to
-`<export>_answers.json`. Paste the CSV block into `real_query.csv` here and
-replace this section with the count of queries that agreed, out of how many, and
-the margin at which any disagreement occurred.
+`mechanism_check_synthetic.csv` is the same path on a random head at the real
+shape, run on a laptop before the artifacts were reachable. It is a code check,
+not a result. Do not cite it.

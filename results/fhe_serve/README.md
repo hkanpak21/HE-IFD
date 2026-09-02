@@ -107,3 +107,20 @@ degrades only where the maximum itself does.
 control, against +15% to +51%), it needs no threshold, and it needs no extra rotation
 keys. The one-hot route needs Galois keys for the negative power-of-two steps as well
 as the positive ones, which doubles the rotation-key setup, seven keys to fourteen.
+
+## Job 5 — one real query, end to end, against a real trained head
+
+Everything above runs on synthetic vectors, so none of it says the encrypted path
+answers a real query the way the plaintext model does. `real_query/` does.
+`jobs/fhe_export_head.py` rebuilds the served head from the recorded artifact
+`ag_news_s42.pt` and computes real test features under the same frozen backbone;
+`fhe/serve_real.go` (`-serve-real`) encrypts a feature vector, applies the
+encrypted head, takes the argmax index under encryption and key-switches the
+label to the querier, who alone decrypts it.
+
+**Thirty-two of thirty-two queries agree with the plaintext label**, sixteen on
+each servable arrangement, at N=10, ring degree 2^15 and scale 2^45. VALAR jobs
+1618537 (export), 1618540 and 1618541. The hardest margin resolved was 0.006771
+after the public logit scale, tighter than any gap in `argmax_index.csv`. Per
+query: about 5.5 s to apply the head, 34 s for the argmax at 11 collective
+refreshes, 0.6 s to reach the querier. See [real_query/README.md](real_query/README.md).
