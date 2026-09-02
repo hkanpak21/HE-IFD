@@ -33,8 +33,10 @@ THE ATTACK
 2. For a candidate (x, y), take the direction that most reduces the margin of
    class y on the surrogates, which for a linear head is the difference between
    the row of y and the row of its nearest competitor.
-3. Choose one step size from the surrogates: the smallest that flips a
-   surrogate non-member and not a surrogate member.
+3. Choose one step size on the coalition's OWN data, where it knows for each
+   surrogate which examples that surrogate trained on. Pick the step that best
+   separates held-in survival from held-out survival. Calibrating on the
+   candidates instead would need the answer the attack is looking for.
 4. Submit ONE query at the perturbed point. Predict member if the label is
    still y.
 
