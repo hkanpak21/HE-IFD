@@ -123,4 +123,7 @@ each servable arrangement, at N=10, ring degree 2^15 and scale 2^45. VALAR jobs
 1618537 (export), 1618540 and 1618541. The hardest margin resolved was 0.006771
 after the public logit scale, tighter than any gap in `argmax_index.csv`. Per
 query: about 5.5 s to apply the head, 34 s for the argmax at 11 collective
-refreshes, 0.6 s to reach the querier. See [real_query/README.md](real_query/README.md).
+refreshes, 0.6 s to reach the querier, which is the cost of the refresh mechanism
+and not of the server-side bootstrapping Table V reports. Data in
+[real_query.csv](real_query.csv), written up in
+[real_query_README.md](real_query_README.md).
