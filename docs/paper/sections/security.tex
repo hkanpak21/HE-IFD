@@ -407,6 +407,23 @@ $0.01$ to between $0.009$ and $0.017$. Extraction costs the attacker queries and
 returns nothing, which is what \cref{prop:c2c} predicts and what no published
 measurement had shown.}
 
+\tronly{The strongest label-only attack we found does no better, and it fails for
+a reason worth naming. OSLO crafts one query per candidate rather than reading a
+statistic off a model, and it reports a true-positive rate of $6.7$ per cent at a
+false-positive rate of $0.001$ on CIFAR-100 where the previous best label-only
+attack reports $0.3$~\cite{peng2024oslo}. Our serving interface is more exposed to
+it than an ordinary one, because a client uploads its own encrypted feature vector
+and \cref{thm:malicious} lets a coalition deviate in the queries it asks, so the
+crafted point enters directly. Over eighteen cells the attack reaches an area
+under the curve between $0.47$ and $0.52$.}
+
+\tronly{The reason sits in the attack's own calibration. A coalition chooses its
+one perturbation on data it holds, where it knows for every surrogate which
+examples that surrogate trained on. The best separation it achieves there is
+$0.065$ at most and below $0.01$ in most cells. The crafted query does not fail to
+transfer to the served head. The difference in margin between a member and a
+non-member is not there to transfer.}
+
 \tronly{We report one figure we do not treat as a result. Predicting membership
 from whether the head classifies an example correctly reaches an area under the
 curve of $0.72$ on Banking77. Our holdout reserves at least one example of every

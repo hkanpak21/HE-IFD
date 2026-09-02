@@ -1802,3 +1802,30 @@ winning arrangement in all twelve cells of the grid, and the per-class totals it
 combines come back with a relative error near $10^{-8}$. \Cref{sec:exp-select}
 reports which arrangement the rule chooses and how often that choice is right;
 this paragraph reports only that the encrypted evaluation reproduces it.
+%%
+# 2026-09-02. OSLO, the third attack surface, jobs 1618542 to 1618544. It crafts
+# one query per candidate rather than reading a statistic, so it is a different
+# mechanism from the two already reported, and our interface is more exposed to
+# it because Theorem 3 lets a coalition deviate in the queries it asks. Record at
+# results/oslo_serving/results.csv. Report only. Paragraph 1 of 2.
+The strongest label-only attack we found does no better, and it fails for
+a reason worth naming. OSLO crafts one query per candidate rather than reading a
+statistic off a model, and it reports a true-positive rate of $6.7$ per cent at a
+false-positive rate of $0.001$ on CIFAR-100 where the previous best label-only
+attack reports $0.3$~\cite{peng2024oslo}. Our serving interface is more exposed to
+it than an ordinary one, because a client uploads its own encrypted feature vector
+and \cref{thm:malicious} lets a coalition deviate in the queries it asks, so the
+crafted point enters directly. Over eighteen cells the attack reaches an area
+under the curve between $0.47$ and $0.52$.
+%%
+# 2026-09-02, as above. Paragraph 2 of 2, and the part worth having. The
+# coalition calibrates on its own data where it knows the truth, and the best
+# separation available there is 0.065 at most. The attack does not fail in
+# transfer; the signal is not there to transfer. A first run reported chance for
+# the wrong reason, with the step size never chosen, and was discarded.
+The reason sits in the attack's own calibration. A coalition chooses its
+one perturbation on data it holds, where it knows for every surrogate which
+examples that surrogate trained on. The best separation it achieves there is
+$0.065$ at most and below $0.01$ in most cells. The crafted query does not fail to
+transfer to the served head. The difference in margin between a member and a
+non-member is not there to transfer.
