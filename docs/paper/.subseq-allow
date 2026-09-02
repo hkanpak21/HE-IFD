@@ -1720,3 +1720,39 @@ published counterpart. Substituting it, and leaving the local evaluation on the 
 $48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
 against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. The local evaluation,
 which we did not port, is then the larger half of a query above four classes.
+%%
+# 2026-09-02. One query answered end to end on a real trained head, jobs 1618537,
+# 1618540 and 1618541. Every serving benchmark before this ran on synthetic
+# vectors, which CLAUDE.md carried as open work. 32 of 32 agree over both
+# arrangements. Record at results/fhe_serve/real_query.csv. Report only.
+# Paragraph 1 of 2.
+\paragraph{One query, end to end, on a real head} Every figure above runs
+on synthetic vectors, so none of them says the encrypted path answers a real query
+the way the plaintext model does. We ran that comparison. On the recorded AG-News
+head at seed $42$, ten parties, ring degree $2^{15}$ and scale $2^{45}$, thirty-two
+encrypted answers over the two servable arrangements all equal the plaintext
+answers. The hardest case has a top-1 to top-2 gap of $0.037$, which the scaling
+takes to $0.0068$, and its decoded index sits within $3\times10^{-8}$ of the
+integer. Nothing failed, so the resolution limit is bounded below by that gap and
+not above.
+%%
+# 2026-09-02, as above. Paragraph 2 of 2. The encrypted path reproduces the
+# head's own mistakes, which is the behaviour to want and is worth saying so a
+# reader does not read the agreement figure as an accuracy figure.
+Two of the sixteen answers under the shared arrangement are queries the
+head itself gets wrong, and the encrypted path reproduces those errors. That is
+what a faithful serving path does. It agrees with the plaintext computation, not
+with the ground truth.
+%%
+# 2026-09-02. The serving path carries a public scaling constant that our runs
+# fix from the exported head. A deployment cannot, because the head is a
+# ciphertext, so it needs a public bound on the head norm. Found by the agent
+# that built the real-query path; we had not recorded it anywhere. Report only.
+\paragraph{A public constant in the serving path} The serving circuit
+compares logits through a polynomial approximation of the sign, and that
+approximation resolves a fixed absolute margin. The argmax does not change when
+every logit is multiplied by a positive constant, but the margin the circuit must
+resolve does. Our runs fix one such constant from the exported head. A deployment
+cannot do that, because the head is a ciphertext, so it needs a public bound on
+the head's norm instead. \Cref{sec:security} does not treat that bound as secret,
+and we do not measure what a loose one costs.

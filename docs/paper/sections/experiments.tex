@@ -468,6 +468,21 @@ $48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
 against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. The local evaluation,
 which we did not port, is then the larger half of a query above four classes.}
 
+\tronly{\paragraph{One query, end to end, on a real head} Every figure above runs
+on synthetic vectors, so none of them says the encrypted path answers a real query
+the way the plaintext model does. We ran that comparison. On the recorded AG-News
+head at seed $42$, ten parties, ring degree $2^{15}$ and scale $2^{45}$, thirty-two
+encrypted answers over the two servable arrangements all equal the plaintext
+answers. The hardest case has a top-1 to top-2 gap of $0.037$, which the scaling
+takes to $0.0068$, and its decoded index sits within $3\times10^{-8}$ of the
+integer. Nothing failed, so the resolution limit is bounded below by that gap and
+not above.}
+
+\tronly{Two of the sixteen answers under the shared arrangement are queries the
+head itself gets wrong, and the encrypted path reproduces those errors. That is
+what a faithful serving path does. It agrees with the plaintext computation, not
+with the ground truth.}
+
 \tronly{\paragraph{Where this sits against published work} No published system
 takes an argmax under encryption in a multiparty scheme, so there is no matched
 number to compare with. The nearest match on the primitive is NEXUS, which
@@ -885,6 +900,15 @@ is a real restriction. A shared adapter inside the backbone would adapt the
 representation for every participant rather than only for its owner. Serving such an adapter reduces to secure transformer
 inference (\cref{sec:related-inference}) and composes with that literature at its
 cost.}
+
+\tronly{\paragraph{A public constant in the serving path} The serving circuit
+compares logits through a polynomial approximation of the sign, and that
+approximation resolves a fixed absolute margin. The argmax does not change when
+every logit is multiplied by a positive constant, but the margin the circuit must
+resolve does. Our runs fix one such constant from the exported head. A deployment
+cannot do that, because the head is a ciphertext, so it needs a public bound on
+the head's norm instead. \Cref{sec:security} does not treat that bound as secret,
+and we do not measure what a loose one costs.}
 
 \tronly{\paragraph{Bounds on model extraction} The query
 allowance of \cref{sec:exp-leak} is an operational control. Where honest use is
