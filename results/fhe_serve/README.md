@@ -188,3 +188,61 @@ as the number of sequential sign circuits, 2NC is long: the comparisons within a
 round are packed across slots and across held-out examples, so the circuit
 evaluates 321 of them, not 4,000. Neither count is the cost. The cost is two hours
 and 145 GiB, once, at the largest configuration measured.
+
+## Job 7 — the argmax INDEX under server-side bootstrapping, MEASURED
+
+Job 4 measured the index with its levels restored by a collective refresh. The
+paper specifies the other arrangement, bootstrapping keys generated once and the
+serving party restoring levels on its own, which is what Table V reports for the
+value-only tournament. The index had never been measured under that mechanism.
+This measures it ([serve_index_btp.go](../../fhe/serve_index_btp.go),
+`-serve-index-btp`), N=10, evaluation ring 2^15, bootstrapping ring 2^16, residual
+chain 55 + 8x45 at max level 8, on the same seeded logits, so the `tournament_max`
+rows reproduce [argmax_tournament_btp.csv](argmax_tournament_btp.csv) as a
+control. Data in [argmax_index_btp.csv](argmax_index_btp.csv). Job 1618538 on
+VALAR `ai`, CPU only, 3:15:09 wall clock.
+
+The control reproduces. Bootstrap counts match the recorded run exactly at every
+class count, 17, 26, 35, 62 and 62, and the latencies land 2 to 5 per cent below
+it, 391.9 s against 400.8 s at four classes and 1410.2 s against 1468.3 s at a
+hundred. The bootstrapping keys are the same 8,904.15 MiB and take 44.6 s to
+generate.
+
+| C | control (max only) | one-hot (tau 1e-4) | tracked | bootstraps: control / one-hot / tracked |
+|---|---|---|---|---|
+| 4   | 391.9 s  | 597.1 s (+52.4%)  | 409.2 s (+4.4%)  | 17 / 26 / 18 |
+| 6   | 590.6 s  | 794.2 s (+34.5%)  | 633.5 s (+7.3%)  | 26 / 35 / 28 |
+| 14  | 797.7 s  | 1001.5 s (+25.6%) | 859.1 s (+7.7%)  | 35 / 44 / 38 |
+| 77  | 1406.8 s | 1611.4 s (+14.5%) | 1540.3 s (+9.5%) | 62 / 71 / 68 |
+| 100 | 1410.2 s | 1615.9 s (+14.6%) | 1543.0 s (+9.4%) | 62 / 71 / 68 |
+
+**The relative price of the index is the same under either mechanism.** The
+tracked route costs +4.4 per cent at four classes and +9.4 per cent at a hundred
+here, against +4.1 and +9.2 under collective refresh. The one-hot route costs
++52 to +15 per cent here, against +51 to +15. The mechanism that restores the
+level changes the absolute latency by a factor of thirteen and leaves the index
+premium where it was.
+
+The one-hot route's extra cost is a constant nine bootstraps, 204 to 206 s at
+every class count, because it evaluates one further step circuit whose depth does
+not depend on C. The tracked route's extra cost is one bootstrap per tournament
+round beyond the first, so it grows with log C and stays below ten per cent.
+
+**One case fails.** At C=77 with tau=1e-3 the one-hot route returns 31.707321
+where the true index is 22, and the decoded one-hot mass is 1.571019 rather than
+1, so more than one slot carries the indicator. The same case is exact under
+collective refresh, and exact here at tau=1e-4. C=77 has the smallest top-1/top-2
+gap in the sweep, 0.006242, and a larger tau moves the runner-up closer to the
+step circuit's decision boundary, from 3.07e-03 to 2.62e-03. The residual chain
+here is 8 levels where the collective-refresh chain is 14, so the sign circuit
+resolves less finely and that margin is no longer enough. The one-hot route's
+usable tau window is narrower under server-side bootstrapping than the earlier
+measurement suggested, and the paper should not quote a tau without the chain it
+was measured on.
+
+**The tracked route stays exact everywhere, with less headroom.** Its index
+absolute error runs from 1.98e-05 at four classes to 9.46e-03 at seventy-seven,
+against 2.7e-09 to 3.0e-06 under collective refresh. The rounding margin is 0.5,
+so the worst case still clears it by a factor of 54, but five orders of magnitude
+of headroom are gone. It remains the route to use: no threshold, no extra sign
+evaluation, and the cheaper of the two at every class count.
