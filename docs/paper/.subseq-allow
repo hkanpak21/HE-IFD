@@ -1438,14 +1438,12 @@ moves.
 # which the cryptography has already failed, and that the measurement bounds
 # every adversary the protocol admits from above. Report only.
 # Paragraph 8 of 8.
-None of this makes the encryption idle, and the reading that it does
-inverts the argument. The encryption is what stops any party from holding the
-trained result, which \cref{sec:intro} gives as a requirement in its own right.
-It is also what removes the per-round updates that carry the strongest published
-attacks on federated learning~\cite{zhu2025fedmia}. What it leaves open, by
-design, is a client asking for labels. These measurements close that last
-channel, and they close it at the point where the cryptography is assumed to have
-failed altogether.
+Read together, the three surfaces say one thing. Even where extraction
+has already succeeded, and even where the head is simply given away, the
+membership attack of Carlini et al.~\cite{carlini2022membership} stays near
+chance. The head is a linear map fitted for two hundred steps over thousands of
+examples per class, and the coverage-weighted merge gives a coalition no row it
+can read.
 %%
 # 2026-08-31. The extraction rule was stated as a law in the head size alone.
 # It is a law in the fidelity target too: our own three tasks fit
@@ -1680,3 +1678,45 @@ ring-degree doublings and the argmax itself separate the first from our figure,
 and the second evaluates a whole network where we evaluate one linear map and
 then compare its outputs. The cost we report is the cost of refusing to release
 the scores.
+%%
+# 2026-08-31, Halil's ruling after I checked the CryptPEFT paper directly. It
+# says the model user decrypts "the final inference result", the string argmax
+# appears nowhere in it, and the classifier sits inside the protected adapter,
+# so what the querier reconstructs is the adapter's output. Our sentence said
+# "the predicted label alone", which the paper does not support. Submission form.
+CryptPEFT divides the work as we do. A public frozen backbone runs in plaintext on the client, the
+client encrypts the resulting features, only the adapter is evaluated under
+encryption, and the client receives the adapter's
+output~\cite{xia2026cryptpeft}. It is a
+two-party protocol, the trained unit is the provider's plaintext, and there is no
+training protocol.
+%%
+# 2026-08-31, as above. Report form of the same correction.
+CryptPEFT divides the work as we do and reaches the opposite conclusion about who
+holds the secret. A public frozen backbone runs in plaintext on the client, the
+client encrypts the resulting features, only the adapter is evaluated under
+encryption, and the client receives the adapter's
+output~\cite{xia2026cryptpeft}. Confining encrypted computation to a small unit
+after the representation is the motivation for our design as well. It is a
+two-party protocol, the trained unit is the provider's plaintext, and there is no
+training protocol, so it establishes that the serving arrangement is practical
+without addressing how mutually distrustful parties would build the unit at all.
+It reports one inference in $2.26$\,s on CIFAR-100. It is two-party and the
+adapter is one party's plaintext, so it evaluates no ciphertext-by-ciphertext
+product and restores no levels.
+%%
+# 2026-08-31. Phantom publishes no bootstrapping benchmark and no GPU library we
+# found restores levels under collectively generated keys, so our 2.28 s H100
+# figure has no published counterpart. Saying so forestalls a comparison against
+# single-key GPU bootstrapping, which is not the same operation. Report only.
+The circuit is bootstrap-bound, so one number sets the accelerated figure.
+Level restoration is $97$ per cent of a query and costs $23.1$\,s on one core at
+every label-space size, against the $28.6$\,s a full-slot bootstrap costs in
+OpenFHE at the same ring degree and $29$ levels~\cite{agullo2025fideslib}. We measure one restoration under Phantom on an NVIDIA
+H100 at $2.28$\,s, at the ring degree $2^{16}$ the protocol restores at, a factor
+of ten. Phantom publishes no bootstrapping benchmark, and no GPU library we found
+restores levels under collectively generated keys, so this figure has no
+published counterpart. Substituting it, and leaving the local evaluation on the processor, gives
+$48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
+against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. The local evaluation,
+which we did not port, is then the larger half of a query above four classes.

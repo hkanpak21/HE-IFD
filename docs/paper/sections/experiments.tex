@@ -461,7 +461,9 @@ Level restoration is $97$ per cent of a query and costs $23.1$\,s on one core at
 every label-space size, against the $28.6$\,s a full-slot bootstrap costs in
 OpenFHE at the same ring degree and $29$ levels~\cite{agullo2025fideslib}. We measure one restoration under Phantom on an NVIDIA
 H100 at $2.28$\,s, at the ring degree $2^{16}$ the protocol restores at, a factor
-of ten. Substituting it, and leaving the local evaluation on the processor, gives
+of ten. Phantom publishes no bootstrapping benchmark, and no GPU library we found
+restores levels under collectively generated keys, so this figure has no
+published counterpart. Substituting it, and leaving the local evaluation on the processor, gives
 $48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
 against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. The local evaluation,
 which we did not port, is then the larger half of a query above four classes.}

@@ -228,16 +228,16 @@ label is.}
 
 \paperonly{CryptPEFT divides the work as we do. A public frozen backbone runs in plaintext on the client, the
 client encrypts the resulting features, only the adapter is evaluated under
-encryption, and the client receives the predicted label
-alone~\cite{xia2026cryptpeft}. It is a
+encryption, and the client receives the adapter's
+output~\cite{xia2026cryptpeft}. It is a
 two-party protocol, the trained unit is the provider's plaintext, and there is no
 training protocol.}
 
 \tronly{CryptPEFT divides the work as we do and reaches the opposite conclusion about who
 holds the secret. A public frozen backbone runs in plaintext on the client, the
 client encrypts the resulting features, only the adapter is evaluated under
-encryption, and the client receives the predicted label
-alone~\cite{xia2026cryptpeft}. Confining encrypted computation to a small unit
+encryption, and the client receives the adapter's
+output~\cite{xia2026cryptpeft}. Confining encrypted computation to a small unit
 after the representation is the motivation for our design as well. It is a
 two-party protocol, the trained unit is the provider's plaintext, and there is no
 training protocol, so it establishes that the serving arrangement is practical
@@ -273,7 +273,7 @@ GH-OFL~\cite{turazza2026ghofl}       & one  & none & yes      & the model \\
 FedAUXfdp~\cite{hoech2022fedauxfdp}  & one  & DP   & yes      & the model \\
 POSEIDON~\cite{sav2021poseidon}      & many & HE   & no       & the prediction \\
 slytHErin~\cite{intoci2023slytherin} &      & HE   & no       & scores \\
-CryptPEFT~\cite{xia2026cryptpeft}    &      & 2PC  & provider & label \\
+CryptPEFT~\cite{xia2026cryptpeft}    & many & 2PC  & provider & scores \\
 \midrule
 HE-OFT                               & one  & HE   & no       & label \\
 \bottomrule

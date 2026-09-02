@@ -457,14 +457,12 @@ And the shadow federations vary who trains on what while holding the coverage
 pattern fixed, so they say nothing about how leakage moves when the partition
 moves.}
 
-\tronly{None of this makes the encryption idle, and the reading that it does
-inverts the argument. The encryption is what stops any party from holding the
-trained result, which \cref{sec:intro} gives as a requirement in its own right.
-It is also what removes the per-round updates that carry the strongest published
-attacks on federated learning~\cite{zhu2025fedmia}. What it leaves open, by
-design, is a client asking for labels. These measurements close that last
-channel, and they close it at the point where the cryptography is assumed to have
-failed altogether.}
+\tronly{Read together, the three surfaces say one thing. Even where extraction
+has already succeeded, and even where the head is simply given away, the
+membership attack of Carlini et al.~\cite{carlini2022membership} stays near
+chance. The head is a linear map fitted for two hundred steps over thousands of
+examples per class, and the coverage-weighted merge gives a coalition no row it
+can read.}
 
 \tronly{\subsection{What a Decryption Carries}
 \label{sec:cpad}}
