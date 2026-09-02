@@ -508,6 +508,27 @@ of \cref{sec:intro}. No intermediate training artifact is ever exposed. It is no
 silent. Key generation precedes it, selection costs at most $2\Nc\Cc$ encrypted comparisons, once, and serving
 costs traffic per query.
 
+\tronly{We measured what that selection actually costs, because the comparison
+count alone does not say. At five clients and four classes it takes $400$\,s and
+moves $3.4$\,GiB. At twenty clients and a hundred classes it takes $7111$\,s and
+moves $145.4$\,GiB. The federation pays this once, before it answers anything,
+and no part of it recurs per query.}
+
+\tronly{The bound holds and the cost sits elsewhere. Our implementation evaluates
+$321$ sequential sign circuits at twenty clients and a hundred classes, where
+$2\Nc\Cc$ allows $4000$ comparisons. What the count does not carry is depth. Each
+comparison under CKKS is a polynomial approximation of the sign, every such
+approximation consumes levels, and restoring them is $99.8$ per cent of the
+traffic above. This is the price the current comparison literature
+charges~\cite{cheon2019comparison,lee2021minimax}, and we pay it rather than
+decrypt the two scores.}
+
+\tronly{The selection is correct at every point we measured. It decodes the
+winning arrangement in all twelve cells of the grid, and the per-class totals it
+combines come back with a relative error near $10^{-8}$. \Cref{sec:exp-select}
+reports which arrangement the rule chooses and how often that choice is right;
+this paragraph reports only that the encrypted evaluation reproduces it.}
+
 \tronly{\begin{table}[t]
 \centering
 \caption{Communication at $\Nc=10$, on the fifteen-modulus chain at ring degree

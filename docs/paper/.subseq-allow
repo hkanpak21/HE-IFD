@@ -1769,3 +1769,36 @@ $2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
 feature dimension, and in each case fidelity $0.90$ costs
 between three and five times that number of queries. A deployment can therefore set its
 allowance from $\Cc$, $d$ and the fidelity it concedes. \trsee{sec:experiments} gives the extraction study in full.
+%%
+# 2026-09-02, Halil's ruling: the selection cost is discussed in the report and
+# not in the submission, because it is not a query cost. Job 1618539 measured it
+# for the first time; the submission's half-clause gave no time and no traffic.
+# Record at results/fhe_serve/selection_cost.csv. Paragraph 1 of 3, the numbers.
+We measured what that selection actually costs, because the comparison
+count alone does not say. At five clients and four classes it takes $400$\,s and
+moves $3.4$\,GiB. At twenty clients and a hundred classes it takes $7111$\,s and
+moves $145.4$\,GiB. The federation pays this once, before it answers anything,
+and no part of it recurs per query.
+%%
+# 2026-09-02, as above. Paragraph 2 of 3. Halil's framing: this is a cost we
+# must pay given the best comparison circuit the literature offers. The 2NC
+# bound is not violated, 321 circuits against 4000 allowed; what the count does
+# not carry is depth, and restoring it is 99.8 per cent of the traffic.
+The bound holds and the cost sits elsewhere. Our implementation evaluates
+$321$ sequential sign circuits at twenty clients and a hundred classes, where
+$2\Nc\Cc$ allows $4000$ comparisons. What the count does not carry is depth. Each
+comparison under CKKS is a polynomial approximation of the sign, every such
+approximation consumes levels, and restoring them is $99.8$ per cent of the
+traffic above. This is the price the current comparison literature
+charges~\cite{cheon2019comparison,lee2021minimax}, and we pay it rather than
+decrypt the two scores.
+%%
+# 2026-09-02, as above. Paragraph 3 of 3. The good half: the encrypted
+# evaluation decodes the right winner in all twelve cells and the per-class
+# totals are accurate to about 1e-8. Separated from Section V-D, which reports
+# whether the rule itself chooses correctly.
+The selection is correct at every point we measured. It decodes the
+winning arrangement in all twelve cells of the grid, and the per-class totals it
+combines come back with a relative error near $10^{-8}$. \Cref{sec:exp-select}
+reports which arrangement the rule chooses and how often that choice is right;
+this paragraph reports only that the encrypted evaluation reproduces it.
