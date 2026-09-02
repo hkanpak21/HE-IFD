@@ -100,6 +100,8 @@ func main() {
 		serveTournamentFlag = flag.Bool("serve-tournament", false, "run the Serve-mode LOG-DEPTH tournament argmax (SIMD-packed rotate-and-Max; the QuickMax optimization)")
 		serveIndexFlag      = flag.Bool("serve-index", false, "measure the argmax INDEX under encryption, by a one-hot indicator and by an index carried through the tournament, against the value-only tournament as control")
 		serveBtpFlag        = flag.Bool("serve-btp", false, "run the tournament argmax with level restoration done by the serving party alone, under collectively generated bootstrapping keys")
+		serveIndexBtpFlag   = flag.Bool("serve-index-btp", false, "measure the argmax INDEX with level restoration done by the serving party alone, so the index is priced under the mechanism the paper describes")
+		selectionCostFlag   = flag.Bool("selection-cost", false, "measure the selection step: each client scores both arrangements on its held-out data under encryption, the server combines the encrypted scores, and one value is decrypted")
 		btpKeyFlag          = flag.Bool("btp-keys", false, "measure the one-time bootstrapping key material that lets the serving party refresh locally")
 		commCostFlag        = flag.Bool("comm-cost", false, "measure the communication the protocol needs: key-generation shares, ciphertexts, key-switching shares, and refresh shares")
 		ringSweepFlag       = flag.Bool("ring-sweep", false, "measure the per-operation cost across ring degrees, so the GPU comparison can be made at a matched ring")
@@ -151,6 +153,16 @@ func main() {
 	// Level restoration by the serving party alone. See serve_btp.go.
 	if *serveBtpFlag {
 		runServeBtpSuite(*jsonOut)
+		return
+	}
+	// The index, priced under server-side bootstrapping. See serve_index_btp.go.
+	if *serveIndexBtpFlag {
+		runIndexBtpSuite(*jsonOut)
+		return
+	}
+	// Choosing an arrangement without decrypting either. See protocol_cost.go.
+	if *selectionCostFlag {
+		runSelectionCost(*jsonOut)
 		return
 	}
 	// The operations encrypted serving adds over Release-mode aggregation.

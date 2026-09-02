@@ -634,7 +634,7 @@ func printIndexRow(r indexRow) {
 	if r.Tau != 0 {
 		fmt.Printf("   tau                  : %g\n", r.Tau)
 	}
-	fmt.Printf("   collective refreshes : %d  (extra %d)\n", r.Refreshes, r.ExtraRefresh)
+	fmt.Printf("   level restorations   : %d  (extra %d)\n", r.Refreshes, r.ExtraRefresh)
 	fmt.Printf("   total                : %.1f ms  (extra %.1f ms)\n", r.TotalMs, r.ExtraMs)
 	fmt.Printf("     in refreshes       : %.1f ms\n", r.RefreshMs)
 	fmt.Printf("     local eval         : %.1f ms\n", r.LocalMs)
