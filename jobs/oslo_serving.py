@@ -156,10 +156,12 @@ def run(task, seed, rows):
         pool = np.concatenate([np.concatenate([np.asarray(tr_parts[j]),
                                                np.asarray(va_parts[j])])
                                for j in coal])
-        surr = []
+        surr, surr_in = [], []
         for _ in range(SURR):
             idx = srng.choice(pool, max(32, len(pool) // 2), replace=False)
             surr.append(train_head(F[idx], y[idx], C, t0W, t0b))
+            surr_in.append(np.isin(pool, idx))
+        surr_in = np.array(surr_in)                     # (SURR, len(pool))
         print(f"    {task} s{seed} {arrangement}: {SURR} surrogates from "
               f"{len(pool)} coalition examples", flush=True)
 
@@ -174,20 +176,34 @@ def run(task, seed, rows):
                 v += d
             dirs[i] = v / (np.linalg.norm(v) + 1e-12)
 
-        # the step size is common, picked where the surrogates separate their
-        # own members from their own non-members best
-        best_t, best_sep = STEPS[1], -1.0
-        smemb = np.isin(cand, np.concatenate([np.asarray(tr_parts[j]) for j in coal]))
+        # the step size is common and the coalition calibrates it on its own
+        # data, where it knows for every surrogate which examples that surrogate
+        # trained on. Calibrating on the candidates would need the answer the
+        # attack is trying to find.
+        cal = srng.choice(len(pool), min(600, len(pool)), replace=False)
+        Fcal, ycal, incal = F[pool[cal]], y[pool[cal]], surr_in[:, cal]
+        dcal = np.zeros_like(Fcal)
+        for i in range(len(cal)):
+            v = np.zeros(Fcal.shape[1])
+            for Ws, _ in surr:
+                d, _ = margin_direction(Ws, int(ycal[i]))
+                v += d
+            dcal[i] = v / (np.linalg.norm(v) + 1e-12)
+        best_t, best_sep = STEPS[1], -np.inf
         for t in STEPS[1:]:
-            keep_all = []
-            for Ws, bsv in surr:
-                z = (Fc + t * dirs) @ Ws.T + bsv
-                keep_all.append(np.argmax(z, axis=1) == yc)
-            k = np.mean(keep_all, axis=0)
-            if smemb.sum() and (~smemb).sum():
-                sep = float(k[smemb].mean() - k[~smemb].mean())
-                if sep > best_sep:
-                    best_sep, best_t = sep, t
+            surv = np.array([((Fcal + t * dcal) @ Ws.T + bsv).argmax(1) == ycal
+                             for Ws, bsv in surr])          # (SURR, len(cal))
+            num_in = (surv & incal).sum(); den_in = incal.sum()
+            num_out = (surv & ~incal).sum(); den_out = (~incal).sum()
+            if den_in == 0 or den_out == 0:
+                continue
+            sep = float(num_in / den_in - num_out / den_out)
+            if sep > best_sep:
+                best_sep, best_t = sep, t
+        if not np.isfinite(best_sep):
+            print(f"  [skip] {task} s{seed} {arrangement}: no calibration signal",
+                  flush=True)
+            continue
 
         # step 4: ONE query per candidate against the served head
         z = (Fc + best_t * dirs) @ W.T + b
