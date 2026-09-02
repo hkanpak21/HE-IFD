@@ -1317,3 +1317,132 @@ representation~\cite{fedheonn2023}. What remains unaddressed is a protocol that
 exposes no training-time quantity, that exchanges anything at all only once, and
 that never discloses the model even to the parties that built it. \Cref{sec:method}
 works out what that forces, and the rest of the paper measures what it costs.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 1 of 8.
+\subsubsection{Measuring the cap}
+\label{sec:c2c-measured}
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 2 of 8.
+We measure $\delta_{\mathrm{wb}}$ and find it at chance. The adversary in
+\cref{prop:c2c} receives both shared heads in plaintext, so we give an attacker
+exactly that and run the likelihood-ratio membership attack of
+Carlini et al.~\cite{carlini2022membership} against it. We build $64$ shadow
+federations per cell, each one $\Nc$ clients training on half of their own
+examples followed by the merge of \cref{eq:aggregate}, and we test $2000$
+candidates over three tasks, three seeds and both arrangements. The attack
+reaches an area under the curve between $0.49$ and $0.53$, and a true-positive
+rate between $0.008$ and $0.023$ at a false-positive rate of $0.01$. A
+true-positive rate equal to the false-positive rate is chance.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 3 of 8.
+Handing the head over is a counterfactual, and that is the point of
+measuring there. No party ever holds either head, so this is the world in which
+the cryptography has already failed. \Cref{prop:c2c} says the query channel is no
+stronger than that world. Measuring the strongest adversary the proposition
+admits therefore bounds every adversary the protocol admits, and the bound is
+chance.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 4 of 8.
+A coalition that extracts a copy first does no better. We fit a copy of
+the head to $2\times10^{5}$ label-only answers, the largest budget of
+\cref{sec:exp-leak}, and attack the copy. The area under the curve moves to
+between $0.49$ and $0.50$, and the true-positive rate at a false-positive rate of
+$0.01$ to between $0.009$ and $0.017$. Extraction costs the attacker queries and
+returns nothing, which is what \cref{prop:c2c} predicts and what no published
+measurement had shown.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 5 of 8.
+We report one figure we do not treat as a result. Predicting membership
+from whether the head classifies an example correctly reaches an area under the
+curve of $0.72$ on Banking77. Our holdout reserves at least one example of every
+class a client holds, so held-out examples are richer in rare classes than
+trained ones, and that rule separates them for a reason that has nothing to do
+with membership. The likelihood-ratio attack calibrates each example against its
+own shadow distributions and does not inherit the confound.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 6 of 8.
+The coverage-weighted merge invites a sharper attack and does not yield
+to it. A class that one client alone holds takes its row from that client's
+displacement, with no averaging over the federation, and for a linear map with a
+bias the ratio of the row displacement to the bias displacement is a weighted
+mean of that client's features~\cite{phong2018privacy}. We compute that ratio for
+all $570$ class rows of the three tasks. It matches the closest example of its own
+class better than the closest example of another class by $0.012$ in cosine where
+one client holds the class, and by $0.006$ where six or more do, against an
+absolute cosine of $0.16$ and a random-direction baseline of $0.029$. The row
+points into the space the features occupy. It does not point at a class, and it
+does not point at a record.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 7 of 8.
+Two limits belong with these numbers. A thousand members resolve a
+true-positive rate no finer than $0.001$, so every figure we report at a
+false-positive rate of $0.001$ counts two to four examples rather than a rate.
+And the shadow federations vary who trains on what while holding the coverage
+pattern fixed, so they say nothing about how leakage moves when the partition
+moves.
+%%
+# 2026-08-31. The measured cap. delta_wb had no number and was the only
+# such quantity in the security section. Jobs 1617191 to 1617194 on VALAR,
+# records in results/mia_extracted/ and results/row_leakage/. Halil asked
+# that the framing motivate the encryption rather than appear to excuse it,
+# so the passage states that handing the head over is the counterfactual in
+# which the cryptography has already failed, and that the measurement bounds
+# every adversary the protocol admits from above. Report only.
+# Paragraph 8 of 8.
+None of this makes the encryption idle, and the reading that it does
+inverts the argument. The encryption is what stops any party from holding the
+trained result, which \cref{sec:intro} gives as a requirement in its own right.
+It is also what removes the per-round updates that carry the strongest published
+attacks on federated learning~\cite{zhu2025fedmia}. What it leaves open, by
+design, is a client asking for labels. These measurements close that last
+channel, and they close it at the point where the cryptography is assumed to have
+failed altogether.
