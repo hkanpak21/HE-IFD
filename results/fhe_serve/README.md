@@ -127,3 +127,64 @@ refreshes, 0.6 s to reach the querier, which is the cost of the refresh mechanis
 and not of the server-side bootstrapping Table V reports. Data in
 [real_query.csv](real_query.csv), written up in
 [real_query_README.md](real_query_README.md).
+
+## Job 6 — the cost of the selection step, MEASURED
+
+The paper states that selection "costs at most 2NC encrypted comparisons, once"
+and gives no measurement. This measures it
+([protocol_cost.go](../../fhe/protocol_cost.go), `-selection-cost`), over N in
+{5,10,20} and C in {4,14,77,100} at ring degree 2^15, on the same fifteen-modulus
+chain the argmax uses, with level restoration by collective refresh. Data in
+[selection_cost.csv](selection_cost.csv). Job 1618539 on VALAR `ai`, CPU only,
+44:54 wall clock.
+
+Each client scores both arrangements on its held-out data under encryption:
+reduce every held-out example's logits to their maximum by the serving
+tournament, test with one step circuit whether the true label's logit is that
+maximum, mask that slot with the client's own public label, and fold the
+per-example indicators into one encrypted per-class count vector. The server sums
+the N count vectors, applies the prior-weighted estimator with public scalars at
+depth one, compares the two encrypted scores, and the quorum decrypts one value.
+
+**A client's whole held-out set fits in one ciphertext.** One example per class
+occupies C blocks of 2^ceil(log2 C) slots, which is at most 16,384 slots at every
+class count the paper reports, so a client scores its entire held-out set with one
+tournament and one step circuit. Selection costs 2N encrypted argmaxes, not 2NC.
+
+| N | C | one client, one arrangement | selection, all 2N | refreshes | traffic |
+|---|---|---|---|---|---|
+| 5  | 4   | 38.8 s  | 6.7 min   | 144  | 3.4 GiB |
+| 5  | 100 | 103.7 s | 17.5 min  | 394  | 9.2 GiB |
+| 10 | 4   | 45.7 s  | 15.5 min  | 284  | 13.3 GiB |
+| 10 | 100 | 126.4 s | 42.4 min  | 784  | 36.5 GiB |
+| 20 | 4   | 63.9 s  | 42.9 min  | 564  | 52.6 GiB |
+| 20 | 100 | 177.3 s | 118.5 min | 1564 | 145.4 GiB |
+
+The score circuit is measured once per arrangement for one client and the 2N
+figure is computed from that rate, which is how the other per-operation costs in
+`protocol_cost.go` are reported. The server combine (0.16 to 0.50 s per
+arrangement), the final comparison (11.1 to 18.7 s) and the single threshold
+decryption (0.08 to 0.18 s) happen once for the federation and are measured as
+they stand.
+
+**Every cell decrypts the right winner**, indicator 1.000000 against a plaintext
+score gap of 0.33 to 0.75, and the encrypted per-class counts match the plaintext
+counts to a relative L2 error of 2.0e-09 to 1.2e-08.
+
+**The traffic is the refresh traffic.** Collective refresh shares are 98.2 to 99.8
+per cent of every cell's bytes, because each of the 2N score circuits refreshes 14
+to 39 times and each refresh collects a 4.75 MiB share from every client. The
+traffic therefore grows as N^2: 3.4 GiB at five clients and four classes, 145 GiB
+at twenty clients and a hundred. The count vectors themselves are 5.5 MiB each
+because the circuit leaves them near the top of the chain; a client that drops the
+level before uploading, which costs nothing since the server only sums them, would
+send 1.0 MiB instead.
+
+**Against the paper's count.** Read as the number of pairwise comparisons, 2NC is
+short by a factor of 2^ceil(log2 C): the equality test is one comparison per
+held-out example, but the maximum it compares against costs C-1 more. At N=20 and
+C=100 the circuit performs 512,001 pairwise comparisons where 2NC is 4,000. Read
+as the number of sequential sign circuits, 2NC is long: the comparisons within a
+round are packed across slots and across held-out examples, so the circuit
+evaluates 321 of them, not 4,000. Neither count is the cost. The cost is two hours
+and 145 GiB, once, at the largest configuration measured.
