@@ -1,0 +1,4 @@
+task,arrangement,n_parties,logN,log_scale,C,d,test_index,true_label,plaintext_label,encrypted_label,agree,plaintext_margin,scaled_margin,gamma,decoded_index,index_abs_error,collective_refreshes,head_apply_ms,argmax_ms,key_switch_ms,total_ms
+smoke,A,3,15,45,4,768,0,3,3,3,true,1.090272,0.405252,0.37169843,3.000000,3.855e-08,11,2021.9,8194.3,94.0,10340.5
+smoke,A,3,15,45,4,768,1,0,0,0,true,0.352494,0.131021,0.37169843,-0.000000,2.116e-08,11,2037.1,8376.7,84.9,10531.3
+smoke,A,3,15,45,4,768,2,0,0,0,true,0.000709,0.000263,0.37169843,-0.000000,2.174e-08,11,2834.1,9975.0,92.4,12930.6

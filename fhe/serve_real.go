@@ -344,7 +344,7 @@ func (rc *realCtx) answer(ex *realExport, i, logN int) realRow {
 	q := &ex.Queries[i]
 	ctx := rc.idx
 	params, eval := ctx.params, ctx.eval
-	refresh0 := ctx.btp.count
+	refresh0 := ctx.btp.Count()
 	tAll := time.Now()
 
 	// ---- the client encrypts [phi(x) | 1] ------------------------------------
@@ -432,7 +432,7 @@ func (rc *realCtx) answer(ex *realExport, i, logN int) realRow {
 		EncLabel: encLabel, Agree: encLabel == q.PlainLabel,
 		Margin: q.Margin, ScaledMargin: q.Margin * rc.gamma, Gamma: rc.gamma,
 		DecodedIndex: decoded, IndexAbsErr: math.Abs(decoded - float64(q.PlainLabel)),
-		Refreshes: ctx.btp.count - refresh0,
+		Refreshes: ctx.btp.Count() - refresh0,
 		HeadMs:    headMs, ArgmaxMs: argmaxMs, SwitchMs: switchMs,
 		TotalMs: ms(time.Since(tAll)),
 	}
