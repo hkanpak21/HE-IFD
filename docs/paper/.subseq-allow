@@ -1756,3 +1756,16 @@ resolve does. Our runs fix one such constant from the exported head. A deploymen
 cannot do that, because the head is a ciphertext, so it needs a public bound on
 the head's norm instead. \Cref{sec:security} does not treat that bound as secret,
 and we do not measure what a loose one costs.
+%%
+# 2026-09-02, Halil's ruling. The submission said an allowance follows from C
+# and d 'without repeating this experiment', which reads as a law in the head
+# size alone. Our own three tasks fit Q = 0.4 C d / epsilon, so the target is
+# part of the rule. The sentence now names it and leaves the rule itself to the
+# report, which the following sentence already points at. Submission form.
+\emph{Fidelity} is the rate at which a copy agrees with the served
+model. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
+feature dimension, and in each case fidelity $0.90$ costs
+between three and five times that number of queries. A deployment can therefore set its
+allowance from $\Cc$, $d$ and the fidelity it concedes. \trsee{sec:experiments} gives the extraction study in full.
