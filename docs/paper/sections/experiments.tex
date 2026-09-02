@@ -767,6 +767,29 @@ honest client spends one. The allowance charges the two differently, which is th
 property the mechanism lacks. We therefore state the operational bound as a bound
 on queries, and we do not add noise to the answers.}
 
+\tronly{The published defences do not offer a third option, and the reason is the
+encryption. Query-distribution monitoring reads the query and tests whether a
+client's stream looks like a
+sweep~\cite{juuti2019prada}. Adaptive misinformation reads the query and answers
+differently when it looks out of distribution~\cite{kariyappa2020adaptive}. Proof
+of work reads the query to price it~\cite{dziedzic2022proof}. Watermarking needs
+the answer to be a deterministic keyed function of the query, so that a repeat
+cannot be filtered out~\cite{szyller2021dawn}. Our server holds a ciphertext of a
+feature vector and, by the same assumption that protects the head, learns nothing
+from it. Every one of these defences is a decryption in disguise, which is the
+argument of \cref{prop:nogate} applied to a different gate.}
+
+\tronly{Output randomisation is weak by a theorem and not only by our table.
+Against a server that answers incorrectly with constant probability $\rho$ below
+one half, extraction costs a factor of $8/(1-2\rho)^2$ times a logarithm and no
+more~\cite{chandrasekaran2020exploring}. That bounds what the defender buys.
+\Cref{tab:defence} supplies the half their analysis leaves out, which is what the
+defender pays. One mechanism does survive both restrictions and we have not
+measured it. Drawing a fresh head from a distribution for each query, rather than
+perturbing the label, needs no access to the query and flips only answers near a
+boundary~\cite{alabdulmohsin2014adding}. It has a known break at a higher query
+cost, and its accuracy cost under our arrangement is open.}
+
 \paperonly{\paragraph{Comparison with a released model} A participant holding the model in plaintext has fidelity $1$ at zero
 queries, may read the parameters directly rather than infer them, and is subject
 to no allowance because there is nothing to meter.}

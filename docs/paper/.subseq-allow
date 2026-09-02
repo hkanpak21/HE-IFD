@@ -1573,3 +1573,49 @@ logarithmic in the precision demanded, and it leaves the head determined only up
 to a positive scale and a vector added to every row. It does not make
 extraction impossible, and \cref{sec:threat} states the resulting bound
 as a bound on queries rather than a cryptographic hardness claim.
+%%
+# 2026-08-31. The threat model says a coalition cannot recover the remaining
+# client's class histogram because the per-class totals are never decrypted.
+# Wainakh et al. show the counts also shape the magnitude of the uploaded
+# displacement, so the sentence is true about the channel and not about the
+# quantity. This paragraph says which. Report only; the shared sentence stands.
+That last sentence is worth stating precisely, because it does not say the
+histogram is unrecoverable. It says the protocol publishes no direct read of it.
+A client's counts also shape the displacement it uploads, since for a linear map
+trained under cross-entropy the magnitude of the row for a class grows with the
+number of examples of that class the client held~\cite{wainakh2022user}. Those
+displacements are ciphertexts and the merged head is a ciphertext, so nothing is
+readable while the encryption stands, and \cref{sec:c2c-measured} measures what
+survives into an extracted copy. What inverting the totals under encryption buys
+is the removal of the one channel that would have handed the histogram over in
+the clear.
+%%
+# 2026-08-31. Why no third defence exists here. Query monitoring, adaptive
+# misinformation, proof of work and watermarking all read the plaintext query,
+# which is the gate Proposition 1 already forbids. Report only.
+The published defences do not offer a third option, and the reason is the
+encryption. Query-distribution monitoring reads the query and tests whether a
+client's stream looks like a
+sweep~\cite{juuti2019prada}. Adaptive misinformation reads the query and answers
+differently when it looks out of distribution~\cite{kariyappa2020adaptive}. Proof
+of work reads the query to price it~\cite{dziedzic2022proof}. Watermarking needs
+the answer to be a deterministic keyed function of the query, so that a repeat
+cannot be filtered out~\cite{szyller2021dawn}. Our server holds a ciphertext of a
+feature vector and, by the same assumption that protects the head, learns nothing
+from it. Every one of these defences is a decryption in disguise, which is the
+argument of \cref{prop:nogate} applied to a different gate.
+%%
+# 2026-08-31, as above. Output randomisation is weak by a theorem and not only
+# by our table: Chandrasekaran et al. bound the attacker's extra cost at a
+# constant times a log, and Table VIII supplies the defender's side, which they
+# never measure. One mechanism survives both restrictions and we have not run it.
+Output randomisation is weak by a theorem and not only by our table.
+Against a server that answers incorrectly with constant probability $\rho$ below
+one half, extraction costs a factor of $8/(1-2\rho)^2$ times a logarithm and no
+more~\cite{chandrasekaran2020exploring}. That bounds what the defender buys.
+\Cref{tab:defence} supplies the half their analysis leaves out, which is what the
+defender pays. One mechanism does survive both restrictions and we have not
+measured it. Drawing a fresh head from a distribution for each query, rather than
+perturbing the label, needs no access to the query and flips only answers near a
+boundary~\cite{alabdulmohsin2014adding}. It has a known break at a higher query
+cost, and its accuracy cost under our arrangement is open.

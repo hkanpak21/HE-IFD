@@ -67,6 +67,9 @@ func (b *collectiveBootstrapper) Bootstrap(ct *rlwe.Ciphertext) (*rlwe.Ciphertex
 	return out, nil
 }
 
+func (b *collectiveBootstrapper) Count() int      { return b.count }
+func (b *collectiveBootstrapper) Millis() float64 { return b.totalMs }
+
 func (b *collectiveBootstrapper) BootstrapMany(cts []rlwe.Ciphertext) ([]rlwe.Ciphertext, error) {
 	for i := range cts {
 		r, err := b.Bootstrap(&cts[i])

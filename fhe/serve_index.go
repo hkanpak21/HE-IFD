@@ -73,7 +73,7 @@ type idxCtx struct {
 	encoder   *ckks.Encoder
 	eval      *ckks.Evaluator
 	cmp       *comparison.Evaluator
-	btp       *collectiveBootstrapper
+	btp       countingBtp
 	encryptor *rlwe.Encryptor
 	dec       *rlwe.Decryptor
 	Cpad      int
@@ -131,6 +131,13 @@ func runIndexSuite(jsonOut string) {
 // constructions.
 func runIndex(c argmaxConfig, taus []float64) []indexRow {
 	ctx, logits, ct0 := newIdxCtx(c)
+	return runIndexOn(ctx, logits, ct0, c, taus)
+}
+
+// runIndexOn is the measurement itself, over a context somebody else built. The
+// collective-refresh suite and the server-bootstrapping suite differ only in that
+// context, so the circuit they measure is the same one.
+func runIndexOn(ctx *idxCtx, logits []float64, ct0 *rlwe.Ciphertext, c argmaxConfig, taus []float64) []indexRow {
 	params := ctx.params
 	rounds := 0
 	for s := 1; s < ctx.Cpad; s *= 2 {
@@ -159,13 +166,13 @@ func runIndex(c argmaxConfig, taus []float64) []indexRow {
 	rows := make([]indexRow, 0, 2+len(taus))
 
 	// ---- control: the value-only tournament, exactly as serve_tournament.go --
-	r0, ms0 := ctx.btp.count, ctx.btp.totalMs
+	r0, ms0 := ctx.btp.Count(), ctx.btp.Millis()
 	tA := time.Now()
 	m, err := ctx.tournamentMax(ct0)
 	check(err)
 	maxMs := ms(time.Since(tA))
-	maxRefresh := ctx.btp.count - r0
-	maxRefreshMs := ctx.btp.totalMs - ms0
+	maxRefresh := ctx.btp.Count() - r0
+	maxRefreshMs := ctx.btp.Millis() - ms0
 
 	out := make([]float64, ctx.slots)
 	check(ctx.encoder.Decode(ctx.dec.DecryptNew(m), out))
@@ -191,13 +198,13 @@ func runIndex(c argmaxConfig, taus []float64) []indexRow {
 					fmt.Printf("\n[index] C=%d onehot tau=%g FAILED: %v\n", c.C, tau, r)
 				}
 			}()
-			r1, ms1 := ctx.btp.count, ctx.btp.totalMs
+			r1, ms1 := ctx.btp.Count(), ctx.btp.Millis()
 			tB := time.Now()
 			idxVal, hotSum, err := ctx.oneHotIndex(m, ct0, tau)
 			check(err)
 			extraMs := ms(time.Since(tB))
-			extraRef := ctx.btp.count - r1
-			extraRefMs := ctx.btp.totalMs - ms1
+			extraRef := ctx.btp.Count() - r1
+			extraRefMs := ctx.btp.Millis() - ms1
 
 			row := base
 			row.Method = "onehot_index"
@@ -226,13 +233,13 @@ func runIndex(c argmaxConfig, taus []float64) []indexRow {
 				fmt.Printf("\n[index] C=%d tracked FAILED: %v\n", c.C, r)
 			}
 		}()
-		r2, ms2 := ctx.btp.count, ctx.btp.totalMs
+		r2, ms2 := ctx.btp.Count(), ctx.btp.Millis()
 		tC := time.Now()
 		mv, mi, err := ctx.trackedTournament(ct0)
 		check(err)
 		totMs := ms(time.Since(tC))
-		ref := ctx.btp.count - r2
-		refMs := ctx.btp.totalMs - ms2
+		ref := ctx.btp.Count() - r2
+		refMs := ctx.btp.Millis() - ms2
 
 		vOut := make([]float64, ctx.slots)
 		check(ctx.encoder.Decode(ctx.dec.DecryptNew(mv), vOut))
@@ -334,26 +341,38 @@ func newIdxCtx(c argmaxConfig) (*idxCtx, []float64, *rlwe.Ciphertext) {
 	encoder := ckks.NewEncoder(params)
 	encryptor := rlwe.NewEncryptor(params, pk)
 	slots := params.MaxSlots()
-	rng := mrand.New(mrand.NewSource(int64(20260714 + c.C)))
-	logits := make([]float64, c.C)
-	vec := make([]float64, slots)
-	for i := range vec {
-		vec[i] = -0.5
-	}
-	for j := 0; j < c.C; j++ {
-		logits[j] = rng.Float64()*0.9 - 0.4
-		vec[j] = logits[j]
-	}
-	pt := ckks.NewPlaintext(params, params.MaxLevel())
-	check(encoder.Encode(vec, pt))
-	ct0, err := encryptor.EncryptNew(pt)
-	check(err)
+	logits, ct0 := packLogits(params, encoder, encryptor, c.C)
 
 	return &idxCtx{
 		params: params, encoder: encoder, eval: eval, cmp: cmp, btp: btp,
 		encryptor: encryptor, dec: rlwe.NewDecryptor(params, idealSk),
 		Cpad: Cpad, C: c.C, slots: slots,
 	}, logits, ct0
+}
+
+// packLogits builds one case's logit vector and encrypts it. The seed, the range
+// and the padding value are the ones serve_tournament.go used, so every suite that
+// calls this compares against the same numbers.
+//
+// The comparison circuit is accurate on [-0.5, 0.5], so the padding lies inside
+// that range and strictly below every logit.
+func packLogits(params ckks.Parameters, encoder *ckks.Encoder, encryptor *rlwe.Encryptor, C int) ([]float64, *rlwe.Ciphertext) {
+	slots := params.MaxSlots()
+	rng := mrand.New(mrand.NewSource(int64(20260714 + C)))
+	logits := make([]float64, C)
+	vec := make([]float64, slots)
+	for i := range vec {
+		vec[i] = -0.5
+	}
+	for j := 0; j < C; j++ {
+		logits[j] = rng.Float64()*0.9 - 0.4
+		vec[j] = logits[j]
+	}
+	pt := ckks.NewPlaintext(params, params.MaxLevel())
+	check(encoder.Encode(vec, pt))
+	ct, err := encryptor.EncryptNew(pt)
+	check(err)
+	return logits, ct
 }
 
 // tournamentMax is the recorded control: ceil(log2 Cpad) rounds of rotate-and-Max,

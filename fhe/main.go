@@ -105,12 +105,20 @@ func main() {
 		ringSweepFlag       = flag.Bool("ring-sweep", false, "measure the per-operation cost across ring degrees, so the GPU comparison can be made at a matched ring")
 		costGridFlag        = flag.Bool("cost-grid", false, "measure every protocol operation over the cross product of ring degree and federation size")
 		protocolCostFlag    = flag.Bool("protocol-cost", false, "measure the operations the encrypted-serving protocol adds: ciphertext-by-ciphertext head application, encrypted reciprocal for the head merge, key switch to the querier, and selection scoring")
+		serveRealFlag       = flag.String("serve-real", "", "answer real queries against a real trained head: path to the JSON written by jobs/fhe_export_head.py")
+		realPartiesFlag     = flag.Int("real-parties", 10, "quorum size for -serve-real")
+		realQueriesFlag     = flag.Int("real-queries", 0, "answer only the first this many exported queries (0 = all)")
 	)
 	flag.Parse()
 
 	// Serve mode (encrypted inference): measure the per-query cost atoms Release
 	// mode does not pay — the collective refresh (multiparty bootstrap) and the
 	// threshold decrypt. See serve.go.
+	// One real query, end to end, against a real trained head. See serve_real.go.
+	if *serveRealFlag != "" {
+		runServeReal(*serveRealFlag, *realPartiesFlag, *logNFlag, *realQueriesFlag, *jsonOut)
+		return
+	}
 	if *costGridFlag {
 		runCostGrid(*jsonOut)
 		return

@@ -21,6 +21,17 @@ own contributions. The shared head is never decrypted, so it cannot be inverted
 the same way. The per-class totals are never decrypted, so a coalition cannot
 recover the remaining client's class histogram.
 
+\tronly{That last sentence is worth stating precisely, because it does not say the
+histogram is unrecoverable. It says the protocol publishes no direct read of it.
+A client's counts also shape the displacement it uploads, since for a linear map
+trained under cross-entropy the magnitude of the row for a class grows with the
+number of examples of that class the client held~\cite{wainakh2022user}. Those
+displacements are ciphertexts and the merged head is a ciphertext, so nothing is
+readable while the encryption stands, and \cref{sec:c2c-measured} measures what
+survives into an extracted copy. What inverting the totals under encryption buys
+is the removal of the one channel that would have handed the histogram over in
+the clear.}
+
 \tronly{This section states what the protocol guarantees. \Cref{sec:ideal} gives an
 ideal functionality. \Cref{sec:semihonest} proves that the protocol realizes it
 against semi-honest parties. \Cref{sec:malicious} bounds what a malicious client

@@ -1,6 +1,6 @@
 module github.com/hkanpak21/HE-IFD/fhe
 
-go 1.24
+go 1.24.0
 
 require github.com/tuneinsight/lattigo/v6 v6.1.0
 
