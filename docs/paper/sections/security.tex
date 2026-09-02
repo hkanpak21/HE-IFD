@@ -416,6 +416,29 @@ absolute cosine of $0.16$ and a random-direction baseline of $0.029$. The row
 points into the space the features occupy. It does not point at a class, and it
 does not point at a record.}
 
+\tronly{Three other attack families ask for something this construction does not
+provide, and we say which and why. Reconstruction from weights is the first. The
+strongest published attack in our exact setting recovers training images from
+heads trained on frozen $768$-dimensional embeddings, and its authors report that
+it fails on linear probes and name linear models as a
+mitigation~\cite{oz2024reconstructing}. Their own governing ratio is the
+parameter count over the unknowns, which for a linear head reduces to the class
+count over the client's sample count. Ours is about $0.01$, and the smallest
+ratio at which they recover anything is $0.5$.}
+
+\tronly{Attribute inference is the second. Against a model trained on features of
+this kind, the black-box attack performs at the base rate, $0.28$ against a base
+rate of $0.28$ on one dataset and $0.05$ against $0.06$ on
+another~\cite{jayaraman2022attribute}. The variant that beats imputation reads
+individual hidden-layer activations, and a single linear map has none.}
+
+\tronly{Gradient inversion is the third, and it does not instantiate at all. Every
+attack in that line needs gradients with respect to parameters that see the
+input, or a model the server chose~\cite{zhu2019deep,geiping2020inverting}. The
+backbone here is public and fixed, every client runs the same one, and the only
+uploaded object is a trained displacement of a map that sits after the last
+nonlinearity.}
+
 \tronly{Two limits belong with these numbers. A thousand members resolve a
 true-positive rate no finer than $0.001$, so every figure we report at a
 false-positive rate of $0.001$ counts two to four examples rather than a rate.

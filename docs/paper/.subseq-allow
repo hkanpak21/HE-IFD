@@ -1446,3 +1446,130 @@ attacks on federated learning~\cite{zhu2025fedmia}. What it leaves open, by
 design, is a client asking for labels. These measurements close that last
 channel, and they close it at the point where the cryptography is assumed to have
 failed altogether.
+%%
+# 2026-08-31. The extraction rule was stated as a law in the head size alone.
+# It is a law in the fidelity target too: our own three tasks fit
+# Q = 0.4 C d / epsilon over the measured range, so an allowance set for one
+# target does not carry to another. Report only.
+Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. Those figures track the size of the head rather than
+the task. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
+between three and five times that number of queries, with $0.80$ costing roughly
+$1.5$ times and $0.95$ roughly ten times. The multiplier is a function of the
+target, not a constant. Writing $\varepsilon$ for the shortfall from a perfect
+copy, our three tasks fit $Q\approx 0.4\,\Cc d/\varepsilon$ across the measured
+range. A deployment can therefore set its allowance from $\Cc$, $d$ and the
+fidelity it is willing to concede, without repeating this experiment, and an
+allowance set for one target does not carry to another. A published
+measurement of the same interface agrees. Extracting a softmax model from class
+labels alone costs $100$ queries per parameter for agreement above $99.9$ per
+cent~\cite{tramer2016stealing}, and the curve here reaches $0.993$ at $65$
+queries per parameter on AG-News.
+%%
+# 2026-08-31. The paragraph said membership inference and reconstruction were
+# not evaluated. They are now, in Section IV, so the sentence points there.
+Fidelity measures agreement with the
+served model, and nothing more. A copy at fidelity $0.90$ reproduces nine in ten
+of the served model's decisions, including its mistakes. It does not follow that
+the adversary has learned any client's data. The recovered object is a linear map
+over a public feature space, fitted from labels the adversary requested at points
+it chose itself, and no client record enters the attack at any stage. Turning a
+copy into a statement about a particular record is the separate problem of
+membership inference or reconstruction. That problem needs a surface this protocol
+does not expose, since no gradient, update or data-derived summary is ever
+available in plaintext. \Cref{sec:c2c-measured} measures it and finds it at
+chance.
+%%
+# 2026-08-31. The boundary-strategy result was understated and mis-read. It
+# reverses above about 16 queries per parameter, and the 13-of-15 count is an
+# artefact of the budget grid against the head size, not a property of the
+# strategy. Split into three paragraphs, one per claim. Report only.
+# Paragraph 1 of 3.
+\paragraph{A second query strategy, and what it does not settle} We also ran a
+variant that spends half its budget bisecting toward the decision boundary and
+then fits the same linear model. It loses in $13$ of the $15$ cells, reaching
+$0.675$ against $0.755$ on Banking77 at $5\times10^4$ queries, because a
+bisection chain returns many nearly identical points and a linear fit gains less
+from them than from independent ones. Tramer et al. report the same ordering for
+multiclass models and offer the same reason, that the searches split across
+several decision boundaries~\cite{tramer2016stealing}.
+%%
+# 2026-08-31, as above. Paragraph 2 of 3, the crossover.
+The ordering reverses once the budget is large against the head. On
+AG-News the variant crosses over at about $16$ queries per parameter and at $65$
+it leaves $0.0041$ of the decisions wrong against the random strategy's $0.0072$,
+a factor of $1.77$. Banking77 never reaches $3.4$ queries per parameter at our
+largest budget, so its cells are measured below the crossover and the count of
+$13$ reflects the budget grid rather than the strategy. We report the random
+strategy because it is the stronger one over the range an allowance would sit in,
+and because it is the simpler.
+%%
+# 2026-08-31, as above. Paragraph 3 of 3. Both of our strategies fit a model to
+# labelled points; the published constructions solve for the hyperplanes and tie
+# their scales together, which costs a log rather than a linear factor. Our
+# figures therefore bound the allowance from the permissive side and the report
+# says so rather than letting them read as a security argument.
+Neither strategy is the attack a cryptanalyst would mount. Both fit a
+model to labelled points. The published constructions instead solve for each
+decision hyperplane from points found on it, and tie the hyperplanes to one
+another so that the scale the argmax discards is fixed
+once~\cite{lowd2005adversarial,carlini2025hardlabel}. That route costs a factor
+logarithmic in the precision demanded rather than linear in it, so our figures
+bound the allowance from the wrong side and should be read as what a
+straightforward adversary pays.
+%%
+# 2026-08-31. Reconstruction, attribute inference and gradient inversion, each
+# with the reason it does not reach this construction. Report only.
+# Paragraph 1 of 3, reconstruction.
+Three other attack families ask for something this construction does not
+provide, and we say which and why. Reconstruction from weights is the first. The
+strongest published attack in our exact setting recovers training images from
+heads trained on frozen $768$-dimensional embeddings, and its authors report that
+it fails on linear probes and name linear models as a
+mitigation~\cite{oz2024reconstructing}. Their own governing ratio is the
+parameter count over the unknowns, which for a linear head reduces to the class
+count over the client's sample count. Ours is about $0.01$, and the smallest
+ratio at which they recover anything is $0.5$.
+%%
+# 2026-08-31, as above. Paragraph 2 of 3, attribute inference.
+Attribute inference is the second. Against a model trained on features of
+this kind, the black-box attack performs at the base rate, $0.28$ against a base
+rate of $0.28$ on one dataset and $0.05$ against $0.06$ on
+another~\cite{jayaraman2022attribute}. The variant that beats imputation reads
+individual hidden-layer activations, and a single linear map has none.
+%%
+# 2026-08-31, as above. Paragraph 3 of 3, gradient inversion.
+Gradient inversion is the third, and it does not instantiate at all. Every
+attack in that line needs gradients with respect to parameters that see the
+input, or a model the server chose~\cite{zhu2019deep,geiping2020inverting}. The
+backbone here is public and fixed, every client runs the same one, and the only
+uploaded object is a trained displacement of a map that sits after the last
+nonlinearity.
+%%
+# 2026-08-31. The report said hard-label extraction is markedly harder and
+# cited chen2024hardlabel, whose cost carries a factor exponential in the
+# number of hidden neurons. Our shared quantity is one linear map and has
+# none, so at n=0 that bound collapses to a log factor over the linear solve.
+# The paragraph now states the real factor and the invariance the argmax
+# leaves behind. Report only; the submission copy is unchanged.
+\paragraph{Restriction to the predicted label} Returning logits would defeat the
+construction. The head is a linear map on features the client computes itself, so a
+client that reads logits for feature vectors of its choosing recovers the head by
+solving a linear system in as many queries as the feature
+dimension~\cite{tramer2016stealing}. This is not a hypothetical concern. The same
+object, the final projection layer of a production transformer, has been recovered
+through a deployed interface for a few tens of dollars, using an interface that
+exposed log-probabilities and a logit bias, and the operators' response was to
+restrict that combination~\cite{carlini2024stealing}. Returning only the index of
+the largest entry is the same restriction imposed by construction rather than by
+policy. It places an adversary in the hard-label setting, where functionally
+equivalent extraction has only recently been achieved for general
+networks~\cite{chen2024hardlabel,carlini2025hardlabel}. Those results carry a
+factor exponential in the number of hidden neurons, and our shared quantity has
+none, so the restriction buys less here than they suggest. It removes the linear
+solve and puts a search for decision boundaries in its place, at a factor
+logarithmic in the precision demanded, and it leaves the head determined only up
+to a positive scale and a vector added to every row. It does not make
+extraction impossible, and \cref{sec:threat} states the resulting bound
+as a bound on queries rather than a cryptographic hardness claim.

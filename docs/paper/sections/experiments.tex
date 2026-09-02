@@ -658,8 +658,12 @@ about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
 $2.0\times10^5$ on Banking77. Those figures track the size of the head rather than
 the task. The head has $\Cc d$ parameters, and in each case fidelity $0.90$ costs
 between three and five times that number of queries, with $0.80$ costing roughly
-$1.5$ times and $0.95$ roughly ten times. A deployment can therefore set its
-allowance from $\Cc$ and $d$ without repeating this experiment. A published
+$1.5$ times and $0.95$ roughly ten times. The multiplier is a function of the
+target, not a constant. Writing $\varepsilon$ for the shortfall from a perfect
+copy, our three tasks fit $Q\approx 0.4\,\Cc d/\varepsilon$ across the measured
+range. A deployment can therefore set its allowance from $\Cc$, $d$ and the
+fidelity it is willing to concede, without repeating this experiment, and an
+allowance set for one target does not carry to another. A published
 measurement of the same interface agrees. Extracting a softmax model from class
 labels alone costs $100$ queries per parameter for agreement above $99.9$ per
 cent~\cite{tramer2016stealing}, and the curve here reaches $0.993$ at $65$
@@ -681,19 +685,35 @@ it chose itself, and no client record enters the attack at any stage. Turning a
 copy into a statement about a particular record is the separate problem of
 membership inference or reconstruction. That problem needs a surface this protocol
 does not expose, since no gradient, update or data-derived summary is ever
-available in plaintext, and we do not evaluate it here.}
+available in plaintext. \Cref{sec:c2c-measured} measures it and finds it at
+chance.}
 
-\tronly{One methodological point. We also ran a boundary-search variant that spends half
-its budget bisecting toward the decision boundary, on the expectation that points
-near a boundary are more informative. It is worse in $13$ of the $15$ cells we
-measured, reaching $0.675$ against $0.755$ on Banking77 at $5\times10^4$ queries,
-because a bisection chain returns many nearly identical points and a linear fit
-gains less from them than from the same number of independent ones. A published
-multiclass measurement reports the same ordering, where a line search does not
-improve on uniform queries, and suggests the same reason, that the searches split
-across several decision boundaries~\cite{tramer2016stealing}. The two
-exceptions are AG-News at the two largest budgets, where it wins by $0.003$. We
-report the stronger of the two, which is also the simpler.}
+\tronly{\paragraph{A second query strategy, and what it does not settle} We also ran a
+variant that spends half its budget bisecting toward the decision boundary and
+then fits the same linear model. It loses in $13$ of the $15$ cells, reaching
+$0.675$ against $0.755$ on Banking77 at $5\times10^4$ queries, because a
+bisection chain returns many nearly identical points and a linear fit gains less
+from them than from independent ones. Tramer et al. report the same ordering for
+multiclass models and offer the same reason, that the searches split across
+several decision boundaries~\cite{tramer2016stealing}.}
+
+\tronly{The ordering reverses once the budget is large against the head. On
+AG-News the variant crosses over at about $16$ queries per parameter and at $65$
+it leaves $0.0041$ of the decisions wrong against the random strategy's $0.0072$,
+a factor of $1.77$. Banking77 never reaches $3.4$ queries per parameter at our
+largest budget, so its cells are measured below the crossover and the count of
+$13$ reflects the budget grid rather than the strategy. We report the random
+strategy because it is the stronger one over the range an allowance would sit in,
+and because it is the simpler.}
+
+\tronly{Neither strategy is the attack a cryptanalyst would mount. Both fit a
+model to labelled points. The published constructions instead solve for each
+decision hyperplane from points found on it, and tie the hyperplanes to one
+another so that the scale the argmax discards is fixed
+once~\cite{lowd2005adversarial,carlini2025hardlabel}. That route costs a factor
+logarithmic in the precision demanded rather than linear in it, so our figures
+bound the allowance from the wrong side and should be read as what a
+straightforward adversary pays.}
 
 \tronly{\paragraph{Noise on the returned label} The query allowance is one way to
 price extraction. Perturbing the answer is the other, and it is what a reader who

@@ -235,8 +235,13 @@ exposed log-probabilities and a logit bias, and the operators' response was to
 restrict that combination~\cite{carlini2024stealing}. Returning only the index of
 the largest entry is the same restriction imposed by construction rather than by
 policy. It places an adversary in the hard-label setting, where functionally
-equivalent extraction is markedly harder and has only recently been achieved for
-general networks~\cite{chen2024hardlabel,carlini2025hardlabel}. It does not make
+equivalent extraction has only recently been achieved for general
+networks~\cite{chen2024hardlabel,carlini2025hardlabel}. Those results carry a
+factor exponential in the number of hidden neurons, and our shared quantity has
+none, so the restriction buys less here than they suggest. It removes the linear
+solve and puts a search for decision boundaries in its place, at a factor
+logarithmic in the precision demanded, and it leaves the head determined only up
+to a positive scale and a vector added to every row. It does not make
 extraction impossible, and \cref{sec:threat} states the resulting bound
 as a bound on queries rather than a cryptographic hardness claim.}
 
