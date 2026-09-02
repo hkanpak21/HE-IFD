@@ -1829,3 +1829,18 @@ examples that surrogate trained on. The best separation it achieves there is
 $0.065$ at most and below $0.01$ in most cells. The crafted query does not fail to
 transfer to the served head. The difference in margin between a member and a
 non-member is not there to transfer.
+%%
+# 2026-09-02. The index premium, job 1618538. The tournament returns the
+# largest logit and the protocol needs its index. Measured under both level
+# restoration mechanisms: 4.4 to 9.4 per cent under server-side bootstrapping,
+# 4.1 to 9.2 under collective refresh, exact at every class count. The earlier
+# measurement had only the refresh mechanism, which the protocol does not use.
+# Records: results/fhe_serve/argmax_index.csv and argmax_index_btp.csv.
+The tournament returns the largest logit, and the protocol needs the index
+of it. Carrying the index through the fold costs $4.4$ per cent at four classes
+and $9.4$ per cent at a hundred, and it returns the index exactly at every class
+count we measured. We measured this twice, once under collective refresh and once
+under the server-side bootstrapping the protocol specifies, and the premium is
+the same to within half a point although the absolute latency differs
+thirteenfold. What the index costs is therefore a property of the fold and not of
+the mechanism that restores its levels.

@@ -413,6 +413,15 @@ evaluation under a single key, single-key results carry over, and GPU
 implementations of the same reduction report a full-vocabulary argmax in well under
 a second~\cite{zhang2025nexus}.}
 
+\tronly{The tournament returns the largest logit, and the protocol needs the index
+of it. Carrying the index through the fold costs $4.4$ per cent at four classes
+and $9.4$ per cent at a hundred, and it returns the index exactly at every class
+count we measured. We measured this twice, once under collective refresh and once
+under the server-side bootstrapping the protocol specifies, and the premium is
+the same to within half a point although the absolute latency differs
+thirteenfold. What the index costs is therefore a property of the fold and not of
+the mechanism that restores its levels.}
+
 \tronly{\paragraph{The two axes that set the cost} The ring degree is the security
 parameter, and the number of clients decides how many shares a decryption needs.
 \Cref{fig:cost} separates them, from one measurement over the full grid.}
