@@ -1439,7 +1439,7 @@ moves.
 # every adversary the protocol admits from above. Report only.
 # Paragraph 8 of 8.
 Read together, the three surfaces say one thing. Even where extraction
-has already succeeded, and even where the head is simply given away, the
+has already succeeded, and even where we hand the head over outright, the
 membership attack of Carlini et al.~\cite{carlini2022membership} stays near
 chance. The head is a linear map fitted for two hundred steps over thousands of
 examples per class, and the coverage-weighted merge gives a coalition no row it
@@ -1607,7 +1607,7 @@ argument of \cref{prop:nogate} applied to a different gate.
 # by our table: Chandrasekaran et al. bound the attacker's extra cost at a
 # constant times a log, and Table VIII supplies the defender's side, which they
 # never measure. One mechanism survives both restrictions and we have not run it.
-Output randomisation is weak by a theorem and not only by our table.
+Output randomisation is weak by a theorem as well as by our table.
 Against a server that answers incorrectly with constant probability $\rho$ below
 one half, extraction costs a factor of $8/(1-2\rho)^2$ times a logarithm and no
 more~\cite{chandrasekaran2020exploring}. That bounds what the defender buys.
@@ -1800,8 +1800,8 @@ decrypt the two scores.
 The selection is correct at every point we measured. It decodes the
 winning arrangement in all twelve cells of the grid, and the per-class totals it
 combines come back with a relative error near $10^{-8}$. \Cref{sec:exp-select}
-reports which arrangement the rule chooses and how often that choice is right;
-this paragraph reports only that the encrypted evaluation reproduces it.
+reports which arrangement the rule chooses and how often that choice is right.
+This paragraph reports only that the encrypted evaluation reproduces it.
 %%
 # 2026-09-02. OSLO, the third attack surface, jobs 1618542 to 1618544. It crafts
 # one query per candidate rather than reading a statistic, so it is a different
