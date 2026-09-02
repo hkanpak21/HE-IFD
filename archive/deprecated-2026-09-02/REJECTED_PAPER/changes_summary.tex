@@ -1,0 +1,87 @@
+\documentclass[10pt]{article}
+\usepackage[margin=0.5in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{booktabs,enumitem,microtype}
+\setlist[itemize]{leftmargin=1.1em,itemsep=0pt,topsep=1pt,parsep=0pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{2pt}
+\pagestyle{empty}
+\newcommand{\rc}[1]{\textbf{#1}}
+
+\begin{document}
+{\large\bfseries Summary of Revisions: FedDil $\rightarrow$ HE-OFT}\\[1pt]
+{\footnotesize Manuscript TDSCSI-2026-04-1278 (rejected) $\rightarrow$ resubmission. What changed, and how each
+reviewer concern is addressed (R$i$-W/Q $=$ Reviewer~$i$ weakness/question).}
+
+\textbf{Principal change --- a method redesign, not a patch.} The submitted version trained an
+encryption-friendly model \emph{under} homomorphic encryption, replacing activations with polynomial
+approximations and transmitting large encrypted objects over many internal steps; this was the source of the
+accuracy loss, the $\sim$460\,GB per-client upload, and the degradation at higher client counts. The
+resubmission performs \emph{no} training under encryption: each client fine-tunes a small low-rank adapter on a
+frozen, public, pretrained backbone in plaintext and uploads only the encrypted parameter displacement, and the
+server's sole cryptographic operation is one sample-weighted linear sum under multiparty CKKS at
+\emph{multiplicative depth one}, decrypted by a threshold of clients. Freezing the adapter's down-projection
+makes this aggregate \emph{exact} task arithmetic, so the encrypted object is $19$ ciphertexts ($9.5$\,MiB),
+sent once. This resolves the reviewers' concerns at their root rather than mitigating them.
+
+\textbf{What changed.}
+\begin{itemize}
+\item \rc{No encrypted training:} the only encrypted operation is a depth-one linear combine (PT$\times$CT,
+CT$+$CT); it reproduces the plaintext aggregate to relative $\ell_2\!\approx\!10^{-9}$ (zero accuracy cost),
+with no polynomial activations and no bootstrapping.
+\item \rc{One-shot, fine-tuning-based:} a single upload and download; learning is local and in plaintext on a
+frozen pretrained backbone, the setting the encryption constraint admits.
+\item \rc{Cryptographic, not differentially private:} contributions are protected without perturbation; only
+the final shared model is revealed, and its residual leakage is measured.
+\item \rc{New contribution:} encrypted multi-candidate release with post-decryption client-side selection,
+which also yields a measured defense against a poisoning client at no homomorphic cost.
+\item \rc{Evaluation and exposition:} language (RoBERTa), vision (ViT-B/16), and a $0.5$B language model, with
+five ablation axes and matched comparators; end-to-end multiparty CKKS measured in Lattigo; prose rewritten
+plainly, new figures, and the pseudocode replaced by formal equations.
+\end{itemize}
+
+\textbf{How the rejection points are addressed.}
+
+{\scriptsize
+\renewcommand{\arraystretch}{0.96}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{0.085\linewidth}p{0.40\linewidth}p{0.46\linewidth}@{}}
+\toprule
+Point & Previous concern & Resolution in the resubmission \\
+\midrule
+R1-W1 & Accuracy degrades at higher client counts & No from-scratch encrypted training; accuracy stable across
+$N\!=\!10$--$50$ (DBpedia $0.93/0.90/0.93$). \\
+R1-W2 & Operator replacement; unquantified accuracy cost & Operator replacement removed; the cryptographic
+layer is exact ($\ell_2\!\approx\!10^{-9}$), so its accuracy cost is provably zero. \\
+R1-W3 & Upload size / bandwidth ($\sim$460\,GB) & Only the adapter displacement is encrypted: $19$
+ciphertexts, $9.5$\,MiB per client, one round. \\
+R1-W4 & Empirical privacy; leakage from released model & Membership inference (loss-threshold $+$ LiRA),
+external and fellow-client adversaries: at or near chance (AUC $0.49$--$0.59$). \\
+R1-W5 & No NLP; missing ablations & Four text tasks, two vision datasets, a $0.5$B LM, and five ablation axes.\\
+\midrule
+R2-Q1 & Comparison with prior work & Comparison table; HE-OFT run at the published setups of DENSE /
+FedAUXfdp / FedSD2C; new related work on encrypted and DP transfer learning. \\
+R2-Q2 & End-to-end CKKS measurement & Full protocol in Lattigo (key-gen, encrypt, aggregate, threshold
+decrypt); depth one, no bootstrapping; correctness verified. \\
+R2-Q3 & Client-side encryption cost & Measured: $\approx\!40$\,ms/client to encrypt; aggregation $76$\,ms
+($N\!=\!10$) to $0.72$\,s ($N\!=\!100$). \\
+R2-Q4 & Malicious / colluding clients & Threat model stated; a measured leave-one-out vote neutralizes a
+poisoning client; stronger guarantees as future work. \\
+R2-Q5 & Post-release privacy across $N$, $\alpha$ & MIA reported per task; contributions covered
+cryptographically (server and sub-threshold coalitions see only ciphertexts). \\
+R2-Q6 & Plaintext weights, CT$\times$PT, no encrypted optimizer & Exactly the present design: public weights
+and init in plaintext, only displacements encrypted, server does CT$\times$PT and CT$+$CT only, depth one. \\
+\midrule
+R3-1 & Participation incentive & Each client obtains a model over the whole label space, including classes it
+never observed locally. \\
+R3-2 & Challenges / contributions; write directly & Restructured around one difficulty (linear averaging of
+independently trained models fails under skew) and one solution (frozen backbone supplies the shared frame). \\
+R3-3,4 & Motivation placement; overview figure & Motivation moved to the introduction; protocol figure redrawn
+(frozen backbone, shared init, encrypted displacements, depth-one aggregation, threshold decryption). \\
+R3-5,6 & Limited comparison; future directions & Comparison broadened and the method explained, not only its
+outcomes; future directions in a separate scope-and-limitations discussion. \\
+\bottomrule
+\end{tabular}}
+
+\end{document}

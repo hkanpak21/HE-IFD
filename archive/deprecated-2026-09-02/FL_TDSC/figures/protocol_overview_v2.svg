@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 520" font-family="serif" font-size="12">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="arrow-share" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1B9E77"/>
+    </marker>
+    <marker id="arrow-enc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#D95F02"/>
+    </marker>
+    <marker id="arrow-server" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8B9EA8"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="600" y="22" text-anchor="middle" font-size="15" font-weight="bold">HE-IFD encrypted CFD protocol: plaintext student forward pass + encrypted teacher-induced delta accumulator</text>
+
+  <!-- Phase separator lines -->
+  <line x1="180" y1="50" x2="180" y2="470" stroke="#666666" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <line x1="340" y1="50" x2="340" y2="470" stroke="#666666" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <line x1="500" y1="50" x2="500" y2="470" stroke="#666666" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <line x1="680" y1="50" x2="680" y2="470" stroke="#666666" stroke-width="0.5" stroke-dasharray="3 3"/>
+  <line x1="960" y1="50" x2="960" y2="470" stroke="#666666" stroke-width="0.5" stroke-dasharray="3 3"/>
+
+  <!-- Phase headers -->
+  <text x="90"   y="48" text-anchor="middle" font-weight="bold" fill="#333">Phase 0 (DKG)</text>
+  <text x="260"  y="48" text-anchor="middle" font-weight="bold" fill="#333">Phase 1 (upload)</text>
+  <text x="420"  y="48" text-anchor="middle" font-weight="bold" fill="#333">Phase 2a (warm-start)</text>
+  <text x="590"  y="48" text-anchor="middle" font-weight="bold" fill="#333">Phase 2b (target)</text>
+  <text x="820"  y="48" text-anchor="middle" font-weight="bold" fill="#333">Phase 2c (parallel tracks)</text>
+  <text x="1080" y="48" text-anchor="middle" font-weight="bold" fill="#333">Phase 3 (deliver)</text>
+
+  <!-- ====================== Phase 0: DKG ====================== -->
+  <g id="phase-0">
+    <!-- Server box with DKG glyph -->
+    <rect x="50"  y="220" width="80" height="60" fill="#8B9EA8" stroke="#333"/>
+    <text x="90"  y="245" text-anchor="middle" fill="#fff" font-weight="bold">Server</text>
+    <text x="90"  y="265" text-anchor="middle" fill="#fff" font-style="italic">DKG</text>
+
+    <!-- Three client boxes -->
+    <rect x="20"  y="80"  width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="50"  y="100" text-anchor="middle">C_1</text>
+    <rect x="20"  y="130" width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="50"  y="150" text-anchor="middle">C_2</text>
+    <rect x="20"  y="180" width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="50"  y="200" text-anchor="middle">C_3</text>
+
+    <!-- Key-share arrows converging into server -->
+    <line x1="80" y1="96"  x2="60"  y2="225" stroke="#1B9E77" stroke-width="1.2" marker-end="url(#arrow-share)"/>
+    <line x1="80" y1="146" x2="60"  y2="235" stroke="#1B9E77" stroke-width="1.2" marker-end="url(#arrow-share)"/>
+    <line x1="80" y1="196" x2="60"  y2="245" stroke="#1B9E77" stroke-width="1.2" marker-end="url(#arrow-share)"/>
+    <text x="120" y="170" text-anchor="middle" fill="#1B9E77" font-size="10">sk_i shares</text>
+
+    <!-- pk output -->
+    <text x="90" y="305" text-anchor="middle" font-style="italic" fill="#333">collective pk</text>
+    <line x1="90" y1="285" x2="90" y2="300" stroke="#333" stroke-width="1" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- ====================== Phase 1: encrypted upload ====================== -->
+  <g id="phase-1">
+    <!-- Clients (re-drawn for Phase 1) -->
+    <rect x="195" y="80"  width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="225" y="100" text-anchor="middle">C_1</text>
+    <rect x="195" y="130" width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="225" y="150" text-anchor="middle">C_2</text>
+    <rect x="195" y="180" width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="225" y="200" text-anchor="middle">C_3</text>
+
+    <!-- encrypted upload arrows -->
+    <line x1="255" y1="96"  x2="330" y2="180" stroke="#D95F02" stroke-width="1.4" marker-end="url(#arrow-enc)"/>
+    <line x1="255" y1="146" x2="330" y2="210" stroke="#D95F02" stroke-width="1.4" marker-end="url(#arrow-enc)"/>
+    <line x1="255" y1="196" x2="330" y2="240" stroke="#D95F02" stroke-width="1.4" marker-end="url(#arrow-enc)"/>
+
+    <text x="305" y="120" text-anchor="middle" fill="#D95F02" font-size="11">⟨T_i(P)⟩</text>
+    <text x="305" y="265" text-anchor="middle" fill="#333" font-style="italic" font-size="10">encrypted teacher logits</text>
+  </g>
+
+  <!-- ====================== Phase 2a: plaintext warm-start (α only) ====================== -->
+  <g id="phase-2a">
+    <rect x="355" y="160" width="130" height="120" fill="#8B9EA8" fill-opacity="0.5" stroke="#333"/>
+    <text x="420" y="180" text-anchor="middle" font-weight="bold" fill="#333">Server</text>
+    <text x="420" y="205" text-anchor="middle" fill="#333">plaintext SGD</text>
+    <text x="420" y="222" text-anchor="middle" fill="#333">on (P, y_P)</text>
+    <text x="420" y="250" text-anchor="middle" font-style="italic" fill="#333">→ θ_0*</text>
+    <text x="420" y="300" text-anchor="middle" fill="#666" font-size="10">α only · plaintext</text>
+  </g>
+
+  <!-- ====================== Phase 2b: encrypted ensemble target ====================== -->
+  <g id="phase-2b">
+    <rect x="515" y="160" width="150" height="120" fill="#8B9EA8" stroke="#333"/>
+    <text x="590" y="180" text-anchor="middle" font-weight="bold" fill="#fff">Server</text>
+    <text x="590" y="205" text-anchor="middle" fill="#fff" font-size="11">Ỹ = Σ_i ⟨α_i^β⟩ · ⟨T_i(P)⟩</text>
+    <text x="590" y="225" text-anchor="middle" fill="#fff" font-style="italic" font-size="10">encrypted ensemble target</text>
+    <text x="590" y="260" text-anchor="middle" fill="#fff" font-size="10">depth ≤ 3</text>
+    <text x="590" y="300" text-anchor="middle" fill="#666" font-size="10">encrypted</text>
+
+    <!-- arrow carrying θ_0* from 2a into 2c (top track) -->
+    <line x1="485" y1="200" x2="700" y2="140" stroke="#8B9EA8" stroke-width="1.2" stroke-dasharray="2 2" marker-end="url(#arrow-server)"/>
+    <text x="595" y="135" text-anchor="middle" fill="#8B9EA8" font-size="10" font-style="italic">θ_0* (plaintext)</text>
+
+    <!-- arrow carrying Ỹ from 2b into 2c (bottom track) -->
+    <line x1="665" y1="240" x2="700" y2="335" stroke="#D95F02" stroke-width="1.2" marker-end="url(#arrow-enc)"/>
+    <text x="675" y="295" text-anchor="middle" fill="#D95F02" font-size="10" font-style="italic">⟨Ỹ⟩</text>
+  </g>
+
+  <!-- ====================== Phase 2c: TWO PARALLEL TRACKS ====================== -->
+
+  <!-- Top track: plaintext student forward pass -->
+  <g id="plaintext-track">
+    <rect x="700" y="140" width="240" height="90" fill="#E0D2BA" stroke="#333" stroke-width="1.2"/>
+    <text x="820" y="160" text-anchor="middle" font-weight="bold" fill="#333">θ (plaintext)</text>
+    <text x="820" y="182" text-anchor="middle" fill="#333" font-size="11">forward pass</text>
+    <text x="820" y="202" text-anchor="middle" fill="#333" font-style="italic" font-size="10">on probe inputs P</text>
+    <text x="820" y="220" text-anchor="middle" fill="#666" font-size="10">student state in the clear</text>
+  </g>
+
+  <!-- Bottom track: encrypted accumulator -->
+  <g id="encrypted-track">
+    <rect x="700" y="270" width="240" height="100" fill="#8B9EA8" stroke="#333" stroke-width="1.2"/>
+    <text x="820" y="290" text-anchor="middle" font-weight="bold" fill="#fff">⟨Δ⟩ (encrypted accumulator over ⟨g_t⟩)</text>
+    <text x="820" y="312" text-anchor="middle" fill="#fff" font-size="11">accumulate ⟨g_t⟩</text>
+    <text x="820" y="332" text-anchor="middle" fill="#fff" font-style="italic" font-size="10">Δ ← Δ + lr · ⟨g_t⟩</text>
+    <text x="820" y="352" text-anchor="middle" fill="#fff" font-size="10">per-step depth ≤ 3</text>
+  </g>
+
+  <!-- Phase 2c title under tracks -->
+  <text x="820" y="395" text-anchor="middle" fill="#666" font-style="italic" font-size="10">two parallel tracks: plaintext student + encrypted teacher-induced delta</text>
+
+  <!-- ====================== Phase 2c → 3 composition glyph ====================== -->
+  <g id="composition">
+    <!-- bracket joining the two tracks -->
+    <path d="M 940 185 L 955 185 L 955 320 L 940 320" fill="none" stroke="#333" stroke-width="1.2"/>
+    <!-- the '+' glyph -->
+    <circle cx="970" cy="252" r="18" fill="#fff" stroke="#333" stroke-width="1.5"/>
+    <text x="970" y="259" text-anchor="middle" font-size="24" font-weight="bold" fill="#333">+</text>
+
+    <!-- output arrow into Phase 3 with the composition label -->
+    <line x1="988" y1="252" x2="1015" y2="252" stroke="#8B9EA8" stroke-width="1.8" marker-end="url(#arrow-server)"/>
+    <text x="1080" y="240" text-anchor="middle" fill="#8B9EA8" font-weight="bold" font-size="12">⟨θ_E⟩ = ⟨θ_0*⟩ + ⟨Δ⟩</text>
+  </g>
+
+  <!-- ====================== Phase 3: collective key-switch + delivery ====================== -->
+  <g id="phase-3">
+    <!-- Server box in Phase 3 doing key-switch -->
+    <rect x="1010" y="255" width="80" height="60" fill="#8B9EA8" stroke="#333"/>
+    <text x="1050" y="280" text-anchor="middle" fill="#fff" font-weight="bold">Server</text>
+    <text x="1050" y="300" text-anchor="middle" fill="#fff" font-style="italic" font-size="10">key-switch</text>
+    <text x="1050" y="332" text-anchor="middle" fill="#666" font-size="10">collective key-switch</text>
+
+    <!-- Three client boxes (reused positions, fanning right) -->
+    <rect x="1130" y="80"  width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="1160" y="100" text-anchor="middle">C_1</text>
+    <rect x="1130" y="180" width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="1160" y="200" text-anchor="middle">C_2</text>
+    <rect x="1130" y="380" width="60" height="32" fill="#C6A87D" stroke="#333"/>
+    <text x="1160" y="400" text-anchor="middle">C_3</text>
+
+    <!-- fan-out arrows from server to clients -->
+    <line x1="1090" y1="265" x2="1130" y2="100" stroke="#333" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="1090" y1="280" x2="1130" y2="196" stroke="#333" stroke-width="1.2" marker-end="url(#arrow)"/>
+    <line x1="1090" y1="305" x2="1130" y2="395" stroke="#333" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+    <text x="1160" y="145" text-anchor="middle" fill="#333" font-size="11">θ_E</text>
+    <text x="1160" y="245" text-anchor="middle" fill="#333" font-size="11">θ_E</text>
+    <text x="1160" y="430" text-anchor="middle" fill="#333" font-size="10" font-style="italic">θ_E (plaintext)</text>
+  </g>
+
+  <!-- Footer legend -->
+  <g id="legend">
+    <rect x="20"  y="485" width="14" height="14" fill="#C6A87D" stroke="#333"/>
+    <text x="40"  y="497">Client</text>
+    <rect x="90"  y="485" width="14" height="14" fill="#8B9EA8" stroke="#333"/>
+    <text x="110" y="497">Server / encrypted state</text>
+    <rect x="260" y="485" width="14" height="14" fill="#E0D2BA" stroke="#333"/>
+    <text x="280" y="497">Plaintext student state (Phase 2c top track)</text>
+    <line x1="560" y1="492" x2="595" y2="492" stroke="#1B9E77" stroke-width="2"/>
+    <text x="600" y="497">key-share</text>
+    <line x1="670" y1="492" x2="705" y2="492" stroke="#D95F02" stroke-width="2"/>
+    <text x="710" y="497">encrypted upload</text>
+    <line x1="820" y1="492" x2="855" y2="492" stroke="#8B9EA8" stroke-width="2"/>
+    <text x="860" y="497">encrypted server-side</text>
+    <line x1="990" y1="492" x2="1025" y2="492" stroke="#333" stroke-width="2"/>
+    <text x="1030" y="497">plaintext delivery</text>
+  </g>
+</svg>

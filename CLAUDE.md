@@ -51,6 +51,12 @@ read for reasoning and never for what to do next.
 | the per-query cost and the argmax | `results/fhe_serve/cost_grid.json`, `argmax_tournament.csv` |
 | communication | `results/fhe_serve/comm_grid.json`, the `serving` chain at `log_n` 15 |
 | the bootstrapping key size and its generation time | `results/fhe_serve/btp_keys.json` |
+| membership inference, report only | `results/mia_extracted/results.csv` |
+| the coverage-weighted row, report only | `results/row_leakage/results.csv` |
+| one-shot label-only membership, report only | `results/oslo_serving/results.csv` |
+| one real end-to-end query, report only | `results/fhe_serve/real_query.csv` |
+| the selection cost, report only | `results/fhe_serve/selection_cost.csv` |
+| the index premium, report only | `results/fhe_serve/argmax_index.csv` and `argmax_index_btp.csv` |
 | extraction, report only | `results/extraction_budget/results.csv` |
 | the extraction scaling law, report only | `results/extraction_scale/results.csv` |
 | the noise defence, report only | `results/extraction_defence/results.csv` |
@@ -60,11 +66,16 @@ read for reasoning and never for what to do next.
 - `docs/archive/` — superseded notes, plans and issue briefs, provenance only.
 - `archive/` — earlier simulations. `src/v1/` and `src/v2/` are gone; the
   consolidation left one flat `src/` package.
-- **`FL_TDSC/` — REJECTED TDSC SUBMISSION.** The protocol there (encrypted
-  intermediate-feature distillation, polynomial activations, server-side encrypted
-  SGD) is not the current method. Historical and audit-only.
+- **`archive/deprecated-2026-09-02/`** — moved out of the tree on 2026-09-02 and
+  documented by its own README. It holds the old `mia/` package and the four job
+  wrappers that imported it, the rejected TDSC submission `FL_TDSC/`, and the
+  decision letter in `REJECTED_PAPER/`. The membership attacks the paper reports
+  are `jobs/mia_extracted_head.py`, `jobs/row_leakage.py` and
+  `jobs/oslo_serving.py`, which attack what the protocol exposes rather than a
+  released model.
 - `comparators/` — vendored upstream code for citation and audit; many vendors
   have stale APIs and are not runnable. Cite `comparators/REPORTED_RESULTS.md`.
+  NOT deprecated: the paper cites its extracted tables.
 
 ## The current method (what we are actually doing)
 
@@ -106,8 +117,8 @@ classifier head is one such map. A decoder's vocabulary projection is another.
 The construction fixes the *position* of the map, not the task. Say this when
 scope comes up, and say we evaluate classification only, because we do.
 
-**Current state (2026-08-23). The paper is two documents at ten pages and
-twenty.** `docs/paper` is the source of truth and it is ahead of Overleaf.
+**Current state (2026-09-02). The paper is two documents at ten pages and
+twenty-three.** `docs/paper` is the source of truth and it is ahead of Overleaf.
 Editing it is expected now, under the rules below.
 
 **Overleaf still holds the pre-restructure paper.** The delivery is a whole-file
@@ -169,40 +180,31 @@ Run `bash scripts/gates.sh` before sending anything anywhere. Nine gates.
 placeholder, then the paper goes out. Gate 9 counts the placeholder and it must
 not survive submission.
 
-## Carried forward, not started (updated 2026-08-23)
+## Carried forward, not started (updated 2026-09-02)
 
-Decided, unstarted, easy to lose. Everything on the 2026-08-20 list that is now
-done has been removed, so this list is short and true.
+Decided, unstarted, easy to lose. Four items left this list on 2026-09-02 because
+they were done, and their records are in the table above.
 
-**The membership-inference work.** Deferred by the user to a later session on the
-technical report. `mia/target.py` still composes `src.phase0`, `src.distill` and
-`src.aggregate` and attacks a released model that no longer exists, so the
-target needs rewiring, not the attacks. `mia/attacks.py` holds Yeom 2018, LiRA
-and GLiRA, all published, all fine. Open the session with a fresh literature
-search, because the setting changed from a released model to a label-only query
-interface and heads recovered by extraction, and `choquettechoo2021labelonly`
-is already in `refs.bib` cited nowhere. The submission carries one paragraph and
-a pointer.
+**The arXiv identifier.** `refs.bib` carries `arXiv:XXXX.XXXXX`. The report goes
+to arXiv first, its identifier replaces the placeholder, then the paper goes out.
+Gate 9 counts it and it must not survive submission. Nothing else blocks this.
 
-**One real end-to-end encrypted query.** `fhe/main.go` has no flag that loads a
-real head, so every serving benchmark runs on synthetic vectors. Making one
-query real needs a Python exporter for a head out of
-`results/personal_adapter/artifacts/` and about a hundred lines of Go. The
-compute is minutes. Nothing in the submission depends on it, so it belongs to
-the report session.
+**The TDSC editorial office.** Nobody has asked whether a rejected manuscript may
+return. Open since 2026-07-29. It does not block TNSE.
 
-**Fold the twelve CIFAR-10 cells into the selection table.** Free, no compute,
-and it turns the selection result from 13/15 into 24/27. That table is
-report-only now, so this is report work.
+**Two sentences where the two documents differ on purpose.** The report explains
+that the hard-label extraction result it cites carries a factor exponential in
+hidden neurons, which a single linear map does not have. The submission keeps the
+shorter claim, which Halil ruled defensible on 2026-09-02 because clients are
+semi-honest and cannot mount unconstrained boundary search. Do not "fix" the
+submission to match.
 
-**The CUDA microbenchmarks.** 30 ms for a product and 29.5 ms for a rotation
-under a CUDA CKKS implementation at ring degree 2^16 carried no record and no
-citation, so they left the submission on 2026-08-23. `yang2024phantom` sits in
-the bibliography and is plausibly the source. The report either attributes them
-after checking or drops them. Do not guess.
-
-**The TDSC editorial office.** Nobody has asked whether a rejected manuscript
-may return. Open since 2026-07-29. It does not block TNSE.
+**The selection cost was measured under collective refresh, not bootstrapping.**
+`results/fhe_serve/selection_cost.csv` gives two hours and 145 GiB at twenty
+clients and a hundred classes, and collective refresh is 99.8 per cent of the
+traffic. The protocol specifies server-side bootstrapping, under which the
+traffic would fall and the wall clock rise. Neither pair is measured. The report
+says so; the submission does not report a selection cost at all.
 
 ## Venue (decided 2026-07-29, reconfirmed 2026-08-23)
 
@@ -257,10 +259,10 @@ Explorer round-trips (those are unreliable in their setup). When authoring Colab
 - **Every results cell prints CSV that is ready to paste directly into a `.csv` file.** Plain
   comma-separated rows with ONE header line, ONE table per cell, **no markdown pipes/formatting and no prose
   mixed into the CSV block**. The user copies the cell output verbatim into `results/<case>/<name>.csv`. Use
-  the column order of the matching `src/report.py` / `mia/report.py` table. Canonical formats:
+  the column order of the matching `src/report.py` table. Canonical formats:
     - **sweep / accuracy:** `backbone,N,alpha,method,seed,acc,theta0_acc,mean_teacher,best_teacher,oracle,status`
     - **λ-verify (026):** `backbone,N,alpha,method,seed,lambda,acc`  — one row per λ
-    - **MIA (021/028):** `backbone,N,alpha,method,seed,surface,attack,tpr_at_0.1pct,tpr_at_1pct,auc`
+    - **membership:** the columns of `results/mia_extracted/results.csv`, written by `jobs/mia_extracted_head.py`
   Implement as `print(df.to_csv(index=False))` or a manual `print(",".join(...))` loop — header once, then
   rows, copy-paste-clean. (Keep a human-readable table too if useful, but the CSV block is the deliverable.)
 - **Robust setup, never `git pull`.** Clone if absent, then `git fetch origin master` +
@@ -427,8 +429,8 @@ src/                                 # SINGLE flat package (post-consolidation; 
   sweep.py       resumable CLI over the grid; per-cell JSON
   report.py      results/<case>/ writer (README + results.csv + partition_diagnostic.jsonl)
 
-fhe/                                 # Lattigo (Go) real-FHE validation (M2)
-mia/                                 # membership-inference attack suite (M2)
+fhe/                                 # Lattigo (Go) real-FHE validation, and the
+                                     #   real-query path (serve_real.go)
 
 jobs/                                # sbatch wrappers — the ONLY entrypoints that run python
 scripts/                             the gates, committed and runnable
@@ -507,7 +509,8 @@ results/colab_results/               # the authoritative notebook + exported tab
 - **Never say clients learn "nothing at all."** They learn the labels they query.
 - **Never commit LaTeX build artifacts.** `.aux`, `.log`, `.out`, `.blg`, `.bbl`
   are gitignored; `main.pdf` stays tracked.
-- **Never edit `FL_TDSC/*.tex`.** It is the rejected submission, audit-only.
+- **Never edit anything under `archive/`.** That includes the rejected TDSC
+  submission and the retired membership suite, both moved there 2026-09-02.
 - **Never rewrite a paragraph of the paper.** The PIs read commit `cc1df39`.
   Cut by deleting and moving. `scripts/check_subseq.py` decides, and anything it
   reports as rewritten is the user's call, not yours. Paper writing is HITL.

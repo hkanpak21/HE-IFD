@@ -1,0 +1,73 @@
+[
+  {
+    "method": "M0",
+    "arch": "lenet5",
+    "weight_mode": "samples",
+    "N": 2,
+    "seed": 42,
+    "alpha": 0.1,
+    "K": 2,
+    "teacher_epochs": 3,
+    "anchor_scale": 3.0,
+    "anchor_lambda": 1.0,
+    "anchors_per_class": 50,
+    "within_class_cos": 0.5,
+    "pre_align_epochs": 0,
+    "probe_size": 0,
+    "student_acc": 0.3674,
+    "per_class_acc": {
+      "0": 0.00205761316872428,
+      "1": 0.9982578397212544,
+      "2": 0.8228346456692913,
+      "3": 0.37782340862423,
+      "4": 0.002079002079002079,
+      "5": 0.06289308176100629,
+      "6": 0.0,
+      "7": 0.0,
+      "8": 0.2975708502024291,
+      "9": 0.971830985915493
+    },
+    "per_teacher_acc": [
+      0.4852,
+      0.6958
+    ],
+    "best_teacher": 0.6958,
+    "mean_teacher": 0.5905,
+    "worst_teacher": 0.4852,
+    "per_client_total": [
+      23570,
+      36430
+    ],
+    "per_client_per_class": [
+      [
+        0,
+        5297,
+        0,
+        0,
+        5840,
+        0,
+        5917,
+        6264,
+        0,
+        252
+      ],
+      [
+        5923,
+        1445,
+        5958,
+        6131,
+        2,
+        5421,
+        1,
+        1,
+        5851,
+        5697
+      ]
+    ],
+    "phase_teacher_sec": 7.418431043624878,
+    "phase_distill_sec": 6.918310165405273,
+    "phase_aggregate_sec": 9.393692016601562e-05,
+    "phase_eval_sec": 0.6315088272094727,
+    "wall_sec": 16.213817834854126
+  }
+]
