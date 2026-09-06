@@ -60,8 +60,8 @@ changing what sets it. Adapting a pretrained transformer by this route is out of
 reach, and that is the case this paper addresses.}
 
 Applying both measures still leaves one artifact exposed, namely the model itself.
-One-shot protocols end by handing the final model to every participant, which is
-unacceptable when the model may not be distributed at all. A model fine-tuned on
+One-shot protocols end by handing the final model to every participant, which
+rules them out when the model may not be distributed at all. A model fine-tuned on
 confidential records can be a regulated artifact in high-risk domains such as
 health, biometrics, and credit~\cite{euaiact2024}.
 
@@ -102,7 +102,10 @@ which, in a transformer, is a single place. The three contributions below follow
 
 \item \textbf{A selection rule that runs under encryption.} Two arrangements are
   servable at the same cost, the shared head over each client's own adapter and the
-  shared head over the bare public backbone. Each client scoring both on its own held-out data and voting estimates the
+  shared head over the bare public backbone. The two fail for opposite reasons, the
+  shared head when few clients hold a class and the personal adapter when a
+  client's representation drifts too far. Which failure binds depends on the task
+  and on the partition, so the federation must measure both. Each client scoring both on its own held-out data and voting estimates the
   wrong quantity. The
   estimator given here corrects that, needs no fitted threshold, and reveals only
   which arrangement won (\cref{sec:selection}).

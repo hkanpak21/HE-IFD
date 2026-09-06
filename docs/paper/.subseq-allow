@@ -1844,3 +1844,129 @@ under the server-side bootstrapping the protocol specifies, and the premium is
 the same to within half a point although the absolute latency differs
 thirteenfold. What the index costs is therefore a property of the fold and not of
 the mechanism that restores its levels.
+%%
+# 2026-09-06. Halil asked for the frozen down-projection to carry its
+# citation at the point it is stated. FFA-LoRA was already cited in Related
+# Work for exactly this construction. One \cite added, nothing else changed.
+The trainable unit is a rank-$8$ low-rank adapter with its down-projection frozen at a shared public initialisation~\cite{sun2024ffalora}, together with a classifier head. We use no labelled public data anywhere.
+%%
+# 2026-09-06. Table 1's caption. Halil could not follow the closing sentence,
+# which said the estimator selects per seed and then gave two accuracies that
+# do not match the bolded column. Those numbers moved into the selection
+# subsection. The caption now says what alone, disclosed and pooled are, which
+# it never did. Alternative rejected: leave the columns undefined.
+<FLOAT> Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
+The servable columns are the two arrangements the protocol answers queries from,
+and bold marks the better one. The reference columns are not servable under the
+threat model of  . Alone is one client's own model with no
+federation, disclosed is the merged model this protocol declines to build, and
+pooled is centralised training on the union of the data.
+%%
+# 2026-09-06. The selection rule is a headline contribution and the submission
+# gave it four sentences of results and no explanation. It now says why the
+# vote fails and reports the counts over all 27 cells with the regret. Halil
+# rejected promoting the report's table, which would not fit in ten pages.
+The natural procedure is for each client to measure both arrangements
+on data it held back and vote. It estimates the wrong quantity. The shared
+arrangement is one model, so pooled measurements track its global accuracy, while
+client $j$ can measure the personal arrangement only on its own distribution,
+which is the one its own model was fitted to. The vote is therefore optimistic for
+the personal arrangement and picks correctly in $8$ of $27$ cells. The estimator
+of   scores both under the federation's own class prior and
+picks correctly in $23$, or $24$ when unobserved classes are filled from each
+client's rarest classes rather than with zero. A wrong choice gives up $0.470$ of
+accuracy under the vote and $0.021$ under the estimator.
+  reports every cell.
+%%
+# 2026-09-06. Three measurements landed after the PIs read the draft:
+# membership at chance against the extracted copy and against the head in
+# plaintext, the coverage-weighted row, and OSLO. Two sentences state the
+# first and point at the report. Records: results/mia_extracted/results.csv,
+# results/row_leakage/results.csv, results/oslo_serving/results.csv.
+\emph{Fidelity} is the rate at which a copy agrees with the served
+model. Reaching fidelity $0.90$ takes
+about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
+$2.0\times10^5$ on Banking77. The head has $\Cc d$ parameters, where $d$ is the
+feature dimension, and in each case fidelity $0.90$ costs
+between three and five times that number of queries. A deployment can therefore set its
+allowance from $\Cc$, $d$ and the fidelity it concedes. A copy at that fidelity
+reproduces the served model's decisions, and published membership attacks against
+it and against the head in plaintext both sit at chance.   gives the extraction study in full.
+%%
+# 2026-09-06. One word. "Unacceptable" passed judgement where the sentence
+# only needs to state applicability. Halil asked for a softer word.
+Applying both measures still leaves one artifact exposed, namely the model itself.
+One-shot protocols end by handing the final model to every participant, which
+rules them out when the model may not be distributed at all. A model fine-tuned on
+confidential records can be a regulated artifact in high-risk domains such as
+health, biometrics, and credit~\cite{euaiact2024}.
+%%
+# 2026-09-06. The selection contribution named the failure of the held-out
+# vote without ever saying why selection is needed. Three sentences added: the
+# two arrangements fail for opposite reasons and which failure binds depends on
+# the task and the partition. Halil rejected the shorter version that blamed
+# thin class counts alone, because the DBpedia sweep and the twelve CIFAR-10
+# cells go the other way.
+\item \textbf{A selection rule that runs under encryption.} Two arrangements are
+  servable at the same cost, the shared head over each client's own adapter and the
+  shared head over the bare public backbone. The two fail for opposite reasons, the
+  shared head when few clients hold a class and the personal adapter when a
+  client's representation drifts too far. Which failure binds depends on the task
+  and on the partition, so the federation must measure both. Each client scoring both on its own held-out data and voting estimates the
+  wrong quantity. The
+  estimator given here corrects that, needs no fitted threshold, and reveals only
+  which arrangement won ( ).
+%%
+# 2026-09-06. One sentence became two and "That is the head." was deleted.
+# Halil called the original too long. Nothing was added.
+\paragraph{Necessity of the partition} The client that sends an inference query must compute
+the features of that query itself, by \textbf{C6}. If the shared trained
+quantity were an adapter placed inside the backbone, the features would depend on
+it, and computing them would require evaluating the backbone with encrypted
+weights. The client would then have to evaluate every nonlinearity of the network
+homomorphically, which is the cost this design exists to avoid. The trained
+quantity that is shared must therefore attach after the last nonlinearity. In a
+transformer, the only such point is the final linear map.
+%%
+# 2026-09-06. A reviewer will ask what happens if more than the final linear
+# map is shared, with the client doing the nonlinearities. Two sentences give
+# the dichotomy. The argument in full is in the report's Scope section.
+The requirement
+constrains the \emph{position} of the shared map, not the task it serves. Any
+trained linear map that sits after the last nonlinearity satisfies it, provided
+the querying client can compute the features that enter the map. A classifier
+head is one such map. The vocabulary projection of an autoregressive decoder is
+another. Placing the map earlier forces the client either to evaluate the
+nonlinearities above it under encryption or to decrypt an intermediate value,
+which hands back the numbers the serving path withholds. We evaluate
+classification only.
+%%
+# 2026-09-06. Table 1's caption. Halil could not follow the closing sentence,
+# which said the estimator selects per seed and then gave two accuracies that
+# do not match the bolded column. Those numbers moved into the selection
+# subsection. The caption now says what alone, disclosed and pooled are, which
+# it never did. Alternative rejected: leave the columns undefined.
+<FLOAT> Accuracy on the global test set, three seeds, $\Nc=10$, $\alpha=0.1$.
+The servable columns are the two arrangements the protocol answers queries from,
+and bold marks the better one. The reference columns are not servable under the
+threat model of  . Alone is one client's own model with no
+federation, disclosed is the merged model this protocol declines to build, and
+pooled is centralised training on the union of the data. We did not run the pooled reference on CIFAR-100. On one seed
+the Dirichlet draw assigns fewer than twenty samples to some clients, which cannot
+train, so the effective federation is seven on AG-News and nine on TREC.
+%%
+# 2026-09-06. Report only. The full dichotomy for sharing a map inside the
+# backbone. Either the client decrypts an intermediate, which is a linear
+# oracle recovering the shared weights in d queries, or every nonlinearity
+# above the site runs homomorphically. The 769-query anchor is measured in
+# the extraction study.
+Delegating the work to the client does not avoid that cost. Suppose the
+shared map sits at a site inside the backbone and the client evaluates the layers
+above it itself. The client then needs that site's output in plaintext, so the
+protocol must decrypt the map evaluated at a point the client chose. That is a
+linear oracle on the shared weights, and $d$ independent queries recover them
+exactly by linear solve. The measurement above prices such an oracle at $769$
+answers, against the $1.2\times10^4$ to $2.0\times10^5$ that labels demand. The
+alternative leaves the intermediate encrypted, which returns every nonlinearity
+above the site to the homomorphic circuit. Several maps at one position cost
+neither, since parallel maps after the last nonlinearity add rows and no depth.

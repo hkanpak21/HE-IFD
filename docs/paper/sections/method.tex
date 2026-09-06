@@ -103,15 +103,17 @@ quantity were an adapter placed inside the backbone, the features would depend o
 it, and computing them would require evaluating the backbone with encrypted
 weights. The client would then have to evaluate every nonlinearity of the network
 homomorphically, which is the cost this design exists to avoid. The trained
-quantity that is shared must therefore attach after the last nonlinearity, and in
-a transformer, the only such point is the final linear map. That is the head.
+quantity that is shared must therefore attach after the last nonlinearity. In a
+transformer, the only such point is the final linear map.
 
 \paperonly{The requirement
 constrains the \emph{position} of the shared map, not the task it serves. Any
 trained linear map that sits after the last nonlinearity satisfies it, provided
 the querying client can compute the features that enter the map. A classifier
 head is one such map. The vocabulary projection of an autoregressive decoder is
-another. We evaluate
+another. Placing the map earlier forces the client either to evaluate the
+nonlinearities above it under encryption or to decrypt an intermediate value,
+which hands back the numbers the serving path withholds. We evaluate
 classification only.}
 
 \tronly{The requirement
@@ -181,7 +183,7 @@ backbone $\featx$ and the same public head initialiser $\thz$.}
 \paragraph{Cost} The server performs one ciphertext addition per client per
 ciphertext, one encrypted reciprocal, and one multiplication. The encrypted object
 is the head alone, whose size is set by the number of classes and the feature
-dimension and not by the backbone behind it. Communication is one upload per
+dimension. Communication is one upload per
 client and no download of model parameters at all.
 
 \subsection{Inference on the Encrypted Head}
