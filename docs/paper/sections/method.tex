@@ -1,7 +1,7 @@
 \section{Method}
 \label{sec:method}
 
-The protocol runs in two phases. In the first, each client fine-tunes an adapter
+HE-OFT runs in two phases. In the first, each client fine-tunes an adapter
 and a classifier head on the same frozen public backbone, keeps the adapter, and
 uploads its head displacement once, weighted by its own per-class counts and
 encrypted. In the second, a client computes the features of its query
@@ -13,18 +13,13 @@ encrypted head and reduces the encrypted logits to the index of the largest.
 
 We consider $\Nc$ clients holding private labeled data over a common label space
 of $\Cc$ classes. Client $j$ holds data $\Dj$ of size $\nj$. The class proportions
-differ across clients, and a client may hold no example of a class. The clients want a classifier
-that works across the whole label space, and they cannot pool their data to build
-one.
+differ across clients, and a client may hold no example of a class. The clients seek a classifier that operates across the entire label space, but cannot pool their data to train a single model.
 
-Three requirements separate this setting from ordinary federated learning. (1) The
-protocol is \emph{one-shot}. Each client uploads once. (2) Confidentiality is \emph{cryptographic}. A client's contribution is never
+Three requirements separate this setting from vanilla FL. (1) The
+protocol is \emph{one-shot}. Each client uploads its encrypted head displacement once. (2) Confidentiality is based on \emph{cryptography}. A client's contribution is never
 available in plaintext to any other party. (3) The resulting model is
 \emph{never disclosed}. No party, client or server, ever holds the trained
-classifier in plaintext.
-
-Each requirement forecloses a family of designs, and the remaining space is
-narrow. We record the chain of implications here.
+classifier in plaintext. Each requirement forecloses a family of designs, and the remaining space is narrow. We record the chain (C) of implications here.
 
 \paperonly{\begin{itemize}
 \item[\textbf{C1}] \emph{Optimization cannot run under encryption at acceptable
@@ -48,7 +43,9 @@ narrow. We record the chain of implications here.
 \item[\textbf{C6}] \emph{The model is never disclosed, yet it must answer
   queries.} \emph{Therefore}, the client runs the backbone
   and its own adapter in plaintext, and the trained quantity that is shared cannot
-  sit inside the backbone.}
+  sit inside the backbone.
+  \end{itemize}
+}
 
 \tronly{\begin{itemize}
 \item[\textbf{C1}] \emph{Optimization cannot run under encryption at acceptable
@@ -56,7 +53,7 @@ narrow. We record the chain of implications here.
   bootstrapped homomorphic circuits. \emph{Therefore}, for efficiency, all learning happens in
   plaintext on the clients, and the server performs no learning.
 \item[\textbf{C2}] \emph{A server computing on ciphertexts cannot read its
-  inputs.} It cannot inspect, compare, or branch, so it cannot select a
+  inputs.} It cannot inspect, compare, or branch, therefore it cannot select a
   data-dependent aggregation rule. \emph{Therefore}, the choice is deferred to the
   clients, who make it without decrypting anything (\cref{sec:selection}).
 \item[\textbf{C3}] \emph{Models trained from different starting points do not
@@ -80,17 +77,16 @@ narrow. We record the chain of implications here.
   queries.} A query is formed from features, and the client that asks the query must be able
   to compute those features itself. \emph{Therefore}, the client runs the backbone
   and its own adapter in plaintext, and the trained quantity that is shared cannot
-  sit inside the backbone.}
+  sit inside the backbone.
 
+\end{itemize}}
   This requirement distinguishes the present design from one in which
   the model is released, and \cref{sec:split} derives its consequences.
-\end{itemize}
-
 \subsection{Partitioning the Trainable Unit}
 \label{sec:split}
 
 \paragraph{The construction} Each client uses the same frozen public backbone
-$\featx$, and trains two things on its own data, a low-rank adapter $A_j$ that
+$\featx$, and trains a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
 head from the public initialiser and uploads it once. The server combines the
@@ -107,28 +103,24 @@ quantity that is shared must therefore attach after the last nonlinearity. In a
 transformer, the only such point is the final linear map.
 
 \paperonly{The requirement
-constrains the \emph{position} of the shared map, not the task it serves. Any
-trained linear map that sits after the last nonlinearity satisfies it, provided
-the querying client can compute the features that enter the map. A classifier
-head is one such map. The vocabulary projection of an autoregressive decoder is
-another. Placing the map earlier forces the client either to evaluate the
+constrains the \emph{position} of the shared map, not the task it serves. Any trained linear map placed after the final nonlinearity satisfies this requirement, provided that the querying client can compute the features fed into the map. A classifier head is one example; the vocabulary projection in an autoregressive decoder is another. Placing the map earlier forces the client either to evaluate the
 nonlinearities above it under encryption or to decrypt an intermediate value,
-which hands back the numbers the serving path withholds. We evaluate
+which hands back the numbers the serving path withholds. We evaluate the
 classification only.}
 
 \tronly{The requirement
 constrains the \emph{position} of the shared map, not the task it serves. Any
-trained linear map that sits after the last nonlinearity satisfies it, provided
+trained linear map that comes after the last nonlinearity satisfies it, provided
 the querying client can compute the features that enter the map. A classifier
 head is one such map. The vocabulary projection of an autoregressive decoder is
-another, since it is linear, sits after the final layer normalisation, and takes
+another, since it is linear, comes after the final layer normalisation, and takes
 features the client can compute from a prefix it generated itself. We evaluate
 classification only. The construction itself does not depend on the label space
 being a set of classes, and \cref{sec:scope} records what a generation setting
 would additionally require, including the restriction to greedy decoding that
 \cref{sec:serving} imposes.}
 
-The adapter is relocated. Each client retains its own, so the
+The adapter is relocated. Each client retains its own, thus the
 representation still adapts to local data. The distinction follows from coverage. A client
 can improve its own representation alone, but it cannot learn to recognise a class
 it has never observed. Coverage is a property of the head, which is exactly what
@@ -149,11 +141,11 @@ coverage-weighted combination
 in which row $c$ of the shared head is the count-weighted average of the clients'
 row-$c$ displacements. Clients holding a class decide its row, and rows that no
 client covers remain at the public initialiser. Each client forms the products
-$g_j\odot\disp$ locally, before encryption, so the server only adds ciphertexts.
+$g_j\odot\disp$ locally, before encryption, thus the server only adds ciphertexts.
 
 \paragraph{The division} The denominator of \cref{eq:aggregate} is the vector of
 federation-wide per-class totals. It cannot be decrypted. Every client knows its
-own counts, so a coalition of $\Nc-1$ clients that learned the totals would
+own counts, hence a coalition of $\Nc-1$ clients that learned the totals would
 subtract its own and read the remaining client's class histogram exactly. The reciprocal
 is therefore evaluated under encryption, using an inversion circuit over the
 positive domain whose refreshes are collective. It is paid once, at aggregation, never per
@@ -215,7 +207,7 @@ ciphertext rather than ciphertext by plaintext, and \cref{sec:exp-cost} reports
 what that costs.}
 
 \paperonly{\paragraph{Restriction to the predicted label} Returning logits would defeat the
-construction. The head is a linear map on features the client computes itself, so a
+construction. The head is a linear map on features the client computes itself, therefore a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
 dimension~\cite{tramer2016stealing}. The same
@@ -227,7 +219,7 @@ extraction impossible, and \cref{sec:threat} states the resulting bound
 as a bound on queries.}
 
 \tronly{\paragraph{Restriction to the predicted label} Returning logits would defeat the
-construction. The head is a linear map on features the client computes itself, so a
+construction. The head is a linear map on features the client computes itself, therefore a
 client that reads logits for feature vectors of its choosing recovers the head by
 solving a linear system in as many queries as the feature
 dimension~\cite{tramer2016stealing}. This is not a hypothetical concern. The same
@@ -240,18 +232,17 @@ policy. It places an adversary in the hard-label setting, where functionally
 equivalent extraction has only recently been achieved for general
 networks~\cite{chen2024hardlabel,carlini2025hardlabel}. Those results carry a
 factor exponential in the number of hidden neurons, and our shared quantity has
-none, so the restriction buys less here than they suggest. It removes the linear
+none, thus the restriction buys less here than they suggest. It removes the linear
 solve and puts a search for decision boundaries in its place, at a factor
 logarithmic in the precision demanded, and it leaves the head determined only up
 to a positive scale and a vector added to every row. It does not make
 extraction impossible, and \cref{sec:threat} states the resulting bound
 as a bound on queries rather than a cryptographic hardness claim.}
 
-\paragraph{Directed decryption} Decryption needs a quorum, so
-other clients necessarily participate in producing an answer to a question they did
-not ask. Rather than decrypt the label collectively, which would reveal it to
-every participant, the quorum key-switches the ciphertext to the querying client's
-public key.
+\paragraph{Directed decryption} Decryption needs a quorum, and clients other than
+the querier take part in answering each query. They contribute partial
+decryptions and read nothing, because the quorum key-switches the ciphertext to
+the querying client's public key rather than decrypting the label collectively.
 
 \begin{algorithm}[t]
 \caption{Answering one query. The shared head remains a ciphertext throughout.}
@@ -275,41 +266,42 @@ public key.
 \end{algorithm}
 
 \paperonly{\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
-that is not shallow. Packing the logits into one ciphertext and
+that costs more than one level, because it compares logits rather than adding or
+scaling them. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. The server is not trusted with anything. It
-holds the collective public key, the evaluation keys, and ciphertexts, so it
+holds the collective public key, the evaluation keys, and ciphertexts; thus it
 computes but cannot decrypt.}
 
 \tronly{\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
-that is not shallow. Evaluated as a sequential fold of $\Cc-1$ comparisons it costs
+that costs more than one level, because it compares logits rather than adding or
+scaling them. Evaluated as a sequential fold of $\Cc-1$ comparisons, it costs
 minutes for a large label space. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. None of this is particular to the multiparty setting. Homomorphic
 evaluation under a collectively generated key is identical to evaluation under a
-single key, and the schemes differ only in key generation and in decryption, so
+single key, and the schemes differ only in key generation and in decryption; therefore
 single-key results carry over. The server is not trusted with anything. It
-holds the collective public key, the evaluation keys, and ciphertexts, so it
+holds the collective public key, the evaluation keys, and ciphertexts; therefore it
 computes but cannot decrypt, and it learns neither the model nor any client's
 data. It is trusted only for availability, and where honest computation must be
 certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.}
 
 \paperonly{\paragraph{Scope} This construction serves a trained quantity that is linear in
 the features. Serving a trained quantity that sits inside the backbone is the
-problem that secure transformer inference addresses, and an encrypted shared
-adapter composes with any such system at that literature's cost. We do not
-re-solve it.}
+problem that secure transformer inference addresses. An encrypted shared adapter
+composes with those systems at the cost they report, and we place that case
+outside our scope.}
 
 \tronly{\paragraph{Scope} This construction serves a trained quantity that is linear in
 the features. Serving a trained quantity that sits inside the backbone is the
-problem that secure transformer inference addresses, and an encrypted shared
-adapter composes with any such system at that literature's cost. We do not
-re-solve it. One difference should be noted. Those systems evaluate a plaintext
-model on encrypted inputs, whereas here the shared weights are encrypted as well,
-so each adapter site would carry a ciphertext-by-ciphertext product. The dominant
-cost in that literature is the nonlinearities, which are unchanged, so the added
+problem that secure transformer inference addresses. An encrypted shared adapter
+composes with those systems at the cost they report, and we place that case
+outside our scope. One difference should be noted. Those systems evaluate a plaintext
+model on encrypted inputs, whereas here the shared weights are encrypted as well; therefore each adapter site would carry a ciphertext-by-ciphertext product. The dominant
+cost in that literature is the nonlinearities, which are unchanged; thus the added
 cost is the low-rank product per site rather than a different order of magnitude.}
 
 \subsection{Candidate Selection Under Encryption}
@@ -317,19 +309,19 @@ cost is the low-rank product per site rather than a different order of magnitude
 
 \tronly{\input{figures/selection}}
 
-\paragraph{The construction} Two arrangements are servable at the same cost, the
+\paragraph{The construction} Two arrangements are available at the same cost: the
 shared head over each client's own adapter, and the shared head over the bare
 public backbone with no adapter at all. Which is better depends on the task, and
 the federation must choose without decrypting either. Each client evaluates both
 on data it holds back from its own training, entirely under encryption, and
-reports encrypted per-class counts. The counts are combined into one encrypted
-score per arrangement, and exactly
-one value is decrypted, which arrangement the federation adopts.
+reports encrypted per-class counts. The server combines the counts into one encrypted
+score per arrangement, and the federation decrypts exactly one value, the index
+of the arrangement it adopts.
 
 \paperonly{\paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
 procedure estimates the wrong quantity. The arrangement without an
-adapter is a single model, so pooled held-out measurements estimate its accuracy on the global
+adapter is a single model, thus pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
 models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimistic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
@@ -339,12 +331,12 @@ chooses wrongly whenever the two differ.}
 measure the accuracy of both arrangements on its held-out data and vote. The
 procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, and the union of the clients' data is the whole training
-set, so pooled held-out measurements estimate its accuracy on the global
+set, thus pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
 models, and client $j$'s held-out data can only measure client $j$'s own model. How
 client $j$'s model performs on the other clients' distributions is not observable
 locally, and that is precisely where it fails. A client's held-out set also
-contains only the classes that client holds, so it cannot measure performance on
+contains only the classes that client holds, thus it cannot measure performance on
 classes the client has never seen. The measurement is systematically optimistic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
 chooses wrongly whenever the two differ.}
@@ -360,7 +352,7 @@ p_c \;=\; \frac{\sum_j n_{j,c}}{\sum_j \nj},
 where $a_c$ is the accuracy on class $c$ and $p_c$ is that class's share of the
 federation's examples, taken from the per-class counts already used in
 \cref{eq:aggregate}. For the shared
-arrangement there is one model, so per-class evidence from
+arrangement, there is one model, hence per-class evidence from
 different clients concerns the same object and combines. For the personal arrangement each client's evidence concerns only
 its own model, and classes it does not hold contribute no evidence at all. Scoring
 those classes at zero makes $E$ a lower bound for the personal arrangement. There is no fitted threshold anywhere.
@@ -376,7 +368,7 @@ except the index of the winner.}
     \State obtain $\mathsf{Enc}(\ell)$ and $\mathsf{Enc}(\max_c \ell_c)$ as in
            \cref{alg:serve}
     \State select $\mathsf{Enc}(\ell_{y})$ with a plaintext mask
-           \Comment{the client knows $y$, so the mask is public}
+           \Comment{the client knows $y$, thus the mask is public}
     \State add $\mathsf{Enc}\big(\mathbf{1}[\ell_y = \max_c \ell_c]\big)$ to the
            class-$y$ accumulator
   \EndFor
@@ -393,21 +385,21 @@ accuracy on classes a client has not seen, and its only local proxy is accuracy 
 classes it has barely seen. Each
 client therefore reserves at least one held-out example from every class it holds
 before carving the remainder at random. This costs a negligible amount of training data and
-requires no change to the cryptography.}
+requires no change to the cryptographic protocol.}
 
 \tronly{\paragraph{Requirements on the held-out split} The estimator needs an estimate of
 accuracy on classes a client has not seen, and its only local proxy is accuracy on
 classes it has barely seen. A held-out set carved uniformly almost never contains a
-class the client holds one or two examples of, so that proxy is unmeasurable. Each
+class the client holds one or two examples of, thus that proxy is unmeasurable. Each
 client therefore reserves at least one held-out example from every class it holds
 before carving the remainder at random. A client holding a single example of a
-class donates it, so its adapter never trains on that class, which is exactly the
+class donates it, thus its adapter never trains on that class, which is exactly the
 probe the estimator needs. This costs a negligible amount of training data and
-requires no change to the cryptography.}
+requires no change to the cryptographic protocol.}
 
 \paragraph{Cost and disclosure} Every step is depth one except the comparisons,
 which are the same circuit already used for the argmax. One value is decrypted for the whole federation.
 The per-client per-class accuracies are not decrypted, and must not be.
 
-The threat model, the view each party has and what a coalition of clients can
-learn, is stated in \cref{sec:threat}.
+The threat model, including each party’s view and what a coalition of clients can learn, is described in \cref{sec:threat}.
+

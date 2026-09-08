@@ -1,8 +1,14 @@
 \section{Preliminaries}
 \label{sec:prelim}
 
-Client indices are
-$j\in\{1,\dots,\Nc\}$ and class indices are $c\in\{1,\dots,\Cc\}$.
+% We denote client indices as $j\in\{1,\dots,\Nc\}$ and class indices as $c\in\{1,\dots,\Cc\}$.
+
+We denote client indices with $j\in\{1,\dots,\Nc\}$ and class indices are
+$c\in\{1,\dots,\Cc\}$. Client $j$ holds a dataset $\Dj$ of size $\nj$ and uploads
+a head displacement $\disp$, from which the server forms the shared head
+$\thstar$.The frozen public backbone is $\featx$, while $\varphi_j$ denotes this backbone composed with client $j$'s local adapter. We denote $\mathsf{Enc}(\cdot)$
+for encryption under the collective public key and $\tc$ for the decryption
+threshold. \trsee{sec:prelim} provides a comprehensive table of the notation.
 
 \tronly{\begin{table}[t]
 \centering
@@ -35,32 +41,31 @@ $\mathsf{Enc}(\cdot)$ & encryption under the collective public key \\
 
 We build on CKKS~\cite{cheon2017ckks}, which performs approximate arithmetic on
 packed vectors of real numbers under encryption. It is
-levelled\tronly{~\cite{lyubashevsky2010ideal}}, so each multiplication spends one
+a levelled scheme\tronly{~\cite{lyubashevsky2010ideal}} such that each multiplication spends one
 level of a finite budget\tronly{, and a depleted budget is restored by
 bootstrapping~\cite{cheon2018bootstrapping}}.
 
 A single-key scheme would require one party to hold the secret key and therefore
 to be trusted with decryption. We use the multiparty
 variant~\cite{mouchet2021multiparty}, stated here for a $\tc$-out-of-$\Nc$
-threshold with $2\le\tc\le\Nc$.
+threshold with $2\le\tc\le\Nc$. 
 
-
-That setting asks four things of the scheme, and the protocol uses all four. Key
+The protocol requires four operations from the multiparty scheme. Key
 generation produces one collective public key and the evaluation keys from the
-clients' shares, and never assembles the secret in one place, so any party may
-compute on ciphertexts and none may read them. Decryption takes partial shares
+clients' shares, and never assembles the secret in one place, such that any party may
+compute on ciphertexts, and none may read them. Decryption takes partial shares
 from at least $\tc$ clients, and any $\tc-1$ of them learn nothing about a
 plaintext. A key switch to a designated public key redirects a result so that one
 chosen party reads it and no other does. A collective refresh restores a spent
-level budget, and plays the part bootstrapping plays under a single key.
+level budget, and enables bootstrapping. 
 
-Two consequences follow, and the protocol uses both. Any $\tc$ clients form a
-quorum, so serving does not require every client to be online. Any $\tc-1$
-clients are powerless against a ciphertext, so $\tc-1$ is the corruption bound
-throughout \cref{sec:security}.
+In the protocol, any $\tc$ clients form a
+quorum, thus computation does not require every client to be online. Any $\tc-1$
+clients are powerless against a ciphertext, hence $\tc-1$ is the corruption bound
+throughout \cref{sec:security}. 
 
 Our implementation instantiates $\tc=\Nc$, which is the setting the multiparty
 CKKS library provides, and the measurements of \cref{sec:exp-cost} are taken
 there. Every statement in \cref{sec:security} holds for general $\tc$.
 
-%We state the reason for this choice. The aggregation of \cref{sec:split} uses only additions and multiplications by public scalars, so it consumes one level. What we need from the scheme is not depth but key structure: threshold decryption over a collectively generated key is the property the protocol cannot do without, and mature distributed key generation and collective key switching provide it directly. CKKS additionally packs thousands of real values into one ciphertext and multiplies them by public scalars natively. Additively homomorphic schemes offer neither packed real arithmetic at this width nor comparable multiparty tooling, and masking-based secure aggregation reveals the plaintext sum to the server, which this protocol never does.
+%We state the reason for this choice. The aggregation of \cref{sec:split} uses only additions and multiplications by public scalars, hence it consumes one level. What we need from the scheme is not depth but key structure: threshold decryption over a collectively generated key is the property the protocol cannot do without, and mature distributed key generation and collective key switching provide it directly. CKKS additionally packs thousands of real values into one ciphertext and multiplies them by public scalars natively. Additively homomorphic schemes offer neither packed real arithmetic at this width nor comparable multiparty tooling, and masking-based secure aggregation reveals the plaintext sum to the server, which this protocol never does.

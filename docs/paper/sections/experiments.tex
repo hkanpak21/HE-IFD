@@ -939,17 +939,6 @@ representation for every participant rather than only for its owner. Serving suc
 inference (\cref{sec:related-inference}) and composes with that literature at its
 cost.}
 
-\tronly{Delegating the work to the client does not avoid that cost. Suppose the
-shared map sits at a site inside the backbone and the client evaluates the layers
-above it itself. The client then needs that site's output in plaintext, so the
-protocol must decrypt the map evaluated at a point the client chose. That is a
-linear oracle on the shared weights, and $d$ independent queries recover them
-exactly by linear solve. The measurement above prices such an oracle at $769$
-answers, against the $1.2\times10^4$ to $2.0\times10^5$ that labels demand. The
-alternative leaves the intermediate encrypted, which returns every nonlinearity
-above the site to the homomorphic circuit. Several maps at one position cost
-neither, since parallel maps after the last nonlinearity add rows and no depth.}
-
 \tronly{\paragraph{A public constant in the serving path} The serving circuit
 compares logits through a polynomial approximation of the sign, and that
 approximation resolves a fixed absolute margin. The argmax does not change when

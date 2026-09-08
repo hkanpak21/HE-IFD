@@ -59,7 +59,7 @@ rounds~\cite{kerkouche2023client}. POSEIDON runs encrypted
 stochastic gradient descent under multiparty CKKS, with activations replaced by
 polynomial approximations~\cite{sav2021poseidon}. The approach is iterative and encrypted nonlinearity costs
 a deep multiplicative circuit with repeated bootstrapping.
-That cost scales with the network being trained, so adapting a pretrained
+That cost scales with the network being trained, therefore adapting a pretrained
 transformer by this route is out of reach.}
 
 \tronly{Secure aggregation lets the server learn only the sum of the clients' updates,
@@ -75,12 +75,12 @@ loses no accuracy, but the approach is iterative and encrypted nonlinearity cost
 a deep multiplicative circuit with repeated bootstrapping. Several works measure
 how delicate those polynomial activations
 are~\cite{garimella2021sisyphus,baruch2022methodology,agamennone2025polynomial,alhossain2025training,ibarrondo2021fhebn}.
-That cost scales with the network being trained, so adapting a pretrained
+That cost scales with the network being trained, therefore adapting a pretrained
 transformer by this route is out of reach.}
 
 Several works encrypt only the aggregation step of an otherwise plaintext training
 loop~\paperonly{\cite{li2025shelora}}\tronly{\cite{zhang2020batchcrypt,jin2023fedml,wei2025fedshe,li2025shelora,kemmaka2025hybagg}}.
-All of them remain bound to the iterative protocol, so the encryption cost is paid
+All of them remain bound to the iterative protocol, hence the encryption cost is paid
 on every round and what is protected is a per-round sum rather than a complete
 contribution. Single-key
 homomorphic encryption forces the assumption that the server and the clients do
@@ -91,7 +91,7 @@ that assumption.
 classifier head, a linear or logistic model on frozen
 features under
 CKKS~\cite{lee2023hetal}.
-These share our structural niche, but they run an optimiser on ciphertexts, so multiplicative depth grows with
+These share our structural niche, but they run an optimiser on ciphertexts, hence multiplicative depth grows with
 the step count.}
 
 \tronly{Transfer learning itself has been placed under encryption. Several works train a
@@ -99,7 +99,7 @@ classifier head, a linear or logistic model, or a low-rank adapter on frozen
 features under
 CKKS~\cite{lee2023hetal,kim2018securelr,kim2018logistic,chiang2025cnn,privfedtl2026,alamin2025vit,li2024privtuner,frery2025private}.
 These share our structural niche, a frozen public backbone with a small trainable
-unit, but they run an optimiser on ciphertexts, so multiplicative depth grows with
+unit, but they run an optimiser on ciphertexts, thus multiplicative depth grows with
 the step count and every nonlinearity must be approximated. Several of them are
 also single-party, one data owner outsourcing computation rather than a
 collaboration of mutually distrustful parties. Our parties train on their own and
@@ -168,7 +168,7 @@ accuracy tax on the model they release, and they are centralised or multi-round.
 adapter rather than a model. FedIT averages the adapters round by
 round~\cite{zhang2024fedit}, but per-factor averaging is biased.
 FFA-LoRA instead freezes the randomly initialised down-projection and trains only
-the up-projection, so that averaging the trained factor is
+the up-projection, hence averaging the trained factor is
 exact~\cite{sun2024ffalora}. None
 of this line protects the contributions, which is our subject.}
 
@@ -181,7 +181,7 @@ by reconstructing full products, by reconciling heterogeneous ranks, or by shari
 one factor
 only~\cite{wang2024flora,bai2024flexlora,cho2024hetlora,guo2025fedsalora}.
 FFA-LoRA instead freezes the randomly initialised down-projection and trains only
-the up-projection, so that averaging the trained factor is
+the up-projection, hence averaging the trained factor is
 exact~\cite{sun2024ffalora}. Combining displacements from a shared initialiser is
 task-vector merging, which is equivalent to one-shot federated averaging, and one
 round of fine-tuning suffices for foundation models in
@@ -193,7 +193,7 @@ of this line protects the contributions, which is our subject.}
 
 \paperonly{Answering queries from a model that stays encrypted is the subject of secure
 inference. Several works evaluate a transformer under encryption, and in each case the nonlinearities of attention dominate the
-cost~\cite{zhang2025nexus}. The map served here is linear in the features, so serving a
+cost~\cite{zhang2025nexus}. The map served here is linear in the features, thus serving a
 trained map that sits inside the backbone instead would reduce to exactly the
 problem these systems address.}
 
@@ -202,7 +202,7 @@ inference. Several works evaluate a transformer under encryption, either
 non-interactively under CKKS or between two or three parties with secret sharing,
 and in each case the nonlinearities of attention dominate the
 cost~\cite{zhang2025nexus,hao2022iron,pang2024bolt,dong2023puma}. This literature
-is what makes the disclosure setting of \cref{sec:serving} affordable, and we compose with it. The map served here is linear in the features, so serving a
+is what makes the disclosure setting of \cref{sec:serving} affordable, and we compose with it. The map served here is linear in the features, thus serving a
 trained map that sits inside the backbone instead would reduce to exactly the
 problem these systems address.}
 
@@ -211,18 +211,18 @@ held under a multiparty key, and it key-switches the prediction to the querier,
 which is the serving setting of \cref{sec:serving}~\cite{intoci2023slytherin}. It evaluates the whole network
 homomorphically, which is why the models it reports are a twenty-layer and a
 fifty-layer network on a handwritten-digit task rather than a pretrained encoder.
-And it returns the prediction vector, so the querier receives scores, which
+And it returns the prediction vector, hence the querier receives scores, which
 \cref{sec:exp-leak} shows is a cheaper target for extraction than a
 label.}
 
 \tronly{Two systems sit closer. slytHErin evaluates a network under CKKS with the model
 held under a multiparty key, and it key-switches the prediction to the querier,
 which is the serving setting of \cref{sec:serving}~\cite{intoci2023slytherin}. The
-same group built the encrypted training scheme of \cref{sec:related-crypto}, so
+same group built the encrypted training scheme of \cref{sec:related-crypto}, therefore
 the pair is the closest existing route to a model that no party decrypts. It evaluates the whole network
 homomorphically, which is why the models it reports are a twenty-layer and a
 fifty-layer network on a handwritten-digit task rather than a pretrained encoder.
-And it returns the prediction vector, so the querier receives scores, which
+And it returns the prediction vector, hence the querier receives scores, which
 \cref{sec:exp-leak} shows is a materially cheaper target for extraction than a
 label is.}
 
@@ -240,17 +240,17 @@ encryption, and the client receives the adapter's
 output~\cite{xia2026cryptpeft}. Confining encrypted computation to a small unit
 after the representation is the motivation for our design as well. It is a
 two-party protocol, the trained unit is the provider's plaintext, and there is no
-training protocol, so it establishes that the serving arrangement is practical
+training protocol, therefore it establishes that the serving arrangement is practical
 without addressing how mutually distrustful parties would build the unit at all.
 It reports one inference in $2.26$\,s on CIFAR-100. It is two-party and the
-adapter is one party's plaintext, so it evaluates no ciphertext-by-ciphertext
+adapter is one party's plaintext, hence it evaluates no ciphertext-by-ciphertext
 product and restores no levels.}
 
 \tronly{Constructions for the encrypted maximum faster than the tournament of
 \cref{sec:serving} exist, both for ranking and order statistics at constant
 comparison depth and for decoding a language model without decrypting the
 scores~\cite{mazzone2025ranking,avitan2025cutmax}. Both are single-key and neither
-carries the collective refreshes that the threshold setting requires, so neither
+carries the collective refreshes that the threshold setting requires, thus neither
 transfers unchanged.}
 
 \begin{table}[t]
@@ -259,7 +259,7 @@ transfers unchanged.}
 reports them. The plaintext column says whether any party ends up holding the
 trained model in plaintext, and \emph{provider} means one party does while the
 querier does not.\tronly{ slytHErin and CryptPEFT serve a model they do not
-train, so their rounds cell is empty. POSEIDON keeps the model under the
+train, hence their rounds cell is empty. POSEIDON keeps the model under the
 collective key and states that the querier does not obtain the model's weights.}}
 \label{tab:related}
 \footnotesize

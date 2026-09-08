@@ -17,18 +17,14 @@ Alptekin K\"up\c{c}\"u\,\orcidlink{0000-0003-2099-2206}%
 \maketitle
 
 \begin{abstract}
-Several parties hold data on the same task and want one model built from all of
-it, without pooling the data.
-Federated learning does that and concentrates the privacy risk at training time.
+For machine learning tasks, several parties often hold data relevant to the same task and seek to jointly train a single model without sharing or pooling their data.
+Federated learning (FL) enables this, but privacy risks remain due to reconstruction attacks that target shared intermediate values, i.e., model or gradients. 
 A one-shot protocol that exchanges a single encrypted contribution removes that surface,
 but it still ends by handing the trained result to every participant, which is not
-permitted where the model is itself a regulated or proprietary asset. We present HE-OFT, the first
-cryptographically secure one-shot federated fine-tuning protocol in which no
-party receives the trained result.
-Each client fine-tunes a low-rank adapter and a classifier head on a
-frozen public backbone, retains the adapter locally, and uploads one encrypted
+permitted where the model itself is a regulated or proprietary asset. We present HE-OFT, the first cryptographically secure one-shot federated fine-tuning protocol in which no
+party receives the trained result. Each client fine-tunes a low-rank adapter and a classifier head on a frozen public backbone, retains the adapter locally, and uploads one encrypted
 head displacement that the server combines under multiparty CKKS and never
-decrypts, and a quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and answers one query in $400.8$ to $1468.3$\,s on one core, or $48.9$ to $176.6$\,s with GPU acceleration, for $13.5$\,MiB of traffic.
+decrypts. A quorum of clients returns only the predicted label, addressed to the party that asked. Across four text classification tasks and one vision task, HE-OFT reaches $0.61$ to $0.79$ accuracy where a client training alone reaches $0.20$ to $0.48$, gives up $0.03$ to $0.14$ against a disclosed model, and responds one query in $400.8$ to $1468.3$\,s on one core, or $48.9$ to $176.6$\,s with GPU acceleration, for $13.5$\,MiB of traffic.
 \end{abstract}
 
 \begin{IEEEkeywords}
