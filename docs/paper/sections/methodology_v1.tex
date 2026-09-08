@@ -198,6 +198,23 @@ all.
 
 \tronly{\input{figures/serving}}
 
+\paperonly{The construction below serves a trained quantity that is linear in the
+features. Serving a trained quantity that sits inside the backbone is the problem
+that secure transformer inference addresses. An encrypted shared adapter composes
+with those systems at the cost they report, and we place that case outside our
+scope.}
+
+\tronly{The construction below serves a trained quantity that is linear in the
+features. Serving a trained quantity that sits inside the backbone is the problem
+that secure transformer inference addresses. An encrypted shared adapter composes
+with those systems at the cost they report, and we place that case outside our
+scope. One difference should be noted. Those systems evaluate a plaintext model
+on encrypted inputs, whereas here the shared weights are encrypted as well, so
+each adapter site would carry a ciphertext-by-ciphertext product. The dominant
+cost in that literature is the nonlinearities, which are unchanged, thus the
+added cost is the low-rank product per site rather than a different order of
+magnitude.}
+
 \subsubsection{Query Serving}
 A client that wants a prediction computes the features of its query with its own
 backbone and adapter, encrypts them, and sends the ciphertext to the server. The
@@ -303,24 +320,6 @@ the collective public key, the evaluation keys, and ciphertexts, so it computes
 but cannot decrypt, and it learns neither the model nor any client's data. It is
 trusted only for availability, and where honest computation must be certified,
 verifiable homomorphic encryption applies~\cite{viand2023verifiable}.}
-
-\subsubsection{Scope}
-\paperonly{This construction serves a trained quantity that is linear in the
-features. Serving a trained quantity that sits inside the backbone is the problem
-that secure transformer inference addresses. An encrypted shared adapter composes
-with those systems at the cost they report, and we place that case outside our
-scope.}
-
-\tronly{This construction serves a trained quantity that is linear in the
-features. Serving a trained quantity that sits inside the backbone is the problem
-that secure transformer inference addresses. An encrypted shared adapter composes
-with those systems at the cost they report, and we place that case outside our
-scope. One difference should be noted. Those systems evaluate a plaintext model
-on encrypted inputs, whereas here the shared weights are encrypted as well, so
-each adapter site would carry a ciphertext-by-ciphertext product. The dominant
-cost in that literature is the nonlinearities, which are unchanged, thus the
-added cost is the low-rank product per site rather than a different order of
-magnitude.}
 
 \subsection{Arrangement Selection}
 \label{sec:selection}
