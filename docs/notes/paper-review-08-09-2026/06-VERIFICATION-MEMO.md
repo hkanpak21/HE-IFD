@@ -48,8 +48,12 @@ seat, the memo governs.
    N=10 to 0.882 at N=50." Both sentences describe DBpedia at the default
    N=10, alpha=0.1, and Section V-A says every number is a three-seed mean.
 
-8. **No bit-security level in the submission.** The string `128` occurs zero
-   times in the submission and three times in the report.
+8. **No bit-security level in either document.** The string `128` occurs zero
+   times in the submission. Its three occurrences in the report are all the
+   citation `[128]` for CryptPEFT, not a security level. Corrected 2026-09-08:
+   an earlier form of this item implied the report states a level. It does not.
+   Neither document states a claimed bit security, a total modulus, or a secret
+   distribution for any parameter set.
 
 ## Corrected
 
