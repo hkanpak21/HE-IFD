@@ -16,9 +16,9 @@ key. The server additionally sees
 encrypted query features, which it cannot read.
 
 The design is arranged so that no arithmetic shortcut evades it. No aggregate of
-the adapters exists, so there is no sum from which a coalition can subtract its
-own contributions. The shared head is never decrypted, so it cannot be inverted
-the same way. The per-class totals are never decrypted, so a coalition cannot
+the adapters exists. There is no sum from which a coalition can subtract its
+own contributions. The shared head is never decrypted. It cannot be inverted
+the same way. The per-class totals are never decrypted. A coalition cannot
 recover the remaining client's class histogram.
 
 \tronly{That last sentence is worth stating precisely, because it does not say the
@@ -26,7 +26,7 @@ histogram is unrecoverable. It says the protocol publishes no direct read of it.
 A client's counts also shape the displacement it uploads, since for a linear map
 trained under cross-entropy the magnitude of the row for a class grows with the
 number of examples of that class the client held~\cite{wainakh2022user}. Those
-displacements are ciphertexts and the merged head is a ciphertext, so nothing is
+displacements are ciphertexts and the merged head is a ciphertext. Nothing is
 readable while the encryption stands, and \cref{sec:c2c-measured} measures what
 survives into an extracted copy. What inverting the totals under encryption buys
 is the removal of the one channel that would have handed the histogram over in
@@ -44,7 +44,7 @@ task itself leaks.}
 \label{sec:ideal}
 
 \Cref{func:ideal} defines the ideal functionality $\Fhe$ against which we
-measure the protocol. The server is an entity outside $\Fhe$, so it may be corrupt. The form of the functionality follows the
+measure the protocol. The server is an entity outside $\Fhe$. It may be corrupt. The form of the functionality follows the
 secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and placing the
 aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
 
@@ -143,20 +143,20 @@ corrupted parties, playing the honest clients on uniformly chosen shares.
 \emph{Training.} For each honest client the simulator sends an encryption of
 zero in place of $\mathsf{Enc}(g_j\odot\disp)$, once for each of the two
 arrangements, and in place of $\mathsf{Enc}(g_j)$, which the two share. The number
-of ciphertexts follows from the public parameters, so the simulator knows it. A hybrid
+of ciphertexts follows from the public parameters. The simulator knows it. A hybrid
 argument replaces the honest ciphertexts one at a time, and each neighbouring
 pair of hybrids is indistinguishable by IND-CPA against $\tc-1$ shares, the
 assumption of the theorem.
 
 \tronly{The server's additions and its multiplication by the reciprocal are
-deterministic functions of those ciphertexts and of public scalars, so the
+deterministic functions of those ciphertexts and of public scalars. The
 simulator computes them as the server does. The encrypted reciprocal is not such
 a function. Its inversion circuit consumes levels and restores them by
 collective refresh, an interactive protocol in which the participating clients
 contribute fresh randomness. The simulator therefore invokes the simulator of
 the refresh protocol for each of the two refreshes, playing the honest clients
 on that protocol's simulated shares. Both refreshes sit at fixed points in the
-circuit that do not depend on any plaintext, so the simulator knows their number
+circuit that do not depend on any plaintext. The simulator knows their number
 and position in advance.}
 
 \paperonly{\emph{Selection and serving.} The selection step decrypts one value. The
@@ -170,7 +170,7 @@ key-switching transcript for it from that protocol's simulator.
 For each query of a corrupted client, the simulator holds the answer in
 $\mathsf{out}_{\mathcal{A}}$ and simulates the key switch to that client in the
 same way. Queries by honest clients are switched to keys the adversary does not
-hold, so their transcripts are simulated as key switches of encryptions of zero.}
+hold. Their transcripts are simulated as key switches of encryptions of zero.}
 
 Composing the three parts gives a view computationally indistinguishable from
 the real one. \paperonly{\trsee{sec:security} gives every proof in full.}
@@ -196,7 +196,7 @@ The adversary $\mathcal{A}$ corrupts $\tc-1$ clients. The server is honest. At l
 \end{definition}
 
 \tronly{The equal-size restriction is necessary. The per-client sample counts are
-public, so an adversary free to choose datasets of different sizes reads the
+public. An adversary free to choose datasets of different sizes reads the
 answer off the counts without attacking anything.}
 
 \begin{theorem}[Input privacy]
@@ -217,9 +217,9 @@ clients' uploaded ciphertexts, the values the server computes, and the answers t
 \tronly{The first four are independent of $b$ up to $\negl(\lambda)$. The honest
 ciphertexts are indistinguishable from encryptions of zero by the hybrid
 argument of \cref{thm:semihonest}, which holds against an adversary with
-$\tc-1$ shares. The server is honest, so the values it computes are the
+$\tc-1$ shares. The server is honest. The values it computes are the
 prescribed deterministic functions of those ciphertexts and of public scalars.
-The server is honest, so every ciphertext presented for key switching is
+The server is honest. Every ciphertext presented for key switching is
 the prescribed output of \cref{alg:serve} on a query, and its plaintext is a
 label the coalition does not choose. Deviating in the uploaded values does not
 help either, because the adversary already chooses those values in the real
@@ -261,7 +261,7 @@ plaintexts $m_0$ and $m_1$,
 
 \begin{proof}
 A gap between the two probabilities gives an IND-CPA distinguisher that holds
-one key share. One share is at most $\tc-1$ shares, so the assumed security of
+one key share. One share is at most $\tc-1$ shares. The assumed security of
 the scheme applies directly.
 \end{proof}
 
@@ -357,7 +357,7 @@ $\Leak$ and from encryptions of zero exactly as the simulator of
 Each answer is $\arg\max_c(\thstar_{a^{\star}}\,\featx^{a^{\star}}_j(x_i))_c$ for a
 query $x_i$ that $\mathcal{A}$ asks at one of its own clients $j$. Under
 $a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$ it composes the
-backbone with the adapter of client $j$, and that client is corrupt, so
+backbone with the adapter of client $j$, and that client is corrupt.
 $\mathcal{B}$ holds the adapter. $\mathcal{B}$ holds both heads by assumption and
 reads $a^{\star}$ from $\Leak$. It computes every answer itself.
 
@@ -376,13 +376,13 @@ cost of approaching the cap, and \cref{sec:exp-leak} measures that cost.}
 \tronly{Two consequences follow for a deployment. Lowering the threshold $\tc$
 raises $Q_{\mathrm{tot}}$ and moves a coalition along the curve toward the cap,
 and it does not move the cap. Raising the allowance does the same. Neither choice
-changes what is ultimately learnable, so both are decisions about cost.}
+changes what is ultimately learnable. Both are decisions about cost.}
 
 \tronly{\subsubsection{Measuring the cap}
 \label{sec:c2c-measured}}
 
 \tronly{We measure $\delta_{\mathrm{wb}}$ and find it at chance. The adversary in
-\cref{prop:c2c} receives both shared heads in plaintext, so we give an attacker
+\cref{prop:c2c} receives both shared heads in plaintext. We give an attacker
 exactly that and run the likelihood-ratio membership attack of
 Carlini et al.~\cite{carlini2022membership} against it. We build $64$ shadow
 federations per cell, each one $\Nc$ clients training on half of their own
@@ -393,7 +393,7 @@ rate between $0.008$ and $0.023$ at a false-positive rate of $0.01$. A
 true-positive rate equal to the false-positive rate is chance.}
 
 \tronly{Handing the head over is a counterfactual, and that is the point of
-measuring there. No party ever holds either head, so this is the world in which
+measuring there. No party ever holds either head. This is the world in which
 the cryptography has already failed. \Cref{prop:c2c} says the query channel is no
 stronger than that world. Measuring the strongest adversary the proposition
 admits therefore bounds every adversary the protocol admits, and the bound is
@@ -413,7 +413,7 @@ statistic off a model, and it reports a true-positive rate of $6.7$ per cent at 
 false-positive rate of $0.001$ on CIFAR-100 where the previous best label-only
 attack reports $0.3$~\cite{peng2024oslo}. Our serving interface is more exposed to
 it than an ordinary one, because a client uploads its own encrypted feature vector
-and \cref{thm:malicious} lets a coalition deviate in the queries it asks, so the
+and \cref{thm:malicious} lets a coalition deviate in the queries it asks. The
 crafted point enters directly. Over eighteen cells the attack reaches an area
 under the curve between $0.47$ and $0.52$.}
 
@@ -427,7 +427,7 @@ non-member is not there to transfer.}
 \tronly{We report one figure we do not treat as a result. Predicting membership
 from whether the head classifies an example correctly reaches an area under the
 curve of $0.72$ on Banking77. Our holdout reserves at least one example of every
-class a client holds, so held-out examples are richer in rare classes than
+class a client holds. Held-out examples are richer in rare classes than
 trained ones, and that rule separates them for a reason that has nothing to do
 with membership. The likelihood-ratio attack calibrates each example against its
 own shadow distributions and does not inherit the confound.}
@@ -468,10 +468,10 @@ uploaded object is a trained displacement of a map that sits after the last
 nonlinearity.}
 
 \tronly{Two limits belong with these numbers. A thousand members resolve a
-true-positive rate no finer than $0.001$, so every figure we report at a
+true-positive rate no finer than $0.001$. Every figure we report at a
 false-positive rate of $0.001$ counts two to four examples rather than a rate.
 And the shadow federations vary who trains on what while holding the coverage
-pattern fixed, so they say nothing about how leakage moves when the partition
+pattern fixed. They say nothing about how leakage moves when the partition
 moves.}
 
 \tronly{Read together, the three surfaces say one thing. Even where extraction
@@ -487,18 +487,18 @@ can read.}
 \tronly{The protocol decrypts twice. The selection step decrypts one scalar, and
 each answer is key-switched to the client that asked for it. Both are intended
 outputs. In an exact scheme that would end the discussion, because a decryption
-returns the message and nothing else. CKKS is approximate, so a decryption
+returns the message and nothing else. CKKS is approximate. A decryption
 returns the message together with an error term, and that term is a function of
 the secret key and of the values the circuit consumed. Li and Micciancio show
 that an adversary which observes decryption results recovers the key that
 produced them~\cite{limicciancio2021approximate}.}
 
 \tronly{Their attack does not need the message. It reads the ring element
-$c_0+c_1 s$ out of the decoded output and inverts it, so an argument that the
+$c_0+c_1 s$ out of the decoded output and inverts it. An argument that the
 adversary cannot predict what the circuit should have produced does not answer
 it. The reason the attack does not reach us is structural. It recovers whichever
 key performed the decryption. Every decryption here happens after a collective
-key switch that moves the ciphertext off the collective key, so the key it
+key switch that moves the ciphertext off the collective key. The key it
 recovers is the querying client's own, which that client already holds. The
 collective key $s$ never appears in a relation the coalition can invert, and
 $\mathsf{Enc}(\thstar)$ is never decrypted at all.}
@@ -525,8 +525,8 @@ depends on the honest clients' displacements. Whether that is exploitable is
 open, and the scheme's authors record it as open as well.}
 
 \tronly{Meeting the stated requirement is not a matter of raising one constant.
-At a plaintext scale of $2^{45}$ the required smudging exceeds the scale itself,
-so it would destroy the answer rather than protect it. A configuration that
+At a plaintext scale of $2^{45}$ the required smudging exceeds the scale itself.
+It would destroy the answer rather than protect it. A configuration that
 satisfies the condition needs a larger scale and modulus, and every cost in
 \cref{sec:exp-cost} would move with them. The tension is recorded in the
 literature rather than particular to us. Threshold CKKS is insecure under this
@@ -539,16 +539,16 @@ guarantee we did not instantiate.}
 arithmetic because it decides which control the deployment needs. Write the
 served ciphertext as $(c_0,c_1)$ under the collective key $s$. The querier
 decrypts $c_0+c_1s+E$, where $E$ collects the honest parties' smudging terms. The
-serving circuit is deterministic, so a client that resubmits an identical query
+serving circuit is deterministic. A client that resubmits an identical query
 receives the same $c_0$ and $c_1$ and a freshly drawn $E$. Averaging $k$
 repetitions drives $E$ to zero and converges on $c_0+c_1s$ exactly. The noise of
 the ciphertext is not a term outside that expression. It is inside it, because
 $c_0+c_1s$ is the plaintext together with that noise. An adversary that holds
 $c_0$ and $c_1$ subtracts and rounds, obtains $c_1s$, and recovers $s$ by one
 ring inversion. The server holds $c_0$ and $c_1$, and \cref{def:semihonest}
-corrupts the server together with $\tc-1$ clients, so this view is inside the
+corrupts the server together with $\tc-1$ clients. This view is inside the
 model rather than outside it. Resubmitting a query is also what the protocol
-permits, so the adversary is semi-honest.}
+permits. The adversary is semi-honest.}
 
 \tronly{The cost is the number of repetitions that drives the averaged error
 below half a unit in each of the $2^{15}$ coefficients, which is on the order of
@@ -565,7 +565,7 @@ it is spent~\cite{limicciancio2022dp}.}
 
 \tronly{Raising the smudging is the second control and it is free on every axis
 the deployment measures. The values this protocol decrypts are one index and one
-label, so the precision the answer needs is a handful of bits against a plaintext
+label. The precision the answer needs is a handful of bits against a plaintext
 scale of $2^{45}$. Moving the smudging from eight times the fresh-encryption
 noise to $2^{25}$ multiplies the required repetitions by roughly $2^{40}$ and
 still leaves twenty bits of the scale. It costs nothing in latency, nothing in
