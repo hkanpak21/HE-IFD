@@ -175,7 +175,7 @@ Run `bash scripts/gates.sh` before sending anything anywhere. Nine gates.
 | `scripts/check_subseq.py` | did anything get rewritten, per document |
 | `scripts/check_split.py` | do the two documents number their sections alike, and does either print a subsection with a single run-in |
 | `scripts/budget.py` | prose words per section, conditionals resolved |
-| `scripts/lint_view.py` | the writing linter on the resolved view, not on the raw source |
+| `scripts/lint_view.py` | the writing linter on the resolved view, not on the raw source, plus the house words the PIs asked us to drop (sits, buys, which is why, at chance, very) |
 
 **The arXiv identifier is a placeholder.** `refs.bib` carries
 `arXiv:XXXX.XXXXX`. The report goes to arXiv first, its identifier replaces the

@@ -9,6 +9,7 @@ resolved view of every section to a scratch directory and lints that.
     scripts/lint_view.py --report   the report
 """
 import argparse
+import re
 import importlib.util
 import subprocess
 import sys
@@ -39,7 +40,38 @@ def main():
         (out / f.name).write_text(t)
         files.append(str(out / f.name))
     print(f"linting the {'report' if a.report else 'submission'} view\n")
-    return subprocess.run([sys.executable, str(LINT), "--paper", *files]).returncode
+    rc = subprocess.run([sys.executable, str(LINT), "--paper", *files]).returncode
+    return rc + house(files)
+
+
+# Words the PIs have asked us to stop using in this paper. The global linter
+# does not know them, and every Overleaf round trip has reinstated some of
+# them, so they are checked here rather than remembered.
+HOUSE = [
+    (r"\bsits?\b(?!\s+at\s+the\s+bottom)", "a location, not a verb. placed, comes after, is within"),
+    (r"\bbuys?\b", "name the price. costs, is the price of, pays for"),
+    (r"\bwhich is why\b", "two sentences, or therefore"),
+    (r"\bat chance\b", "random guessing"),
+    (r"\badds nothing\b", "say what it does not add"),
+    (r"(?<!e)\bvery\b", "banned intensifier"),
+    (r"\bdoes no better\b", "obtains no greater advantage"),
+]
+
+
+def house(files):
+    n = 0
+    for path in files:
+        for i, line in enumerate(Path(path).read_text().split("\n"), 1):
+            if line.lstrip().startswith("%"):
+                continue
+            for pat, fix in HOUSE:
+                if re.search(pat, line):
+                    print(f"  {Path(path).name}:{i}  HOUSE  "
+                          f"{re.search(pat, line).group(0)!r}: {fix}")
+                    n += 1
+    if n:
+        print(f"\n{n} house-style hit(s)")
+    return n
 
 
 if __name__ == "__main__":

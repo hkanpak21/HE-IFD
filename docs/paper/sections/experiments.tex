@@ -149,7 +149,7 @@ CIFAR-100 & $0.748$ ($0.010$) & $0.774$ ($0.003$) & $0.197$ ($0.009$) & $0.784$ 
 arrangement. AG-News is the exception, and the cause is the partition rather than
 the training. One of its three Dirichlet draws leaves seven usable clients, and
 the shared head reaches $0.402$ on that draw against $0.809$ and $0.736$ on the
-other two. The estimator selects the personal adapter on that seed, which is why
+other two. The estimator selects the personal adapter on that seed, and therefore
 $\Asel$ exceeds the shared head's mean on AG-News.}
 
 \tronly{\paragraph{The public initializer} $\thz$ is the state every client starts
@@ -175,7 +175,7 @@ default on DBpedia. Accuracy falls with skew, from $0.970$ at
 $\alpha=1.0$ to $0.789$ at $\alpha=0.1$. Longer local
 training helps. Accuracy
 rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
-$\Nc=50$. That row is a single seed, which is why its $\Nc=10$ value differs from
+$\Nc=50$. That row is a single seed, and its $\Nc=10$ value therefore differs from
 \cref{tab:headline}.}
 
 \tronly{\paragraph{Sensitivity} \Cref{fig:trends} varies the protocol axes around the
@@ -183,7 +183,7 @@ default on DBpedia. Accuracy falls with skew, from $0.970$ at
 $\alpha=1.0$ to $0.789$ at $\alpha=0.1$. Longer local
 training helps. Accuracy
 rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
-$\Nc=50$. That row is a single seed, which is why its $\Nc=10$ value differs from
+$\Nc=50$. That row is a single seed, and its $\Nc=10$ value therefore differs from
 \cref{tab:headline}.}
 
 \tronly{The more informative reading concerns which arrangement the estimator selects. The estimator
@@ -423,7 +423,7 @@ see that variation, but a rule keyed to it inherits the same optimism.}
 \tronly{\paragraph{Packing and the setup traffic} A ciphertext at ring degree
 $2^{15}$ carries $2^{14}$ slots, and the head has $\Cc d$ entries at $d=768$.
 Four classes fit in one ciphertext, a hundred need five, and the server adds
-them independently, which is why the cost of \cref{sec:exp-cost} grows with
+them independently, so the cost of \cref{sec:exp-cost} grows with
 $\Cc$ through the argmax rather than through the addition. The head application
 is a slot-wise product followed by a rotate-and-sum over $\log_2 d$ rotations,
 so the rotation key set is the ten power-of-two rotations that fold a
@@ -470,7 +470,7 @@ are single-run wall clock on one core of a VALAR CPU node. Communication figures
 
 \tronly{\paragraph{Cost of query encryption} Applying the head to an encrypted
 query costs $39.0$\,ms against $5.4$\,ms for a plaintext one, a factor of seven.
-That factor buys the property that the server never sees the feature vector
+That factor is the price of the property that the server never sees the feature vector
 and therefore cannot invert it to recover the client's input, and it is small
 beside the argmax that follows.}
 
@@ -610,7 +610,7 @@ the way the plaintext model does. We ran that comparison. On the recorded AG-New
 head at seed $42$, ten parties, ring degree $2^{15}$ and scale $2^{45}$, thirty-two
 encrypted answers over the two servable arrangements all equal the plaintext
 answers. The hardest case has a top-1 to top-2 gap of $0.037$, which the scaling
-takes to $0.0068$, and its decoded index sits within $3\times10^{-8}$ of the
+takes to $0.0068$, and its decoded index is within $3\times10^{-8}$ of the
 integer. Nothing failed, so the resolution limit is bounded below by that gap and
 not above.}
 
@@ -619,7 +619,7 @@ head itself gets wrong, and the encrypted path reproduces those errors. That is
 what a faithful serving path does. It agrees with the plaintext computation, not
 with the ground truth.}
 
-\tronly{\paragraph{Where this sits against published work} No published system
+\tronly{\paragraph{Comparison with published work} No published system
 takes an argmax under encryption in a multiparty scheme, so there is no matched
 number to compare with. The nearest match on the primitive is NEXUS, which
 computes the same sign-based argmax under CKKS at the same ring degree $2^{16}$
@@ -650,7 +650,7 @@ moves $3.4$\,GiB. At twenty clients and a hundred classes it takes $7111$\,s and
 moves $145.4$\,GiB. The federation pays this once, before it answers anything,
 and no part of it recurs per query.}
 
-\tronly{The bound holds and the cost sits elsewhere. Our implementation evaluates
+\tronly{The bound holds, and the cost appears elsewhere. Our implementation evaluates
 $321$ sequential sign circuits at twenty clients and a hundred classes, where
 $2\Nc\Cc$ allows $4000$ comparisons. What the count does not carry is depth. Each
 comparison under CKKS is a polynomial approximation of the sign, every such
@@ -854,7 +854,7 @@ feature dimension, and in each case fidelity $0.90$ costs
 between three and five times that number of queries. A deployment can therefore set its
 allowance from $\Cc$, $d$ and the fidelity it concedes. A copy at that fidelity
 reproduces the served model's decisions, and published membership attacks against
-it and against the head in plaintext both sit at chance. \trsee{sec:experiments} gives the extraction study in full.}
+it and against the head in plaintext both perform at random guessing. \trsee{sec:experiments} gives the extraction study in full.}
 
 \tronly{Extraction is possible and its cost is orderly. Reaching fidelity $0.90$ takes
 about $1.2\times10^4$ queries on AG-News, $5.0\times10^4$ on DBpedia and
@@ -929,7 +929,7 @@ it leaves $0.0041$ of the decisions wrong against the random strategy's $0.0072$
 a factor of $1.77$. Banking77 never reaches $3.4$ queries per parameter at our
 largest budget, so its cells are measured below the crossover and the count of
 $13$ reflects the budget grid rather than the strategy. We report the random
-strategy because it is the stronger one over the range an allowance would sit in,
+strategy because it is the stronger one over the range in which an allowance would fall,
 and because it is the simpler.}
 
 \tronly{Neither strategy is the attack a cryptanalyst would mount. Both fit a
@@ -1008,7 +1008,7 @@ argument of \cref{prop:nogate} applied to a different gate.}
 \tronly{Output randomization is weak by a theorem as well as by our table.
 Against a server that answers incorrectly with constant probability $\rho$ below
 one half, extraction costs a factor of $8/(1-2\rho)^2$ times a logarithm and no
-more~\cite{chandrasekaran2020exploring}. That bounds what the defender buys.
+more~\cite{chandrasekaran2020exploring}. That bounds what the defence achieves.
 \Cref{tab:defence} supplies the half their analysis leaves out, which is what the
 defender pays. One mechanism does survive both restrictions and we have not
 measured it. Drawing a fresh head from a distribution for each query, rather than
@@ -1038,7 +1038,7 @@ offers~\cite{carlini2024stealing}.}
 \paperonly{Never disclosing the model costs accuracy. The estimator selects per
 seed, so $\Asel$ is $0.669$ on AG-News and $0.756$ on CIFAR-100 rather than the
 bolded entry of \cref{tab:headline}. The quantity $\Adis-\Asel$
-runs from $0.029$ to $0.136$ across the five tasks. What disclosure buys an
+runs from $0.029$ to $0.136$ across the five tasks. What disclosure gives an
 adversary is the other half of that trade. A participant holding the model in
 plaintext has fidelity $1$ at zero queries, may read the parameters directly
 rather than infer them, and is subject to no allowance because there is nothing
@@ -1139,5 +1139,5 @@ reaches a given fidelity sooner. It does not raise the ceiling
 $\delta_{\mathrm{wb}}$ on what a coalition can learn about an honest client, since
 that ceiling is a property of the shared head. The threshold therefore trades
 availability against the cost of an attack rather than against what the attack can
-ultimately achieve, and a deployment can buy liveness with a proportionate
+ultimately achieve, and a deployment can obtain liveness with a proportionate
 reduction in $Q$.}

@@ -41,8 +41,8 @@ secret key is generated and held distributively under multiparty CKKS
 
 The model is never disclosed, yet it must answer queries. The client that asks a
 query computes the features of that query itself. It therefore runs the backbone
-and its own adapter in plaintext, and the shared trained quantity cannot sit
-inside the backbone. A server computing on ciphertexts cannot inspect a value or
+and its own adapter in plaintext, and the shared trained quantity cannot be
+placed inside the backbone. A server computing on ciphertexts cannot inspect a value or
 compare two of them, hence it cannot apply an aggregation rule that depends on
 the data. The clients make that choice instead (\cref{sec:selection}).}
 
@@ -66,7 +66,7 @@ is generated and held distributively under multiparty CKKS (\cref{sec:mhe}).
 The model is never disclosed, yet it must answer queries. A query is formed from
 features, and the client that asks the query computes those features itself. The
 client therefore runs the backbone and its own adapter in plaintext, and the
-trained quantity that is shared cannot sit inside the backbone. One further
+trained quantity that is shared cannot be placed inside the backbone. One further
 choice follows from the same restriction on the server. A server that computes on
 ciphertexts cannot inspect a value, compare two of them, or branch on the result,
 so it cannot apply an aggregation rule that depends on the data. The clients make
@@ -183,7 +183,7 @@ scale the totals by the federation's example count, which is public, so the
 argument lands in $(2^{-6},1]$. A class whose share falls below $2^{-6}$ is
 outside that interval. Our measurement uses denominators in $[0.02,0.99]$ and
 reports a relative error of $1.9\times10^{-8}$ at ten parties, so it does not
-cover the low end. Banking77 and CIFAR-100 sit there, at class shares near
+cover the low end. Banking77 and CIFAR-100 fall there, at class shares near
 $0.013$ and $0.010$, and a deployment at those label-space sizes must widen the
 interval or rescale by the largest class total rather than by the example count.}
 
@@ -208,13 +208,13 @@ all.
 \tronly{\input{figures/serving}}
 
 \paperonly{The construction below serves a trained quantity that is linear in the
-features. Serving a trained quantity that sits inside the backbone is the problem
+features. Serving a trained quantity placed inside the backbone is the problem
 that secure transformer inference addresses. An encrypted shared adapter composes
 with those systems at the cost they report, and we place that case outside our
 scope.}
 
 \tronly{The construction below serves a trained quantity that is linear in the
-features. Serving a trained quantity that sits inside the backbone is the problem
+features. Serving a trained quantity placed inside the backbone is the problem
 that secure transformer inference addresses. An encrypted shared adapter composes
 with those systems at the cost they report, and we place that case outside our
 scope. One difference should be noted. Those systems evaluate a plaintext model
@@ -272,7 +272,7 @@ construction rather than by policy. It places an adversary in the hard-label
 setting, where functionally equivalent extraction has only recently been achieved
 for general networks~\cite{chen2024hardlabel,carlini2025hardlabel}. Those results
 carry a factor exponential in the number of hidden neurons, and our shared
-quantity has none, thus the restriction buys less here than they suggest. It
+quantity has none, thus the restriction gains less here than they suggest. It
 removes the linear solve and puts a search for decision boundaries in its place,
 at a factor logarithmic in the precision demanded, and it leaves the head
 determined only up to a positive scale and a vector added to every row. It does
