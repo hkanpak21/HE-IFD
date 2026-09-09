@@ -247,10 +247,11 @@ holds $(\tc-1)Q$ queries regardless of the size of the federation.
 \paperonly{\trsee{sec:experiments} measures $\delta$ and turns it into a bound on $Q$.}
 \tronly{\Cref{sec:exp-leak} measures $\delta$ and turns it into a bound on $Q$.}
 
-\subsection{Necessity of an Honest Server}
+\subsection{The Honest-Server Assumption}
 \label{sec:malicious-ext}
 
-\Cref{thm:malicious} keeps the server honest. That assumption is necessary. Decryption is a protocol the clients run on a ciphertext the server presents. A
+\Cref{thm:malicious} keeps the server honest. No protocol with this message
+pattern can drop that assumption. Decryption is a protocol the clients run on a ciphertext the server presents. A
 deviating server can present a ciphertext of its own choosing, such as a row of
 $\thstar$, rather than the output of \cref{alg:serve}. The natural repair is to
 have an honest client refuse such a request. It cannot, and the obstacle is the
