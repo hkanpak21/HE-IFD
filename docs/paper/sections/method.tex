@@ -89,7 +89,7 @@ classifier in plaintext. Each requirement forecloses a family of designs, and th
 $\featx$, and trains a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
 head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
-head from the public initialiser and uploads it once. The server combines the
+head from the public initializer and uploads it once. The server combines the
 encrypted displacements into a single shared head and never decrypts the result.
 The adapter is trained locally and never transmitted.
 
@@ -113,7 +113,7 @@ constrains the \emph{position} of the shared map, not the task it serves. Any
 trained linear map that comes after the last nonlinearity satisfies it, provided
 the querying client can compute the features that enter the map. A classifier
 head is one such map. The vocabulary projection of an autoregressive decoder is
-another, since it is linear, comes after the final layer normalisation, and takes
+another, since it is linear, comes after the final layer normalization, and takes
 features the client can compute from a prefix it generated itself. We evaluate
 classification only. The construction itself does not depend on the label space
 being a set of classes, and \cref{sec:scope} records what a generation setting
@@ -122,7 +122,7 @@ would additionally require, including the restriction to greedy decoding that
 
 The adapter is relocated. Each client retains its own, thus the
 representation still adapts to local data. The distinction follows from coverage. A client
-can improve its own representation alone, but it cannot learn to recognise a class
+can improve its own representation alone, but it cannot learn to recognize a class
 it has never observed. Coverage is a property of the head, which is exactly what
 the federation supplies. \Cref{sec:exp-split} measures both halves.
 
@@ -140,7 +140,7 @@ coverage-weighted combination
 \end{equation}
 in which row $c$ of the shared head is the count-weighted average of the clients'
 row-$c$ displacements. Clients holding a class decide its row, and rows that no
-client covers remain at the public initialiser. Each client forms the products
+client covers remain at the public initializer. Each client forms the products
 $g_j\odot\disp$ locally, before encryption, thus the server only adds ciphertexts.
 
 \paragraph{The division} The denominator of \cref{eq:aggregate} is the vector of
@@ -153,7 +153,7 @@ query.
 
 \tronly{\begin{algorithm}[t]
 \caption{Building the shared head. All clients hold the same frozen public
-backbone $\featx$ and the same public head initialiser $\thz$.}
+backbone $\featx$ and the same public head initializer $\thz$.}
 \label{alg:train}
 \small
 \begin{algorithmic}[1]
@@ -323,7 +323,7 @@ measure the accuracy of both arrangements on its held-out data and vote. The
 procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, thus pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
-models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimistic for
+models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimiztic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
 chooses wrongly whenever the two differ.}
 
@@ -337,7 +337,7 @@ models, and client $j$'s held-out data can only measure client $j$'s own model. 
 client $j$'s model performs on the other clients' distributions is not observable
 locally, and that is precisely where it fails. A client's held-out set also
 contains only the classes that client holds, thus it cannot measure performance on
-classes the client has never seen. The measurement is systematically optimistic for
+classes the client has never seen. The measurement is systematically optimiztic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
 chooses wrongly whenever the two differ.}
 

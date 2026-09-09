@@ -31,7 +31,7 @@ Several works share predictions instead of gradients, and the predictions leak
 too~\cite{takahashi2023breaching,yang2023fdleaks,gu2023ldia,shi2025unveiling}.}
 
 \paperonly{Attacks that see only the final model are consistently weaker, and the field
-survey draws that separation explicitly~\cite{kairouz2021advances}. Against models that generalise well they identify few members, and only at
+survey draws that separation explicitly~\cite{kairouz2021advances}. Against models that generalize well they identify few members, and only at
 low false-positive rates~\cite{carlini2022membership}. A protocol that never sends an update, and that
 sends anything only once, therefore leaves every adversary with the weaker
 attack.}
@@ -40,10 +40,10 @@ attack.}
 survey draws that separation explicitly~\cite{kairouz2021advances}. Several works
 infer membership from a released model, or invert it from released
 confidences~\cite{shokri2017membership,yeom2018privacy,salem2019ml,fredrikson2015model,hitaj2017deep},
-and against models that generalise well they identify few members, and only at
+and against models that generalize well they identify few members, and only at
 low false-positive rates~\cite{carlini2022membership}. The reason for the gap
 is simple. An update is a detailed view of one client's data and arrives every
-round, where the final model is a single average that generalisation moves away
+round, where the final model is a single average that generalization moves away
 from any one training example. A protocol that never sends an update, and that
 sends anything only once, therefore leaves every adversary with the weaker
 attack.}
@@ -91,7 +91,7 @@ that assumption.
 classifier head, a linear or logistic model on frozen
 features under
 CKKS~\cite{lee2023hetal}.
-These share our structural niche, but they run an optimiser on ciphertexts, hence multiplicative depth grows with
+These share our structural niche, but they run an optimizer on ciphertexts, hence multiplicative depth grows with
 the step count.}
 
 \tronly{Transfer learning itself has been placed under encryption. Several works train a
@@ -99,7 +99,7 @@ classifier head, a linear or logistic model, or a low-rank adapter on frozen
 features under
 CKKS~\cite{lee2023hetal,kim2018securelr,kim2018logistic,chiang2025cnn,privfedtl2026,alamin2025vit,li2024privtuner,frery2025private}.
 These share our structural niche, a frozen public backbone with a small trainable
-unit, but they run an optimiser on ciphertexts, thus multiplicative depth grows with
+unit, but they run an optimizer on ciphertexts, thus multiplicative depth grows with
 the step count and every nonlinearity must be approximated. Several of them are
 also single-party, one data owner outsourcing computation rather than a
 collaboration of mutually distrustful parties. Our parties train on their own and
@@ -167,7 +167,7 @@ accuracy tax on the model they release, and they are centralised or multi-round.
 \paperonly{A recent line federates parameter-efficient fine-tuning, communicating a low-rank
 adapter rather than a model. FedIT averages the adapters round by
 round~\cite{zhang2024fedit}, but per-factor averaging is biased.
-FFA-LoRA instead freezes the randomly initialised down-projection and trains only
+FFA-LoRA instead freezes the randomly initialized down-projection and trains only
 the up-projection, hence averaging the trained factor is
 exact~\cite{sun2024ffalora}. None
 of this line protects the contributions, which is our subject.}
@@ -180,9 +180,9 @@ the average of the products. Several works correct that bias by stacking factors
 by reconstructing full products, by reconciling heterogeneous ranks, or by sharing
 one factor
 only~\cite{wang2024flora,bai2024flexlora,cho2024hetlora,guo2025fedsalora}.
-FFA-LoRA instead freezes the randomly initialised down-projection and trains only
+FFA-LoRA instead freezes the randomly initialized down-projection and trains only
 the up-projection, hence averaging the trained factor is
-exact~\cite{sun2024ffalora}. Combining displacements from a shared initialiser is
+exact~\cite{sun2024ffalora}. Combining displacements from a shared initializer is
 task-vector merging, which is equivalent to one-shot federated averaging, and one
 round of fine-tuning suffices for foundation models in
 plaintext~\cite{ilharco2023editing,tao2024taskarith,malinovsky2024oneround}. None
