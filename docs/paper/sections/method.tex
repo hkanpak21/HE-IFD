@@ -88,7 +88,8 @@ classifier in plaintext. Each requirement forecloses a family of designs, and th
 \paragraph{The construction} Each client uses the same frozen public backbone
 $\featx$, and trains a low-rank adapter $A_j$ that
 adjusts the representation, and a classifier head $h_j$ on top of it. Only the
-head is shared. Client $j$ encrypts the displacement $\disp = h_j - \thz$ of its
+head is shared. Client $j$ encrypts the displacement
+$\disp = h_j - \thz \in \mathbb{R}^{\Cc\times d}$ of its
 head from the public initializer and uploads it once. The server combines the
 encrypted displacements into a single shared head and never decrypts the result.
 The adapter is trained locally and never transmitted.
@@ -135,13 +136,13 @@ per-class example counts, $g_{j,c}=n_{j,c}$. The shared head is the
 coverage-weighted combination
 \begin{equation}
 \label{eq:aggregate}
-\thstar \;=\; \thz \;+\; \frac{\sum_{j=1}^{\Nc} g_j \odot \disp}
+\thstar \;=\; \thz \;+\; \frac{\sum_{j=1}^{\Nc} \mathrm{diag}(g_j)\,\disp}
                               {\sum_{j=1}^{\Nc} g_j},
 \end{equation}
 in which row $c$ of the shared head is the count-weighted average of the clients'
 row-$c$ displacements. Clients holding a class decide its row, and rows that no
 client covers remain at the public initializer. Each client forms the products
-$g_j\odot\disp$ locally, before encryption, thus the server only adds ciphertexts.
+$\mathrm{diag}(g_j)\,\disp$ locally, before encryption, thus the server only adds ciphertexts.
 
 \paragraph{The division} The denominator of \cref{eq:aggregate} is the vector of
 federation-wide per-class totals. It cannot be decrypted. Every client knows its
@@ -161,7 +162,7 @@ backbone $\featx$ and the same public head initializer $\thz$.}
 \For{client $j=1,\dots,\Nc$ \textbf{in parallel}}
   \State train adapter $A_j$ and head $h_j$ on $\Dj$ \Comment{plaintext, local}
   \State \textbf{keep} $A_j$, which is never transmitted
-  \State send $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$,
+  \State send $\mathsf{Enc}(\mathrm{diag}(g_j)\,\disp)$ and $\mathsf{Enc}(g_j)$,
          where $\disp=h_j-\thz$
 \EndFor
 \State \textbf{server} adds the ciphertexts to form the numerator and the
@@ -323,9 +324,10 @@ measure the accuracy of both arrangements on its held-out data and vote. The
 procedure estimates the wrong quantity. The arrangement without an
 adapter is a single model, thus pooled held-out measurements estimate its accuracy on the global
 distribution closely. The arrangement with personal adapters is $\Nc$ different
-models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimiztic for
+models, and client $j$'s held-out data can only measure client $j$'s own model. The measurement is systematically optimistic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
-chooses wrongly whenever the two differ.}
+selects the personal arrangement in every cell, so it is wrong wherever the
+shared arrangement is better.}
 
 \tronly{\paragraph{Inadequacy of the held-out vote} The natural procedure is for each client to
 measure the accuracy of both arrangements on its held-out data and vote. The
@@ -337,9 +339,10 @@ models, and client $j$'s held-out data can only measure client $j$'s own model. 
 client $j$'s model performs on the other clients' distributions is not observable
 locally, and that is precisely where it fails. A client's held-out set also
 contains only the classes that client holds, thus it cannot measure performance on
-classes the client has never seen. The measurement is systematically optimiztic for
+classes the client has never seen. The measurement is systematically optimistic for
 the personal arrangement, and \cref{sec:exp-select} shows that the resulting vote
-chooses wrongly whenever the two differ.}
+selects the personal arrangement in every cell, so it is wrong wherever the
+shared arrangement is better.}
 
 \paragraph{A prior-weighted estimator} Score both arrangements as the expected accuracy of a
 prediction on an example drawn from the federation's own class distribution,

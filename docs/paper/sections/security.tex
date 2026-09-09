@@ -148,7 +148,7 @@ corrupted parties, playing the honest clients on uniformly chosen shares.
 
 
 \emph{Training.} For each honest client, the simulator sends an encryption of
-zero in place of $\mathsf{Enc}(g_j\odot\disp)$, once for each of the two
+zero in place of $\mathsf{Enc}(\mathrm{diag}(g_j)\,\disp)$, once for each of the two
 arrangements, and in place of $\mathsf{Enc}(g_j)$, which the two share. The simulator
 knows how many ciphertexts to send, because the count follows from the public
 parameters. A hybrid
@@ -281,28 +281,37 @@ neither. No protocol of this message pattern realizes $\Fhe$ against a
 malicious server. \Cref{thm:malicious} assumes an honest server for this
 reason.
 
-\paperonly{One mechanism would check provenance rather than content.
-The serving circuit is a deterministic function of the encrypted head, the
-encrypted query, the evaluation keys, and the public parameters, and its level
-restoration is deterministic as well. A client can therefore recompute the
-prescribed output ciphertext and compare it as a string.}
+\paperonly{A mechanism that certifies which function the server evaluated would
+remove the assumption. A zero-knowledge proof of correct evaluation and
+verifiable homomorphic encryption both do this~\cite{viand2023verifiable}. We
+implement neither, and \cref{sec:scope} records it as a limitation.}
 
 \tronly{Two mechanisms would remove the assumption, and we implement neither. The first
 checks provenance rather than content. The serving circuit is a deterministic
 function of the encrypted head, the encrypted query, the evaluation keys, and the
 public parameters, and its level restoration is deterministic as well, because
 the protocol restores levels under collectively generated bootstrapping keys
-rather than by collective refresh. A client can therefore recompute the
-prescribed output ciphertext and compare it as a string. The design choice that
-saves $510$\,MiB of traffic on every query is the same one that leaves the
-circuit verifiable. Checking a random fraction $p$ of queries suffices, because
-recovering the shared map needs on the order of $\Cc d$ deviating requests and a
-campaign of that length escapes a single checker with probability at most
-$(1-p)^{\Cc d}$, which at $p=0.01$ is below $10^{-13}$ on the smallest of our
-tasks. The second mechanism certifies which function the server
+rather than by collective refresh. A checker holding those four inputs can
+recompute the prescribed output ciphertext and compare it as a string. The design
+choice that saves $510$\,MiB of traffic on every query is the same one that
+leaves the circuit verifiable. Checking a random fraction $p$ of queries
+suffices, because recovering the shared map needs on the order of $\Cc d$
+deviating requests and a campaign of that length escapes a single checker with
+probability at most $(1-p)^{\Cc d}$, which at $p=0.01$ is below $10^{-13}$ on the
+smallest of our tasks.}
+
+\tronly{Two conditions on that mechanism should be stated, because the protocol as
+specified does not meet them. The checker must hold the encrypted head and the
+querier's encrypted features, and a quorum member holds neither. Both are
+ciphertexts, so broadcasting them to the quorum discloses no plaintext, but it
+costs traffic on every checked query and it tells the quorum which client asked,
+which \cref{sec:inherent} counts as leakage. We describe the mechanism rather
+than claim it, and a deployment that wants it pays for both.}
+
+\tronly{The second mechanism certifies which function the server
 evaluated, through a zero-knowledge proof of correct evaluation or verifiable
-homomorphic encryption~\cite{viand2023verifiable}. \Cref{sec:scope} records both
-as limitations.}
+homomorphic encryption~\cite{viand2023verifiable}. It needs neither condition.
+\Cref{sec:scope} records both as limitations.}
 
 \subsection{Leakage of the Functionality}
 \label{sec:inherent}

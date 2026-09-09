@@ -98,8 +98,8 @@ the largest. No party holds a key that opens the shared head alone.
 \subsubsection{Local Training}
 Each client uses the same frozen public backbone $\featx$, and trains a low-rank
 adapter $A_j$ that adjusts the representation, and a classifier head $h_j$ on top
-of it. Only the head is shared. Client $j$ encrypts the displacement $\disp = h_j
-- \thz$ of its head from the public initializer and uploads it once. The server
+of it. Only the head is shared. Client $j$ encrypts the displacement
+$\disp = h_j - \thz \in \mathbb{R}^{\Cc\times d}$ of its head from the public initializer and uploads it once. The server
 combines the encrypted displacements into a single shared head and never decrypts
 the result. The adapter is trained locally and never transmitted.
 
@@ -148,13 +148,13 @@ Let $g_{j}\in\mathbb{R}^{\Cc}$ collect client $j$'s per-class example counts,
 $g_{j,c}=n_{j,c}$. The shared head is the coverage-weighted combination
 \begin{equation}
 \label{eq:aggregate}
-\thstar \;=\; \thz \;+\; \frac{\sum_{j=1}^{\Nc} g_j \odot \disp}
+\thstar \;=\; \thz \;+\; \frac{\sum_{j=1}^{\Nc} \mathrm{diag}(g_j)\,\disp}
                               {\sum_{j=1}^{\Nc} g_j},
 \end{equation}
 in which row $c$ of the shared head is the count-weighted average of the clients'
 row-$c$ displacements. Clients holding a class decide its row, and rows that no
 client covers remain at the public initializer. Each client forms the products
-$g_j\odot\disp$ locally, before encryption, thus the server only adds
+$\mathrm{diag}(g_j)\,\disp$ locally, before encryption, thus the server only adds
 ciphertexts.
 
 \subsubsection{Division by the Class Totals}
@@ -175,7 +175,7 @@ backbone $\featx$ and the same public head initializer $\thz$.}
 \For{client $j=1,\dots,\Nc$ \textbf{in parallel}}
   \State train adapter $A_j$ and head $h_j$ on $\Dj$ \Comment{plaintext, local}
   \State \textbf{keep} $A_j$, which is never transmitted
-  \State send $\mathsf{Enc}(g_j\odot\disp)$ and $\mathsf{Enc}(g_j)$,
+  \State send $\mathsf{Enc}(\mathrm{diag}(g_j)\,\disp)$ and $\mathsf{Enc}(g_j)$,
          where $\disp=h_j-\thz$
 \EndFor
 \State \textbf{server} adds the ciphertexts to form the numerator and the
@@ -338,8 +338,9 @@ arrangement it adopts.
 
 \subsubsection{Prior-Weighted Estimator}
 Each client could instead measure both arrangements on its held-out data and
-vote. That procedure estimates the wrong quantity, and \cref{sec:exp-select}
-shows it choosing wrongly whenever the two arrangements differ.
+vote. That procedure estimates the wrong quantity. It selects the personal
+arrangement in every cell, so \cref{sec:exp-select} finds it wrong wherever the
+shared arrangement is better.
 Score both arrangements as the expected accuracy of a prediction on an example
 drawn from the federation's own class distribution,
 \begin{equation}
