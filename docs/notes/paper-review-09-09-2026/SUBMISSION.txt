@@ -1,0 +1,1194 @@
+
+
+===== PAGE 1 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 1
+HE-OFT: Privacy-Preserving One-Shot Federated
+Fine-Tuning under Homomorphic Encryption
+Halil ˙Ibrahim Kanpak , Sinem Sav , Alptekin K ¨upc ¸¨u
+Abstract—For machine learning tasks, several parties often
+hold data relevant to the same task and seek to jointly train a
+single model without sharing or pooling their data. Federated
+learning (FL) enables this, but privacy risks remain due to
+reconstruction attacks that target shared intermediate values,
+i.e., model or gradients. A one-shot protocol that exchanges a
+single encrypted contribution removes that surface, but it still
+ends by handing the trained result to every participant, which is
+not permitted where the model itself is a regulated or proprietary
+asset. We present HE-OFT, the first cryptographically secure one-
+shot federated fine-tuning protocol in which no party receives the
+trained result. Each client fine-tunes a low-rank adapter and a
+classifier head on a frozen public backbone, retains the adapter
+locally, and uploads one encrypted head displacement that the
+server combines under multiparty CKKS and never decrypts. A
+quorum of clients returns only the predicted label, addressed to
+the party that asked. Across four text classification tasks and
+one vision task, HE-OFT reaches0.61to0.79accuracy where a
+client training alone reaches0.20to0.48, gives up0.03to0.14
+against a disclosed model, and responds one query in400.8to
+1468.3s on one core, or48.9to176.6s once level restoration
+runs on a GPU, for13.5MiB of traffic.
+Index Terms—Federated learning, one-shot federated learning,
+federated fine-tuning, homomorphic encryption, multiparty com-
+putation, privacy-preserving machine learning.
+I. INTRODUCTION
+Organizations adapt large public pretrained models to their
+own data by fine-tuning [1]. Often several organizations hold
+complementary data over the same task, different patient
+populations, fraud patterns, or customer bases, and each would
+obtain an enhanced model from the combination than from
+its own data alone [2]. However, pooling data is challenging
+because data protection law restricts the sharing of confidential
+records across institutions [3]. Three obstacles stand between
+that setting and a protocol these organizations could deploy.
+Federated learning (FL) enables collaboration [4], and its
+privacy risk is concentrated at training time [5], [6]. The
+protocol exchanges model updates instead of data, but the
+updates are themselves vulnerable to privacy attacks. An
+adversary aggregating a client’s per-round updates can perform
+membership inference at25.3%true positive rate at0.1%false
+positive rate, against0.18%from a single snapshot [7]. Two
+Corresponding Author: Sinem Sav (sinem.sav@cs.bilkent.edu.tr)
+Halil ˙Ibrahim Kanpak is with the Department of Computer Engineering,
+Koc ¸ University,˙Istanbul, T ¨urkiye (e-mail: hkanpak21@ku.edu.tr).
+Sinem Sav is with the Department of Computer Engineering, Bilkent
+University, Ankara, T ¨urkiye (e-mail: sinem.sav@cs.bilkent.edu.tr).
+Alptekin K ¨upc ¸¨u is with the Department of Computer Engineering, Koc ¸
+University, ˙Istanbul, T ¨urkiye (e-mail: akupcu@ku.edu.tr).
+Manuscript received XX XX, XXXX; revised XX XX, XXXX.
+factors therefore determine the attack surface: what a protocol
+reveals during training and how frequently it is revealed.
+Eliminating this surface requires two measures to be taken
+together. Making the protocolone-shot, hence each client
+contributes only once, ensures that there is no intermediate
+state for anyone to observe. Encrypting the single contribution
+such that the only exchanged value is never available in
+plaintext. In this paper,one-shotdoes not mean that the parties
+stop communicating. Rather, it means that no intermediate
+training artifact is ever exposed. Prior work applies one of
+these measures at a time. One-shot FL [8] sends its single
+contribution in plaintext [9], [10], or protects it with differ-
+ential privacy (DP) [11], which adds noise to the artifact it
+releases. Encrypted FL runs many rounds of encrypted training
+or encrypted aggregation, paying the cryptographic cost on
+every round, and training under encryption forces polynomial
+replacements of every activation and a deep, repeatedly boot-
+strapped circuit [12]. Thus, adapting a pretrained transformer
+through this approach is impractical.
+Applying both measures still leaves one artifact exposed,
+namely the model itself. One-shot protocols end by handing
+the final model to every participant, which rules them out when
+the model may not be distributed at all. A model fine-tuned
+on confidential records can be a regulated artifact in high-risk
+domains such as health, biometrics, and credit [13].
+In this work, we present HE-OFT, the first one-shot feder-
+ated fine-tuning protocol that enables several parties to adapt
+a pretrained model together and to query the result, without
+any of them ever holding it in plaintext. The contribution is
+encrypted under multiparty CKKS [14], [15], a homomorphic
+encryption scheme where secret key is split across the par-
+ties. The backbone remains public and in plaintext, thus the
+cryptographic cost does not grow with its size. At no point
+in the protocol is a training artifact, plaintext contribution, or
+plaintext model exposed.
+Figure 1 shows how the shared head is built. Every client
+fine-tunes an adapter and a classifier head on the same frozen
+public backbone, keeps the adapter, and uploads one encrypted
+head displacement weighted by the classes it holds. The server
+adds the ciphertexts and divides by the per-class totals under
+encryption, thus the shared head exists only as a ciphertext,
+and the server does not hold any key to decrypt it.
+The querier must build its query from parts that it can run
+itself. Therefore, those parts must be public. The shared trained
+quantity therefore sits after the last nonlinearity, which, in a
+transformer, is a single place. Following this, we summarize
+our contributions below:
+•We split the trainable unit.We federate the classifier
+
+===== PAGE 2 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 2
+1. train, locally 2. merge, under encryption 3. serve, under encryption
+backbone adapter head
+client 1
+backbone adapter head
+client 2
+backbone adapter head
+client N
+⋮
+the adapter never leaves the client
+the server
+Σ gj ⊙  Δj encrypted
+reciprocal Enc(θ★)
+select argmax
+one index is decrypted, which arrangement is served
+backbone
+adapter
+querying client
+a quorum switches the
+label to this client alone
+Enc(gj ⊙  Δj)
+Enc(φ(x))
+one label
+Fig. 1. The protocol in three stages. Each client fine-tunes an adapter and a classifier head on the same frozen public backbone, keeps the adapter, and
+uploads one encrypted head displacement weighted by its per-class counts. The server adds the ciphertexts and divides by the per-class totals under encryption,
+holding no decryption key, so the shared headθ ⋆ exists only as a ciphertext. The same server answers queries.
+head alone. Each client keeps its adapter and never
+transmits it, because a client can improve its own features
+alone but cannot recognize a class it has never seen. The
+protocol forms no adapter aggregate, and a coalition of
+all but one client therefore has no sum from which to
+subtract its own contributions (Section III-B).
+•We design a serving path that never decrypts.The
+querying client encrypts its own features, and the server
+cannot read the query. We return the label alone, and a
+client therefore cannot collect the per-class scores that
+would let it solve for the head (Section III-C).
+•We select between arrangements under encryption.
+Two arrangements are servable at the same cost: the
+shared head over each client’s own adapter and the
+shared head over the bare public backbone. The two fail
+for opposite reasons, the shared head when the public
+backbone alone does not separate the label space, and
+the personal adapter when a client’s representation drifts
+too far. Which failure binds depends on the task and on
+the partition, and the federation must measure both. We
+show that the natural rule, each client scoring both ar-
+rangements on its own held-out data and voting, estimates
+the wrong quantity. Our estimator corrects it, needs no
+fitted threshold, and reveals only which arrangement won
+(Section III-D).
+We evaluate HE-OFT on four text classification tasks and one
+vision task, with frozen RoBERTa [16] and vision transformer
+(ViT) [17] backbones, and we implement the cryptographic
+protocol in real multiparty CKKS rather than simulating it.
+II. PRELIMINARIES
+We denote client indices withj∈ {1, . . . , N}and class
+indices arec∈ {1, . . . , C}. Clientjholds a datasetD j of size
+nj and uploads a head displacement∆ j, from which the server
+forms the shared headθ ⋆.The frozen public backbone isφ,
+whileφ j denotes this backbone composed with clientj’s local
+adapter. We denoteEnc(·)for encryption under the collective
+public key andtfor the decryption threshold. Section II of
+the technical report [18] provides a comprehensive table of
+the notation.
+A. Multiparty Homomorphic Encryption
+We build on CKKS [14], which performs approximate
+arithmetic on packed vectors of real numbers under encryption.
+It is a levelled scheme such that each multiplication spends one
+level of a finite budget.
+A single-key scheme would require one party to hold the
+secret key and therefore to be trusted with decryption. We
+use the multiparty variant [15], stated here for at-out-of-N
+threshold with2≤t≤N.
+The protocol requires four operations from the multiparty
+scheme. Key generation produces one collective public key
+and the evaluation keys from the clients’ shares, and never
+assembles the secret in one place, such that any party may
+compute on ciphertexts, and none may read them. Decryption
+takes partial shares from at leasttclients, and anyt−1of them
+learn nothing about a plaintext. A key switch to a designated
+public key redirects a result so that one chosen party reads it
+and no other does. A collective refresh restores a spent level
+budget, and enables bootstrapping.
+In the protocol, anytclients form a quorum, thus compu-
+tation does not require every client to be online. Anyt−1
+clients are powerless against a ciphertext, hencet−1is the
+corruption bound throughout Section IV.
+Our implementation instantiatest=N, which is the setting
+the multiparty CKKS library provides, and the measurements
+of Section V-E are taken there. Every statement in Section IV
+holds for generalt.
+III. METHOD
+a) Problem Statement:We considerNclients holding
+private labeled data over a common label space ofCclasses.
+Clientjholds dataD j of sizen j. The class proportions differ
+across clients, and a client may hold no example of a class.
+The clients seek a classifier that operates across the entire
+label space, and they cannot pool their data to train a single
+model. Three requirements separate this setting from vanilla
+federated learning. The protocol isone-shot, and each client
+uploads its encrypted head displacement once. Confidentiality
+rests on cryptography, and a client’s contribution is never
+available in plaintext to any other party. The trained classifier
+is never disclosed, and no party, client or server, ever holds it
+in plaintext.
+
+===== PAGE 3 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 3
+b) Threat Model:The participants areNclients and
+a server. A static, semi-honest adversary corrupts the server
+together with up tot−1clients. The corrupted parties
+follow the protocol, pool their views, and try to infer private
+information from what they observe. Section IV states what
+each party sees and proves the guarantees.
+c) Motivation:Optimization cannot run under encryption
+at an acceptable cost. All learning therefore happens in plain-
+text on the clients, and the server performs no learning. Models
+trained from different starting points do not combine linearly,
+and multiplicative depth dominates homomorphic cost. Every
+client therefore starts from one public initializer on one frozen
+public backbone, and the server combines what it receives by
+a linear combination.
+Intermediate training signals are the strongest attack surface,
+as Section VI-A reports. The protocol is therefore one-shot,
+and its single artifact is a ciphertext. No single party may
+decrypt that artifact. The secret key is generated and held
+distributively under multiparty CKKS (Section II-A).
+The model is never disclosed, yet it must answer queries.
+The client that asks a query computes the features of that query
+itself. It therefore runs the backbone and its own adapter in
+plaintext, and the shared trained quantity cannot sit inside the
+backbone. A server computing on ciphertexts cannot inspect
+a value or compare two of them, hence it cannot apply an
+aggregation rule that depends on the data. The clients make
+that choice instead (Section III-D).
+A. Overview
+The protocol runs in two phases. In the first, each client
+fine-tunes an adapter and a classifier head on the same frozen
+public backbone, keeps the adapter, and uploads its head
+displacement once, weighted by its own per-class counts and
+encrypted. Figure 1 shows that phase. In the second, a client
+computes the features of its query itself, encrypts them, and
+sends them to the server, which applies the encrypted head
+and reduces the encrypted logits to the index of the largest.
+No party holds a key that opens the shared head alone.
+B. Shared Head Construction
+1) Local Training:Each client uses the same frozen public
+backboneφ, and trains a low-rank adapterA j that adjusts the
+representation, and a classifier headh j on top of it. Only the
+head is shared. Clientjencrypts the displacement∆ j =h j −
+θ0 ∈R C×d of its head from the public initializer and uploads
+it once. The server combines the encrypted displacements into
+a single shared head and never decrypts the result. The adapter
+is trained locally and never transmitted.
+2) Position of the Shared Map:The client that sends an
+inference query must compute the features of that query
+itself. If the shared trained quantity were an adapter placed
+inside the backbone, the features would depend on it, and
+computing them would require evaluating the backbone with
+encrypted weights. The client would then have to evaluate
+every nonlinearity of the network homomorphically, which is
+the cost this design exists to avoid. The trained quantity that
+is shared must therefore attach after the last nonlinearity. In a
+transformer, the only such point is the final linear map.
+The requirement constrains thepositionof the shared map,
+not the task it serves. Any trained linear map placed after the
+final nonlinearity satisfies this requirement, provided that the
+querying client can compute the features fed into the map.
+A classifier head is one example. The vocabulary projection
+in an autoregressive decoder is another. Placing the map
+earlier forces the client either to evaluate the nonlinearities
+above it under encryption or to decrypt an intermediate value,
+which hands back the numbers the serving path withholds. We
+evaluate classification only.
+The adapter is relocated. Each client retains its own, thus the
+representation still adapts to local data. The distinction follows
+from coverage. A client can improve its own representation
+alone, but it cannot learn to recognize a class it has never
+observed. Coverage is a property of the head, which is exactly
+what the federation supplies. Section V-B measures both
+halves.
+Retaining the adapter locally has a second consequence,
+which is cryptographic. No aggregate of the adapters is ever
+formed. Section IV states this precisely.
+3) Coverage-Weighted Merge:Letg j ∈R C collect client
+j’s per-class example counts,g j,c =n j,c. The shared head is
+the coverage-weighted combination
+θ⋆ =θ 0 +
+PN
+j=1 diag(gj) ∆j
+PN
+j=1 gj
+,(1)
+in which rowcof the shared head is the count-weighted
+average of the clients’ row-cdisplacements. Clients holding
+a class decide its row, and rows that no client covers re-
+main at the public initializer. Each client forms the products
+diag(gj) ∆j locally, before encryption, thus the server only
+adds ciphertexts.
+4) Division by the Class Totals:The denominator of eq. (1)
+is the vector of federation-wide per-class totals. It cannot
+be decrypted. Every client knows its own counts, hence a
+coalition ofN−1clients that learned the totals would subtract
+its own and read the remaining client’s class histogram exactly.
+The reciprocal is therefore evaluated under encryption, using
+an inversion circuit over the positive domain whose refreshes
+are collective. It is paid once, at aggregation, never per query.
+5) Aggregation Cost:The server performs one ciphertext
+addition per client per ciphertext, one encrypted reciprocal,
+and one multiplication. The encrypted object is the head alone,
+whose size is set by the number of classes and the feature
+dimension. Communication is one upload per client and no
+download of model parameters at all.
+C. Encrypted Inference
+The construction below serves a trained quantity that is
+linear in the features. Serving a trained quantity that sits inside
+the backbone is the problem that secure transformer inference
+addresses. An encrypted shared adapter composes with those
+systems at the cost they report, and we place that case outside
+our scope.
+
+===== PAGE 4 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 4
+Algorithm 1Answering one query. The shared head remains
+a ciphertext throughout.
+Require:queryxat clientj;Enc(θ ⋆)held by the server
+1:clientjcomputesφ j(x)with its own backbone and adapter▷
+plaintext, local
+2:clientjsendsEnc(φ j(x))
+3:servercomputesEnc(ℓ)←Enc(θ ⋆)Enc(φ j(x))▷ciphertext
+by ciphertext
+4:serverreducesEnc(ℓ)toEnc(ˆy),ˆy= arg max c ℓc, by a
+tournament of homomorphic comparisons [22]
+5:a quorum of clients key-switchesEnc(ˆy)to clientj’s public key
+6:returnˆy, readable by clientjalone
+1) Query Serving:A client that wants a prediction com-
+putes the features of its query with its own backbone and
+adapter, encrypts them, and sends the ciphertext to the server.
+The server applies the encrypted shared head to the encrypted
+features, obtains encrypted logits, and reduces them to the
+index of the largest entry under encryption. Algorithm 1 states
+it.
+2) Query Encryption:The client could send the features in
+plaintext, which would make the head application cheaper. We
+encrypt them because features are invertible. A party holding
+φj(x)and the public backbone can reconstruct an approxima-
+tion ofx. Sending features in plaintext would therefore hand
+the server the client’s input, which is the thing the protocol
+exists to protect.
+3) Label-Only Output:Returning logits would defeat the
+construction. The head is a linear map on features the client
+computes itself, therefore a client that reads logits for feature
+vectors of its choosing recovers the head by solving a linear
+system in as many queries as the feature dimension [19].
+The same object, the final projection layer of a production
+transformer, has been recovered through a deployed interface
+for a few tens of dollars [20]. Returning only the index
+of the largest entry places an adversary in the hard-label
+setting, where functionally equivalent extraction is markedly
+harder [21]. It does not make extraction impossible, and
+Section IV states the resulting bound as a bound on queries.
+4) Decryption to the Querier:Decryption needs a quorum,
+and clients other than the querier take part in answering
+each query. They contribute partial decryptions and read
+nothing, because the quorum key-switches the ciphertext to the
+querying client’s public key rather than decrypting the label
+collectively.
+5) Serving Cost:The argmax is the one operation in the
+protocol that costs more than one level, because it compares
+logits rather than adding or scaling them. Packing the logits
+into one ciphertext and reducing them by a tournament lowers
+the number of sequential comparisons fromC−1to⌈log 2 C⌉,
+and Section V-E reports the measured result. The server is not
+trusted with anything. It holds the collective public key, the
+evaluation keys, and ciphertexts, so it computes but cannot
+decrypt.
+D. Arrangement Selection
+1) Encrypted Scoring:Two arrangements are available at
+the same cost: the shared head over each client’s own adapter,
+and the shared head over the bare public backbone with no
+adapter at all. Which is better depends on the task, and the
+federation must choose without decrypting either. Each client
+evaluates both on data it holds back from its own training,
+entirely under encryption, and reports encrypted per-class
+counts. The server combines the counts into one encrypted
+score per arrangement, and the federation decrypts exactly one
+value, the index of the arrangement it adopts.
+2) Prior-Weighted Estimator:Each client could instead
+measure both arrangements on its held-out data and vote.
+That procedure estimates the wrong quantity. It selects the
+personal arrangement in every cell, so Section V-D finds it
+wrong wherever the shared arrangement is better. Score both
+arrangements as the expected accuracy of a prediction on an
+example drawn from the federation’s own class distribution,
+E=
+CX
+c=1
+pc ac, p c =
+P
+j nj,c
+P
+j nj
+,(2)
+wherea c is the accuracy on classcandp c is that class’s share
+of the federation’s examples, taken from the per-class counts
+already used in eq. (1). For the shared arrangement, there is
+one model, hence per-class evidence from different clients
+concerns the same object and combines. For the personal
+arrangement each client’s evidence concerns only its own
+model, and classes it does not hold contribute no evidence
+at all. Scoring those classes at zero makesEa lower bound
+for the personal arrangement. There is no fitted threshold
+anywhere.
+3) One Example per Class:The estimator needs an esti-
+mate of accuracy on classes a client has not seen, and its only
+local proxy is accuracy on classes it has barely seen. Each
+client therefore reserves at least one held-out example from
+every class it holds before carving the remainder at random.
+This costs a negligible amount of training data and requires
+no change to the cryptographic protocol.
+4) Cost and Disclosure:Every step is depth one except the
+comparisons, which are the same circuit already used for the
+argmax. One value is decrypted for the whole federation. The
+per-client per-class accuracies are not decrypted, and must not
+be.
+IV. SECURITY
+The participants areNclients and a server. A static, semi-
+honest adversary corrupts the server together with up to
+t−1clients. The corrupted parties follow the protocol, pool
+their views, and try to infer private information from what
+they observe. Section IV-C strengthens the client side of this
+model, and allows up tot−1clients to deviate arbitrarily
+while the server stays honest. Section IV-D explains why that
+assumption cannot be dropped.
+The server sees ciphertexts under the collective public key,
+the public per-client sample counts, and the evaluation keys.
+It does not hold the decryption key. The server additionally
+sees encrypted query features, which it cannot read.
+Three properties of the construction restrict what a coalition
+can compute. Every adapter remains with its owner, and the
+protocol never forms an aggregate from which a coalition
+
+===== PAGE 5 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 5
+Functionality 1HE-OFTF
+Parameters.The client countN, the decryption thresholdt, the per-client
+query allowanceQ, and the label space sizeC. The parties are clients
+P1, . . . , PN and a serverS, which is not part ofF. The functionality holds
+a counterq j for each client, each initialized to0, and a store that is initially
+empty and thatFnever sends to any party.
+Inputs.Each clientP j inputs its datasetD j, and later inputs queriesx. The
+serverSinputs a selection request.
+Outputs.Every party receives the selected indexa ⋆ and the phase signals.
+ClientP j receives one label for each of its firstQqueries, and⊥afterwards.
+Steps.
+1)Training and aggregation.On(Train,D j )from every client, run
+the local training of Section III-B on eachD j in both servable
+arrangements and store the two shared headsθ ⋆
+A andθ ⋆
+B of eq. (1).
+Send(Done,train)to every party.
+2)Selection.On(Select)fromS, evaluate the estimator of eq. (2) on
+each of the two stored heads, send the indexa ⋆ ∈ {A, B}of the
+larger to every party, and send(Done,select)to every party.
+3)Serving.On(Query, x)from clientP j, return⊥toP j ifq j ≥Q.
+Otherwise setq j ←q j + 1, returnˆy= arg max c (θ⋆
+a⋆ φa⋆
+j (x))c to
+Pj alone, whereφ A
+j =φis the public backbone andφ B
+j =φ j is the
+backbone composed withP j’s adapter, and send(Done,query, j)to
+S.
+Leakage.FrevealsLto the adversary, consisting of the public parameters,
+the per-client sample countsn j, the announced indexa ⋆, and the fact that
+eachDonemessage was sent.
+could subtract its own contributions. The shared head remains
+a ciphertext throughout, so the same subtraction is unavailable
+against it. The server inverts the per-class totals under encryp-
+tion and never decrypts them. A coalition therefore cannot
+recover the remaining client’s class histogram.
+A. The Ideal Functionality
+Functionality 1 defines the ideal functionalityFagainst
+which we measure the protocol.Fdoes not include the server,
+and the semi-honest adversary of Section IV may corrupt it.
+The form of the functionality follows the secure aggregation
+functionality of ELSA [23], and placing the aggregator outside
+it follows FULLSA [24].
+The leakage includes the sample counts because the protocol
+uses them as public scalars. We prove security relative to both.
+The protocol must reproduce three properties ofF. No
+party ever holds either shared head. The only value the whole
+federation learns is one index. A client learns one label for
+each query it submits, up to its allowanceQ, and nothing
+else.
+B. Security Against Semi-Honest Parties
+Definition 1(Semi-honest security).LetAcorrupt a set
+of parties that may contain the server and at mostt−1
+clients. Writeview Π
+A({Dj}N
+j=1)for the corrupted parties’ joint
+view of a protocol run on datasets{D j}N
+j=1. The protocolΠ
+securely realizesFwith leakageLif there is a probabilistic
+polynomial-time simulatorSsuch that, for every{D j}N
+j=1,
+viewΠ
+A({Dj}N
+j=1)
+c
+≈ S
+ 
+L,{D j}jcorrupt ,out A
+
+,
+whereout A collects the answersFreturns to the corrupted
+clients.
+Theorem 1(Semi-honest security).Assume thet-out-of-N
+threshold CKKS scheme is secure under chosen plaintext
+attack (IND-CPA) against an adversary holdingt−1key
+shares. Then the protocol securely realizesFwith leakageL
+against any semi-honest adversary corrupting the server and
+at mostt−1clients, in the sense of definition 1.
+Proof sketch.The simulator is givenL, the corrupted clients’
+datasets, and the answers the corrupted clients receive.
+Setup.The simulator runs the distributed key generation
+with the corrupted parties, playing the honest clients on
+uniformly chosen shares.
+Training.For each honest client, the simulator sends an
+encryption of zero in place ofEnc(diag(g j) ∆j), once for
+each of the two arrangements, and in place ofEnc(g j), which
+the two share. The simulator knows how many ciphertexts to
+send, because the count follows from the public parameters. A
+hybrid argument replaces the honest ciphertexts one at a time,
+and each neighbouring pair of hybrids is indistinguishable by
+IND-CPA againstt−1shares, the assumption of the theorem.
+Selection and serving.The selection step decrypts the index
+a⋆ of the adopted arrangement. The simulator takes it fromL.
+For each query of a corrupted client, the simulator holds the
+answer inout A. Queries by honest clients are simulated as
+key switches of encryptions of zero.
+Composing the three parts gives a view computationally
+indistinguishable from the real one. Section IV of the technical
+report [18] gives every proof in full.
+C. Input Privacy Against Malicious Clients
+Theorem 1 assumes every party follows the protocol. We
+extend the model to clients that deviate arbitrarily. We bound
+what a deviating coalition learns about the data of a client that
+follows the protocol. We do not claim correctness.
+Definition 2(Content game).The adversaryAcorruptst−1
+clients. The server is honest. At least one clienthstays honest.
+1)Aoutputs two datasetsD 0 andD 1 with|D 0|=|D 1|.
+2) The challenger samplesb∈ {0,1}and givesD b to client
+h.
+3) The protocol runs.Amay deviate arbitrarily in the
+values its clients upload, in the shares they contribute,
+and in the queries they ask.
+4)Aoutputsb ′. Its advantage is|Pr[b ′ =b]− 1
+2 |.
+Theorem 2(Input privacy).Assume the conditions of theo-
+rem 1. Then the advantage ofAin definition 2 is at most
+negl(λ) +δ(Q tot), whereQ tot = (t−1)Qandδis the
+advantage available fromQ tot label queries to the served
+head.
+Proof sketch.The adversary’s view consists of the key-
+generation transcript, the honest clients’ uploaded ciphertexts,
+the values the server computes, and the answers to its own
+queries.
+The first four are independent ofbup tonegl(λ).
+Only the answers remain. They depend onb, becauseθ ⋆
+depends on clienth’s displacement, and the advantage they
+give is bounded by whatQ tot label queries reveal.
+The bound scales with the corruption threshold. A coalition
+oft−1clients holds(t−1)Qqueries regardless of the size of
+
+===== PAGE 6 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 6
+the federation. Section V of the technical report [18] measures
+δand turns it into a bound onQ.
+D. The Honest-Server Assumption
+Theorem 2 assumes an honest server. No protocol with this
+message pattern can drop that assumption. Decryption is a
+protocol the clients run on a ciphertext the server presents. A
+deviating server can present a ciphertext of its own choosing,
+such as a row ofθ ⋆, rather than the output of algorithm 1. The
+natural repair is to have an honest client refuse such a request.
+It cannot, and the obstacle is the encryption itself.
+Proposition 1(No plaintext gate from a ciphertext).Let an
+honest client decide, by a polynomial-time predicateDon its
+view, whether to contribute its decryption share for a presented
+ciphertext. Let the rest of that view be independent of the
+underlying plaintext. If the scheme is IND-CPA against an
+adversary holdingt−1key shares, then for every pair of
+plaintextsm 0 andm 1,
+ Pr[D(Enc(m0)) = 1]−Pr[D(Enc(m 1)) = 1]
+ ≤negl(λ).
+Proof.A gap between the two probabilities gives an IND-
+CPA distinguisher that holds one key share. One share is at
+mostt−1shares. The assumed security of the scheme applies
+directly.
+An honest client therefore releases its share for both plain-
+texts or for neither. No protocol of this message pattern realizes
+Fagainst a malicious server. Theorem 2 assumes an honest
+server for this reason.
+A mechanism that certifies which function the server eval-
+uated would remove the assumption. A zero-knowledge proof
+of correct evaluation and verifiable homomorphic encryption
+both do this [25]. We implement neither, and Section V-H
+records it as a limitation.
+E. Leakage of the Functionality
+Fanswers queries. Answers carry information aboutθ ⋆,
+and a sufficient number of them reconstruct it. Section V-F
+measures the rate at three to five queries per parameter. This
+is a property of the functionality, and any protocol that realizes
+Finherits it.
+The cryptographic claim is that the protocol leaks no more
+thanF. The operational claim is that the leakage ofFis
+bounded by the query allowanceQ. The first rests on IND-
+CPA. The second rests on a measurement.
+V. EXPERIMENTS
+A. Setup
+The trainable unit is a rank-8low-rank adapter with its
+down-projection frozen at a shared public initialization [26],
+together with a classifier head. We do not use any labelled
+public data.
+We evaluate on four text classification tasks of increasing
+label-space size, AG-News with4classes [27], TREC with
+6[28], DBpedia with14[27] and Banking77 with77[29],
+TABLE I
+ACCURACY ON THE GLOBAL TEST SET,THREE SEEDS,N= 10,α= 0.1.
+THE SERVABLE COLUMNS ARE THE TWO ARRANGEMENTS THE PROTOCOL
+ANSWERS QUERIES FROM,AND BOLD MARKS THE BETTER ONE. THE
+REFERENCE COLUMNS ARE NOT SERVABLE UNDER THE THREAT MODEL
+OFSECTIONIV. ALONE IS ONE CLIENT’S OWN MODEL WITH NO
+FEDERATION,DISCLOSED IS THE MERGED MODEL THIS PROTOCOL
+DECLINES TO BUILD,AND POOLED IS CENTRALISED TRAINING ON THE
+UNION OF THE DATA.
+servable reference
+TaskCshared personal alone disclosed pooled
+head adapter
+AG-News 40.6490.479 0.475 0.739 0.921
+TREC 60.6070.429 0.400 0.711 0.967
+DBpedia 140.7890.754 0.451 0.925 0.988
+Banking77 77 0.2060.6860.249 0.760 0.923
+CIFAR-100 100 0.7480.7740.197 0.784 0.893
+using a frozen RoBERTa-base encoder [16], and on CIFAR-
+100 [30] with a frozen ViT-B/16 [17]. Data are partitioned
+across clients by a Dirichlet distribution over labels with
+concentrationα, the standard label-skew partition [31]. There
+areN= 10clients,α= 0.1, the local trajectory is200steps,
+and every number is the mean over three seeds.
+We writeA sel for the accuracy of the servable arrange-
+ment that Section V-D selects. Three reference points appear
+throughout, and none of them is servable under the threat
+model of Section IV. We writeA loc for the accuracy a client
+obtains alone. We writeA dis for the accuracy of the disclosed
+model, in which the adapter and the head are both aggregated
+and decrypted. We writeA pool for the accuracy of one model
+trained on the union of the clients’ data.
+Two differences follow, and the paper reports both. The
+quantityA dis −A sel is the price of never disclosing a model.
+The quantityA pool −A dis is the price of the partition.
+B. Utility of the Federated Head
+Sharing only the classifier head, over representations that
+each client adapts locally, yields a model usable across the
+whole label space, and the preferable arrangement depends on
+the size of the label space.
+Table I reports both servable arrangements and both refer-
+ence points. The arrangement labelledshared headgives every
+client the same head over the bare public backbone.Personal
+adaptergives each client the shared head over its own locally
+adapted representation.
+Three observations follow. First, the federation raises accu-
+racy on every task. A client alone reaches0.20to0.48, while
+the federated head reaches0.61to0.79on four of the five
+tasks. The gap is largest exactly where a client’s own data
+covers least of the label space.
+Second, the preferable arrangement changes with the size of
+the label space. On the small label spaces the shared head wins,
+0.17on AG-News and0.18on TREC. The AG-News margin
+rests on two of the three seeds, because the third partition
+drops three clients. On the large ones the personal adapter
+wins. The shared head collapses to0.206while the personal
+adapter holds0.686. The collapse is not a coverage failure. We
+count the holders of every class row and find three or more
+
+===== PAGE 7 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 7
+TABLE II
+CIFAR-10ON TWO PUBLISHED PARTITIONS,THREE SEEDS,ON THE
+WHOLE10,000-IMAGE TEST SET. THE COLUMNS ARE THE QUANTITIES
+DEFINED INSECTIONV-A,ALL MEASURED ON OUR PROTOCOL AT THE
+PARTITION EACH PRIOR PAPER PUBLISHED.
+N α A loc Asel Adis Adis −A sel
+5 0.10 0.384 0.949 0.963 0.013
+5 0.30 0.570 0.952 0.966 0.015
+20 0.04 0.212 0.950 0.947−0.003
+20 0.16 0.397 0.953 0.961 0.007
+on two of the three Banking77 seeds, and at least one on all
+of them, so the merge has evidence for every row. The bare
+public backbone is what fails. It does not separate seventy-
+seven intents with a linear map, and serving over each client’s
+own adapter reaches0.686on the same data.
+Third, the two failure modes are complementary. The shared
+head fails when the public backbone alone does not separate
+the label space. The personal adapter fails when each client’s
+representation drifts far enough that a common head no longer
+transfers. Neither arrangement dominates the other, so the
+federation must select between them.
+a) Sensitivity:Figure 2 varies the protocol axes around
+the default on DBpedia. Accuracy falls with skew, from0.970
+atα= 1.0to0.789atα= 0.1. Longer local training helps.
+Accuracy rises with the size of the federation, from0.803at
+N= 10to0.882atN= 50. That row is a single seed, which
+is why itsN= 10value differs from table I.
+C. Comparison with One-Shot Federated Learning
+The protocol gives up no accuracy for protecting the con-
+tributions, where the differentially private one-shot methods
+give up an amount that grows as their budget tightens. The
+peer group evaluates on different tasks from ours, so we ran
+our protocol on theirs. We adopt two published partitions of
+CIFAR-10:N= 5withα∈ {0.1,0.3}, the configuration
+of [9], andN= 20withα∈ {0.04,0.16}, the configuration
+of [11].
+AtN= 5andα= 0.1we measureA sel = 0.949,
+against the0.503of [9]. We do not present that margin as a
+result. Those methods train a ResNet-18 from scratch, whereas
+every client here fine-tunes a frozen public ViT-B/16. Absolute
+accuracy across papers therefore measures the backbone.
+What compares across papers is the accuracy each method
+gives up for protecting the contribution, since every paper
+measures that against its own unprotected baseline on its own
+architecture, and the backbone cancels. Read that way the
+peer group falls into three cases. A method either leaves the
+contribution unprotected, protects it with differential privacy,
+or protects it cryptographically.
+FedAUXfdp does protect its contribution, and its cost is
+governed by the budget. Against its own undefended baseline
+of0.752on CIFAR-10 atN= 20andα= 0.16, the published
+figures give up0.006atε= 1.0and0.029atε= 0.5, then
+0.413atε= 0.1and0.626atε= 0.01[11].
+Our contribution is protected cryptographically, and that
+protection costs no accuracy, by construction, since the de-
+crypted result matches the plaintext computation to the en-
+coding precision of the scheme. Withholding the model is a
+separate charge, and no method above incurs it. Over table II
+the charge lies between−0.003and0.015, and over table I
+between0.03and0.14.
+One difference bounds the federation’s own contribution
+independently of the backbone, because we measure both of
+its terms on the same backbone. AtN= 5andα= 0.1we
+measureA loc = 0.384againstA sel = 0.949. That difference
+is what the protocol supplies.
+D. Accuracy of the Selection Rule
+The natural procedure is for each client to measure both
+arrangements on data it held back and vote. It estimates the
+wrong quantity. The shared arrangement is one model, so
+pooled measurements track its global accuracy, while client
+jcan measure the personal arrangement only on its own
+distribution, which is the one its own model was fitted to.
+The vote is therefore optimistic for the personal arrangement
+and picks correctly in8of27cells. The estimator of eq. (2)
+scores both under the federation’s own class prior and picks
+correctly in23, or24when unobserved classes are filled from
+each client’s rarest classes rather than with zero. A wrong
+choice gives up0.470of accuracy under the vote and0.021
+under the estimator. Section V of the technical report [18]
+reports every cell.
+E. Cryptographic Cost
+The cryptographic cost of the protocol is dominated by
+one-time setup, and the recurring per-query traffic is a few
+megabytes. We do not simulate the cryptography. We imple-
+ment the protocol in real multiparty CKKS on Lattigo [32],
+[15]. All figures use ring degree2 14 for the shallow operations
+and a deeper chain at ring degree2 15 for the circuits that need
+it. Timings are single-run wall clock on one core of a V ALAR
+CPU node. Communication figures are exact.
+a) End-to-end query cost:On one core a query takes
+400.8s at four classes and1468.3s at a hundred. The arith-
+metic and the key switch account for0.24s of that at every
+label-space size. Everything else is the encrypted argmax, and
+97per cent of the argmax is the server restoring levels, which
+it does17times at four classes and62times at a hundred.
+The server restores them on its own, under bootstrapping keys
+the clients generate once together, so no restoration costs a
+round with the clients. The tournament needs⌈log 2 C⌉rounds
+against theC−1of the sequential fold it replaces (fig. 2).
+b) Communication:The protocol is one-shot in the sense
+of Section I. No intermediate training artifact is ever exposed.
+It is not silent. Key generation precedes it, selection costs at
+most2N Cencrypted comparisons, once, and serving costs
+traffic per query.
+The per-query total is8.5 + 0.5NMiB, since the quorum
+returns one key-switching share each. It is11.0MiB atN= 5
+and18.5MiB atN= 20, and it is6.8MiB at ring degree
+214 and27.0MiB at2 16. It does not vary with the number of
+classes. Setup costs344MiB per client, once.
+
+===== PAGE 8 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 8
+10 20 50
+clients N
+0.4
+0.6
+0.8accuracy
+(a)
+0.05 0.1 0.3 1
+label skew α
+0.4
+0.6
+0.8
+1.0
+(b)
+100 200 400
+local steps K
+0.4
+0.6
+0.8
+(c)
+4 14 100
+classes
+30
+100
+300
+1000seconds per query
+(d)
+selected disclosed alone sequential tournament
+Fig. 2. The protocol along four axes. Panels (a) to (c) vary the federation size, the label skew and the local trajectory on DBpedia aroundN= 10,α= 0.1
+and200steps. Panel (d) gives the cost of one encrypted argmax against the label space, atN= 10and ring degree2 15 under collective refresh, for the
+tournament and for the sequential fold it replaces.
+c) Correctness:The encrypted argmax agrees with the
+plaintext maximum to7.3×10 −5, which is far below the
+gap between adjacent logits, so it selects the same class. The
+accuracy figures of table I are therefore unaffected by the
+cryptography.
+F . Leakage Through the Served Answers
+The protocol exposes no training-time artifact and no model,
+so the only remaining channel is the sequence of answers the
+served model returns, and that channel is bounded by the query
+allowance rather than eliminated. Section IV of the technical
+report [18] instantiates theδof theorem 2: it proves the channel
+no stronger than the shared head itself, then measures what the
+head gives up.
+Fidelityis the rate at which a copy agrees with the served
+model. Reaching fidelity0.90takes about1.2×10 4 queries on
+AG-News,5.0×10 4 on DBpedia and2.0×10 5 on Banking77.
+The head hasCdparameters, wheredis the feature dimension,
+and in each case fidelity0.90costs between three and five
+times that number of queries. A deployment can therefore
+set its allowance fromC,dand the fidelity it concedes. A
+copy at that fidelity reproduces the served model’s decisions,
+and published membership attacks against it and against the
+head in plaintext both sit at chance. Section V of the technical
+report [18] gives the extraction study in full.
+a) Comparison with a released model:A participant
+holding the model in plaintext has fidelity1at zero queries,
+may read the parameters directly rather than infer them, and
+is subject to no allowance because there is nothing to meter.
+G. Comparison with Model Disclosure
+Never disclosing the model costs accuracy. The estimator
+selects per seed, soA sel is0.669on AG-News and0.756
+on CIFAR-100 rather than the bolded entry of table I. The
+quantityA dis −A sel runs from0.029to0.136across the five
+tasks. A disclosed model does not satisfy Functionality 1, so
+we do not offer it as a configuration of this protocol. Section V
+of the technical report [18] gives the comparison per task.
+H. Scope and Limitations
+Three limitations bound the construction. The shared quan-
+tity must be linear in the features, the query allowance is
+an operational control rather than cryptographic hardness, and
+the guarantees assume semi-honest parties. Section V of the
+technical report [18] states each one in full.
+VI. RELATEDWORK
+A. Attacks at Training Time and at Inference Time
+Federated learning (FL) began as an iterative procedure in
+which a server repeatedly broadcasts a model, clients train
+it on their own data, and the server averages the returned
+updates [4]. An observer of the per-round updates infers
+membership and unintended properties of another client’s data,
+and the repetition of those updates is what makes the attack
+strong [5], [6]. A server that chooses the weights it broadcasts
+does not need inference at all, since crafted weights make
+clients return verbatim copies of their own inputs [33].
+Attacks that see only the final model are consistently
+weaker, and the field survey draws that separation explic-
+itly [34]. Against models that generalize well they identify few
+members, and only at low false-positive rates [35]. A protocol
+that never sends an update, and that sends anything only once,
+therefore leaves every adversary with the weaker attack.
+B. Protecting Training with Cryptography
+Secure aggregation lets the server learn only the sum of the
+clients’ updates, using masks that cancel in the aggregate [36].
+It protects one round’s sum inside an iterative protocol, and
+Kerkouche et al. show that the revealed per-round sums
+themselves leak across rounds [37]. POSEIDON runs en-
+crypted stochastic gradient descent under multiparty CKKS,
+with activations replaced by polynomial approximations [12].
+The approach is iterative and encrypted nonlinearity costs a
+deep multiplicative circuit with repeated bootstrapping. That
+cost scales with the network being trained, therefore adapting
+a pretrained transformer by this route is out of reach.
+Several works encrypt only the aggregation step of an
+otherwise plaintext training loop [38]. All of them remain
+bound to the iterative protocol, hence the encryption cost is
+paid on every round and what is protected is a per-round sum
+rather than a complete contribution. Single-key homomorphic
+encryption forces the assumption that the server and the clients
+do not collude [38]. The threshold structure of Section II-A
+removes that assumption.
+
+===== PAGE 9 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 9
+Transfer learning itself has been placed under encryption.
+Several works train a classifier head, a linear or logistic
+model on frozen features under CKKS [39]. These share our
+structural niche, but they run an optimizer on ciphertexts,
+hence multiplicative depth grows with the step count.
+C. One-Shot Federated Learning and Differential Privacy
+A parallel line collapses the many rounds into a single ex-
+change [8]. Genuinely single-round methods distil the clients’
+models through a generator or synthesised inputs, or fuse the
+models directly [9], [10]. These establish that one round can
+produce a usable model, but they work in plaintext, and each
+client sends an entire model or a synthetic distillate of its
+data. A recent method sends no model at all, having each
+client upload per-class sufficient statistics once [40]. Those
+statistics travel in plaintext, and per-class totals are exactly
+what Section III-B keeps encrypted.
+The one-shot methods that do address privacy use differen-
+tial privacy. FedAUXfdp releases client contributions under
+a differentially private mechanism after distillation through
+a pretrained extractor [11], and related approaches protect a
+diffusion-generated surrogate or a teacher ensemble [41], [42].
+These are our natural quantitative peers, and their privacy is
+lossy, because the noise a meaningful budget requires is added
+to the artifact that is released. Several works apply the same
+trade-off to transfer learning, running noisy gradient descent
+on a low-rank adapter [43].
+D. Federated Fine-Tuning and Task Arithmetic
+A recent line federates parameter-efficient fine-tuning, com-
+municating a low-rank adapter rather than a model. FedIT
+averages the adapters round by round [44], but per-factor
+averaging is biased. FFA-LoRA instead freezes the randomly
+initialized down-projection and trains only the up-projection,
+hence averaging the trained factor is exact [26]. None of this
+line protects the contributions, which is our subject.
+E. Secure Inference
+Answering queries from a model that stays encrypted is the
+subject of secure inference. Several works evaluate a trans-
+former under encryption, and in each case the nonlinearities of
+attention dominate the cost [45]. The map served here is linear
+in the features, thus serving a trained map that sits inside the
+backbone instead would reduce to exactly the problem these
+systems address.
+Two systems sit closer. slytHErin evaluates a network under
+CKKS with the model held under a multiparty key, and it key-
+switches the prediction to the querier, which is the serving
+setting of Section III-C [46]. It evaluates the whole network
+homomorphically, which is why the models it reports are
+a twenty-layer and a fifty-layer network on a handwritten-
+digit task rather than a pretrained encoder. And it returns the
+prediction vector, hence the querier receives scores, which
+Section V-F shows is a cheaper target for extraction than a
+label.
+CryptPEFT divides the work as we do. A public frozen
+backbone runs in plaintext on the client, the client encrypts
+TABLE III
+THE CLOSEST SYSTEMS ON THE FOUR AXES THIS PAPER TURNS ON,AS
+EACH PAPER REPORTS THEM. THE PLAINTEXT COLUMN SAYS WHETHER
+ANY PARTY ENDS UP HOLDING THE TRAINED MODEL IN PLAINTEXT,AND
+providerMEANS ONE PARTY DOES WHILE THE QUERIER DOES NOT.
+System Rounds Protection
+Model in
+plaintext
+Querier
+receives
+DENSE [9] one none yes the model
+GH-OFL [40] one none yes the model
+FedAUXfdp [11] one DP yes the model
+POSEIDON [12] many HE no the prediction
+slytHErin [46] HE no scores
+CryptPEFT [47] many 2PC provider scores
+HE-OFT one HE no label
+the resulting features, only the adapter is evaluated under
+encryption, and the client receives the adapter’s output [47].
+It is a two-party protocol, the trained unit is the provider’s
+plaintext, and there is no training protocol.
+Positioning.Table III places the closest systems on the axes
+that separate them. What remains unaddressed is a protocol
+that exposes no training-time quantity, that exchanges anything
+at all only once, and that never discloses the model even to
+the parties that built it. Section VI of the technical report [18]
+surveys the field in full.
+VII. CONCLUSION
+We presented HE-OFT, a federated fine-tuning protocol in
+which no party receives the trained result. The design follows
+from the observation that federated learning’s privacy risk is
+concentrated in the quantities a protocol exposes while the
+model is being built, and from the further requirement that in
+some deployments the finished model may not be distributed
+either. Each client fine-tunes on a frozen public backbone,
+retains its adapter locally, and uploads a single encrypted head
+displacement. The server combines those displacements under
+multiparty CKKS and never decrypts the result. A quorum of
+clients returns only the predicted label, addressed to the party
+that asked.
+Withholding the model constrains what may be shared.
+Since the querying party must form its query from components
+it can evaluate itself, those components must be public, and
+the shared trained quantity must therefore attach after the last
+nonlinearity of the network. Across four text classification
+tasks and one vision task, the protocol produces a model
+stronger than any client obtains alone, at a cost of0.03to0.14
+accuracy relative to a model that is aggregated and disclosed.
+Two directions follow. Robustness to actively malicious
+participants is outside the present guarantee, and reconciling
+robust aggregation with an encrypted contribution remains
+open. Serving a shared quantity that sits inside the backbone,
+rather than after it, reduces to secure transformer inference.
+ACKNOWLEDGMENTS
+We acknowledge the support of T ¨UB˙ITAK (the Scientific
+and Technological Research Council of T ¨urkiye) projects
+124E091 and 124N941. The authors used Claude agents to
+polish the manuscript.
+
+===== PAGE 10 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 10
+REFERENCES
+[1] E. J. Hu, Y . Shen, P. Wallis, Z. Allen-Zhu, Y . Li, S. Wang, L. Wang,
+and W. Chen, “LoRA: Low-rank adaptation of large language models,”
+inICLR, 2022.
+[2] M. J. Sheller, B. Edwards, G. A. Reina, J. Martin, S. Pati, A. Kotrotsou,
+M. Milchenko, W. Xu, D. Marcus, R. R. Colen, and S. Bakas, “Feder-
+ated learning in medicine: facilitating multi-institutional collaborations
+without sharing patient data,”Scientific Reports, vol. 10, p. 12598, 2020.
+[3] European Parliament and Council of the European Union, “Regulation
+(eu) 2016/679 (general data protection regulation),” Official Journal of
+the European Union, L 119, pp. 1–88, 2016.
+[4] B. McMahan, E. Moore, D. Ramage, S. Hampson, and B. A. y. Arcas,
+“Communication-efficient learning of deep networks from decentralized
+data,” inAISTATS, 2017.
+[5] M. Nasr, R. Shokri, and A. Houmansadr, “Comprehensive privacy
+analysis of deep learning: Passive and active white-box inference attacks
+against centralized and federated learning,” inIEEE S&P, 2019.
+[6] L. Melis, C. Song, E. De Cristofaro, and V . Shmatikov, “Exploiting
+unintended feature leakage in collaborative learning,” inIEEE S&P,
+2019.
+[7] G. Zhu, D. Li, H. Gu, Y . Yao, L. Fan, and Y . Han, “FedMIA: An
+effective membership inference attack exploiting “all for one” principle
+in federated learning,” inIEEE/CVF Conference on Computer Vision
+and Pattern Recognition (CVPR), 2025, pp. 20 643–20 653.
+[8] N. Guha, A. Talwalkar, and V . Smith, “One-shot federated learning,”
+arXiv preprint arXiv:1902.11175, 2019.
+[9] J. Zhang, C. Chen, B. Li, L. Lyu, S. Wu, S. Ding, C. Shen, and C. Qi,
+“DENSE: Data-free one-shot federated learning,” inNeurIPS, 2022.
+[10] Z. Tang, Y . Zhang, P. Dong, Y .-m. Cheung, A. C. Zhou, B. Han,
+and X. Chu, “Fusefl: One-shot federated learning through the lens of
+causality with progressive model fusion,” inNeurIPS, 2024.
+[11] H. Hoech, R. Rischke, K. Mueller, and W. Samek, “FedAUXfdp:
+Differentially private one-shot federated distillation,” inIJCAI Workshop
+on Federated Learning, 2022.
+[12] S. Sav, A. Pyrgelis, J. R. Troncoso-Pastoriza, D. Froelicher, J.-P. Bossuat,
+J. S ´a Sousa, and J.-P. Hubaux, “POSEIDON: Privacy-preserving feder-
+ated neural network learning,” inNDSS, 2021.
+[13] European Parliament and Council of the European Union, “Regulation
+(eu) 2024/1689 (artificial intelligence act),” Official Journal of the
+European Union, L, 2024/1689, 2024.
+[14] J. H. Cheon, A. Kim, M. Kim, and Y . Song, “Homomorphic encryption
+for arithmetic of approximate numbers,” inASIACRYPT, 2017.
+[15] C. Mouchet, J. R. Troncoso-Pastoriza, J.-P. Bossuat, and J.-P. Hubaux,
+“Multiparty homomorphic encryption from ring-learning-with-errors,”
+PoPETs, vol. 2021, no. 4, pp. 291–311, 2021.
+[16] Y . Liu, M. Ott, N. Goyal, J. Du, M. Joshi, D. Chen, O. Levy, M. Lewis,
+L. Zettlemoyer, and V . Stoyanov, “RoBERTa: A robustly optimized
+BERT pretraining approach,” arXiv:1907.11692, 2019.
+[17] A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai,
+T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly,
+J. Uszkoreit, and N. Houlsby, “An image is worth 16x16 words:
+Transformers for image recognition at scale,” inICLR, 2021.
+[18] H. I. Kanpak, S. Sav, and A. K ¨upc ¸¨u, “HE-OFT: Privacy-preserving
+one-shot federated fine-tuning under homomorphic encryption (technical
+report),”arXiv preprint arXiv:XXXX.XXXXX, 2026.
+[19] F. Tram `er, F. Zhang, A. Juels, M. K. Reiter, and T. Ristenpart, “Stealing
+machine learning models via prediction APIs,” inUSENIX Security,
+2016.
+[20] N. Carlini, D. Paleka, K. D. Dvijotham, T. Steinke, J. Hayase, A. F.
+Cooper, K. Lee, M. Jagielski, M. Nasr, A. Conmy, I. Yona, E. Wallace,
+D. Rolnick, and F. Tram `er, “Stealing part of a production language
+model,” inICML, 2024.
+[21] Y . Chen, X. Dong, J. Guo, Y . Shen, A. Wang, and X. Wang, “Hard-
+label cryptanalytic extraction of neural network models,” inASIACRYPT,
+2024.
+[22] J. H. Cheon, D. Kim, and D. Kim, “Efficient homomorphic comparison
+methods with optimal complexity,” inASIACRYPT, 2020.
+[23] M. Rathee, C. Shen, S. Wagh, and R. A. Popa, “ELSA: Secure
+aggregation for federated learning with malicious actors,” inIEEE S&P,
+2023.
+[24] F. Karakoc ¸, A. K¨upc ¸¨u, and M. ¨Onen, “Fault tolerant and malicious secure
+federated learning,” inCANS, 2024.
+[25] A. Viand, C. Knabenhans, and A. Hithnawi, “SoK: Fully homomorphic
+encryption compilers and verifiable computation,” inIEEE S&P, 2023.
+[26] Y . Sun, Z. Li, Y . Li, and B. Ding, “Improving LoRA in privacy-
+preserving federated learning,” inICLR, 2024.
+[27] X. Zhang, J. Zhao, and Y . LeCun, “Character-level convolutional net-
+works for text classification,” inNeurIPS, 2015.
+[28] X. Li and D. Roth, “Learning question classifiers,” inCOLING, 2002.
+[29] I. Casanueva, T. Tem ˇcinas, D. Gerz, M. Henderson, and I. Vuli ´c,
+“Efficient intent detection with dual sentence encoders,” inWorkshop
+on NLP for Conversational AI (NLP4ConvAI), ACL, 2020.
+[30] A. Krizhevsky, “Learning multiple layers of features from tiny images,”
+University of Toronto, Tech. Rep., 2009.
+[31] T.-M. H. Hsu, H. Qi, and M. Brown, “Measuring the effects of non-
+identical data distribution for federated visual classification,”arXiv
+preprint arXiv:1909.06335, 2019.
+[32] C. Mouchet, J.-P. Bossuat, J. Troncoso-Pastoriza, and J.-P. Hubaux,
+“Lattigo v5: A multiparty homomorphic encryption library in Go,” in
+WAHC, 2021.
+[33] F. Boenisch, A. Dziedzic, R. Schuster, A. S. Shamsabadi, I. Shumailov,
+and N. Papernot, “When the curious abandon honesty: Federated learn-
+ing is not private,” inIEEE EuroS&P, 2023.
+[34] P. Kairouz, H. B. McMahan, B. Aventet al., “Advances and open
+problems in federated learning,”Foundations and Trends in Machine
+Learning, vol. 14, no. 1–2, pp. 1–210, 2021.
+[35] N. Carlini, S. Chien, M. Nasr, S. Song, A. Terzis, and F. Tramer,
+“Membership inference attacks from first principles,” inIEEE S&P,
+2022.
+[36] K. Bonawitz, V . Ivanov, B. Kreuter, A. Marcedone, H. B. McMahan,
+S. Patel, D. Ramage, A. Segal, and K. Seth, “Practical secure aggregation
+for privacy-preserving machine learning,” inACM CCS, 2017.
+[37] R. Kerkouche, G. ´Acs, and M. Fritz, “Client-specific property inference
+against secure aggregation in federated learning,” inWPES, 2023.
+[38] J. Liu, L. Yan, B. Li, L. Yu, and C. Shen, “SHE-LoRA: Selective ho-
+momorphic encryption for federated tuning with heterogeneous LoRA,”
+inICLR, 2026.
+[39] S. Lee, G. Lee, J. W. Kim, J. Shin, and M.-K. Lee, “HETAL: Efficient
+privacy-preserving transfer learning with homomorphic encryption,” in
+ICML, 2023.
+[40] F. Turazza, M. Picone, and M. Mamei, “The Gaussian-Head OFL family:
+One-shot federated learning from client global statistics,” inICLR, 2026.
+[41] M. Mendieta, G. Sun, and C. Chen, “Navigating heterogeneity and
+privacy in one-shot federated learning with diffusion models,” inWACV,
+2025.
+[42] Q. Li, B. He, and D. Song, “Practical one-shot federated learning for
+cross-silo setting,” inIJCAI, 2021.
+[43] X.-Y . Liu, R. Zhu, D. Zha, J. Gao, S. Zhong, M. White, and M. Qiu,
+“Differentially private low-rank adaptation of large language model
+using federated learning,”ACM TMIS, vol. 16, no. 2, pp. 1–24, 2025.
+[44] J. Zhang, S. Vahidian, M. Kuo, C. Li, R. Zhang, T. Yu, Y . Zhou,
+G. Wang, and Y . Chen, “Towards building the federated GPT: Federated
+instruction tuning,” inIEEE ICASSP, 2024.
+[45] J. Zhang, J. Liu, X. Yang, Y . Wang, K. Chen, X. Hou, K. Ren, and
+X. Yang, “Secure transformer inference made non-interactive,” inNDSS,
+2025.
+[46] F. Intoci, S. Sav, A. Pyrgelis, J.-P. Bossuat, J. R. Troncoso-Pastoriza,
+and J.-P. Hubaux, “slytHErin: An agile framework for encrypted deep
+neural network inference,” inCloud S&P, 2023.
+[47] S. Xia, W. Wang, Z. Wang, Y . Zhang, Y . Jin, D. Meng, and
+R. Hou, “CryptPEFT: Efficient and private neural network inference
+via parameter-efficient fine-tuning,” inNDSS, 2026.
+HAL˙IL ˙IBRAH˙IM KANPAKreceived his B.Sc.
+degree in Mathematics from Koc ¸ University. He
+is currently pursuing his Ph.D. at Koc ¸ University,
+where he is a member of the Cryptography, Cyber
+Security & Privacy Research Group. His research
+interests include cryptography and related areas in
+Deep Learning.
+
+===== PAGE 11 =====
+IEEE TRANSACTIONS ON NETWORK SCIENCE AND ENGINEERING 11
+Asst. Prof. S ˙INEM SA Vreceived her Ph.D. in
+Computer and Communication Sciences from ´Ecole
+Polytechnique F ´ed´erale de Lausanne (EPFL). She
+also holds M.Sc. and B.Sc. degrees in Computer
+Engineering from Bilkent University, where she
+currently serves as an Assistant Professor in the
+Computer Engineering department. Her research in-
+terests include privacy-preserving machine learning
+and applied cryptography.
+Prof. ALPTEK ˙IN K ¨UPC ¸¨Ureceived his Ph.D.
+degree from Brown University Computer Science
+Department in 2010. Since then, he has been work-
+ing as a faculty member at Koc ¸ University, leading
+the Cryptography, Cyber Security & Privacy Re-
+search Group that he founded. He is an ACM and
+IEEE Senior Member, and a co-founder of Xtinge
+Technology Inc.
