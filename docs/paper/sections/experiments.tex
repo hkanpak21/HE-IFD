@@ -77,7 +77,7 @@ The servable columns are the two arrangements the protocol answers queries from,
 and bold marks the better one. The reference columns are not servable under the
 threat model of \cref{sec:threat}. Alone is one client's own model with no
 federation, disclosed is the merged model this protocol declines to build, and
-pooled is centralised training on the union of the data. We did not run the pooled reference on CIFAR-100.\tronly{ On one seed
+pooled is centralised training on the union of the data.\tronly{ On one seed
 the Dirichlet draw assigns fewer than twenty samples to some clients, which cannot
 train, so the effective federation is seven on AG-News and nine on TREC.}}
 \label{tab:headline}
@@ -93,7 +93,7 @@ AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 & 0.921 \\
 TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 & 0.967 \\
 DBpedia    & 14  & $\mathbf{0.789}$ & 0.754 & 0.451 & 0.925 & 0.988 \\
 Banking77  & 77  & 0.206 & $\mathbf{0.686}$ & 0.249 & 0.760 & 0.923 \\
-CIFAR-100  & 100 & 0.748 & $\mathbf{0.774}$ & 0.197 & 0.784 & --- \\
+CIFAR-100  & 100 & 0.748 & $\mathbf{0.774}$ & 0.197 & 0.784 & 0.893 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -404,7 +404,9 @@ beside the argmax that follows.}
 at four classes and $1468.3$\,s at a hundred. The arithmetic and the key switch
 account for $0.24$\,s of that at every label-space size. Everything else is the
 encrypted argmax, and $97$ per cent of the argmax is the server restoring levels,
-which it does $17$ times at four classes and $62$ times at a hundred. The
+which it does $17$ times at four classes and $62$ times at a hundred. The server
+restores them on its own, under bootstrapping keys the clients generate once
+together, so no restoration costs a round with the clients. The
 tournament needs $\lceil\log_2\Cc\rceil$ rounds against the $\Cc-1$ of the
 sequential fold it replaces (\cref{fig:trends}).
 
@@ -952,10 +954,11 @@ smallest at the extremes, and it is paid for a property that no accuracy figure
 can substitute for. After the protocol ends, there is no plaintext model anywhere.}
 
 \tronly{The last column of
-\cref{tab:headline} isolates the second difference of \cref{sec:setup}. On three of
-the four text tasks $\Apool-\Adis$ exceeds $\Adis-\Asel$. It is $0.182$ against
-$0.071$ on AG-News, $0.257$ against $0.104$ on TREC, and $0.163$ against $0.075$ on
-Banking77. DBpedia is the exception, at $0.063$ against $0.136$. On those three
+\cref{tab:headline} isolates the second difference of \cref{sec:setup}. On four of
+the five tasks $\Apool-\Adis$ exceeds $\Adis-\Asel$. It is $0.182$ against
+$0.071$ on AG-News, $0.257$ against $0.104$ on TREC, $0.163$ against $0.075$ on
+Banking77, and $0.109$ against $0.029$ on CIFAR-100. DBpedia is the exception, at
+$0.063$ against $0.136$. On those four
 tasks most of the distance between a servable arrangement and a centralised model
 is therefore attributable to the partition of the data, and not to the decision
 never to decrypt.}

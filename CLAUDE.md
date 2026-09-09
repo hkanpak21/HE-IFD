@@ -44,7 +44,8 @@ read for reasoning and never for what to do next.
 | paper element | record |
 |---|---|
 | the five-task accuracy table | `results/personal_adapter*/stratified/results.csv` |
-| its pooled column | `results/centralised_ceiling/results.csv`, `matched_total` rows |
+| its pooled column, four text tasks | `results/centralised_ceiling/results.csv`, `matched_total` rows |
+| its pooled column, CIFAR-100 | `results/centralised_ceiling/vision_results.csv`, `matched_total` rows. Measured 2026-09-09, job 1657503, on both the 2000- and the 10000-image test set, which agree to 0.002 |
 | the CIFAR-10 table, against the published partitions | `results/personal_adapter_vision/cifar10_matched_full.csv`, the full 10,000-image test set |
 | Figure 2, panels (a) to (c) | `results/personal_adapter/nsweep.csv` and `sensitivity.csv`, plus `stratified/results.csv` for the default cell |
 | Figure 2, panel (d) | `results/fhe_serve/argmax_tournament.csv` and `argmax_cost.csv` |
