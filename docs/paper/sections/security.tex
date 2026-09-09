@@ -19,23 +19,23 @@ public per-client sample counts, and the evaluation keys. It does not hold the d
 key. The server additionally sees
 encrypted query features, which it cannot read.
 
-Three properties of the construction close the routes a coalition could take.
-Every adapter stays with its owner, and the protocol never forms the aggregate a
-coalition would subtract its own contributions from. The shared head stays a
-ciphertext throughout, which closes the same route against it. The server inverts
-the per-class totals under encryption and never decrypts them. A coalition cannot
-recover the remaining client's class histogram.
+Three properties of the construction restrict what a coalition can compute.
+Every adapter remains with its owner, and the protocol never forms an aggregate
+from which a coalition could subtract its own contributions. The shared head
+remains a ciphertext throughout, so the same subtraction is unavailable against
+it. The server inverts the per-class totals under encryption and never decrypts
+them. A coalition therefore cannot recover the remaining client's class
+histogram.
 
 \tronly{The claim concerns disclosure. The protocol publishes no direct read of the
 class histogram, and we do not establish that the histogram is unrecoverable.
 A client's counts also shape the displacement it uploads, since for a linear map
 trained under cross-entropy the magnitude of the row for a class grows with the
 number of examples of that class the client held~\cite{wainakh2022user}. Those
-displacements are ciphertexts, and the merged head is a ciphertext. Nothing is
-readable while the encryption stands, and \cref{sec:c2c-measured} measures what
-survives into an extracted copy. What inverting the totals under encryption buys
-is the removal of the one channel that would have handed the histogram over in
-the clear.}
+displacements are ciphertexts, and the merged head is a ciphertext. No ciphertext
+is readable while the encryption holds, and \cref{sec:c2c-measured} measures what
+survives into an extracted copy. Inverting the totals under encryption removes
+the only channel that would have disclosed the histogram in plaintext.}
 
 \tronly{This section states what the protocol guarantees. \Cref{sec:ideal} gives an
 ideal functionality. \Cref{sec:semihonest} proves that the protocol realizes it
@@ -49,10 +49,10 @@ task itself leaks.}
 \label{sec:ideal}
 
 \Cref{func:ideal} defines the ideal functionality $\Fhe$ against which we
-measure the protocol. The server sits outside $\Fhe$, and the semi-honest adversary of
-\cref{sec:threat} may corrupt it. The form of the functionality follows the
-secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and placing the
-aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
+measure the protocol. $\Fhe$ does not include the server, and the semi-honest
+adversary of \cref{sec:threat} may corrupt it. The form of the functionality
+follows the secure aggregation functionality of ELSA~\cite{rathee2023elsa}, and
+placing the aggregator outside it follows FULLSA~\cite{karakoc2024fullsa}.
 
 \begin{functionality}[t]
 \caption{HE-OFT $\Fhe$}
@@ -97,11 +97,11 @@ announced index $a^{\star}$, and the fact that each $\mathsf{Done}$ message was
 sent.
 \end{functionality}
 
-The sample counts sit in the leakage because the protocol uses them as public
+The leakage includes the sample counts because the protocol uses them as public
 scalars. We prove security relative to both.
 
-Three properties of $\Fhe$ are what the protocol must reproduce. No party ever
-holds either shared head. The only value the whole federation learns is one index. A
+The protocol must reproduce three properties of $\Fhe$. No party ever holds
+either shared head. The only value the whole federation learns is one index. A
 client learns one label for each query it submits, up to its allowance $Q$, and
 nothing else.
 
@@ -126,8 +126,8 @@ corrupted clients.
 \end{definition}
 
 \tronly{The simulator receives the answers because the protocol delivers them. A
-definition that withheld them would be unachievable, and the theorem would say
-nothing about a system that answers questions.}
+definition that withheld them would be unachievable, and the resulting theorem
+would not apply to a system that answers queries.}
 
 \begin{theorem}[Semi-honest security]
 \label{thm:semihonest}
@@ -163,9 +163,9 @@ a function. Its inversion circuit consumes levels and restores them by
 collective refresh, an interactive protocol in which the participating clients
 contribute fresh randomness. The simulator therefore invokes the simulator of
 the refresh protocol for each of the two refreshes, playing the honest clients
-on that protocol's simulated shares. Both refreshes sit at fixed points in the
-circuit that do not depend on any plaintext. The simulator knows their number
-and position in advance.}
+on that protocol's simulated shares. Both refreshes occur at fixed points in the
+circuit, and those points do not depend on any plaintext. The simulator knows
+their number and position in advance.}
 
 \paperonly{\emph{Selection and serving.} The selection step decrypts the index
 $a^{\star}$ of the adopted arrangement. The simulator takes it from $\Leak$.
@@ -206,8 +206,8 @@ The adversary $\mathcal{A}$ corrupts $\tc-1$ clients. The server is honest. At l
 \end{definition}
 
 \tronly{The equal-size restriction is necessary. The per-client sample counts are
-public. An adversary free to choose datasets of different sizes reads the
-answer off the counts without attacking anything.}
+public. An adversary free to choose datasets of different sizes determines $b$
+from the counts alone.}
 
 \begin{theorem}[Input privacy]
 \label{thm:malicious}
@@ -227,15 +227,15 @@ clients' uploaded ciphertexts, the values the server computes, and the answers t
 \tronly{The first four are independent of $b$ up to $\negl(\lambda)$. The honest
 ciphertexts are indistinguishable from encryptions of zero by the hybrid
 argument of \cref{thm:semihonest}, which holds against an adversary with
-$\tc-1$ shares. The server is honest. The values it computes are the
-prescribed deterministic functions of those ciphertexts and of public scalars.
-The server is honest. Every ciphertext presented for key switching is
-the prescribed output of \cref{alg:serve} on a query, and its plaintext is a
-label the coalition does not choose. Deviating in the uploaded values does not
-help either, because the adversary already chooses those values in the real
-protocol and they carry no dependence on $b$. Deviating in the contributed
-shares does not help, because a share that is not the prescribed one makes the
-reconstruction fail, which aborts the query and returns nothing.}
+$\tc-1$ shares. The server is honest, so the values it computes are the
+prescribed deterministic functions of those ciphertexts and of public scalars,
+and every ciphertext presented for key switching is the prescribed output of
+\cref{alg:serve} on a query. The plaintext of that ciphertext is a label the
+coalition does not choose. Deviating in the uploaded values gives no advantage,
+because the adversary already chooses those values in the real protocol and they
+carry no dependence on $b$. Deviating in the contributed shares gives none
+either, because a share that is not the prescribed one makes the reconstruction
+fail, which aborts the query and returns nothing.}
 
 Only the answers remain. They depend on $b$, because $\thstar$ depends on client
 $h$'s displacement, and the advantage they give is bounded by what
@@ -250,12 +250,12 @@ holds $(\tc-1)Q$ queries regardless of the size of the federation.
 \subsection{The Honest-Server Assumption}
 \label{sec:malicious-ext}
 
-\Cref{thm:malicious} keeps the server honest. No protocol with this message
-pattern can drop that assumption. Decryption is a protocol the clients run on a ciphertext the server presents. A
-deviating server can present a ciphertext of its own choosing, such as a row of
-$\thstar$, rather than the output of \cref{alg:serve}. The natural repair is to
-have an honest client refuse such a request. It cannot, and the obstacle is the
-encryption itself.
+\Cref{thm:malicious} assumes an honest server. No protocol with this message
+pattern can drop that assumption. Decryption is a protocol the clients run on a
+ciphertext the server presents. A deviating server can present a ciphertext of
+its own choosing, such as a row of $\thstar$, rather than the output of
+\cref{alg:serve}. The natural repair is to have an honest client refuse such a
+request. It cannot, and the obstacle is the encryption itself.
 
 \begin{proposition}[No plaintext gate from a ciphertext]
 \label{prop:nogate}
@@ -278,15 +278,14 @@ the scheme applies directly.
 
 An honest client therefore releases its share for both plaintexts or for
 neither. No protocol of this message pattern realizes $\Fhe$ against a
-malicious server, which is why \cref{thm:malicious} places the server among the
-honest parties.
+malicious server. \Cref{thm:malicious} assumes an honest server for this
+reason.
 
-\paperonly{A mechanism checks provenance.
+\paperonly{One mechanism would check provenance rather than content.
 The serving circuit is a deterministic function of the encrypted head, the
 encrypted query, the evaluation keys and the public parameters, and its level
-restoration is deterministic as well. A
-client can therefore recompute the prescribed output ciphertext and compare it as
-a string.}
+restoration is deterministic as well. A client can therefore recompute the
+prescribed output ciphertext and compare it as a string.}
 
 \tronly{Two mechanisms would remove the assumption, and we implement neither. The first
 checks provenance rather than content. The serving circuit is a deterministic
@@ -305,46 +304,44 @@ evaluated, through a zero-knowledge proof of correct evaluation or verifiable
 homomorphic encryption~\cite{viand2023verifiable}. \Cref{sec:scope} records both
 as limitations.}
 
-\subsection{Leakage Inherent to the Functionality}
+\subsection{Leakage of the Functionality}
 \label{sec:inherent}
 
-\tronly{\Cref{thm:semihonest} shows the protocol reveals no more than $\Fhe$ reveals.
-That leaves the question of what $\Fhe$ itself reveals, and the answer is not
-nothing.}
+\tronly{\Cref{thm:semihonest} shows that the protocol reveals no more than $\Fhe$
+reveals. This subsection bounds what $\Fhe$ reveals.}
 
-$\Fhe$ answers queries. Answers carry information about $\thstar$, and enough of
-them reconstruct it. \Cref{sec:exp-leak} measures the rate at three to five
-queries per parameter. This is a property of the
-functionality. Any protocol that realizes $\Fhe$
-inherits it.
+$\Fhe$ answers queries. Answers carry information about $\thstar$, and a
+sufficient number of them reconstruct it. \Cref{sec:exp-leak} measures the rate
+at three to five queries per parameter. This is a property of the functionality,
+and any protocol that realizes $\Fhe$ inherits it.
 
-The cryptographic claim is that the protocol adds nothing to the leakage of
-$\Fhe$. The operational claim is that $\Fhe$'s own leakage is bounded by the query
+The cryptographic claim is that the protocol leaks no more than $\Fhe$. The
+operational claim is that the leakage of $\Fhe$ is bounded by the query
 allowance $Q$. The first rests on IND-CPA. The second rests on a measurement.
 
 \tronly{\subsection{What a Fellow Client Learns}
 \label{sec:c2c}}
 
 \tronly{\Cref{thm:malicious} bounds a deviating coalition by
-$\negl(\lambda)+\delta(Q_{\mathrm{tot}})$ and leaves $\delta$ unnamed. We name it
-here. A coalition of clients is the one adversary the cryptography does not
-silence, because its members hold key shares, run the backbone themselves, and
-receive answers by design.}
+$\negl(\lambda)+\delta(Q_{\mathrm{tot}})$ without characterising $\delta$. This
+subsection characterises it. A coalition of clients is the adversary the
+cryptography constrains least, because its members hold key shares, run the
+backbone themselves, and receive answers by design.}
 
 \tronly{A client outside the coalition contributes four things to what the
-coalition sees. It contributes the public sample count $\nj$, which the protocol
-uses as a public scalar. It contributes the ciphertexts it uploads, which are
-computationally independent of what they encrypt. It contributes its share of the
-announced index $a^{\star}$ and of the phase signals. It contributes its part of
-every answer the coalition is given. It contributes no per-class total, because
-\cref{sec:split} inverts those under encryption and never decrypts them, and it
-contributes no adapter, because no adapter aggregate exists.}
+coalition sees: (i) the public sample count $\nj$, which the protocol uses as a
+public scalar, (ii) the ciphertexts it uploads, which are computationally
+independent of what they encrypt, (iii) its share of the announced index
+$a^{\star}$ and of the phase signals, and (iv) its part of every answer the
+coalition is given. It contributes no per-class total, because \cref{sec:split}
+inverts those under encryption and never decrypts them, and no adapter, because
+no adapter aggregate exists.}
 
 \tronly{The allowance alone does not bound what the answers reveal. Membership
 inference from predicted labels is an established attack on a classifier that
-answers queries~\cite{choquettechoo2021labelonly}, and its cost is not a function
-the allowance controls. We therefore bound the channel at the head rather than at
-the budget.}
+answers queries~\cite{choquettechoo2021labelonly}, and the allowance does not
+control its cost. We therefore bound the channel at the head rather than at the
+budget.}
 
 \tronly{\begin{proposition}[The query channel is no stronger than the head]
 \label{prop:c2c}
@@ -365,12 +362,25 @@ independent of $b$ up to $\negl(\lambda)$, and $\mathcal{B}$ produces them from
 $\Leak$ and from encryptions of zero exactly as the simulator of
 \cref{thm:semihonest} does.
 
+\tronly{\begin{proof}
+The proof of \cref{thm:malicious} splits the view of $\mathcal{A}$ into the
+key-generation transcript, the honest clients' ciphertexts, the values the honest
+server computes, and the answers to its own queries. The first three are
+independent of $b$ up to $\negl(\lambda)$, and $\mathcal{B}$ produces them from
+$\Leak$ and from encryptions of zero exactly as the simulator of
+\cref{thm:semihonest} does.
+
 Each answer is $\arg\max_c(\thstar_{a^{\star}}\,\featx^{a^{\star}}_j(x_i))_c$ for a
 query $x_i$ that $\mathcal{A}$ asks at one of its own clients $j$. Under
-$a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$ it composes the
-backbone with the adapter of client $j$, and that client is corrupt.
-$\mathcal{B}$ holds the adapter. $\mathcal{B}$ holds both heads by assumption and
-reads $a^{\star}$ from $\Leak$. It computes every answer itself.
+$a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$ the map composes
+the backbone with the adapter of client $j$, and that client is corrupt.
+$\mathcal{B}$ holds that adapter, holds both heads by assumption, and reads
+$a^{\star}$ from $\Leak$. $\mathcal{B}$ therefore computes every answer itself.
+
+$\mathcal{B}$ runs $\mathcal{A}$, answers each query as the server would, and
+returns whatever $\mathcal{A}$ returns. The simulation is exact outside the
+negligible event on which the first three parts of the view differ.
+\end{proof}}
 
 $\mathcal{B}$ therefore runs $\mathcal{A}$, answers each query as the server would,
 and returns whatever $\mathcal{A}$ returns. The simulation is exact outside the
@@ -381,85 +391,87 @@ negligible event on which the first three parts of the view differ.
 polynomial-time adversary that holds both shared heads. \Cref{prop:c2c} gives
 $\delta(Q_{\mathrm{tot}})\le\delta_{\mathrm{wb}}$ at every budget. What a
 coalition learns about an honest client is capped by what the shared head itself
-reveals, and that cap does not depend on the allowance. The allowance prices the
-cost of approaching the cap, and \cref{sec:exp-leak} measures that cost.}
+reveals, and that cap does not depend on the allowance. The allowance determines
+the cost of approaching the cap, and \cref{sec:exp-leak} measures that cost.}
 
 \tronly{Two consequences follow for a deployment. Lowering the threshold $\tc$
-raises $Q_{\mathrm{tot}}$ and moves a coalition along the curve toward the cap,
-and it does not move the cap. Raising the allowance does the same. Neither choice
-changes what is ultimately learnable. Both are decisions about cost.}
+raises $Q_{\mathrm{tot}}$ and moves a coalition toward the cap without moving the
+cap itself. Raising the allowance $Q$ has the same effect. Neither parameter
+changes what a coalition can ultimately learn, and both determine only the cost
+of learning it.}
 
-\tronly{\subsubsection{Measuring the cap}
+\tronly{\subsubsection{Membership Inference Against the Shared Heads in Plaintext}
 \label{sec:c2c-measured}}
 
-\tronly{We measure $\delta_{\mathrm{wb}}$ and find it at chance. The adversary in
-\cref{prop:c2c} receives both shared heads in plaintext. We give an attacker
-exactly that and run the likelihood-ratio membership attack of
+\tronly{We measure $\delta_{\mathrm{wb}}$ and obtain an advantage
+indistinguishable from random guessing. The adversary in \cref{prop:c2c} receives
+both shared heads in plaintext. We give an attacker exactly that and run the
+likelihood-ratio membership attack of
 Carlini et al.~\cite{carlini2022membership} against it. We build $64$ shadow
 federations per cell, each one $\Nc$ clients training on half of their own
 examples followed by the merge of \cref{eq:aggregate}, and we test $2000$
 candidates over three tasks, three seeds and both arrangements. The attack
 reaches an area under the curve between $0.49$ and $0.53$, and a true-positive
 rate between $0.008$ and $0.023$ at a false-positive rate of $0.01$. A
-true-positive rate equal to the false-positive rate is chance.}
+true-positive rate equal to the false-positive rate indicates random guessing.}
 
-\tronly{Handing the head over is a counterfactual, and that is the point of
-measuring there. No party ever holds either head. This is the world in which
-the cryptography has already failed. \Cref{prop:c2c} says the query channel is no
-stronger than that world. Measuring the strongest adversary the proposition
-admits therefore bounds every adversary the protocol admits, and the bound is
-chance.}
+\tronly{Disclosing a head is a counterfactual, and we measure there deliberately.
+No party ever holds either head. The measurement therefore describes the setting
+in which the encryption has already been defeated. \Cref{prop:c2c} states that
+the query channel is no stronger than that setting. Measuring the strongest
+adversary the proposition admits therefore bounds every adversary the protocol
+admits, and that bound is random guessing.}
 
-\tronly{A coalition that extracts a copy first does no better. We fit a copy of
-the head to $2\times10^{5}$ label-only answers, the largest budget of
-\cref{sec:exp-leak}, and attack the copy. The area under the curve moves to
+\tronly{A coalition that first extracts a copy obtains no greater advantage. We
+fit a copy of the head to $2\times10^{5}$ label-only answers, the largest budget
+of \cref{sec:exp-leak}, and attack the copy. The area under the curve moves to
 between $0.49$ and $0.50$, and the true-positive rate at a false-positive rate of
 $0.01$ to between $0.009$ and $0.017$. Extraction costs the attacker queries and
-returns nothing, which is what \cref{prop:c2c} predicts and what no published
-measurement had shown.}
+yields no membership advantage. \Cref{prop:c2c} predicts this, and no published
+measurement had reported it.}
 
-\tronly{The strongest label-only attack we found does no better, and it fails for
-a reason worth naming. OSLO crafts one query per candidate rather than reading a
-statistic off a model, and it reports a true-positive rate of $6.7$ per cent at a
-false-positive rate of $0.001$ on CIFAR-100 where the previous best label-only
-attack reports $0.3$~\cite{peng2024oslo}. Our serving interface is more exposed to
-it than an ordinary one, because a client uploads its own encrypted feature vector
-and \cref{thm:malicious} lets a coalition deviate in the queries it asks. The
-crafted point enters directly. Over eighteen cells the attack reaches an area
-under the curve between $0.47$ and $0.52$.}
+\tronly{The strongest label-only attack in the literature obtains no greater
+advantage, and the reason is specific. OSLO crafts one query per candidate rather
+than reading a statistic off a model, and it reports a true-positive rate of
+$6.7$ per cent at a false-positive rate of $0.001$ on CIFAR-100 where the previous
+best label-only attack reports $0.3$~\cite{peng2024oslo}. Our serving interface is
+more exposed to it than an ordinary one, because a client uploads its own
+encrypted feature vector and \cref{thm:malicious} lets a coalition deviate in the
+queries it asks. The crafted point enters directly. Over eighteen cells the attack
+reaches an area under the curve between $0.47$ and $0.52$.}
 
-\tronly{The reason sits in the attack's own calibration. A coalition chooses its
-one perturbation on data it holds, where it knows for every surrogate which
-examples that surrogate trained on. The best separation it achieves there is
-$0.065$ at most and below $0.01$ in most cells. The crafted query does not fail to
-transfer to the served head. The difference in margin between a member and a
-non-member is not there to transfer.}
+\tronly{The calibration of the attack explains this. A coalition chooses its one
+perturbation on data it holds, where it knows for every surrogate which examples
+that surrogate trained on. The best separation it achieves there is $0.065$ at
+most and below $0.01$ in most cells. The crafted query does transfer to the served
+head. No difference in margin between a member and a non-member exists for it to
+exploit.}
 
-\tronly{We report one figure we do not treat as a result. Predicting membership
-from whether the head classifies an example correctly reaches an area under the
-curve of $0.72$ on Banking77. Our holdout reserves at least one example of every
-class a client holds. Held-out examples are richer in rare classes than
-trained ones, and that rule separates them for a reason that has nothing to do
-with membership. The likelihood-ratio attack calibrates each example against its
-own shadow distributions and does not inherit the confound.}
+\tronly{We report one figure that we do not treat as a result. Predicting
+membership from whether the head classifies an example correctly reaches an area
+under the curve of $0.72$ on Banking77. Our holdout reserves at least one example
+of every class a client holds. Held-out examples are richer in rare classes than
+trained ones, and the rule separates them for a reason unrelated to membership.
+The likelihood-ratio attack calibrates each example against its own shadow
+distributions and does not inherit the confound.}
 
-\tronly{The coverage-weighted merge invites a sharper attack and does not yield
-to it. A class that one client alone holds takes its row from that client's
-displacement, with no averaging over the federation, and for a linear map with a
-bias the ratio of the row displacement to the bias displacement is a weighted
-mean of that client's features~\cite{phong2018privacy}. We compute that ratio for
-all $570$ class rows of the three tasks. It matches the closest example of its own
-class better than the closest example of another class by $0.012$ in cosine where
-one client holds the class, and by $0.006$ where six or more do, against an
-absolute cosine of $0.16$ and a random-direction baseline of $0.029$. The row
-points into the space the features occupy. It does not point at a class, and it
-does not point at a record.}
+\tronly{The coverage-weighted merge permits a sharper attack, and we measure that
+the attack recovers nothing. A class that one client alone holds takes its row
+from that client's displacement, with no averaging over the federation, and for a
+linear map with a bias the ratio of the row displacement to the bias displacement
+is a weighted mean of that client's features~\cite{phong2018privacy}. We compute
+that ratio for all $570$ class rows of the three tasks. It matches the closest
+example of its own class better than the closest example of another class by
+$0.012$ in cosine where one client holds the class, and by $0.006$ where six or
+more do, against an absolute cosine of $0.16$ and a random-direction baseline of
+$0.029$. The row points into the subspace the features occupy. It identifies
+neither a class nor a record.}
 
-\tronly{Three other attack families ask for something this construction does not
-provide, and we say which and why. Reconstruction from weights is the first. The
-strongest published attack in our exact setting recovers training images from
-heads trained on frozen $768$-dimensional embeddings, and its authors report that
-it fails on linear probes and name linear models as a
+\tronly{Three other attack families require structure this construction does not
+provide, and we state which structure in each case. Reconstruction from weights
+is the first. The strongest published attack in our exact setting recovers
+training images from heads trained on frozen $768$-dimensional embeddings, and its
+authors report that it fails on linear probes and name linear models as a
 mitigation~\cite{oz2024reconstructing}. Their own governing ratio is the
 parameter count over the unknowns, which for a linear head reduces to the class
 count over the client's sample count. Ours is about $0.01$, and the smallest
@@ -468,29 +480,27 @@ ratio at which they recover anything is $0.5$.}
 \tronly{Attribute inference is the second. Against a model trained on features of
 this kind, the black-box attack performs at the base rate, $0.28$ against a base
 rate of $0.28$ on one dataset and $0.05$ against $0.06$ on
-another~\cite{jayaraman2022attribute}. The variant that beats imputation reads
-individual hidden-layer activations, and a single linear map has none.}
+another~\cite{jayaraman2022attribute}. The variant that outperforms imputation
+reads individual hidden-layer activations, and a single linear map has none.}
 
-\tronly{Gradient inversion is the third, and it does not instantiate at all. Every
-attack in that line needs gradients with respect to parameters that see the
-input, or a model the server chose~\cite{zhu2019deep,geiping2020inverting}. The
-backbone here is public and fixed, every client runs the same one, and the only
-uploaded object is a trained displacement of a map that sits after the last
-nonlinearity.}
+\tronly{Gradient inversion is the third, and it does not apply here. Every attack
+in that line needs gradients with respect to parameters that see the input, or a
+model the server chose~\cite{zhu2019deep,geiping2020inverting}. The backbone here
+is public and fixed, every client runs the same one, and the only uploaded object
+is a trained displacement of a map placed after the last nonlinearity.}
 
-\tronly{Two limits belong with these numbers. A thousand members resolve a
+\tronly{Two limits apply to these numbers. A thousand members resolve a
 true-positive rate no finer than $0.001$. Every figure we report at a
 false-positive rate of $0.001$ counts two to four examples rather than a rate.
-And the shadow federations vary who trains on what while holding the coverage
-pattern fixed. They say nothing about how leakage moves when the partition
+The shadow federations vary who trains on what while holding the coverage
+pattern fixed, so they say nothing about how leakage moves when the partition
 moves.}
 
-\tronly{Read together, the three surfaces say one thing. Even where extraction
-has already succeeded, and even where we hand the head over outright, the
-membership attack of Carlini et al.~\cite{carlini2022membership} stays near
-chance. The head is a linear map fitted for two hundred steps over thousands of
-examples per class, and the coverage-weighted merge gives a coalition no row it
-can read.}
+\tronly{The three measurements agree. Even after successful extraction, and even
+when we disclose a head in plaintext, the membership attack of Carlini et
+al.~\cite{carlini2022membership} remains near random guessing. The head is a
+linear map fitted for two hundred steps over thousands of examples per class, and
+the coverage-weighted merge produces no row a coalition can read.}
 
 \tronly{\subsection{What a Decryption Carries}
 \label{sec:cpad}}
@@ -507,14 +517,14 @@ produced them~\cite{limicciancio2021approximate}.}
 \tronly{Their attack does not need the message. It reads the ring element
 $c_0+c_1 s$ out of the decoded output and inverts it. An argument that the
 adversary cannot predict what the circuit should have produced does not answer
-it. The reason the attack does not reach us is structural. It recovers whichever
-key performed the decryption. Every decryption here happens after a collective
-key switch that moves the ciphertext off the collective key. The key it
-recovers is the querying client's own, which that client already holds. The
+it. The attack does not apply here, for a structural reason. It recovers
+whichever key performed the decryption. Every decryption here happens after a
+collective key switch that moves the ciphertext off the collective key. The key
+it recovers is the querying client's own, which that client already holds. The
 collective key $s$ never appears in a relation the coalition can invert, and
 $\mathsf{Enc}(\thstar)$ is never decrypted at all.}
 
-\tronly{The published threshold attack does not reach us either, for a separate
+\tronly{The published threshold attack does not apply either, for a separate
 reason. It identifies ciphertexts whose noise is exactly zero and reads a linear
 equation in the key off each one~\cite{checri2024threshold}. Detecting a
 zero-noise ciphertext requires a rounding step whose success can be observed,
@@ -543,23 +553,22 @@ satisfies the condition needs a larger scale and modulus, and every cost in
 literature rather than particular to us. Threshold CKKS is insecure under this
 notion when no smudging is applied, and flooding sized to the rule is expected
 to cost the precision of the decrypted result~\cite{checri2024threshold}. We
-report the configuration we measured and state the gap rather than claim a
+report the configuration we measured and state the gap. We do not claim a
 guarantee we did not instantiate.}
 
-\tronly{Repeating a query turns that gap into a key recovery, and we state the
-arithmetic because it decides which control the deployment needs. Write the
+\tronly{Repeating a query converts that gap into a key recovery, and we give the
+arithmetic because it determines which control the deployment needs. Write the
 served ciphertext as $(c_0,c_1)$ under the collective key $s$. The querier
 decrypts $c_0+c_1s+E$, where $E$ collects the honest parties' smudging terms. The
 serving circuit is deterministic. A client that resubmits an identical query
 receives the same $c_0$ and $c_1$ and a freshly drawn $E$. Averaging $k$
 repetitions drives $E$ to zero and converges on $c_0+c_1s$ exactly. The noise of
-the ciphertext is not a term outside that expression. It is inside it, because
-$c_0+c_1s$ is the plaintext together with that noise. An adversary that holds
-$c_0$ and $c_1$ subtracts and rounds, obtains $c_1s$, and recovers $s$ by one
-ring inversion. The server holds $c_0$ and $c_1$, and \cref{def:semihonest}
-corrupts the server together with $\tc-1$ clients. This view is inside the
-model rather than outside it. Resubmitting a query is also what the protocol
-permits. The adversary is semi-honest.}
+the ciphertext is not a separate term. The quantity $c_0+c_1s$ is the plaintext
+together with that noise. An adversary that holds $c_0$ and $c_1$ subtracts and
+rounds, obtains $c_1s$, and recovers $s$ by one ring inversion. The server holds
+$c_0$ and $c_1$, and \cref{def:semihonest} corrupts the server together with
+$\tc-1$ clients. This view falls inside the model. The protocol also permits a
+client to resubmit a query, so the adversary remains semi-honest.}
 
 \tronly{The cost is the number of repetitions that drives the averaged error
 below half a unit in each of the $2^{15}$ coefficients, which is on the order of
@@ -574,27 +583,27 @@ regime the flooding is sized for. Sizing that flooding for $q$ decryptions costs
 half a bit for each doubling of $q$, and the budget is refreshed by rekeying once
 it is spent~\cite{limicciancio2022dp}.}
 
-\tronly{Raising the smudging is the second control and it is free on every axis
-the deployment measures. The values this protocol decrypts are one index and one
-label. The precision the answer needs is a handful of bits against a plaintext
+\tronly{Raising the smudging is the second control, and it costs nothing on any
+axis the deployment measures. The values this protocol decrypts are one index and
+one label. The precision the answer needs is a handful of bits against a plaintext
 scale of $2^{45}$. Moving the smudging from eight times the fresh-encryption
 noise to $2^{25}$ multiplies the required repetitions by roughly $2^{40}$ and
-still leaves twenty bits of the scale. It costs nothing in latency, nothing in
-traffic, and nothing in the accuracy of the served answers, because the label is
-an argmax and not a score. It does not meet the $2^{\lambda/2}$ rule, and we do
-not claim that it does. It removes the attack above at no price, which is a
-different and weaker statement, and it is the configuration we recommend.}
+still leaves twenty bits of the scale. It changes neither latency nor traffic, and
+it does not change the accuracy of the served answers, because the answer is an
+argmax rather than a score. It does not meet the $2^{\lambda/2}$ rule, and we do
+not claim that it does. It removes the attack above at no cost, which is a weaker
+statement, and it is the configuration we recommend.}
 
-\tronly{One deviation the theorems do not cover belongs here as well. Collective
-key generation has each party publish a share of the public key, and the shares
-are summed. A party that publishes last, after seeing the others, can subtract
-their contribution and leave a public key whose secret it holds alone. Every
-ciphertext uploaded under that key is then readable by that party, and the
-deviation is detected only later, when the honest decryption shares fail to
-reconstruct, by which time the uploads have been read. The standard remedy is to
-commit the shares before opening them, which costs one round and is independent
-of the ring parameters. \Cref{thm:malicious} lets a coalition deviate in the
-shares it contributes, and its proof disposes of that deviation for decryption
-shares, where a wrong share aborts the query. Key-generation shares are not
-covered by that argument, and a deployment that omits the commitment round is
-outside the theorem.}
+\tronly{One deviation the theorems do not cover remains. Collective key
+generation has each party publish a share of the public key, and the shares are
+summed. A party that publishes last, after seeing the others, can subtract their
+contribution and leave a public key whose secret it holds alone. Every ciphertext
+uploaded under that key is then readable by that party, and the deviation is
+detected only later, when the honest decryption shares fail to reconstruct, by
+which time the uploads have been read. The standard remedy is to commit the
+shares before opening them, which costs one round and is independent of the ring
+parameters. \Cref{thm:malicious} lets a coalition deviate in the shares it
+contributes, and its proof disposes of that deviation for decryption shares,
+where a wrong share aborts the query. Key-generation shares are not covered by
+that argument, and a deployment that omits the commitment round falls outside the
+theorem.}

@@ -139,7 +139,7 @@ distillation through a pretrained extractor~\cite{hoech2022fedauxfdp}, and relat
 approaches protect a diffusion-generated surrogate or a teacher
 ensemble~\cite{feddiff2024,li2021fedkt}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
-is added to the very artifact that is released. Several
+is added to the artifact that is released. Several
 works apply the same trade-off to transfer learning, running noisy gradient descent
 on a low-rank
 adapter~\cite{liu2023dplora}.}
@@ -151,9 +151,9 @@ approaches protect a diffusion-generated surrogate or a teacher
 ensemble~\cite{feddiff2024,li2021fedkt}, or apply a noise-free mechanism to the
 distillation itself~\cite{sun2021fedmdnfdp}. These are our natural quantitative
 peers, and their privacy is lossy, because the noise a meaningful budget requires
-is added to the very artifact that is released. Differential privacy proves a
-statistical bound on how much a released artifact can reveal and buys that bound
-with accuracy. Encryption makes a contribution computationally indistinguishable
+is added to the artifact that is released. Differential privacy proves a
+statistical bound on how much a released artifact can reveal, and it pays for
+that bound in accuracy. Encryption makes a contribution computationally indistinguishable
 from random to every party without the key and costs the model nothing. Several
 works apply the same trade-off to transfer learning, running noisy gradient descent
 on frozen features or on a low-rank
@@ -194,7 +194,7 @@ of this line protects the contributions, which is our subject.}
 \paperonly{Answering queries from a model that stays encrypted is the subject of secure
 inference. Several works evaluate a transformer under encryption, and in each case the nonlinearities of attention dominate the
 cost~\cite{zhang2025nexus}. The map served here is linear in the features, thus serving a
-trained map that sits inside the backbone instead would reduce to exactly the
+trained map placed inside the backbone instead would reduce to exactly the
 problem these systems address.}
 
 \tronly{Answering queries from a model that stays encrypted is the subject of secure
@@ -203,24 +203,24 @@ non-interactively under CKKS or between two or three parties with secret sharing
 and in each case the nonlinearities of attention dominate the
 cost~\cite{zhang2025nexus,hao2022iron,pang2024bolt,dong2023puma}. This literature
 is what makes the disclosure setting of \cref{sec:serving} affordable, and we compose with it. The map served here is linear in the features, thus serving a
-trained map that sits inside the backbone instead would reduce to exactly the
+trained map placed inside the backbone instead would reduce to exactly the
 problem these systems address.}
 
-\paperonly{Two systems sit closer. slytHErin evaluates a network under CKKS with the model
+\paperonly{Two systems are closer. slytHErin evaluates a network under CKKS with the model
 held under a multiparty key, and it key-switches the prediction to the querier,
 which is the serving setting of \cref{sec:serving}~\cite{intoci2023slytherin}. It evaluates the whole network
-homomorphically, which is why the models it reports are a twenty-layer and a
+homomorphically, and the models it reports are therefore a twenty-layer and a
 fifty-layer network on a handwritten-digit task rather than a pretrained encoder.
 And it returns the prediction vector, hence the querier receives scores, which
 \cref{sec:exp-leak} shows is a cheaper target for extraction than a
 label.}
 
-\tronly{Two systems sit closer. slytHErin evaluates a network under CKKS with the model
+\tronly{Two systems are closer. slytHErin evaluates a network under CKKS with the model
 held under a multiparty key, and it key-switches the prediction to the querier,
 which is the serving setting of \cref{sec:serving}~\cite{intoci2023slytherin}. The
 same group built the encrypted training scheme of \cref{sec:related-crypto}, therefore
 the pair is the closest existing route to a model that no party decrypts. It evaluates the whole network
-homomorphically, which is why the models it reports are a twenty-layer and a
+homomorphically, and the models it reports are therefore a twenty-layer and a
 fifty-layer network on a handwritten-digit task rather than a pretrained encoder.
 And it returns the prediction vector, hence the querier receives scores, which
 \cref{sec:exp-leak} shows is a materially cheaper target for extraction than a
