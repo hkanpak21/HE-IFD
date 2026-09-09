@@ -321,9 +321,9 @@ $0.02$ on average. The personal arrangement is $\Nc$ different models, and clien
 held-out data measures only client $j$'s own model, on client $j$'s own
 distribution, which is the distribution that model was fitted to. Its measured
 accuracy exceeds its true global accuracy by $0.28$ on average. A client's
-held-out set also contains only the classes that client holds, so the very
-quantity that decides the comparison, accuracy on classes the client has never
-seen, the client cannot measure locally at all. The procedure compares an accurate number
+held-out set also contains only the classes that client holds, so the client
+cannot measure locally the quantity that decides the comparison, which is
+accuracy on classes it has never seen. The procedure compares an accurate number
 against an optimiztic one, so it is not close to correct and it does not become
 correct with more held-out data.
 
@@ -515,10 +515,18 @@ OpenFHE at the same ring degree and $29$ levels~\cite{agullo2025fideslib}. We me
 H100 at $2.28$\,s, at the ring degree $2^{16}$ the protocol restores at, a factor
 of ten. Phantom publishes no bootstrapping benchmark, and no GPU library we found
 restores levels under collectively generated keys, so this figure has no
-published counterpart. Substituting it, and leaving the local evaluation on the processor, gives
-$48.9$\,s at four classes, $100.1$\,s at fourteen and $176.6$\,s at a hundred,
-against the $400.8$\,s and $1468.3$\,s of \cref{tab:btp}. The local evaluation,
-which we did not port, is then the larger half of a query above four classes.}
+published counterpart.}
+
+\tronly{The accelerated figure is arithmetic on that one measurement rather than a
+ported implementation, and we give the recipe so a reader can check it. A query
+performs $17$ restorations at four classes, $35$ at fourteen and $62$ at a
+hundred, and the local evaluation that surrounds them costs $10.1$\,s, $20.2$\,s
+and $35.2$\,s on one core. Replacing each restoration with the H100 figure and
+leaving the local evaluation on the processor gives $17\times2.28+10.1=48.9$\,s,
+$35\times2.28+20.2=100.0$\,s and $62\times2.28+35.2=176.5$\,s, against the
+$400.8$\,s and $1468.3$\,s of \cref{tab:btp}. We ported the restoration and
+nothing else. The local evaluation is then the larger half of a query above four
+classes, and a full port would have to move it as well.}
 
 \tronly{\paragraph{One query, end to end, on a real head} Every figure above runs
 on synthetic vectors, so none of them says the encrypted path answers a real query

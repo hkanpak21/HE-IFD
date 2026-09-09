@@ -103,7 +103,7 @@ quantity that is shared must therefore attach after the last nonlinearity. In a
 transformer, the only such point is the final linear map.
 
 \paperonly{The requirement
-constrains the \emph{position} of the shared map, not the task it serves. Any trained linear map placed after the final nonlinearity satisfies this requirement, provided that the querying client can compute the features fed into the map. A classifier head is one example; the vocabulary projection in an autoregressive decoder is another. Placing the map earlier forces the client either to evaluate the
+constrains the \emph{position} of the shared map, not the task it serves. Any trained linear map placed after the final nonlinearity satisfies this requirement, provided that the querying client can compute the features fed into the map. A classifier head is one example. The vocabulary projection in an autoregressive decoder is another. Placing the map earlier forces the client either to evaluate the
 nonlinearities above it under encryption or to decrypt an intermediate value,
 which hands back the numbers the serving path withholds. We evaluate the
 classification only.}
@@ -271,8 +271,8 @@ scaling them. Packing the logits into one ciphertext and
 reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. The server is not trusted with anything. It
-holds the collective public key, the evaluation keys, and ciphertexts; thus it
-computes but cannot decrypt.}
+holds the collective public key, the evaluation keys, and ciphertexts. It
+therefore computes but cannot decrypt.}
 
 \tronly{\paragraph{Cost and the role of the server} The argmax is the one operation in the protocol
 that costs more than one level, because it compares logits rather than adding or
@@ -282,10 +282,10 @@ reducing them by a tournament lowers the number of sequential comparisons from
 $\Cc-1$ to $\lceil\log_2\Cc\rceil$, and \cref{sec:exp-cost} reports the measured
 result. None of this is particular to the multiparty setting. Homomorphic
 evaluation under a collectively generated key is identical to evaluation under a
-single key, and the schemes differ only in key generation and in decryption; therefore
-single-key results carry over. The server is not trusted with anything. It
-holds the collective public key, the evaluation keys, and ciphertexts; therefore it
-computes but cannot decrypt, and it learns neither the model nor any client's
+single key, and the schemes differ only in key generation and in decryption.
+Single-key results therefore carry over. The server is not trusted with anything. It
+holds the collective public key, the evaluation keys, and ciphertexts. It
+therefore computes but cannot decrypt, and it learns neither the model nor any client's
 data. It is trusted only for availability, and where honest computation must be
 certified, verifiable homomorphic encryption applies~\cite{viand2023verifiable}.}
 
@@ -300,9 +300,9 @@ the features. Serving a trained quantity that sits inside the backbone is the
 problem that secure transformer inference addresses. An encrypted shared adapter
 composes with those systems at the cost they report, and we place that case
 outside our scope. One difference should be noted. Those systems evaluate a plaintext
-model on encrypted inputs, whereas here the shared weights are encrypted as well; therefore each adapter site would carry a ciphertext-by-ciphertext product. The dominant
-cost in that literature is the nonlinearities, which are unchanged; thus the added
-cost is the low-rank product per site rather than a different order of magnitude.}
+model on encrypted inputs, whereas here the shared weights are encrypted as well. Each adapter site would therefore carry a ciphertext-by-ciphertext product. The dominant
+cost in that literature is the nonlinearities, which are unchanged. The added
+cost is therefore the low-rank product per site rather than a different order of magnitude.}
 
 \subsection{Candidate Selection Under Encryption}
 \label{sec:selection}
