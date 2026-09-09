@@ -283,13 +283,13 @@ reason.
 
 \paperonly{One mechanism would check provenance rather than content.
 The serving circuit is a deterministic function of the encrypted head, the
-encrypted query, the evaluation keys and the public parameters, and its level
+encrypted query, the evaluation keys, and the public parameters, and its level
 restoration is deterministic as well. A client can therefore recompute the
 prescribed output ciphertext and compare it as a string.}
 
 \tronly{Two mechanisms would remove the assumption, and we implement neither. The first
 checks provenance rather than content. The serving circuit is a deterministic
-function of the encrypted head, the encrypted query, the evaluation keys and the
+function of the encrypted head, the encrypted query, the evaluation keys, and the
 public parameters, and its level restoration is deterministic as well, because
 the protocol restores levels under collectively generated bootstrapping keys
 rather than by collective refresh. A client can therefore recompute the
@@ -307,7 +307,7 @@ as limitations.}
 \subsection{Leakage of the Functionality}
 \label{sec:inherent}
 
-\tronly{\Cref{thm:semihonest} shows that the protocol reveals no more than $\Fhe$
+\tronly{\Cref{thm:semihonest} demonstrates that the protocol reveals no more than $\Fhe$
 reveals. This subsection bounds what $\Fhe$ reveals.}
 
 $\Fhe$ answers queries. Answers carry information about $\thstar$, and a
@@ -372,7 +372,7 @@ $\Leak$ and from encryptions of zero exactly as the simulator of
 
 Each answer is $\arg\max_c(\thstar_{a^{\star}}\,\featx^{a^{\star}}_j(x_i))_c$ for a
 query $x_i$ that $\mathcal{A}$ asks at one of its own clients $j$. Under
-$a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$ the map composes
+$a^{\star}=A$ the map is the public backbone. Under $a^{\star}=B$, the map composes
 the backbone with the adapter of client $j$, and that client is corrupt.
 $\mathcal{B}$ holds that adapter, holds both heads by assumption, and reads
 $a^{\star}$ from $\Leak$. $\mathcal{B}$ therefore computes every answer itself.
@@ -437,7 +437,7 @@ $6.7$ per cent at a false-positive rate of $0.001$ on CIFAR-100 where the previo
 best label-only attack reports $0.3$~\cite{peng2024oslo}. Our serving interface is
 more exposed to it than an ordinary one, because a client uploads its own
 encrypted feature vector and \cref{thm:malicious} lets a coalition deviate in the
-queries it asks. The crafted point enters directly. Over eighteen cells the attack
+queries it asks. The crafted point enters directly. Over eighteen cells, the attack
 reaches an area under the curve between $0.47$ and $0.52$.}
 
 \tronly{The calibration of the attack explains this. A coalition chooses its one
