@@ -170,13 +170,21 @@ anywhere is held by nobody. Coverage is therefore not what limits the shared hea
 on the large label spaces, and \cref{sec:c2c} reads the same counts as the bound
 on what a single-holder row could reveal.}
 
-\paragraph{Sensitivity} \Cref{fig:trends} varies the protocol axes around the
+\paperonly{\Cref{fig:trends} varies the protocol axes around the
 default on DBpedia. Accuracy falls with skew, from $0.970$ at
 $\alpha=1.0$ to $0.789$ at $\alpha=0.1$. Longer local
 training helps. Accuracy
 rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
 $\Nc=50$. That row is a single seed, which is why its $\Nc=10$ value differs from
-\cref{tab:headline}.
+\cref{tab:headline}.}
+
+\tronly{\paragraph{Sensitivity} \Cref{fig:trends} varies the protocol axes around the
+default on DBpedia. Accuracy falls with skew, from $0.970$ at
+$\alpha=1.0$ to $0.789$ at $\alpha=0.1$. Longer local
+training helps. Accuracy
+rises with the size of the federation, from $0.803$ at $\Nc=10$ to $0.882$ at
+$\Nc=50$. That row is a single seed, which is why its $\Nc=10$ value differs from
+\cref{tab:headline}.}
 
 \tronly{The more informative reading concerns which arrangement the estimator selects. The estimator
 chooses the shared head at $\alpha\in\{0.05,0.1\}$ and the personal adapter at
@@ -1008,11 +1016,7 @@ perturbing the label, needs no access to the query and flips only answers near a
 boundary~\cite{alabdulmohsin2014adding}. It has a known break at a higher query
 cost, and its accuracy cost under our arrangement is open.}
 
-\paperonly{\paragraph{Comparison with a released model} A participant holding the model in plaintext has fidelity $1$ at zero
-queries, may read the parameters directly rather than infer them, and is subject
-to no allowance because there is nothing to meter.}
-
-\tronly{\paragraph{Comparison with a released model} The contrast is not a matter of
+\tronly{\paragraph{Extraction against a released model} The contrast is not a matter of
 degree. A participant holding the model in plaintext has fidelity $1$ at zero
 queries, may read the parameters directly rather than infer them, and is subject
 to no allowance because there is nothing to meter. Granting logits rather than
@@ -1034,7 +1038,11 @@ offers~\cite{carlini2024stealing}.}
 \paperonly{Never disclosing the model costs accuracy. The estimator selects per
 seed, so $\Asel$ is $0.669$ on AG-News and $0.756$ on CIFAR-100 rather than the
 bolded entry of \cref{tab:headline}. The quantity $\Adis-\Asel$
-runs from $0.029$ to $0.136$ across the five tasks. A disclosed model does not
+runs from $0.029$ to $0.136$ across the five tasks. What disclosure buys an
+adversary is the other half of that trade. A participant holding the model in
+plaintext has fidelity $1$ at zero queries, may read the parameters directly
+rather than infer them, and is subject to no allowance because there is nothing
+to meter. A disclosed model does not
 satisfy \cref{func:ideal}, so we do not offer it as a configuration of this
 protocol. \trsee{sec:experiments} gives the comparison per task.}
 

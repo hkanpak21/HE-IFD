@@ -173,7 +173,7 @@ Run `bash scripts/gates.sh` before sending anything anywhere. Nine gates.
 |---|---|
 | `scripts/gates.sh` | all nine, one command |
 | `scripts/check_subseq.py` | did anything get rewritten, per document |
-| `scripts/check_split.py` | do the two documents number their sections alike |
+| `scripts/check_split.py` | do the two documents number their sections alike, and does either print a subsection with a single run-in |
 | `scripts/budget.py` | prose words per section, conditionals resolved |
 | `scripts/lint_view.py` | the writing linter on the resolved view, not on the raw source |
 
