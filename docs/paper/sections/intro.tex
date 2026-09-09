@@ -26,7 +26,7 @@ measures at a time. One-shot FL~\cite{guha2019oneshot} sends its
 single contribution in
 plaintext~\paperonly{\cite{zhang2022dense,tang2024fusefl}}\tronly{\cite{zhang2022dense,dai2024coboosting,tang2024fusefl}}, or protects it
 with differential privacy (DP)~\cite{hoech2022fedauxfdp}, which
-adds noise to the artifact it releases.
+adds noise to the very artifact it releases.
  Encrypted FL runs many rounds of
 encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and training under encryption forces polynomial
@@ -42,7 +42,7 @@ measures at a time. One-shot FL~\cite{guha2019oneshot} sends its
 single contribution in
 plaintext~\paperonly{\cite{zhang2022dense,tang2024fusefl}}\tronly{\cite{zhang2022dense,dai2024coboosting,tang2024fusefl}}, or protects it
 with differential privacy~\cite{hoech2022fedauxfdp}, which
-adds noise to the artifact it releases.
+adds noise to the very artifact it releases.
  Encrypted FL runs many rounds of
 encrypted training or encrypted aggregation, paying the cryptographic cost on
 every round, and training under encryption forces polynomial
@@ -72,7 +72,7 @@ encryption, thus the shared head exists only as a ciphertext, and the server doe
 key to decrypt it.
 
 The querier must build its query from parts that it can run itself. Therefore, those parts must
-be public. The shared trained quantity therefore comes after the last nonlinearity,
+be public. The shared trained quantity therefore sits after the last nonlinearity,
 which, in a transformer, is a single place. Following this, we summarize our contributions below: 
 
 % \begin{itemize}
