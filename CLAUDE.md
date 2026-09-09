@@ -62,6 +62,7 @@ read for reasoning and never for what to do next.
 | the extraction scaling law, report only | `results/extraction_scale/results.csv` |
 | the noise defence, report only | `results/extraction_defence/results.csv` |
 | the selection table, report only | `results/personal_adapter/nsweep.csv` and `sensitivity.csv` |
+| head-row coverage, report only | `results/coverage/results.csv`. Measured 2026-09-09, job 1657509. Every class has three or more holders in every cell except two Banking77 seeds |
 
 **Deprecated. Do NOT mine for methodology, equations, or threat model:**
 - `docs/archive/` — superseded notes, plans and issue briefs, provenance only.

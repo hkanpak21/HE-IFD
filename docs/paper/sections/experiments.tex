@@ -87,7 +87,7 @@ train, so the effective federation is seven on AG-News and nine on TREC.}}
 \toprule
  & & \multicolumn{2}{c}{servable} & & \multicolumn{2}{c}{reference} \\
 \cmidrule(lr){3-4}\cmidrule(lr){6-7}
-Task & $\Cc$ & shared head & adapter & alone & disclosed & pooled \\
+Task & $\Cc$ & shared head & personal adapter & alone & disclosed & pooled \\
 \midrule
 AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 & 0.921 \\
 TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 & 0.967 \\
@@ -128,7 +128,7 @@ $0.402$, and the third partition is the one that drops three clients.}
 \setlength{\tabcolsep}{3pt}
 \begin{tabular}{lcccc}
 \toprule
-Task & shared head & adapter & alone & disclosed \\
+Task & shared head & personal adapter & alone & disclosed \\
 \midrule
 AG-News   & $0.649$ ($0.217$) & $0.479$ ($0.021$) & $0.475$ ($0.006$) & $0.739$ ($0.073$) \\
 TREC      & $0.607$ ($0.074$) & $0.429$ ($0.068$) & $0.400$ ($0.051$) & $0.711$ ($0.043$) \\
@@ -377,6 +377,26 @@ is correct once. The estimator is correct eleven times, and its one error costs
 $0.006$. The failure of the vote is not a matter of close calls. A client measures
 the personal arrangement on its own data, where that arrangement is at its best,
 and the vote is the sum of twelve such measurements.}
+
+\tronly{\paragraph{One index for the federation, or one per client} A client could
+adopt its own winner instead, revealing one index per client rather than one
+globally. We measured that rule. It selects the personal arrangement almost
+everywhere: ten clients out of ten on twelve of the fifteen cells, nine of ten on
+two, and seven of seven on the AG-News seed that drops three clients. It reaches
+$0.542$ on AG-News at seed $42$ where the shared arrangement reaches $0.809$. The
+bias is the one \cref{sec:selection} names, and per-client scoring does not escape
+it, because a client still measures the personal arrangement on its own
+distribution. Which arrangement wins per client does vary, and a deployment can
+see that variation, but a rule keyed to it inherits the same optimism.}
+
+\tronly{\paragraph{What the selection upload is, and is not} Selection costs each
+client a second encrypted message, and a reader tracking the word one-shot is
+entitled to ask whether that reopens the surface. It does not. The message
+carries per-class counts of correct predictions on data the client held back,
+which is a measurement of two finished candidates and not a byproduct of
+training. No gradient, no update and no intermediate state passes through it. The
+term one-shot in this paper means that no intermediate training artifact is ever
+exposed, and it is that surface the selection message stays outside of.}
 
 \tronly{\paragraph{Disclosure of the estimator} One value is decrypted for the whole
 federation, the index of the arrangement adopted. The per-client per-class
