@@ -89,7 +89,7 @@ which, in a transformer, is a single place. Following this, we summarize our con
 
 % \item \textbf{A selection rule that runs under encryption.} Two arrangements are
 %   servable at the same cost: the shared head over each client's own adapter and the
-%   shared head over the bare public backbone. The two fail for opposite reasons, the shared head when few clients hold a class and the personal adapter when a client's representation drifts too far. Which failure binds depends on the task and on the partition, therefore the federation must measure both. Each client scoring both on its own held-out data and voting estimates the
+%   shared head over the bare public backbone. The two fail for opposite reasons, the shared head when the public backbone alone does not separate the label space, and the personal adapter when a client's representation drifts too far. Which failure binds depends on the task and on the partition, therefore the federation must measure both. Each client scoring both on its own held-out data and voting estimates the
 %   wrong quantity. The
 %   estimator given here corrects that, needs no fitted threshold, and reveals only
 %   which arrangement won (\cref{sec:selection}).
@@ -111,7 +111,7 @@ which, in a transformer, is a single place. Following this, we summarize our con
 
 \item \textbf{We select between arrangements under encryption.} Two arrangements are
   servable at the same cost: the shared head over each client's own adapter and the
-  shared head over the bare public backbone. The two fail for opposite reasons, the shared head when few clients hold a class and the personal adapter when a client's representation drifts too far. Which failure binds depends on the task and on the partition, and the federation must measure both. We show that the natural rule, each client scoring both arrangements on its own held-out data and voting, estimates the wrong quantity. Our estimator corrects it, needs no fitted threshold, and reveals only which arrangement won (\cref{sec:selection}).
+  shared head over the bare public backbone. The two fail for opposite reasons, the shared head when the public backbone alone does not separate the label space, and the personal adapter when a client's representation drifts too far. Which failure binds depends on the task and on the partition, and the federation must measure both. We show that the natural rule, each client scoring both arrangements on its own held-out data and voting, estimates the wrong quantity. Our estimator corrects it, needs no fitted threshold, and reveals only which arrangement won (\cref{sec:selection}).
 
 \end{itemize}
 

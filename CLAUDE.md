@@ -159,7 +159,7 @@ What the submission contains, all measured and all sourced from records in
 |---|---|
 | `docs/paper/main.tex` | the TNSE submission, `\submissiontrue`, ten printed pages |
 | `docs/paper/main-tr.tex` | the arXiv technical report, `\submissionfalse`, no limit |
-| `docs/paper/sections/` | everything else, shared, including the preamble and the front and back matter |
+| `docs/paper/sections/` | everything else, shared, including the preamble and the front and back matter. `method.tex` was restructured on 2026-09-09 to CURE's shape, and the version the PIs read before that is `docs/archive/method-pre-restructure-2026-09-09.tex` |
 
 `\paperonly{...}` and `\tronly{...}` switch content. `\trsee{sec:x}` renders in
 the submission as "Section IV of the technical report [26]" and in the report as

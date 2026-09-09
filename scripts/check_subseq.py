@@ -138,9 +138,7 @@ def is_sub(new, old):
 
 # Machinery, not prose. preamble.tex is packages and macros, body.tex is an
 # \input list. Neither is text a PI reads.
-# methodology_v1.tex and body-v1.tex are the reformatted Method draft and its
-# driver. They are not in main.tex or main-tr.tex, so they are not checked.
-SKIP = {"preamble.tex", "body.tex", "body-v1.tex", "methodology_v1.tex"}
+SKIP = {"preamble.tex", "body.tex"}
 
 
 def base_pool(ref, root, view="paper"):

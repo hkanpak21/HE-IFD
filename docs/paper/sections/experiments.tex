@@ -87,7 +87,8 @@ train, so the effective federation is seven on AG-News and nine on TREC.}}
 \toprule
  & & \multicolumn{2}{c}{servable} & & \multicolumn{2}{c}{reference} \\
 \cmidrule(lr){3-4}\cmidrule(lr){6-7}
-Task & $\Cc$ & shared head & personal adapter & alone & disclosed & pooled \\
+Task & $\Cc$ & shared & personal & alone & disclosed & pooled \\
+ & & head & adapter & & & \\
 \midrule
 AG-News    & 4   & $\mathbf{0.649}$ & 0.479 & 0.475 & 0.739 & 0.921 \\
 TREC       & 6   & $\mathbf{0.607}$ & 0.429 & 0.400 & 0.711 & 0.967 \\
@@ -107,13 +108,17 @@ Second, the preferable arrangement changes with the size of the label space. On 
 The AG-News margin rests on two of the three seeds, because the third partition
 drops three clients. On the large ones the personal
 adapter wins. The shared head collapses to
-$0.206$ while the personal adapter holds $0.686$. The collapse is a coverage
-failure. With $77$ classes each head row is decided by few clients
-or none.
+$0.206$ while the personal adapter holds $0.686$. The collapse is not a coverage
+failure. We count the holders of every class row and find three or more on two of
+the three Banking77 seeds, and at least one on all of them, so the merge has
+evidence for every row. The bare public backbone is what fails. It does not
+separate seventy-seven intents with a linear map, and serving over each client's
+own adapter reaches $0.686$ on the same data.
 
-Third, the two failure modes are complementary. The shared head
-fails when coverage is thin. The personal adapter fails when each client's
-representation drifts far enough that a common head no longer transfers.
+Third, the two failure modes are complementary. The shared head fails when the
+public backbone alone does not separate the label space. The personal adapter
+fails when each client's representation drifts far enough that a common head no
+longer transfers.
 Neither arrangement dominates the other, so the federation must select between
 them.
 
@@ -125,7 +130,7 @@ AG-News and TREC. On AG-News the shared head reaches $0.809$, $0.736$ and
 $0.402$, and the third partition is the one that drops three clients.}
 \label{tab:headline-sd}
 \footnotesize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{2pt}
 \begin{tabular}{lcccc}
 \toprule
 Task & shared head & personal adapter & alone & disclosed \\
@@ -146,6 +151,24 @@ the training. One of its three Dirichlet draws leaves seven usable clients, and
 the shared head reaches $0.402$ on that draw against $0.809$ and $0.736$ on the
 other two. The estimator selects the personal adapter on that seed, which is why
 $\Asel$ exceeds the shared head's mean on AG-News.}
+
+\tronly{\paragraph{The public initializer} $\thz$ is the state every client starts
+from, and its head is the default random initialization of a linear layer under
+the shared public seed. It is not zero. A row that no client updates therefore
+keeps a random direction and still competes in the argmax. The count above shows
+that no such row occurs in our runs, so the choice does not affect any number we
+report, and a deployment with uncovered classes should set those rows to zero
+rather than leave them random.}
+
+\tronly{\paragraph{How many clients decide a row} The merge is coverage weighted,
+so a row decided by one client carries that client's displacement alone. We
+counted the holders of every class row on the partitions the accuracy numbers were
+measured on. On AG-News, TREC and DBpedia every class is held by three or more
+clients on every seed. On Banking77 the same holds on one seed, and the other two
+leave two classes with two holders and one class with a single holder. No class
+anywhere is held by nobody. Coverage is therefore not what limits the shared head
+on the large label spaces, and \cref{sec:c2c} reads the same counts as the bound
+on what a single-holder row could reveal.}
 
 \paragraph{Sensitivity} \Cref{fig:trends} varies the protocol axes around the
 default on DBpedia. Accuracy falls with skew, from $0.970$ at
@@ -388,6 +411,29 @@ bias is the one \cref{sec:selection} names, and per-client scoring does not esca
 it, because a client still measures the personal arrangement on its own
 distribution. Which arrangement wins per client does vary, and a deployment can
 see that variation, but a rule keyed to it inherits the same optimism.}
+
+\tronly{\paragraph{Packing and the setup traffic} A ciphertext at ring degree
+$2^{15}$ carries $2^{14}$ slots, and the head has $\Cc d$ entries at $d=768$.
+Four classes fit in one ciphertext, a hundred need five, and the server adds
+them independently, which is why the cost of \cref{sec:exp-cost} grows with
+$\Cc$ through the argmax rather than through the addition. The head application
+is a slot-wise product followed by a rotate-and-sum over $\log_2 d$ rotations,
+so the rotation key set is the ten power-of-two rotations that fold a
+$768$-entry block. The $344$\,MiB each client sends at setup is one public-key
+share of $2.25$\,MiB, one relinearization share of $54.0$\,MiB over two rounds,
+and one Galois share of $18.0$\,MiB for each of the rotations the fold needs.
+The relinearization and Galois shares are what dominate, and neither recurs.}
+
+\tronly{\paragraph{What selection costs} The count of $2\Nc\Cc$ comparisons is the
+count we measured, and the record carries it beside the measurement. At five
+parties and a hundred classes the circuit performs $1000$ scalar comparisons,
+which is exactly $2\Nc\Cc$, in $81$ sequential sign circuits, and the whole phase
+takes $17.5$ minutes. It does not perform one encrypted argmax per held-out
+example. Each client reserves one held-out example per class, those examples pack
+into a single score ciphertext, and the class accumulators are selected with
+plaintext masks the client already knows. We measured this phase under collective
+refresh rather than under the server-side bootstrapping the protocol specifies,
+so its traffic is an upper bound and its wall clock a lower one.}
 
 \tronly{\paragraph{What the selection upload is, and is not} Selection costs each
 client a second encrypted message, and a reader tracking the word one-shot is
@@ -740,7 +786,10 @@ figures of \cref{tab:headline} are therefore unaffected by the cryptography.
 
 \paperonly{The protocol exposes no training-time artifact and no model,
 so the only remaining channel is the sequence of answers the served model returns,
-and that channel is bounded by the query allowance rather than eliminated.}
+and that channel is bounded by the query allowance rather than eliminated.
+\trsee{sec:security} instantiates the $\delta$ of \cref{thm:malicious}: it proves
+the channel no stronger than the shared head itself, then measures what the head
+gives up.}
 
 \tronly{The protocol exposes no training-time artifact and no model,
 so the only remaining channel is the sequence of answers the served model returns,
@@ -833,6 +882,29 @@ membership inference or reconstruction. That problem needs a surface this protoc
 does not expose, since no gradient, update or data-derived summary is ever
 available in plaintext. \Cref{sec:c2c-measured} measures it and finds it at
 chance.}
+
+\tronly{\paragraph{What a quorum learns from a query} The functionality tells the
+server that client $j$ asked a query, and the protocol tells the quorum the same
+thing, because the label is key-switched to client $j$'s public key and every
+contributing client sees whose key it is. A federation of competitors should
+treat the query pattern, who asked and how often, as disclosed to the quorum
+rather than to the server alone. It is not the query, the features or the label,
+all of which stay encrypted to everyone but the querier. Hiding the pattern needs
+a mechanism this protocol does not have, and the natural one, routing every
+answer through an anonymous channel, costs a round and is orthogonal to the
+cryptography here.}
+
+\tronly{\paragraph{Who counts the queries} The allowance $Q$ is a functionality
+parameter, and a deployment has to place the counter somewhere. The server sees
+every query and is the natural place, and \cref{def:semihonest} lets it be
+corrupt, so a corrupt server can refuse to count. That does not break the bound
+of \cref{thm:malicious}, because \cref{sec:malicious} already assumes an honest
+server, and \cref{sec:malicious-ext} shows why that assumption cannot be dropped
+at all. Under a threshold below $\Nc$ a client can also spread its queries across
+quorums, and each quorum sees only its own share, so a per-quorum tally is not a
+per-client tally. A deployment that needs the bound enforced rather than assumed
+must either keep $\tc=\Nc$, which is the configuration we measure, or run the
+counter as a separate service the clients trust for metering alone.}
 
 \tronly{\paragraph{A second query strategy, and what it does not settle} We also ran a
 variant that spends half its budget bisecting toward the decision boundary and
